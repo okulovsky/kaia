@@ -20,7 +20,7 @@ def main(c: Callable[[], TgUpdate]):
         input_text = c().update.message.text
         if input_text=='/logout':
             os.remove(auth_file)
-            yield TgCommand.mock().send_message(c().chat_id, 'Bye!')
+            yield TgCommand.mock().send_message(c)
             yield Return()
 
         yield TgCommand.mock().send_message(c().chat_id, input_text)

@@ -5,6 +5,10 @@ from ..telegram import TgUpdate, TgCommand
 import telegram as tg
 from yo_fluq_ds import *
 
+class TerminateMenu:
+    pass
+
+
 class MenuItemStatus(Enum):
     Active = 0
     Hidden = 1
@@ -22,15 +26,18 @@ class AbstractTelegramMenuItem(Subroutine):
 
 
 class MenuItemOverRoutine(AbstractTelegramMenuItem):
-    def __init__(self, caption, method):
+    def __init__(self, caption, method, terminates_menu = True):
         self.caption = caption
         self.method = method
+        self.terminates_menu = terminates_menu
 
     def get_caption(self):
         return self.caption
 
     def run(self, c: Callable[[], TgUpdate]):
         yield FunctionalSubroutine.ensure(self.method)
+        if self.terminates_menu:
+            yield Return(TerminateMenu())
 
 
 class MenuItemInternal:
@@ -143,11 +150,16 @@ class TextMenuItem(AbstractTelegramMenuItem):
             if action is None:
                 continue
             elif action.item is not None:
-                yield FunctionalSubroutine(action.item.run)
+                subroutine = action.item
+                yield subroutine
+                if isinstance(subroutine.returned_value(), TerminateMenu):
+                    yield Return(TerminateMenu())
+                else:
+                    continue
             elif action.special_action == 'reload':
                 continue
             elif action.special_action == 'back':
                 yield Return()
             elif action.special_action == 'close':
-                break
+                yield Return(TerminateMenu())
 

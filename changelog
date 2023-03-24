@@ -1,0 +1,6 @@
+0.0.1
+  - tests for Storage don't trigger warnings
+  - Subroutine.return_value -> returned_value(), better handling of returning one value
+  - Menu skill demo
+0.0.0
+  - Very first version

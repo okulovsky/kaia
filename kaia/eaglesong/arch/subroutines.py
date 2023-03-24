@@ -5,6 +5,9 @@ class SubroutineBase:
     def get_name(self):
         raise NotImplementedError()
 
+    def returned_value(self):
+        return getattr(self,'_returned_value', None)
+
     @staticmethod
     def ensure(f):
         if isinstance(f, SubroutineBase):

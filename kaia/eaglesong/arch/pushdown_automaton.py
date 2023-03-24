@@ -29,7 +29,7 @@ class PushdownAutomaton(AbstractAutomaton):
 
     def pop(self, item, return_obj: Return):
         current = self.stack.pop()
-        current.subroutine.return_value = return_obj.return_value
+        current.subroutine._returned_value = return_obj.return_value
 
         if self.jump_call_back is not None:
             self.jump_call_back(PushdownAutomatonNotification('from', current.subroutine.get_name(), item))

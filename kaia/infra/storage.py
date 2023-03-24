@@ -63,6 +63,10 @@ class Storage:
     def get_reader(self) -> 'StorageReader':
         return StorageReader(self)
 
+    def close(self):
+        if self.file_handler is not None:
+            self.file_handler.close()
+
 
 class StorageReader:
     def __init__(self, storage: Storage):

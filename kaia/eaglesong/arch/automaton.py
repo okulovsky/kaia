@@ -3,8 +3,11 @@ from .subroutines import SubroutineBase
 
 class Return:
     def __init__(self, *return_value):
-        self.return_value = None
-        if len(return_value)>0:
+        if len(return_value) == 0:
+            self.return_value = None
+        elif len(return_value) == 1:
+            self.return_value = return_value[0]
+        else:
             self.return_value = return_value
 
 

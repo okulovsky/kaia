@@ -17,7 +17,7 @@ def questionnaire(c: Callable[[], TgUpdate]):
 def main(c: Callable[[], TgUpdate]):
     subroutine = FunctionalSubroutine(questionnaire)
     yield subroutine
-    name, country = subroutine.return_value
+    name, country = subroutine.returned_value()
 
     yield TgCommand.mock().send_message(c().chat_id, f"Nice to meet you, {name} from {country}!")
 

@@ -14,10 +14,11 @@ class TestStorage:
     def __enter__(self):
         shutil.rmtree(self.folder, True)
         os.makedirs(self.folder)
-        storage = Storage(self.folder, self.buffer_length, self.buffer_keep_after_flush)
-        return storage
+        self.storage = Storage(self.folder, self.buffer_length, self.buffer_keep_after_flush)
+        return self.storage
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        self.storage.close()
         shutil.rmtree(self.folder, True)
         pass
 
@@ -70,6 +71,7 @@ class StorageTestCase(TestCase):
 
             s1 = Storage(s.folder, 100, 10)
             self.check(100,110, s1.buffer)
+            s1.close()
 
     def test_several_archives(self):
         with TestStorage() as s:
