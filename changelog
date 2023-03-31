@@ -1,3 +1,7 @@
+0.0.2
+   - tests moved to kaia_tests
+   - upgraded SqlMessenger, message can have many tags
+   - kaia.infra.tasks with a bridge to huge async tasks
 0.0.1
   - tests for Storage don't trigger warnings
   - Subroutine.return_value -> returned_value(), better handling of returning one value

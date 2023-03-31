@@ -48,5 +48,5 @@ def main(c):
             continue
         yield TgCommand.mock().send_message(c().chat_id, input_text)
 
-
-run(main)
+if __name__ == '__main__':
+    run(main)

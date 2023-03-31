@@ -1,4 +1,4 @@
-from ..arch import AbstractAutomaton, Return, Listen, Terminate
+from ..arch import AbstractAutomaton, Return, Listen, Terminate, SubroutineBase, PushdownAutomaton, FunctionalSubroutine
 from .tg_command import TgCommand
 
 
@@ -17,12 +17,15 @@ class TgUpdate:
         Start = 0
         Text = 1
         Callback = 2
+        Timer = 2
 
     def __init__(self,
-                 chat_id: int,
+                 bridge: 'TelegramBridge',
+                 chat_id: Optional[int],
                  type: 'TgUpdate.Type',
-                 update: tg.Update,
+                 update: Optional[tg.Update],
                  context: tge.CallbackContext):
+        self.bridge = bridge
         self.chat_id = chat_id
         self.type = type
         self.update = update
@@ -43,8 +46,6 @@ class TelegramBridge:
 
         logger.info('Initializing dispatcher')
         self.chats = {}
-        self.slots = {}
-
 
         logger.info('Type `Start` is added')
         application.add_handler(tge.CommandHandler("start", TelegramBridge.Wrapper(self, TgUpdate.Type.Start).run))
@@ -63,6 +64,7 @@ class TelegramBridge:
         async def run(self, update: tg.Update, context: tge.CallbackContext):
             await self.bridge.push(self.update_type, update, context)
 
+
     async def push(self, update_type: TgUpdate.Type, tg_update: tg.Update, context: tge.CallbackContext):
         if self.log_incoming:
             logger.info(tg_update.to_json())
@@ -72,32 +74,57 @@ class TelegramBridge:
             logger.info(f'Requested new session from {chat_id}')
             self.chats[chat_id] = self.head_automaton_factory(tg_update)
 
-        update = TgUpdate(chat_id, update_type, tg_update, context)
+        update = TgUpdate(self, chat_id, update_type, tg_update, context)
         aut = self.chats[chat_id]
+        await self.run_automaton(aut, update, context.bot, True)
+        logger.info(f'Processed {update_type} from chat_id {chat_id}')
 
+    async def run_automaton(self,
+                            aut: AbstractAutomaton,
+                            update: TgUpdate,
+                            bot,
+                            in_main_loop: bool
+                            ):
         while True:
             result = aut.process(update)
             if isinstance(result, Return):
-                del self.chats[chat_id]
+                if in_main_loop:
+                    del self.chats[update.chat_id]
                 break
             if isinstance(result, Terminate):
-                await context.bot.send_message(chat_id, f'Error when handling the chat:\n\n{result.message}\n\nTo restart the bot, execute /start command or write any message')
-                del self.chats[chat_id]
+                if in_main_loop:
+                    await bot.send_message(update.chat_id, f'Error when handling the chat:\n\n{result.message}\n\nTo restart the bot, execute /start command or write any message')
+                    del self.chats[update.chat_id]
                 break
             elif isinstance(result, Listen):
+                if not in_main_loop:
+                    raise ValueError('`Listen` is not allowed in handlers!')
                 break
             elif isinstance(result, TgCommand):
-                update.last_return = await result.execute(tg_update.get_bot(), chat_id)
+                update.last_return = await result.execute(bot)
                 update.is_continuation = True
             else:
                 raise ValueError(f'Unexpected type {type(result)} of the command')
 
-        logger.info(f'Processed {update_type} from chat_id {chat_id}')
+
+    class Timer:
+        def __init__(self, bridge: 'TelegramBridge', routine):
+            self.bridge = bridge
+            self.routine = routine
+
+        async def run(self, context):
+            aut = PushdownAutomaton(FunctionalSubroutine.ensure(self.routine))
+            bot = context.bot
+            update = TgUpdate(self.bridge, None, TgUpdate.Type.Timer, None, context)
+            await self.bridge.run_automaton(aut, update, bot, False)
 
 
-
-
-
+    def add_timer(self, name: str, period_in_seconds: Union[int, float], routine: SubroutineBase):
+        self.application.job_queue.run_repeating(
+            TelegramBridge.Timer(self,routine).run,
+            period_in_seconds,
+            name = name
+        )
 
 
 

@@ -29,10 +29,10 @@ class TelegramTestProvider:
                 text=text))
 
     def text(self, text):
-        return TgUpdate(self.chat_id, TgUpdate.Type.Text, self._tg_text_message(text), None)
+        return TgUpdate(None, self.chat_id, TgUpdate.Type.Text, self._tg_text_message(text), None)
 
     def start(self):
-        return TgUpdate(self.chat_id, TgUpdate.Type.Start, self._tg_text_message('/start'), None)
+        return TgUpdate(None, self.chat_id, TgUpdate.Type.Start, self._tg_text_message('/start'), None)
 
     @staticmethod
     def visualize(log):

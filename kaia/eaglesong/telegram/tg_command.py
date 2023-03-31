@@ -29,7 +29,7 @@ class TgCommand:
         return TgCommandMock()
 
 
-    async def execute(self, bot, chat_id):
+    async def execute(self, bot):
         method = getattr(bot, self.bot_method)
         last_result = None
         if self._ignore_errors:

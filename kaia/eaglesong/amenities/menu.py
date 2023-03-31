@@ -145,7 +145,7 @@ class TextMenuItem(AbstractTelegramMenuItem):
             yield Listen()
             yield TgCommand.mock().delete_message(chat_id = c().chat_id, message_id=message_id)
             if c().type != TgUpdate.Type.Callback:
-                yield Terminate(f'Expecting callback, but got {c().type}')
+                yield Return(TerminateMenu()) #TODO: this will actually lose the message. We need to pushback in this case: return from this subroutine and feed the same input again
             action = Query.en(items).where(lambda z: z.action==c().update.callback_query.data).single_or_default() #type: MenuItemInternal
             if action is None:
                 continue

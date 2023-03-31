@@ -5,6 +5,7 @@ import shutil
 from yo_fluq_ds import *
 from datetime import datetime, timedelta
 
+
 class TestStorage:
     def __init__(self, buffer_length=110, buffer_keep_after_flush=10):
         self.buffer_length = buffer_length
