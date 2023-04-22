@@ -134,3 +134,4 @@ dmypy.json
 #temp folder of Kaia
 temp/
 environment.env
+externals/

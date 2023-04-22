@@ -1,4 +1,4 @@
-from kaia.eaglesong.telegram import TgCommand
+from kaia.eaglesong.drivers.telegram import TgCommand
 from unittest import TestCase
 
 class TgCommandMockTestCase(TestCase):

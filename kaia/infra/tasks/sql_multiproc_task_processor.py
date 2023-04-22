@@ -1,5 +1,5 @@
 from typing import *
-from .sql_task_processor import SqlTaskProcessor
+from .task_processor import TaskProcessor
 import atexit
 import os
 from ..sql_messenger import SqlMessenger
@@ -8,8 +8,10 @@ from .task_cycle import TaskCycle
 from uuid import uuid4
 import multiprocessing
 
-class SqlMultiprocTaskProcessor(SqlTaskProcessor):
+class SqlMultiprocTaskProcessor(TaskProcessor):
     def __init__(self, task_cycle: TaskCycle, suffix = None):
+        if Loc.is_windows:
+            raise ValueError('`multiprocessing` behavior is different in Windows, so this class will unfortunately not work')
         if suffix is None:
             suffix = str(uuid4())
         path = Loc.temp_folder/f'signalling_db/{suffix}'

@@ -1,165 +1,157 @@
-from ..arch import *
-from ..telegram import TgUpdate, TgCommand
+from ..core import *
+from copy import deepcopy
+from enum import Enum
 
-
-import telegram as tg
-from yo_fluq_ds import *
 
 class TerminateMenu:
-    pass
+    def __init__(self, value = None):
+        self.value = value
 
 
-class MenuItemStatus(Enum):
-    Active = 0
-    Hidden = 1
 
-
-class AbstractTelegramMenuItem(Subroutine):
-    def get_caption(self):
+class MenuItem(Routine):
+    def get_caption(self) -> str:
         raise NotImplementedError()
 
-    def run(self, c: Callable[[], TgUpdate]):
-        raise NotImplementedError()
+    def get_status(self) -> 'MenuItem.Status':
+        return MenuItem.Status.Active
 
-    def get_status(self) -> MenuItemStatus:
-        return MenuItemStatus.Active
+    def is_root(self):
+        if not hasattr(self,'_is_root'):
+            return True
+        return False
+
+    reload_button_text = '⟳'
+    back_button_text = '←'
+    close_button_text = '✖'
+
+    class Status(Enum):
+        Active = 0
+        Hidden = 1
 
 
-class MenuItemOverRoutine(AbstractTelegramMenuItem):
-    def __init__(self, caption, method, terminates_menu = True):
+def callable_or_value(x):
+    if callable(x):
+        return x()
+    return x
+
+class FunctionalMenuItem(MenuItem):
+    def __init__(self,
+                 caption: Union[Callable, str],
+                 method,
+                 terminates_menu = True
+                 ):
         self.caption = caption
         self.method = method
         self.terminates_menu = terminates_menu
 
     def get_caption(self):
-        return self.caption
+        return callable_or_value(self.caption)
 
-    def run(self, c: Callable[[], TgUpdate]):
-        yield FunctionalSubroutine.ensure(self.method)
+    def run(self, context):
+        yield Subroutine.ensure(self.method)
         if self.terminates_menu:
             yield Return(TerminateMenu())
 
 
-class MenuItemInternal:
-    def __init__(
-            self,
-            action: str,
-            title: str,
-            item: Optional[AbstractTelegramMenuItem]=None,
-            special_action: Optional[str] = None
-    ):
-        self.action = action
-        self.title = title
-        self.item = item
-        self.special_action = special_action
+class ValueMenuItem(MenuItem):
+    def __init__(self, caption: Union[Callable, str], value: Any = None):
+        self.caption = caption
+        self.value = value
+
+    def get_caption(self) -> str:
+        return callable_or_value(self.caption)
+
+    def run(self, context):
+        if self.value is not None:
+            value = self.value
+        else:
+            value = self.get_caption()
+        yield Return(TerminateMenu(value))
 
 
-class TextMenuItem(AbstractTelegramMenuItem):
+class MenuFolder(MenuItem):
     def __init__(self,
-                 name: str,
-                 prompt: Union[str, Callable],
-                 column_count: Optional[int] = 1,
-                 add_back_button: bool = True,
-                 add_reload_button: bool = True,
-                 add_close_button: bool = True
+                 content: Union[Callable[[], str], str],
+                 caption: Union[Callable[[], str], str, None] = None,
+                 add_reload_button: bool = False
                  ):
-        self.name = name
-        self.prompt = prompt
-        self.colummn_count = column_count
-        self.children = []
-        self.add_back_button = add_back_button
+        self.content = content
+        self.caption = caption
+        if self.caption is None:
+            self.caption = self.content
         self.add_reload_button = add_reload_button
-        self.add_close_button = add_close_button
+        self._items = [] #type: List[MenuItem]
 
-    def add_child(self, item: AbstractTelegramMenuItem) -> 'TextMenuItem':
-        self.children.append(item)
+
+    def items(self, *items: MenuItem) -> 'MenuFolder':
+        self._items = list(items)
         return self
 
+    def get_caption(self) -> str:
+        return callable_or_value(self.caption)
 
-    def get_caption(self):
-        return self.name
-
-
-    def build_prompt_and_menu_items(self):
-        if callable(self.prompt):
-            prompt = self.prompt()
-        else:
-            prompt = self.prompt
-
-        items = []
-
-        for index, item in enumerate(self.children):
-            name = item.get_caption()
-            status = item.get_status()
-
-            if status!=MenuItemStatus.Hidden:
-                items.append(MenuItemInternal(
-                    str(index),
-                    name,
-                    item,
-                    None
-                ))
-
-        if self.add_back_button:
-            items.append(MenuItemInternal(
-                'back',
-                'Back',
-                special_action='back'
-            ))
-
-        if self.add_reload_button:
-            items.append(MenuItemInternal(
-                'reload',
-                "Reload",
-                special_action='reload'
-            ))
-
-        if self.add_close_button:
-            items.append(MenuItemInternal(
-                'close',
-                'Close',
-                special_action='close'
-            ))
-        return prompt, items
-
-    def build_keyboard(self, items: List[MenuItemInternal]):
+    def build_menu(self) -> Tuple[Options, Dict]:
+        content = callable_or_value(self.content)
         buttons = []
-        buffer = []
-        for index, child in enumerate(items):
-            item = tg.InlineKeyboardButton(child.title, callback_data=child.action, )
-            buffer.append(item)
-            if self.colummn_count is not None and len(buffer) > self.colummn_count:
-                buttons.append(buffer)
-                buffer = []
-        if len(buffer) > 0:
-            buttons.append(buffer)
-        keyboard = tg.InlineKeyboardMarkup(buttons)
-        return keyboard
+        map = {}
+        for item in self._items:
+            status = item.get_status()
+            if status == MenuItem.Status.Hidden:
+                continue
+            caption = item.get_caption()
+            buttons.append(caption)
+            map[caption] = item
+        if self.add_reload_button:
+            buttons.append(MenuItem.reload_button_text)
+        if not self.is_root():
+            buttons.append(MenuItem.back_button_text)
+        buttons.append(MenuItem.close_button_text)
+        return Options(content, tuple(buttons)), map
 
-    def run(self, c: Callable[[], TgUpdate]):
+
+    def run(self, context: BotContext):
         while True:
-            prompt, items = self.build_prompt_and_menu_items()
-            keyboard = self.build_keyboard(items)
-            yield TgCommand.mock().send_message(chat_id=c().chat_id, text=prompt, reply_markup=keyboard)
-            message_id = c().last_return.message_id
-            yield Listen()
-            yield TgCommand.mock().delete_message(chat_id = c().chat_id, message_id=message_id)
-            if c().type != TgUpdate.Type.Callback:
-                yield Return(TerminateMenu()) #TODO: this will actually lose the message. We need to pushback in this case: return from this subroutine and feed the same input again
-            action = Query.en(items).where(lambda z: z.action==c().update.callback_query.data).single_or_default() #type: MenuItemInternal
-            if action is None:
-                continue
-            elif action.item is not None:
-                subroutine = action.item
-                yield subroutine
-                if isinstance(subroutine.returned_value(), TerminateMenu):
-                    yield Return(TerminateMenu())
-                else:
-                    continue
-            elif action.special_action == 'reload':
-                continue
-            elif action.special_action == 'back':
-                yield Return()
-            elif action.special_action == 'close':
+            options, map = self.build_menu()
+            expectations = [SelectedOption(o) for o in options.options]
+            yield options
+            message_id = context.input
+            yield Listen.for_one_of(*expectations)
+            input = context.input
+            yield Delete(message_id)
+            if not isinstance(input, SelectedOption):
                 yield Return(TerminateMenu())
+            if input.value == MenuItem.reload_button_text:
+                continue
+            if input.value == MenuItem.back_button_text:
+                yield Return()
+            if input.value == MenuItem.close_button_text:
+                yield Return(TerminateMenu())
+            if input.value not in map:
+                continue
+
+            item = map[input.value]
+            item._is_root = False
+            yield item
+            returned = item.returned_value()
+            if isinstance(returned, TerminateMenu):
+                yield Return(returned)
+            else:
+                continue
+
+
+class MainMenu(MenuItem):
+    def __init__(self, content: MenuFolder):
+        self.content = content
+
+
+    def run(self, context):
+        content = deepcopy(self.content)
+        yield content
+        returned = content.returned_value()
+        if returned is None:
+            return None
+        if not isinstance(returned, TerminateMenu):
+            raise ValueError('Internal error: MainMenu should always receive TerminateMenu')
+        yield Return(returned.value)
 

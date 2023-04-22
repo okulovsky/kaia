@@ -1,7 +1,7 @@
 from kaia.infra.tasks import TaskCycle, SubprocessConfig
 from kaia.infra.tasks.ctors import Ctor
 from kaia.infra.sql_messenger import SqlMessenger
-from yo_fluq_ds import FileIO
+from ..file_io import FileIO
 import sys
 
 if __name__ == '__main__':

@@ -56,6 +56,8 @@ class SqlLiteTestCase(TestCase):
         self.assertEqual(1, len(cc.read()))
 
     def test_in_memory_does_not_work_with_multiprocessing(self):
+        if Loc.is_windows:
+            self.skipTest('Windows')
         cc = SqlMessenger()
         process = multiprocessing.Process(target=Writer(cc).make)
         process.start()
@@ -65,6 +67,8 @@ class SqlLiteTestCase(TestCase):
             process.kill()
 
     def test_multiprocessing_works_with_mnt(self):
+        if Loc.is_windows:
+            self.skipTest('Windows')
         cc = SqlMessenger('/dev/shm/test_bro_db_1', True)
         process = multiprocessing.Process(target=Writer(cc).make)
         process.start()
@@ -75,6 +79,8 @@ class SqlLiteTestCase(TestCase):
 
 
     def test_multiprocessing_works_with_file(self):
+        if Loc.is_windows:
+            self.skipTest('Windows')
         location = Loc.temp_folder/'tests/messenger/test_bro_db_1'
         os.makedirs(location.parent, exist_ok=True)
         cc = SqlMessenger(location, True)
@@ -116,6 +122,8 @@ class SqlLiteTestCase(TestCase):
         self.assertEqual(N*CNT, r)
 
     def test_stress_processes(self):
+        if Loc.is_windows:
+            self.skipTest('Windows')
         N = 10
         CNT=100
         threads = []

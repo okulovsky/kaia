@@ -1,6 +1,6 @@
 import subprocess
 from typing import *
-from .sql_task_processor import SqlTaskProcessor
+from .task_processor import TaskProcessor
 import atexit
 import os
 from ..sql_messenger import SqlMessenger, MessengerQuery
@@ -8,7 +8,7 @@ from ..loc import Loc
 from uuid import uuid4
 import dataclasses
 from pathlib import Path
-from yo_fluq_ds import FileIO
+from ..file_io import FileIO
 import time
 import sys
 
@@ -22,7 +22,7 @@ class SubprocessConfig:
     db_path: Optional[Path] = None
 
 
-class SqlSubprocTaskProcessor(SqlTaskProcessor):
+class SqlSubprocTaskProcessor(TaskProcessor):
     def __init__(self, config: SubprocessConfig, run_check_attempts = 10):
         if config.db_path is None:
             config.db_path = Loc.temp_folder/f'signalling_db/{uuid4()}'

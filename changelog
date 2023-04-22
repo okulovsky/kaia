@@ -1,3 +1,11 @@
+0.1.0
+    - layer of chatflow logic abstracted from telegram
+    - chat driver for IPython notebooks
+    - lots of cleanup
+    - narrator protorype
+    - complete set of examples with documentation
+0.0.3
+    - TelegramBridge refactoring: the main loop that handles automata moved to Interpreters
 0.0.2
    - tests moved to kaia_tests
    - upgraded SqlMessenger, message can have many tags

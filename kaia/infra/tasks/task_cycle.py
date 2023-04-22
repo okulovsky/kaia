@@ -1,12 +1,40 @@
 from typing import *
 from ..sql_messenger import IMessenger, MessengerQuery
-from .task_processor import TaskStatus
-from datetime import datetime
-import sys
 import traceback
 import time
-import os
 import sys
+import dataclasses
+
+@dataclasses.dataclass()
+class TaskResult:
+    id: str
+    received: bool = False
+    arguments: Dict[str,Any] = dataclasses.field(default_factory=lambda:{})
+    accepted: bool = False
+    progress: Optional[float] = None
+    aborted: bool = False
+    success: bool = False
+    failure: bool = False
+    result: Optional = None
+    error: Optional[Dict[str,str]] = None
+    log: Optional[List[str]] = dataclasses.field(default_factory=lambda:[])
+
+    def finished(self):
+        return self.aborted or self.success or self.failure
+
+    def status(self):
+        if self.aborted:
+            return 'aborted'
+        if self.success:
+            return 'success'
+        if self.failure:
+            return 'failure'
+        if self.accepted:
+            return 'accepted'
+        if self.received:
+            return 'received'
+        return 'unknown'
+
 
 class AbortedException(Exception):
     def __init__(self):
@@ -83,7 +111,7 @@ class TaskCycle:
 
     @staticmethod
     def gather_status(messenger: IMessenger, task_id: str):
-        info = TaskStatus(task_id)
+        info = TaskResult(task_id)
         for message in MessengerQuery(tags=[None,task_id]).query(messenger):
             if message.tags[0] in {'received', 'accepted', 'success', 'failure', 'aborted'}:
                 setattr(info, message.tags[0], True)
