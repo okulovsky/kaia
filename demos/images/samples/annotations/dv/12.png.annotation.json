@@ -1,0 +1,24 @@
+{
+ "allowed": {
+  "1girl": true,
+  "belt": true,
+  "tied_shirt": true,
+  "tan": true,
+  "solo": true,
+  "smile": true,
+  "short_hair": false,
+  "shirt": true,
+  "orange_hair": false,
+  "orange_eyes": false,
+  "night": true,
+  "navel": true,
+  "midriff": true,
+  "hand_on_hip": true,
+  "front-tie_top": true,
+  "cleavage": false,
+  "breasts": true,
+  "tree": true
+ },
+ "custom_text": "",
+ "skip": false
+}

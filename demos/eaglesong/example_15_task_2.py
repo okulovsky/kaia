@@ -29,7 +29,7 @@ class TaskBot(Dispatcher):
 
 
     def fallback(self, context: BotContext):
-        yield '🐈'
+        yield 'Oops'
 
 
     def status(self, context):

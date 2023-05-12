@@ -4,7 +4,7 @@ import shapely
 from PIL import ImageDraw
 from PIL.Image import Image
 import PIL
-
+from copy import copy
 
 @dataclass
 class CropRect:
@@ -40,6 +40,18 @@ class CropRect:
         ymax = max(p[1] for p in locs)
         return xmin, ymin, xmax, ymax
 
+    def try_put_in_bound(self, width, height):
+        rect = copy(self)
+        x0, y0, x1, y1 = rect.get_bounding()
+        if x0<0:
+            rect.center_x+=-x0
+        elif x1>=width:
+            rect.center_x-=(x1-width)
+        if y0<0:
+            rect.center_y+=-y0
+        elif y1>=height:
+            rect.center_y-=(y1-height)
+        return rect
 
     def contains(self, x, y):
         point = shapely.Point(x, y)

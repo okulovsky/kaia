@@ -1,8 +1,0 @@
-APScheduler==3.10.1
-yo_fluq_ds==1.1.14
-python-telegram-bot==20.1
-python-dotenv==1.0.0
-Jinja2==3.0.1
-notebook==6.4.4
-requests==2.26.0
-markdown==3.4.3

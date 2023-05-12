@@ -1,3 +1,6 @@
+0.2.0
+    - fix error in infra tests
+    - demos on images: how to create character
 0.1.0
     - layer of chatflow logic abstracted from telegram
     - chat driver for IPython notebooks

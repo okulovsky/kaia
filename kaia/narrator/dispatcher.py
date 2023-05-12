@@ -12,7 +12,7 @@ class SimpleNarrationDispatcher(Dispatcher):
         super(SimpleNarrationDispatcher, self).__init__()
         narrator_definition = NarrationFilter.define(profile_source, narration_command_translator_factory)
         self.add_skill('main', RoutineBase.interpretable(head_skill, PushdownFilter, narrator_definition, PushdownFilter))
-        self.add_skill('fallback', ConstantRoutine('🐱'))
+        self.add_skill('fallback', ConstantRoutine('Oops'))
 
     def dispatch(self, context: BotContext):
         if 'main' not in self.active_skills:

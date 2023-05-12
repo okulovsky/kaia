@@ -1,4 +1,0 @@
-APScheduler==3.10.1
-Jinja2==3.0.1
-notebook==6.4.4
-python-dotenv==1.0.0

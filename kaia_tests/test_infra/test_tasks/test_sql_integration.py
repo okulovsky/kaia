@@ -38,9 +38,8 @@ class SqlMultiprocTestCase(TestCase):
 
 
     def test_abort_in_subprocess(self):
-        waiting = Waiting(0.1)
-        cycle = TaskCycle(waiting, 0.1)
-        proc = SqlMultiprocTaskProcessor(cycle)
+        cfg = SubprocessConfig('kaia.infra.tasks:Waiting', [0.1], sleep=0.1)
+        proc = SqlSubprocTaskProcessor(cfg)
         two_requests_one_is_aborted(self, proc)
 
     def test_alive_in_subprocess(self):

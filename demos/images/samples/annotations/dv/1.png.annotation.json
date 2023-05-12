@@ -1,0 +1,32 @@
+{
+ "allowed": {
+  "1girl": true,
+  "belt": true,
+  "water": true,
+  "tree": true,
+  "spring_\\(season\\)": true,
+  "solo": true,
+  "short_hair": false,
+  "school_uniform": true,
+  "purple_flower": true,
+  "pink_flower": true,
+  "petals": true,
+  "park": true,
+  "outdoors": true,
+  "orange_hair": false,
+  "orange_eyes": false,
+  "lake": true,
+  "hydrangea": false,
+  "hanami": false,
+  "flower": true,
+  "day": true,
+  "cherry_blossoms": true,
+  "bush": true,
+  "buckle": true,
+  "branch": true,
+  "blush": true,
+  "wisteria": true
+ },
+ "custom_text": "",
+ "skip": false
+}

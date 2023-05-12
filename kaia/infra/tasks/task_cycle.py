@@ -1,5 +1,6 @@
 from typing import *
 from ..sql_messenger import IMessenger, MessengerQuery
+from .progress_reporter import ProgressReporter, IProgressReporter
 import traceback
 import time
 import sys
@@ -36,36 +37,8 @@ class TaskResult:
         return 'unknown'
 
 
-class AbortedException(Exception):
-    def __init__(self):
-        super(AbortedException, self).__init__('Task was aborted')
-
-
-class ProgressReporter:
-    def __init__(self, id: str, messenger: IMessenger):
-        self.id = id
-        self.messenger = messenger
-
-    def process_externals(self):
-        self.messenger.read_all_and_close('is_alive')
-        terminate = self.messenger.read_all_and_close('terminate')
-        if len(terminate) > 0:
-            sys.exit()
-        if self.id is not None:
-            if MessengerQuery(tags=['aborted', self.id]).query_count(self.messenger) > 0:
-                raise AbortedException()
-
-    def report_progress(self, progress: float):
-        self.process_externals()
-        self.messenger.add(progress, 'progress', self.id)
-
-    def log(self, s):
-        self.process_externals()
-        self.messenger.add(s, 'log', self.id)
-
-
 class ITask:
-    def run(self, reporter: ProgressReporter, *args, **kwargs):
+    def run(self, reporter: IProgressReporter, *args, **kwargs):
         raise NotImplementedError()
 
     def warm_up(self):

@@ -132,6 +132,7 @@ dmypy.json
 .idea/
 
 #temp folder of Kaia
-temp/
 environment.env
+temp/
 externals/
+data/
