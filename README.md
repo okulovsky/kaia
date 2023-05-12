@@ -19,7 +19,7 @@ First, you need to install [Anaconda](https://www.anaconda.com/) to manage the d
 
 * change working dir to the root of the repository
 
-* execute `pip install -r requirements.eaglesong.full.txt`
+* execute `pip install -r requirements.kaia.txt`
   * This will install to the environment the exact versions of the libraries that Kaia was tested with.
   * ML projects inside Kaia might have different requirements. It will be discussed in their notebooks.
 
