@@ -39,7 +39,7 @@ class FunctionalMenuItem(MenuItem):
     def __init__(self,
                  caption: Union[Callable, str],
                  method,
-                 terminates_menu = True
+                 terminates_menu = True,
                  ):
         self.caption = caption
         self.method = method

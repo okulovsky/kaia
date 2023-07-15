@@ -2,14 +2,15 @@ import os
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from unittest import TestCase
-from kaia.infra import SqlMessenger, MessengerQuery, Loc
+from kaia.infra.comm import Sql, MessengerQuery, IMessenger
+from kaia.infra import Loc
 import time
 import threading
 import multiprocessing
 
 
 class Reader:
-    def __init__(self, conn: SqlMessenger):
+    def __init__(self, conn: IMessenger):
         self.conn = conn
 
     def make(self):
@@ -22,7 +23,7 @@ class Reader:
 
 
 class Writer:
-    def __init__(self, conn: SqlMessenger, cnt = 1):
+    def __init__(self, conn: IMessenger, cnt = 1):
         self.conn = conn
         self.cnt = cnt
 
@@ -33,7 +34,7 @@ class Writer:
 
 class SqlLiteTestCase(TestCase):
     def test_writing_in_bg_scheduler(self):
-        cc = SqlMessenger()
+        cc = Sql.memory().messenger()
         scheduler = BackgroundScheduler()
         scheduler.add_job(Writer(cc).make, trigger='interval', seconds=0.2)
         scheduler.start()
@@ -48,7 +49,7 @@ class SqlLiteTestCase(TestCase):
         self.assertGreaterEqual(lens[-1], lens[0])
 
     def test_writing_from_thread(self):
-        cc = SqlMessenger()
+        cc = Sql.memory().messenger()
         thread = threading.Thread(target = Writer(cc).make)
         thread.setDaemon(True)
         thread.start()
@@ -58,7 +59,7 @@ class SqlLiteTestCase(TestCase):
     def test_in_memory_does_not_work_with_multiprocessing(self):
         if Loc.is_windows:
             self.skipTest('Windows')
-        cc = SqlMessenger()
+        cc = Sql.memory().messenger()
         process = multiprocessing.Process(target=Writer(cc).make)
         process.start()
         time.sleep(0.1)
@@ -69,7 +70,7 @@ class SqlLiteTestCase(TestCase):
     def test_multiprocessing_works_with_mnt(self):
         if Loc.is_windows:
             self.skipTest('Windows')
-        cc = SqlMessenger('/dev/shm/test_bro_db_1', True)
+        cc = Sql.file('/dev/shm/test_bro_db_1', True).messenger()
         process = multiprocessing.Process(target=Writer(cc).make)
         process.start()
         time.sleep(0.1)
@@ -83,7 +84,7 @@ class SqlLiteTestCase(TestCase):
             self.skipTest('Windows')
         location = Loc.temp_folder/'tests/messenger/test_bro_db_1'
         os.makedirs(location.parent, exist_ok=True)
-        cc = SqlMessenger(location, True)
+        cc = Sql.file(location, True).messenger()
         process = multiprocessing.Process(target=Writer(cc).make)
         process.start()
         time.sleep(0.1)
@@ -94,7 +95,7 @@ class SqlLiteTestCase(TestCase):
     def test_multiprocessing_word_with_file_2(self):
         location = Loc.temp_folder / 'tests/messenger/test_bro_db_2'
         os.makedirs(location.parent, exist_ok=True)
-        cc = SqlMessenger(location, True)
+        cc = Sql.file(location, True).messenger()
         process = multiprocessing.Process(target = Reader(cc).make)
         process.start()
         time.sleep(0.1)
@@ -110,7 +111,7 @@ class SqlLiteTestCase(TestCase):
         N = 10
         CNT=1000
         threads = []
-        cc = SqlMessenger()
+        cc = Sql.memory().messenger()
         for i in range(N):
             t = threading.Thread(target = Writer(cc,CNT).make)
             t.setDaemon(True)
@@ -127,7 +128,7 @@ class SqlLiteTestCase(TestCase):
         N = 10
         CNT=100
         threads = []
-        cc = SqlMessenger('/dev/shm/test_bro_db_2', True)
+        cc = Sql.file('/dev/shm/test_bro_db_2', True).messenger()
         for i in range(N):
             t = multiprocessing.Process(target = Writer(cc,CNT).make)
             threads.append(t)

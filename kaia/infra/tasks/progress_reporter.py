@@ -1,4 +1,4 @@
-from ..sql_messenger import IMessenger, MessengerQuery
+from ..comm import IMessenger, MessengerQuery
 from abc import ABC, abstractmethod
 import sys
 from tqdm import tqdm, tqdm_notebook

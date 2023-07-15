@@ -64,7 +64,10 @@ class TelegramDriver:
             logger.info(f'Requested new session from {chat_id}')
             self.chats[chat_id] = TelegramInterpreter(self.head_subroutine_factory(chat_id), TgContext(self, chat_id))
         aut = self.chats[chat_id]
-        await aut.process(TgUpdatePackage(update_type, tg_update, context.bot))
+        try:
+            await aut.process(TgUpdatePackage(update_type, tg_update, context.bot))
+        except:
+            del self.chats[chat_id]
         logger.info(f'Processed {update_type} from chat_id {chat_id}')
         del self.busy[chat_id]
 

@@ -155,12 +155,13 @@ class ImageTagAnnotator:
 
 
     @staticmethod
-    def export(df_path, image_path, annot_path, output_path):
+    def export(df_path, image_path, annot_path, output_path, prefix = '', vocab = None, cnt=100, add_name_to_tag = False):
         df = pd.read_parquet(df_path).drop_duplicates('interrogation_path')
 
         for cat in df.category.unique():
             qdf = df.loc[df.category == cat]
-            folder = output_path / f'100_{cat}'
+            cat_name = f'{prefix}{cat}'
+            folder = output_path / f'{cnt}_{cat_name}'
             os.makedirs(folder, exist_ok=True)
             for idx, row in enumerate(Query.df(qdf)):
                 annot = FileIO.read_json(annot_path / row['annotation_path'])
@@ -171,6 +172,12 @@ class ImageTagAnnotator:
                     tags = [c for c, v in annot['allowed'].items() if v]
                     if annot['custom_text'] != '':
                         tags += [c.strip() for c in annot['custom_text'].split(',')]
+                    if vocab is not None:
+                        for k, v in vocab.items():
+                            if k in tags:
+                                tags+=v
+                    if add_name_to_tag:
+                        tags = [cat_name]+tags
                     FileIO.write_text(', '.join(tags), folder / f'{idx}.txt')
                     img.convert('RGB').save(folder / f'{idx}.jpg')
                 except:

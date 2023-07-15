@@ -1,0 +1,127 @@
+{
+ "sensors": {
+  "1": {
+   "config": {
+    "configured": true,
+    "on": true,
+    "sunriseoffset": 30,
+    "sunsetoffset": -30
+   },
+   "etag": "343ec74f804e10bcc7de79d1bc10ed48",
+   "manufacturername": "Philips",
+   "modelid": "PHDL00",
+   "name": "Daylight",
+   "state": {
+    "dark": false,
+    "daylight": true,
+    "lastupdated": "2023-06-05T03:43:16.698",
+    "status": 160,
+    "sunrise": "2023-06-05T02:48:20",
+    "sunset": "2023-06-05T19:24:16"
+   },
+   "swversion": "1.0",
+   "type": "Daylight",
+   "uniqueid": "00:21:2e:ff:ff:03:26:20-01"
+  },
+  "2": {
+   "config": {
+    "battery": 100,
+    "offset": 0,
+    "on": true,
+    "reachable": true
+   },
+   "ep": 1,
+   "etag": "8d71a02e3893374de333f621e5bfdfba",
+   "lastannounced": "2022-09-10T13:47:42Z",
+   "lastseen": "2023-06-05T10:33Z",
+   "manufacturername": "LUMI",
+   "modelid": "lumi.weather",
+   "name": "Multi Sensor",
+   "state": {
+    "lastupdated": "2023-06-05T10:33:54.261",
+    "temperature": 2221
+   },
+   "swversion": "20161129",
+   "type": "ZHATemperature",
+   "uniqueid": "00:15:8d:00:02:c1:3c:d4-01-0402"
+  },
+  "3": {
+   "config": {
+    "battery": 100,
+    "offset": 0,
+    "on": true,
+    "reachable": true
+   },
+   "ep": 1,
+   "etag": "687f1b40c82f8819e4607eafc44ca3b5",
+   "lastannounced": "2022-09-10T13:47:42Z",
+   "lastseen": "2023-06-05T10:33Z",
+   "manufacturername": "LUMI",
+   "modelid": "lumi.weather",
+   "name": "Humidity 3",
+   "state": {
+    "humidity": 5312,
+    "lastupdated": "2023-06-05T10:33:54.293"
+   },
+   "swversion": "20161129",
+   "type": "ZHAHumidity",
+   "uniqueid": "00:15:8d:00:02:c1:3c:d4-01-0405"
+  },
+  "4": {
+   "config": {
+    "battery": 100,
+    "offset": 0,
+    "on": true,
+    "reachable": true
+   },
+   "ep": 1,
+   "etag": "7ddcb994eecfad7edb77a58aff4c1a74",
+   "lastannounced": "2022-09-10T13:47:42Z",
+   "lastseen": "2023-06-05T10:33Z",
+   "manufacturername": "LUMI",
+   "modelid": "lumi.weather",
+   "name": "Pressure 4",
+   "state": {
+    "lastupdated": "2023-06-05T10:33:54.325",
+    "pressure": 1013
+   },
+   "swversion": "20161129",
+   "type": "ZHAPressure",
+   "uniqueid": "00:15:8d:00:02:c1:3c:d4-01-0403"
+  }
+ },
+ "lights": {
+  "1": {
+   "etag": "a53af17b1e3c97f678b2796b55300f3e",
+   "hascolor": false,
+   "lastannounced": null,
+   "lastseen": "2023-06-05T10:42Z",
+   "manufacturername": "dresden elektronik",
+   "modelid": "ConBee",
+   "name": "Configuration tool 1",
+   "state": {
+    "reachable": true
+   },
+   "swversion": "0x260b0500",
+   "type": "Configuration tool",
+   "uniqueid": "00:21:2e:ff:ff:03:26:20-01"
+  },
+  "2": {
+   "etag": "906d9dc33e7bb30368060d961604db32",
+   "hascolor": false,
+   "lastannounced": "2023-06-02T17:30:29Z",
+   "lastseen": "2023-06-05T10:39Z",
+   "manufacturername": "OSRAM",
+   "modelid": "Plug 01",
+   "name": "On/Off plug-in unit 2",
+   "state": {
+    "alert": "none",
+    "on": false,
+    "reachable": true
+   },
+   "swversion": "V1.04.12",
+   "type": "On/Off plug-in unit",
+   "uniqueid": "84:18:26:00:00:10:55:cd-03"
+  }
+ }
+}

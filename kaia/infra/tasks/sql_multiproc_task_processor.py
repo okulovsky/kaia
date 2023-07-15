@@ -2,7 +2,7 @@ from typing import *
 from .task_processor import TaskProcessor
 import atexit
 import os
-from ..sql_messenger import SqlMessenger
+from ..comm import Sql
 from ..loc import Loc
 from .task_cycle import TaskCycle
 from uuid import uuid4
@@ -16,7 +16,7 @@ class SqlMultiprocTaskProcessor(TaskProcessor):
             suffix = str(uuid4())
         path = Loc.temp_folder/f'signalling_db/{suffix}'
         os.makedirs(path.parent, exist_ok=True)
-        messenger = SqlMessenger(path)
+        messenger = Sql.file(path).messenger()
         super(SqlMultiprocTaskProcessor, self).__init__(messenger)
         self.task_cycle = task_cycle
         self.process = multiprocessing.Process(target=task_cycle.run, args=(self.messenger,))

@@ -1,6 +1,6 @@
 import time
 from typing import *
-from ..sql_messenger import IMessenger, MessengerQuery
+from ..comm import IMessenger, MessengerQuery
 from .task_cycle import TaskCycle
 from .task_processor_abc import ITaskProcessor, TaskResult
 from uuid import uuid4

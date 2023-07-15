@@ -3,7 +3,7 @@ from typing import *
 from .task_processor import TaskProcessor
 import atexit
 import os
-from ..sql_messenger import SqlMessenger, MessengerQuery
+from ..comm import Sql, MessengerQuery
 from ..loc import Loc
 from uuid import uuid4
 import dataclasses
@@ -28,7 +28,7 @@ class SqlSubprocTaskProcessor(TaskProcessor):
             config.db_path = Loc.temp_folder/f'signalling_db/{uuid4()}'
         os.makedirs(config.db_path.parent, exist_ok=True)
         self.config = config
-        messenger = SqlMessenger(config.db_path)
+        messenger = Sql.file(config.db_path).messenger()
         super(SqlSubprocTaskProcessor, self).__init__(messenger)
         self.process = None
         self.run_check_attempts = run_check_attempts

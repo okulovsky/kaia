@@ -1,5 +1,5 @@
 from typing import *
-from ..sql_messenger import IMessenger, MessengerQuery
+from ..comm import IMessenger, MessengerQuery
 from .progress_reporter import ProgressReporter, IProgressReporter
 import traceback
 import time
