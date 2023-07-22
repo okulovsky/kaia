@@ -38,6 +38,7 @@ class Deployment:
     def _make_dockerfile(self):
         libs = ' '.join(FileIO.read_text(Loc.root_folder/'requirements.linux.txt').split('\n'))
 
+
         content = DOCKERFILE_TEMPLATE.format(
             python_version = '3.8',
             install_libraries = 'RUN pip install '+libs,
@@ -131,6 +132,8 @@ class Deployment:
 DOCKERFILE_TEMPLATE = '''FROM python:{python_version}
 
 {install_libraries}
+
+RUN pip install pymorphy3
 
 COPY ./kaia /kaia
 

@@ -3,10 +3,9 @@ import os.path
 from flask import Flask
 from flask_autoindex import AutoIndex
 from kaia.infra import Loc
-from .app import IKaiaService
 
 
-class MainHtmlService(IKaiaService):
+class MainHtmlService:
     def __init__(self,
                  port: int,
                  port_to_name: Dict[int, str],
@@ -44,7 +43,7 @@ class MainHtmlService(IKaiaService):
 '''
         return page
 
-    def run(self, app_config):
+    def __call__(self):
         self.app.run('0.0.0.0',self.port)
 
 

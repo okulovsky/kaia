@@ -1,3 +1,5 @@
+import sys
+
 import telegram
 
 from kaia.eaglesong.core import RoutineBase, Context
@@ -67,6 +69,8 @@ class TelegramDriver:
         try:
             await aut.process(TgUpdatePackage(update_type, tg_update, context.bot))
         except:
+            ex_type, ex_value, ex_traceback = sys.exc_info()
+            print(f'ERROR in Telegram Bot:\n{ex_type}\n{ex_value},{ex_traceback}')
             del self.chats[chat_id]
         logger.info(f'Processed {update_type} from chat_id {chat_id}')
         del self.busy[chat_id]

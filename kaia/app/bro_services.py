@@ -1,22 +1,26 @@
-from .app import IKaiaService, KaiaAppConfig
-from ..bro.core import BroServer, BroClient, StorageClientDataProvider
+from ..bro.core import BroServer
 from ..bro.amenities.gradio import GradioClient
+from ..infra.comm import IStorage, IMessenger
 import gradio as gr
 
-class ControlBroService(IKaiaService):
-    def __init__(self, server: BroServer):
+class ControlBroService:
+    def __init__(self, server: BroServer, storage: IStorage, messenger: IMessenger):
         self.server = server
+        self.storage = storage
+        self.messenger = messenger
 
-    def run(self, app_config: KaiaAppConfig):
-        self.server.run(app_config.comm.storage(), app_config.comm.messenger())
+    def __call__(self):
+        self.server.run(self.storage, self.messenger)
 
 
-class GradioBroService(IKaiaService):
-    def __init__(self, server: BroServer):
+class GradioBroService:
+    def __init__(self, server: BroServer, storage: IStorage, messenger: IMessenger):
         self.server = server
+        self.storage = storage
+        self.messenger = messenger
 
-    def run(self, app_config: KaiaAppConfig):
-        demo = GradioClient.generate_server_interface(self.server, app_config.comm.storage(), app_config.comm.messenger())
+    def __call__(self):
+        demo = GradioClient.generate_server_interface(self.server, self.storage, self.messenger)
         demo.queue().launch(ssl_verify=False, server_name='0.0.0.0', share=False)
 
 
