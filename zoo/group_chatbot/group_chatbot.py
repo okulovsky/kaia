@@ -3,6 +3,9 @@ from .instant_reaction_skill import TelegramInstantReactionSkill
 from kaia.eaglesong.drivers.telegram import TgUpdatePackage
 from kaia.eaglesong.core import Return, Terminate, Routine
 import telegram as tg
+import logging
+
+logger = logging.getLogger('group_chatbot')
 
 class GroupChatbotRoutine(Routine):
     def __init__(self,
@@ -30,3 +33,5 @@ class GroupChatbotRoutine(Routine):
                 for command in result:
                     yield command
                 break
+
+        yield Return()

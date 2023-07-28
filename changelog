@@ -1,3 +1,5 @@
+0.4.1
+    - More skills for group control, also those are prettified and can now be used as examples
 0.4.0
     - Chatbot to control telegram with 2 skills: autorestriction and whois
     - kaia.app is simplified, storage and messenger is no longer a part of config and must be provided to services separately
