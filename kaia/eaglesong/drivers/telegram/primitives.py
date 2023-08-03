@@ -12,6 +12,7 @@ class TgUpdatePackage:
         Callback = 2
         Timer = 3
         Feedback = 4
+        EaglesongFeedback = 5
 
     def __init__(self, update_type: 'TgUpdatePackage.Type', update, bot):
         self.update_type = update_type
@@ -29,11 +30,21 @@ class TgContext(Context):
         self.bot = None #type: Optional[tg.Bot]
         self.update = None #type: Optional[tg.Update]
         self.update_type = None #type: Optional[TgUpdatePackage.Type]
+        self.exact_input = None
 
     def set_input(self, input: TgUpdatePackage):
-        self.update_type = input.update_type
-        self.update = input.update
-        self.bot = input.bot
+        self.exact_input = input
+        if isinstance(input, TgUpdatePackage):
+            self.update_type = input.update_type
+            self.update = input.update
+            self.bot = input.bot
+        else: #it happens when input is set via eaglesong internals, e.g. Automaton/Return
+            self.update_type = TgUpdatePackage.Type.EaglesongFeedback
+            self.update = input
+            self.bot = None
+
+    def get_input(self):
+        return self.exact_input
 
     def get_input_summary(self):
         return dict(update_type=self.update_type.name, update = self.update)

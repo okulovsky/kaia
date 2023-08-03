@@ -10,7 +10,7 @@ import os
 
 @dataclass(frozen=True)
 class Space(ISpace):
-    source: Slot[Any] = Slot.field(False)
+    source: Slot[Any] = Slot.field(stored = False)
     humidity: Slot[float] = Slot.field()
     pressure: Slot[float] = Slot.field()
     temperature: Slot[float] = Slot.field()
@@ -36,7 +36,7 @@ class ConbeeTestCase(TestCase):
 
     def test_conbee_parser(self):
         space = Space()
-        space.source.current_value = FileIO.read_json(Path(__file__).parent/'conbee.json')
+        space.source.current_value = FileIO.read_json(Path(__file__).parent/'conbee_checked.json')
         parser = (
             Parser(space.source)
             .add_rule(space.humidity, 'sensors', '00:15:8d:00:02:c1:3c:d4-01-0405', lambda z: z['state']['humidity'] / 100)
@@ -48,7 +48,7 @@ class ConbeeTestCase(TestCase):
         result = space.get_current_values_as_dict()
         del result['source']
         self.assertDictEqual(
-            {'humidity': 73.82, 'pressure': 1010.0, 'temperature': 21.93, 'switch': False},
+            {'humidity': 53.12, 'pressure': 1013.0, 'temperature': 22.21, 'switch': False},
             result
         )
 

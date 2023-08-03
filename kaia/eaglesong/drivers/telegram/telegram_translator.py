@@ -24,6 +24,8 @@ def _get_inner_context_message(outer_context: TgContext):
             return outer_context.update.message_id
         else:
             return outer_context.update
+    elif outer_context.update_type == TgUpdatePackage.Type.EaglesongFeedback:
+        return outer_context.update
     raise ValueError(f'cannot translate context of type {outer_context.update_type}')
 
 

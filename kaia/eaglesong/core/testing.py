@@ -3,6 +3,7 @@ from .interpreter import Automaton, RoutineBase
 from .subroutines import Listen, Return, Terminate, Context, PushdownFilter
 import time
 from yo_fluq_ds import Obj
+from dataclasses import dataclass
 
 class Stage:
     def __init__(self, prompt, wait_before: Optional[float], label: Optional[str]):
@@ -11,27 +12,43 @@ class Stage:
         self.label = label
         self.expectations = None #type: Optional[List[Callable]]
 
+@dataclass
+class LogItem:
+    label: Optional[str]
+    prompt: Any
+    response: Any
+    exception: Any = None
+    exception_base: Any = None
+
+
+class DefaultFeedbackFactory:
+    def __init__(self):
+        self.current_id = 0
+
+    def __call__(self, response):
+        self.current_id+=1
+        return self.current_id
 
 class Scenario:
     def __init__(self,
                  context_factory: Callable[[], Context],
                  routine: RoutineBase,
                  filters=None,
-                 printing = print,
-                 feedback_input_factory = None
+                 printing = None,
+                 feedback_factory = None
                  ):
         self.context_factory = context_factory
         self.routine = routine
-        self.feedback_input_factory = feedback_input_factory
+        self.feedback_factory = DefaultFeedbackFactory() if feedback_factory is None else feedback_factory
 
         self.filters = filters if filters is not None else (PushdownFilter,)
-        self.printing = printing
+        self.printing = Scenario.default_printing if printing is None else printing
 
         self.stages = []  # type: List[Stage]
         self.wait_on_next_stage = None
 
         self.stashed_values = {}
-        self.log = []
+        self.log = [] #type: List[LogItem]
 
     def send(self, obj, label = None) -> 'Scenario':
         self.stages.append(Stage(obj, self.wait_on_next_stage, label))
@@ -108,7 +125,6 @@ class Scenario:
         context = self.context_factory()
         aut = Automaton(RoutineBase.interpretable(self.routine, *self.filters), context)
         log = []
-        feedback = 0
         for i, s in enumerate(self.stages):
             if s.wait_before is not None:
                 time.sleep(s.wait_before)
@@ -119,21 +135,13 @@ class Scenario:
                 if isinstance(c, Listen):
                     break
                 response.append(c)
-                feedback+=1
-                if self.feedback_input_factory is None:
-                    feedback_input = feedback
-                else:
-                    feedback_input = self.feedback_input_factory(feedback)
-                context.set_input(feedback_input)
+                feedback = self.feedback_factory(c)
+                context.set_input(feedback)
                 if isinstance(c, Return) or isinstance(c, Terminate):
                     break
             err = self._validate_stage(i,s,response)
 
-            item = Obj()
-            if s.label is not None:
-                item['label'] = s.label
-            item['prompt'] = s.prompt
-            item['response'] = response
+            item = LogItem(s.label, s.prompt, response)
 
             if err is not None:
                 base, ex = err
@@ -143,8 +151,8 @@ class Scenario:
                     else:
                         raise ex from base
                 else:
-                    item['exception'] = ex
-                    item['exception_base'] = base
+                    item.exception = ex
+                    item.exception_base = base
 
             log.append(item)
 
@@ -153,8 +161,18 @@ class Scenario:
         return self
 
     @staticmethod
-    def default_printing(log):
+    def default_printing(log: List[LogItem]):
+        return Scenario.default_printing_generic(log, str, str)
+
+    @staticmethod
+    def default_printing_generic(log: List[LogItem], prompt_to_str, response_to_str):
         for item in log:
-            for key, value in item.items():
-                print('\033[94m' + key.ljust(10) + '\033[0m', value)
-            print()
+            if item.label is not None:
+                print('\033[92m'+item.label+'\033[0m')
+            print('\033[94m' + 'prompt'.ljust(10) + '\033[0m', prompt_to_str(item.prompt))
+            for response in item.response:
+                print('\033[94m' + 'response'.ljust(15) + '\033[0m', response_to_str(response))
+            if item.exception is not None:
+                print('\033[91m' + 'exception'.ljust(10) + '\033[0m', item.exception)
+            if item.exception is not None:
+                print('\033[91m' + 'exc_base'.ljust(10) + '\033[0m', item.exception_base)

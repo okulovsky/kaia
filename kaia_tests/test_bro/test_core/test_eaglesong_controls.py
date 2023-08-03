@@ -1,7 +1,7 @@
 from unittest import TestCase
 from kaia.infra.comm import Sql
 from kaia.bro.core import BroServer
-from kaia.bro.amenities.sandbox import SinSpace
+from kaia.bro.sandbox import SinSpace
 from kaia.bro.amenities.eaglesong import BroSkill
 from kaia.eaglesong.core import Scenario, BotContext, Options, SelectedOption, Delete
 

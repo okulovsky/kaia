@@ -26,11 +26,13 @@ class TelegramDriver:
     def __init__(self,
                  application: tge.Application,
                  head_subroutine_factory: Callable[[int], RoutineBase],
-                 log_incoming = False
+                 log_incoming = False,
+                 ignore_exceptions = False
                  ):
         self.application = application
         self.head_subroutine_factory = head_subroutine_factory
         self.log_incoming = log_incoming
+        self.ignore_exceptions = ignore_exceptions
 
         logger.info('Initializing dispatcher')
         self.chats = {} #type: Dict[int,TelegramInterpreter]
@@ -70,7 +72,8 @@ class TelegramDriver:
             await aut.process(TgUpdatePackage(update_type, tg_update, context.bot))
         except:
             logging.error(f'ERROR in Telegram Bot:\n{traceback.format_exc()}')
-            del self.chats[chat_id]
+            if not self.ignore_exceptions:
+                del self.chats[chat_id]
         logger.info(f'Processed {update_type} from chat_id {chat_id}')
         del self.busy[chat_id]
 

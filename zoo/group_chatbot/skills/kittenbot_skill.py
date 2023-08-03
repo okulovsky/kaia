@@ -1,18 +1,20 @@
-from .externals.kittenbot.src.kittenbot.message_handler import KittenMessageHandler
-from .externals.kittenbot.src.kittenbot.random_generator import RandomGenerator
-from .externals.kittenbot.src.kittenbot.resources import ProdResources
-from .externals.kittenbot.src.kittenbot.language_processing import Nlp, MorphAnalyzer
-from .externals.kittenbot.src.kittenbot.actions import Reply, DocumentReplyContent, TextReplyContent
-from zoo.group_chatbot.instant_reaction_skill import *
+from .common_imports import *
+
+from zoo.group_chatbot.externals.kittenbot.src.kittenbot.message_handler import KittenMessageHandler
+from zoo.group_chatbot.externals.kittenbot.src.kittenbot.random_generator import RandomGenerator
+from zoo.group_chatbot.externals.kittenbot.src.kittenbot.resources import ProdResources
+from zoo.group_chatbot.externals.kittenbot.src.kittenbot.language_processing import Nlp, MorphAnalyzer
+from zoo.group_chatbot.externals.kittenbot.src.kittenbot.actions import Reply, DocumentReplyContent, TextReplyContent
+
+
 
 from pathlib import Path
 
-class KittenbotSkill(TelegramInstantReactionSkill):
+class KittenbotSkill(Routine):
     def __init__(self,
                  bot_id,
                  probability,
                  agree_probability,
-                 test_group_ids,
                  bot_names,
                  noun_template,
                  noun_weight,
@@ -29,7 +31,7 @@ class KittenbotSkill(TelegramInstantReactionSkill):
             bot_id,
             probability,
             agree_probability,
-            test_group_ids,
+            [],
             bot_names,
             noun_template,
             noun_weight,
@@ -38,28 +40,27 @@ class KittenbotSkill(TelegramInstantReactionSkill):
         )
         self.handler = handler
 
-    def execute(self, update: tg.Update):
+    def run(self, context: TgContext):
+        update = context.update
+
         result = self.handler.handle(update, None)
 
         if result is None:
-            return []
+            yield Return()
 
         if isinstance(result, Reply):
             if isinstance(result.content, DocumentReplyContent):
-                return [
-                    TgCommand.mock().send_document(
+                yield TgCommand.mock().send_document(
                         result.reply_to.chat_id,
                         document=result.content.document,
                         filename = result.content.filename,
                         reply_to_message_id = result.reply_to.message_id
                     )
-                ]
             if isinstance(result.content, TextReplyContent):
-                return [
-                    TgCommand.mock().send_message(
+                yield TgCommand.mock().send_message(
                         result.reply_to.chat_id,
                         result.content.text,
-                        reply_to_message_id=result.reply_to.message_id)
-                    ]
-        return []
+                        reply_to_message_id=result.reply_to.message_id
+                )
 
+        yield Return()

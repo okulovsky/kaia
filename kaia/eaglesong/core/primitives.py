@@ -45,7 +45,7 @@ class Context(ABC):
         pass
 
     @abstractmethod
-    def get_input_summary(self):
+    def get_input(self):
         pass
 
 
@@ -141,8 +141,8 @@ class BotContext(Context):
         self.input = input
         self.timestamp = datetime.now()
 
-    def get_input_summary(self):
-        return dict(user_id=self.user_id, message=self.input)
+    def get_input(self):
+        return self.input
 
 
 @dataclass

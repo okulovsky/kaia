@@ -25,7 +25,7 @@ class TranslationContext(Context, Generic[TInnerContext, TOuterContext]):
     def set_input(self, input):
         pass
 
-    def get_input_summary(self):
+    def get_input(self):
         raise NotImplementedError()
 
 
