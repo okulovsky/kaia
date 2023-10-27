@@ -1,7 +1,7 @@
 from .common_imports import *
 from datetime import datetime, timedelta
 
-class MessageFrequencyRestricter(Routine):
+class MessageFrequencyRestricter:
     def __init__(self,
                  ids_affected: List[int],
                  delay_in_minutes: int,
@@ -11,11 +11,11 @@ class MessageFrequencyRestricter(Routine):
         self.delay_in_minutes = delay_in_minutes
         self.current_time_factory = current_time_factory
 
-    def run(self, context: TgContext):
-        update = context.update
+    def __call__(self):
+        update = yield None
 
         if update.effective_user.id not in self.ids_affected:
-            yield Return()
+            return
 
         logging.info('delay_in_minutes not None. Sending restriction')
         yield TgCommand.mock().restrict_chat_member(

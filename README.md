@@ -1,7 +1,8 @@
 # Description
 
-`kaia` is an open-source integration of various ML solutions 
-with flexible chat flows in Telegram chatbots or voice assistant. 
+`kaia` is an open-source home assistant with AI-generated voice, face and personality. 
+It employes state-of-the-art free models to generate content and personalize home assistant. 
+
 
 # Quick start
 
@@ -29,7 +30,8 @@ First, you need to install [Anaconda](https://www.anaconda.com/) to manage the d
 
 * do not close the console.
 
-At this point, a browser will open and you will see the contents of the root of the repostiory. Open `demos` folder, then `Readme.ipynb`. Follow the instructions in this file.
+At this point, a browser will open and you will see the contents of the root of the repostiory. 
+Open `demos` folder, then `Part 00 - Intro.ipynb`. Follow the instructions in this file.
 
 ### If you messed up...
 

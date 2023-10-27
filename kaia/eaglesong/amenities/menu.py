@@ -1,7 +1,7 @@
 from ..core import *
 from copy import deepcopy
 from enum import Enum
-
+from abc import ABC, abstractmethod
 
 class TerminateMenu:
     def __init__(self, value = None):
@@ -9,7 +9,7 @@ class TerminateMenu:
 
 
 
-class MenuItem(Routine):
+class MenuItem:
     def get_caption(self) -> str:
         raise NotImplementedError()
 
@@ -28,6 +28,10 @@ class MenuItem(Routine):
     class Status(Enum):
         Active = 0
         Hidden = 1
+
+    @abstractmethod
+    def __call__(self):
+        pass
 
 
 def callable_or_value(x):
@@ -48,10 +52,10 @@ class FunctionalMenuItem(MenuItem):
     def get_caption(self):
         return callable_or_value(self.caption)
 
-    def run(self, context):
-        yield Subroutine.ensure(self.method)
+    def __call__(self):
+        yield from self.method()
         if self.terminates_menu:
-            yield Return(TerminateMenu())
+            return TerminateMenu()
 
 
 class ValueMenuItem(MenuItem):
@@ -62,12 +66,13 @@ class ValueMenuItem(MenuItem):
     def get_caption(self) -> str:
         return callable_or_value(self.caption)
 
-    def run(self, context):
+    def __call__(self):
+        yield
         if self.value is not None:
             value = self.value
         else:
             value = self.get_caption()
-        yield Return(TerminateMenu(value))
+        return TerminateMenu(value)
 
 
 class MenuFolder(MenuItem):
@@ -110,32 +115,29 @@ class MenuFolder(MenuItem):
         return Options(content, tuple(buttons)), map
 
 
-    def run(self, context: BotContext):
+    def __call__(self):
         while True:
             options, map = self.build_menu()
             expectations = [SelectedOption(o) for o in options.options]
-            yield options
-            message_id = context.input
-            yield Listen.for_one_of(*expectations)
-            input = context.input
+            message_id = yield options
+            input = yield Listen()
             yield Delete(message_id)
             if not isinstance(input, SelectedOption):
-                yield Return(TerminateMenu())
+                return TerminateMenu()
             if input.value == MenuItem.reload_button_text:
                 continue
             if input.value == MenuItem.back_button_text:
-                yield Return()
+                return
             if input.value == MenuItem.close_button_text:
-                yield Return(TerminateMenu())
+                return TerminateMenu()
             if input.value not in map:
                 continue
 
             item = map[input.value]
             item._is_root = False
-            yield item
-            returned = item.returned_value()
+            returned = yield from item()
             if isinstance(returned, TerminateMenu):
-                yield Return(returned)
+                return returned
             else:
                 continue
 
@@ -145,13 +147,12 @@ class MainMenu(MenuItem):
         self.content = content
 
 
-    def run(self, context):
+    def __call__(self):
         content = deepcopy(self.content)
-        yield content
-        returned = content.returned_value()
+        returned = yield from content()
         if returned is None:
             return None
         if not isinstance(returned, TerminateMenu):
-            raise ValueError('Internal error: MainMenu should always receive TerminateMenu')
-        yield Return(returned.value)
+            raise ValueError(f'Internal error: MainMenu should always receive TerminateMenu, but received {returned}')
+        return returned.value
 

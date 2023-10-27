@@ -1,54 +1,32 @@
 from typing import *
 from enum import Enum
-from kaia.eaglesong.core import Context
 import logging
 import telegram as tg
 import json
 
+
+class TgChannel(Enum):
+    Start = 0
+    Text = 1
+    Callback = 2
+    Timer = 3
+    Feedback = 4
+    Voice = 5
+
 class TgUpdatePackage:
-    class Type(Enum):
-        Start = 0
-        Text = 1
-        Callback = 2
-        Timer = 3
-        Feedback = 4
-        EaglesongFeedback = 5
-
-    def __init__(self, update_type: 'TgUpdatePackage.Type', update, bot):
-        self.update_type = update_type
+    def __init__(self, channel: TgChannel, update):
+        self.channel = channel
         self.update = update
-        self.bot = bot
 
 
-class TgContext(Context):
+class TgContext:
     def __init__(self,
                  bridge,
                  chat_id: Optional[int],
                  ):
         self.bridge = bridge
         self.chat_id = chat_id
-        self.bot = None #type: Optional[tg.Bot]
-        self.update = None #type: Optional[tg.Update]
-        self.update_type = None #type: Optional[TgUpdatePackage.Type]
-        self.exact_input = None
-
-    def set_input(self, input: TgUpdatePackage):
-        self.exact_input = input
-        if isinstance(input, TgUpdatePackage):
-            self.update_type = input.update_type
-            self.update = input.update
-            self.bot = input.bot
-        else: #it happens when input is set via eaglesong internals, e.g. Automaton/Return
-            self.update_type = TgUpdatePackage.Type.EaglesongFeedback
-            self.update = input
-            self.bot = None
-
-    def get_input(self):
-        return self.exact_input
-
-    def get_input_summary(self):
-        return dict(update_type=self.update_type.name, update = self.update)
-
+        self.last_massage_channel = None #type: Optional[TgChannel]
 
 
 class TgCommandFunctionMock:
@@ -62,6 +40,17 @@ class TgCommandFunctionMock:
 class TgCommandMock:
     def __getattr__(self, item):
         return TgCommandFunctionMock(item)
+
+
+class TgFunction:
+    def __init__(self, awaitable_function, *args, **kwargs):
+        self.awaitable_function = awaitable_function
+        self.args = args
+        self.kwargs = kwargs
+
+    async def execute(self):
+        return await self.awaitable_function(*self.args, **self.kwargs)
+
 
 
 class TgCommand:

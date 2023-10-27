@@ -1,48 +1,52 @@
+import os
+import uuid
 from typing import *
-from kaia.eaglesong.core import Routine, ContextTranslator, BotContext, TranslationContext, TranslationFilter, primitives as prim
-from .primitives import TgContext, TgUpdatePackage, TgCommand
-import telegram
-
-import re
-from datetime import datetime
+from kaia.eaglesong.core import BotContext, primitives as prim, Translator, TranslatorInputPackage, TranslatorOutputPackage
+from .primitives import TgContext, TgCommand, TgUpdatePackage, TgChannel, TgFunction
 import telegram as tg
+from kaia.infra import Loc
+
 
 BUTTON_PREFIX = 'button_'
 
-def _get_inner_context_message(outer_context: TgContext):
-    if outer_context.update_type == TgUpdatePackage.Type.Callback:
-        button_id = outer_context.update.callback_query.data
+def _translate_context(context: TgContext):
+    return BotContext(context.chat_id)
+
+def _translate_input(input_pack: TranslatorInputPackage):
+    inner_message = input_pack.outer_input
+    if not isinstance(inner_message, TgUpdatePackage):
+        return inner_message
+    channel = inner_message.channel
+    update = inner_message.update #type: tg.Update
+    if channel == TgChannel.Callback:
+        button_id = update.callback_query.data
         if not button_id.startswith(BUTTON_PREFIX):
-            raise ValueError(f'Bad update: {outer_context.update}')
+            raise ValueError(f'Bad update: {inner_message.update}')
         return prim.SelectedOption(button_id[len(BUTTON_PREFIX):])
-    elif outer_context.update_type == TgUpdatePackage.Type.Start or outer_context.update_type == TgUpdatePackage.Type.Text:
-        return outer_context.update.message.text
-    elif outer_context.update_type == TgUpdatePackage.Type.Timer:
+    elif channel == TgChannel.Start or channel == TgChannel.Text:
+        return update.message.text
+    elif channel == TgChannel.Timer:
         return prim.TimerTick()
-    elif outer_context.update_type == TgUpdatePackage.Type.Feedback:
-        if isinstance(outer_context.update, tg.Message):
-            return outer_context.update.message_id
+    elif channel == TgChannel.Voice:
+        file_id = update.message.voice.file_id
+        file_update = yield TgCommand.mock().get_file(file_id = file_id)
+        file = file_update.update #type: tg.File
+        bytearray_update = yield TgFunction(file.download_as_bytearray)
+        bytearray = bytearray_update.update
+        return prim.Audio(bytearray, None)
+    elif channel == TgChannel.Feedback:
+        if isinstance(inner_message.update, tg.Message):
+            return inner_message.update.message_id
         else:
-            return outer_context.update
-    elif outer_context.update_type == TgUpdatePackage.Type.EaglesongFeedback:
-        return outer_context.update
-    raise ValueError(f'cannot translate context of type {outer_context.update_type}')
-
-
-class TelegramContextTranslator(ContextTranslator):
-    def create_inner_context(self, outer_context):
-        return BotContext(outer_context.chat_id)
-
-    def update_inner_context(self, outer_context: TgContext, inner_context: BotContext):
-        inner_context.input = _get_inner_context_message(outer_context)
-        inner_context.timestamp = datetime.now()
-
+            return inner_message.update
+    raise ValueError(f'cannot translate content in channel {inner_message.channel}')
 
 
 def _get_content_arg(message):
     if isinstance(message, str) or isinstance(message, int) or isinstance(message, float):
         return dict(text=str(message))
     return None
+
 
 def _get_keyboard(options):
     column_count = 3
@@ -60,33 +64,39 @@ def _get_keyboard(options):
     return keyboard
 
 
-def _get_translated_message(context: TgContext, message):
+def _translate_output(output_pack: TranslatorOutputPackage):
+    message = output_pack.inner_output
+    if isinstance(message, TgCommand):
+        return message
+    outer_context = output_pack.outer_context #type: TgContext
     content_arg = _get_content_arg(message)
     if content_arg is not None:
-        return TgCommand.mock().send_message(chat_id=context.chat_id, **content_arg)
+        return TgCommand.mock().send_message(chat_id=outer_context.chat_id, **content_arg)
     if isinstance(message, prim.Options):
         content_arg = _get_content_arg(message.content)
         buttons = _get_keyboard(message.options)
-        return TgCommand.mock().send_message(chat_id = context.chat_id, **content_arg, reply_markup=buttons)
+        return TgCommand.mock().send_message(chat_id = outer_context.chat_id, **content_arg, reply_markup=buttons)
+    if isinstance(message, prim.Audio):
+        uid = str(uuid.uuid4())
+        path = Loc.temp_folder/'telegram_files'/uid
+        os.makedirs(path.parent, exist_ok=True)
+        with open(path, 'wb') as stream:
+            stream.write(message.data)
+        return TgCommand.mock().send_voice(chat_id=outer_context.chat_id, voice=path)
     if isinstance(message, prim.Delete):
-        return TgCommand.mock().delete_message(chat_id = context.chat_id, message_id= message.id)
-    if isinstance(message, prim.IsThinking):
-        return TgCommand.mock().send_chat_action(chat_id = context.chat_id, action=telegram.constants.ChatAction.TYPING)
+        return TgCommand.mock().delete_message(chat_id = outer_context.chat_id, message_id= message.id)
     return message
 
 
-class TelegramMessageTranslator(Routine):
-    def run(self, c: TranslationContext[Any, TgContext]):
-        yield _get_translated_message(c.outer_context, c.inner_message)
-
-
-class TelegramTranslationFilter(TranslationFilter):
+class TelegramTranslator(Translator):
     def __init__(self, inner_subroutine):
-        super(TelegramTranslationFilter, self).__init__(
+        super().__init__(
             inner_subroutine,
-            TelegramContextTranslator(),
-            TelegramMessageTranslator()
+            context_translator=_translate_context,
+            input_generator_translator=_translate_input,
+            output_function_translator=_translate_output,
         )
+
 
 
 

@@ -136,10 +136,4 @@ environment.env
 temp/
 externals/
 data/
-research/rhasspy/config/en/acoustic_model/
 
-research/rhasspy/config/en/base_dictionary.txt
-
-research/rhasspy/config/en/g2p.corpus
-
-research/rhasspy/config/en/g2p.fst

@@ -9,29 +9,38 @@ import os
 from pathlib import Path
 from uuid import uuid4
 from datetime import datetime
+from sqlalchemy import create_engine
 
 
-class SqlConnection(ISqlConnection, IComm):
-    def __init__(self, name: str, memory_mode: bool, database, kwargs):
-        self.name = name
-        self.memory_mode = memory_mode
-        self.database = database
-        self.kwargs = kwargs
-        self.db = None
-        if self.memory_mode:
-            self.db = self._connect()
-
-    def _connect(self):
-        return sqlite3.connect(database=self.database, **self.kwargs)
+class SqliteMemoryConnection(ISqlConnection, IComm):
+    def __init__(self, check_same_thread = False):
+        self.connection = sqlite3.connect(database=':memory:', check_same_thread = check_same_thread)
 
     def open(self):
-        if self.memory_mode:
-            return self.db
-        else:
-            return self._connect()
+        return self.connection
 
     def close(self, db):
-        if not self.memory_mode and db is not None:
+        pass
+
+    def messenger(self, table_name = None) -> SqlMessenger:
+        return SqlMessenger(self, table_name)
+
+    def storage(self, table_name = None) -> SqlStorage:
+        return SqlStorage(self, table_name)
+
+    def engine(self):
+        return create_engine('sqlite://', echo=True)
+
+
+class SqlFileConnection(ISqlConnection, IComm):
+    def __init__(self, database):
+        self.database = database
+
+    def open(self):
+        return sqlite3.connect(database=self.database)
+
+    def close(self, db):
+        if db is not None:
             db.close()
 
     def messenger(self, table_name = None) -> SqlMessenger:
@@ -40,15 +49,14 @@ class SqlConnection(ISqlConnection, IComm):
     def storage(self, table_name = None) -> SqlStorage:
         return SqlStorage(self, table_name)
 
-
-
-
+    def engine(self):
+        return create_engine('sqlite:///'+str(self.database))
 
 
 class Sql:
     @staticmethod
     def memory():
-        return SqlConnection('memory', True, ':memory:', dict(check_same_thread=False))
+        return SqliteMemoryConnection(check_same_thread=False)
 
     @staticmethod
     def file(location=None, reset_if_existed=False):
@@ -59,11 +67,19 @@ class Sql:
                 os.remove(location)
 
         os.makedirs(Path(location).parent, exist_ok=True)
-        return SqlConnection('file', False, location, {})
+        return SqlFileConnection(location)
 
 
     @staticmethod
     def file_timestamp(folder: Path):
         os.makedirs(folder, exist_ok=True)
         path = folder/datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-        return SqlConnection('file', False, path, {})
+        return SqlFileConnection(path)
+
+    @staticmethod
+    def test_file(name: str):
+        path = Loc.temp_folder/'tests'/name
+        os.makedirs(path.parent, exist_ok=True)
+        return Sql.file(path, True)
+
+

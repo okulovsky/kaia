@@ -1,17 +1,24 @@
 from kaia.bro import amenities as am
 from kaia.bro.core import BroAlgorithm, BroAlgorithmPresentation
 from kaia.bro.amenities import conbee
-from zoo.smart_home.dehumidifier.space import Space
-from zoo.smart_home.dehumidifier.decider import decider
+from .space import Space
+from .decider import decider
 from . import mocks
 from .plot import draw
-
+from dataclasses import dataclass
 import os
 
 
-def create_algorithm(space: Space, debug: bool, settings):
+@dataclass
+class DehumidifierSettings:
+    humidity_sensor_id: str
+    dehumidifier_sensor_id: str #This is not a sensor, this is a On/Off unit state!
+    dehumidifier_switch_id: str
 
 
+
+
+def create_algorithm(space: Space, debug: bool, settings: DehumidifierSettings):
     units = [
         am.Timer(space.timestamp, 300 if debug else None),
         am.SettingsReader(),

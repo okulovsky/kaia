@@ -3,7 +3,7 @@ from ....eaglesong import core as eac
 from ..messenger_queue_controller import MessengerQueueController
 from ...core import BroServer, BroClient, Slot, BoolInput, RangeInput
 from yo_fluq_ds import Query
-
+from functools import partial
 
 class BroSkill(menu.MenuFolder):
     def __init__(self, client: BroClient):
@@ -22,14 +22,14 @@ class BroSkill(menu.MenuFolder):
             menu_items.append(item)
         self.items(*menu_items)
 
-    def send_value(self, c, slot, value):
+    def send_value(self, slot, value):
         self.queue_manager.send(slot, value)
         yield eac.Return()
 
-    def free_value(self, c, slot, prompt):
+    def free_value(self, slot, prompt):
         yield prompt
-        yield eac.Listen()
-        self.queue_manager.send(slot, c.input)
+        input = yield eac.Listen()
+        self.queue_manager.send(slot, input)
         yield eac.Return()
 
     def _create_menu_item_for_slot(self, slot: Slot):
@@ -38,13 +38,13 @@ class BroSkill(menu.MenuFolder):
                 f'Set the slot {slot.name} in the space {self.client.space.get_name()}',
                 slot.name,
             ).items(
-                menu.FunctionalMenuItem('True', eac.Subroutine(self.send_value, slot, True), False),
-                menu.FunctionalMenuItem('False', eac.Subroutine(self.send_value, slot, False), False)
+                menu.FunctionalMenuItem('True', partial(self.send_value, slot, True), False),
+                menu.FunctionalMenuItem('False', partial(self.send_value, slot, False), False)
             )
         if isinstance(slot.input, RangeInput):
             return menu.FunctionalMenuItem(
                 slot.name,
-                eac.Subroutine(self.free_value, slot, f'Set the slot {slot.name}, value from {slot.input.min} to {slot.input.max}'),
+                partial(self.free_value, slot, f'Set the slot {slot.name}, value from {slot.input.min} to {slot.input.max}'),
                 False
             )
 

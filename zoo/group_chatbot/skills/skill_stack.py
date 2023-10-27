@@ -1,25 +1,26 @@
 from typing import *
-from kaia.eaglesong.core import Return, RoutineBase, Automaton, Routine, PushdownFilter
+from kaia.eaglesong.core import Return, Automaton, ContextRequest
 
 
-class SkillStack(Routine):
+class SkillStack:
     def __init__(self,
-                 skills: List[RoutineBase]
+                 skills: List[Callable]
                  ):
         self.skills = skills
 
-    def run(self, context):
-        input = context.get_input()
+    def __call__(self):
+        main_input = yield None
+        context = yield ContextRequest()
+
         for skill in self.skills:
-            context.set_input(input)
-            aut = Automaton(RoutineBase.interpretable(skill, PushdownFilter), context)
+            input = main_input
+            aut = Automaton(skill, context)
             handled = False
             while True:
-                result = aut.process()
+                result = aut.process(input)
                 if isinstance(result, Return):
                     break
                 handled = True
-                yield result
+                input = yield result
             if handled:
                 break
-        yield Return()

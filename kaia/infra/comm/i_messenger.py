@@ -26,6 +26,15 @@ class MessengerQuery:
     def query(self, messenger: 'IMessenger') -> List[Message]:
         return messenger.read(self)
 
+    def query_single_or_default(self, messenger: 'IMessenger') -> Optional[Message]:
+        result = self.query(messenger)
+        if len(result)==0:
+            return None
+        if len(result)!=1:
+            raise ValueError(f"Request for id `{self.id}`, tags `{self.tags}`, open `{self.open}` returned {len(result)} tasks, 1 was expected")
+        return result[0]
+
+
     def query_single(self, messenger: 'IMessenger') -> Message:
         result = self.query(messenger)
         if len(result)!=1:

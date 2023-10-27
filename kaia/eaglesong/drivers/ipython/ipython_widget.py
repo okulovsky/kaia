@@ -9,47 +9,36 @@ class IPythonChatWidget:
                  interpreter: IPythonInterpreter,
                  timer=False,
                  warm_up_commands=('/start',),
-                 bot_name=None
+                 bot_name=None,
+                 input_preprocessor = None
                  ):
         self.bot_name = bot_name if bot_name is not None else 'Kaia'
-        self.timer = timer
 
         self.interpreter = interpreter
         self.input_field = widgets.Text()
         self.send_message = widgets.Button(description='Send')
         self.send_message.on_click(self.text_entered)
-        self.timer_label = widgets.Label()
-        self.timer_label.value = ' '
         self.stop_label = widgets.Label()
-        self.is_typing_label = widgets.Label()
         self.chat = widgets.VBox()
-        self.timer_state = 0
+        self.input_preprocessor = input_preprocessor
 
         for command in warm_up_commands:
             self.push(command)
 
-    def on_timer(self):
-        while (True):
-            time.sleep(1)
-            self.push(TimerTick())
-
     def text_entered(self, _):
         message = self.input_field.value
         self.input_field.value = ''
+        if self.input_preprocessor is not None:
+            message = self.input_preprocessor(message)
         self.push(message)
 
     def push(self, message):
-        with threading.Lock():
-            if isinstance(message, TimerTick):
-                self.timer_label.value = '/-\|'[self.timer_state % 4]
-                self.timer_state += 1
-            if self.interpreter.has_exited():
-                return
-            self.interpreter.process(message)
-            panels = self.create_message_panel()
-            self.chat.children = panels
-            self.stop_label.value = '🛑' if self.interpreter.has_exited() else ''
-            self.is_typing_label.value = self.bot_name + ' is typing' if self.interpreter.model.is_typing else ''
+        if self.interpreter.has_exited():
+            return
+        self.interpreter.process(message)
+        panels = self.create_message_panel()
+        self.chat.children = panels
+        self.stop_label.value = '🛑' if self.interpreter.has_exited() else ''
 
     def push_button(self, button):
         self.push(SelectedOption(button.description))
@@ -64,6 +53,11 @@ class IPythonChatWidget:
                 button.on_click(self.push_button)
                 buttons.append(button)
             return widgets.VBox([self.convert_content(content.content), widgets.HBox(buttons)])
+        elif isinstance(content, Audio):
+            return widgets.VBox([
+                widgets.Audio(value = content.data, autoplay = False),
+                widgets.Label(content.text)
+                ])
         elif isinstance(content, SelectedOption) or isinstance(content, TimerTick):
             return None
         else:
@@ -87,18 +81,11 @@ class IPythonChatWidget:
         return panels
 
     def run(self):
-        if self.timer:
-            thread = threading.Thread(target=self.on_timer)
-            thread.start()
         return widgets.VBox([
             widgets.HBox([
                 self.input_field,
                 self.send_message,
                 self.stop_label
-            ]),
-            widgets.HBox([
-                self.timer_label,
-                self.is_typing_label,
             ]),
             self.chat
         ])

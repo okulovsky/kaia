@@ -17,7 +17,9 @@ def draw(df):
 
     max_timestamp = df.timestamp.max()
     df['delta_t'] = (max_timestamp - df.timestamp)
-    df = df.loc[df.delta_t.dt.total_seconds() < 24*60*60].copy()
+    df = df.loc[df.delta_t.dt.total_seconds() < 3*24*60*60].copy()
+
+    df = df.drop_duplicates('timestamp').sort_values('timestamp')
 
     df['hum_on'] = pd.Series(np.where(get_shifter(df.state),df.humidity, None), index=df.index)
     df['hum_off'] = pd.Series(np.where(get_shifter(~df.state),df.humidity, None), index=df.index)

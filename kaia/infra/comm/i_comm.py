@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from .i_messenger import IMessenger
 from .i_storage import IStorage
 
+
 class IComm(ABC):
     @abstractmethod
     def messenger(self) -> IMessenger:
@@ -9,4 +10,8 @@ class IComm(ABC):
 
     @abstractmethod
     def storage(self) -> IStorage:
+        pass
+
+    @abstractmethod
+    def engine(self):
         pass

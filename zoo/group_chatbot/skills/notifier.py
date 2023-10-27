@@ -1,7 +1,7 @@
 from .common_imports import *
 from string import Template
 
-class NotifierSkill(Routine):
+class NotifierSkill:
     def __init__(self,
                  affected_users: List[int],
                  message_template: Template
@@ -9,11 +9,11 @@ class NotifierSkill(Routine):
         self.affected_users = affected_users
         self.message_template = message_template
 
-    def run(self, context: TgContext):
-        update = context.update
+    def __call__(self):
+        update = yield None
 
         if update.effective_user.id not in self.affected_users:
-            yield Return()
+            return
 
         yield TgCommand.mock().send_message(
             chat_id = update.effective_chat.id,

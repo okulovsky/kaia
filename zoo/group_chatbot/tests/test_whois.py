@@ -1,9 +1,6 @@
-from unittest import TestCase
+from zoo.group_chatbot.tests.commons import *
 from zoo.group_chatbot.skills.admin_reply.admin_reply import AdminReplySkill
 from zoo.group_chatbot.skills.admin_reply.whois import Whois
-from kaia.eaglesong.drivers.telegram import TelegramScenario as S
-from kaia.eaglesong.core import Return
-from string import Template
 
 class WhoisTestCase(TestCase):
     def create_skill(self, whois):
@@ -13,7 +10,7 @@ class WhoisTestCase(TestCase):
     def test_wrong_message(self):
         whois = self.create_skill(Whois(Template('Z$use_id')))
         (
-            S(whois)
+            Test(whois)
             .send(S.upd(effective_message___text='B'))
             .check(Return)
             .validate()
@@ -22,7 +19,7 @@ class WhoisTestCase(TestCase):
     def test_wrong_customer(self):
         whois = self.create_skill(Whois(Template('Z$use_id')))
         (
-            S(whois)
+            Test(whois)
             .send(S.upd(effective_message___text='A', effective_user___id=2, effective_message___id=100))
             .check(
                 S.val().send_message(chat_id=1, text='X', reply_to_message_id=100),
@@ -34,7 +31,7 @@ class WhoisTestCase(TestCase):
     def test_no_reply_request(self):
         whois = self.create_skill(Whois(Template('Z$use_id')))
         (
-            S(whois)
+            Test(whois)
             .send(S.upd(effective_message___text='A', effective_user___id=1, effective_message___id=100, effective_message___reply_to_message = None))
             .check(
                 S.val().send_message(chat_id=1, text='Y', reply_to_message_id=100),
@@ -55,7 +52,7 @@ class WhoisTestCase(TestCase):
     def test_correct_request(self):
         whois = self.create_skill(Whois(Template('Z$user_id')))
         (
-            S(whois)
+            Test(whois)
             .send(self.get_msg())
             .check(
                 S.val().send_message(chat_id=1, text='Z3', reply_to_message_id=100),
@@ -71,7 +68,7 @@ class WhoisTestCase(TestCase):
         }
         whois = self.create_skill(Whois(Template('Z$user_id'), Template('U $name V $value'), lists))
         (
-            S(whois)
+            Test(whois)
             .send(self.get_msg())
             .check(
                 S.val().send_message(chat_id=1, text='Z3\nU K V P', reply_to_message_id=100),

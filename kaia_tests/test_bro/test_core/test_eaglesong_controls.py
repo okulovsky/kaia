@@ -3,7 +3,7 @@ from kaia.infra.comm import Sql
 from kaia.bro.core import BroServer
 from kaia.bro.sandbox import SinSpace
 from kaia.bro.amenities.eaglesong import BroSkill
-from kaia.eaglesong.core import Scenario, BotContext, Options, SelectedOption, Delete
+from kaia.eaglesong.core import Scenario, BotContext, Options, SelectedOption, Delete, Automaton
 
 class EaglesongUnitTest(TestCase):
     def test_eaglesong(self):
@@ -18,7 +18,7 @@ class EaglesongUnitTest(TestCase):
         server.run_in_multiprocess(storage, messenger)
 
         skill = BroSkill.generate_skill_for_server(server, storage, messenger)
-        (Scenario(lambda: BotContext(123), skill, printing=Scenario.default_printing)
+        (Scenario(lambda: Automaton(skill, BotContext(123)), printing=Scenario.default_printing)
          .send('/start')
          .check(Options)
          .send(SelectedOption('sin'))
@@ -27,11 +27,11 @@ class EaglesongUnitTest(TestCase):
          .check(Delete, Options)
          .send(SelectedOption('True'))
          .send(SelectedOption('←'))
-         .validate()
+         .preview()
          )
         print(messenger.read())
 
-        (Scenario(lambda: BotContext(123), skill, printing=Scenario.default_printing)
+        (Scenario(lambda: Automaton(skill, BotContext(123)), printing=Scenario.default_printing)
          .send('/start')
          .check(Options)
          .send(SelectedOption('sin'))

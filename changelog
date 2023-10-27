@@ -1,3 +1,8 @@
+1.0.0
+    - eaglesong refactored with better input management (`input = yield Listen()` instead of yield Listen(); input = context.input`)
+    - BrainBox, a web-server-decorator for different models, is introduced
+    - Automatic1111 tryouts are now the part of BrainBox
+    - persona module is introduced, currently contains everything required for voiceovers
 0.4.2
     - Full-fledged testing for telegram skills
     - Group control bot is refactored to Eaglesong, unit tests added

@@ -1,5 +1,5 @@
 from typing import *
-from kaia.eaglesong.core import Return, Routine, Subroutine
+from kaia.eaglesong.core import ContextRequest
 from kaia.eaglesong.drivers.telegram import TgCommand, TgContext
 import telegram as tg
 import logging
@@ -12,7 +12,7 @@ class AdminReplySkillLogic(ABC):
     def run(self, context: TgContext, update: tg.Update):
         pass
 
-class AdminReplySkill(Routine):
+class AdminReplySkill:
     def __init__(self,
                  owner_id: int,
                  initial_message: str,
@@ -27,10 +27,12 @@ class AdminReplySkill(Routine):
         self.logic = logic
 
 
-    def run(self, context: TgContext):
-        update = context.update
+    def __call__(self):
+        update = yield None
+        context = yield ContextRequest()
+
         if update.effective_message.text!=self.initial_message:
-            yield Return()
+            return
         logger.info(f'Entered {type(self.logic)}')
 
         if update.effective_user.id != self.owner_id:
@@ -51,4 +53,5 @@ class AdminReplySkill(Routine):
             return
         logger.info(f'Message OK')
 
-        yield Subroutine(self.logic.run, update)
+        yield from self.logic.run(context, update)
+

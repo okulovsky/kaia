@@ -1,5 +1,5 @@
 from .validators import TgCommandValidatorMock
-from ..primitives import TgUpdatePackage, TgCommand, TgContext
+from ..primitives import TgUpdatePackage, TgCommand, TgChannel
 from .feedback import TelegramReplayGenerator
 from ....core import Scenario
 from yo_fluq_ds import Obj
@@ -33,16 +33,15 @@ def telegram_printing(log):
 class TelegramScenario(Scenario):
     CHAT_ID = 1
 
-    def __init__(self, routine):
+    def __init__(self, automaton_factory):
         super(TelegramScenario, self).__init__(
-            lambda: TgContext(None, 1),
-            routine,
+            automaton_factory,
             printing=telegram_printing,
             feedback_factory=TelegramReplayGenerator()
         )
 
     @staticmethod
-    def upd(update_type: TgUpdatePackage.Type = TgUpdatePackage.Type.Text, **dictionary):
+    def upd(update_type: TgChannel = TgChannel.Text, **dictionary):
         result = Obj()
         dictionary['effective_chat___id'] = TelegramScenario.CHAT_ID
         for key, value in dictionary.items():
@@ -53,7 +52,7 @@ class TelegramScenario(Scenario):
                     subobj[part] = Obj()
                 subobj = subobj[part]
             subobj[path[-1]] = value
-        return TgUpdatePackage(update_type, result, None)
+        return TgUpdatePackage(update_type, result)
 
     @staticmethod
     def val() -> tg.Bot:

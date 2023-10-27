@@ -2,6 +2,7 @@ notebook
 APScheduler
 python-dotenv
 jsonpickle
+sqlalchemy
 
 fastparquet
 pyarrow
@@ -16,4 +17,11 @@ shapely
 
 gradio
 plotly
+flask
 flask-autoindex
+
+rhasspy-nlu
+
+pymorphy3
+
+pyttsx3

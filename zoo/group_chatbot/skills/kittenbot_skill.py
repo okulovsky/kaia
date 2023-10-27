@@ -10,7 +10,7 @@ from zoo.group_chatbot.externals.kittenbot.src.kittenbot.actions import Reply, D
 
 from pathlib import Path
 
-class KittenbotSkill(Routine):
+class KittenbotSkill:
     def __init__(self,
                  bot_id,
                  probability,
@@ -40,13 +40,13 @@ class KittenbotSkill(Routine):
         )
         self.handler = handler
 
-    def run(self, context: TgContext):
-        update = context.update
+    def __call__(self):
+        update = yield None
 
         result = self.handler.handle(update, None)
 
         if result is None:
-            yield Return()
+            return
 
         if isinstance(result, Reply):
             if isinstance(result.content, DocumentReplyContent):
@@ -62,5 +62,3 @@ class KittenbotSkill(Routine):
                         result.content.text,
                         reply_to_message_id=result.reply_to.message_id
                 )
-
-        yield Return()

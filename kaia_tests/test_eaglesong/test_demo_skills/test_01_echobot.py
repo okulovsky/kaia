@@ -6,7 +6,7 @@ class Demo0TestCase(TestCase):
         (
             S(bot)
             .send('/start')
-            .check(lambda z: z.startswith('Hello. Your user_id is 123'))
+            .check(lambda z: z.startswith('Say anything and I will repeat.'))
             .send('abc')
             .check('abc')
             .validate()

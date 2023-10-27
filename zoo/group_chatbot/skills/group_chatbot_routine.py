@@ -1,15 +1,17 @@
-from kaia.eaglesong.core import Routine, RoutineBase, Terminate
+from typing import *
+from kaia.eaglesong.core import Terminate, ContextRequest
 from kaia.eaglesong.drivers.telegram import TgContext
 
-class GroupChatbotRoutine(Routine):
+class GroupChatbotRoutine:
     def __init__(self,
                  group_chat_id: int,
-                 group_skill: RoutineBase
+                 group_skill: Callable
                  ):
         self.group_chat_id = group_chat_id
         self.group_skill = group_skill
 
-    def run(self, context: TgContext):
+    def __call__(self):
+        context = yield ContextRequest()
         if context.chat_id != self.group_chat_id:
-            yield Terminate('Unauthorized')
-        yield self.group_skill
+            raise Terminate('Unauthorized')
+        yield from self.group_skill()

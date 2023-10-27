@@ -1,10 +1,11 @@
+import time
 from unittest import TestCase
 from kaia.infra.comm import Sql
 
 class StorageTestCase(TestCase):
     def test_storage(self):
         for sql in [Sql.memory(), Sql.file()]:
-            with self.subTest(sql.name):
+            with self.subTest(type(sql).__name__):
                 storage = sql.storage()
                 for i in range(5):
                     storage.save('', i)
@@ -24,7 +25,7 @@ class StorageTestCase(TestCase):
             storage.save('', i)
         updates = storage.load_update()
         self.assertListEqual(list(range(5)), [u.value for u in updates])
-
+        time.sleep(0.1)
         for i in range(10,13):
             storage.save('', i)
         updates_1 = storage.load_update(last_update_id=updates[-1].id)

@@ -57,9 +57,13 @@ class Deployment:
         return ['docker','login',self.docker_url,'--username',self.docker_username,'--password',self.docker_password]
 
     def _push(self, version):
-        subprocess.call(['docker','tag',f'kaia:{version}',f'{self.docker_url}/kaia:latest'])
-        subprocess.call(self._get_login())
-        subprocess.call(['docker','push',f'{self.docker_url}/kaia:latest'])
+        if subprocess.call(['docker','tag',f'kaia:{version}',f'{self.docker_url}/kaia:latest']) != 0:
+            raise ValueError()
+        if subprocess.call(self._get_login()) != 0:
+            raise ValueError()
+        if subprocess.call(['docker','push',f'{self.docker_url}/kaia:latest']) != 0:
+            raise ValueError()
+
 
     def _ssh(self):
         return [
@@ -121,8 +125,8 @@ class Deployment:
         return args
 
     def run_remote(self, version):
-        self.kill_remote()
         self._push(version)
+        self.kill_remote()
         self._remote_pull()
         subprocess.call(self._ssh()+self._get_run(f'{self.docker_url}/kaia:latest'))
 
@@ -132,8 +136,6 @@ class Deployment:
 DOCKERFILE_TEMPLATE = '''FROM python:{python_version}
 
 {install_libraries}
-
-RUN pip install pymorphy3
 
 COPY ./kaia /kaia
 

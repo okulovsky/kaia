@@ -1,0 +1,1 @@
+from .automatic1111 import Automatic1111

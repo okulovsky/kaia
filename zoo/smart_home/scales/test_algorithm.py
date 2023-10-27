@@ -44,7 +44,3 @@ class ScalesTestCase(TestCase):
         log = server.last_track['scales']
         ldf = pd.DataFrame([c.__dict__ for c in log])
         print(ldf)
-
-    def test_t(self):
-        f = create_test
-        print(type(f).__name__)
