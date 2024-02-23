@@ -25,7 +25,7 @@ class SettingsHolder:
 settings = SettingsHolder()
 
 
-def debug_tts(text, voice):
+def debug_tts(text, voice, count):
     path = settings.current.tortoise_tts_path/'tortoise/voices'/voice
     file = list(path.glob('*.wav'))[0]
     fname = str(uuid4())+".wav"
@@ -40,14 +40,14 @@ class RealTTS:
     def __init__(self, tts):
         self.tts = tts
 
-    def _generate(self, text, voice):
+    def _generate(self, text, voice, count):
         from utils.audio import load_voices
         voice_sel = [voice]
         voice_samples, conditioning_latents = load_voices(voice_sel)
 
         gen, dbg_state = self.tts.tts_with_preset(
             text,
-            k=3,
+            k=count,
             voice_samples=voice_samples,
             conditioning_latents=conditioning_latents,
             preset='fast',
@@ -60,9 +60,9 @@ class RealTTS:
             gen = [gen]
         return gen
 
-    def simple(self, text, voice):
+    def simple(self, text, voice, count):
         from torchaudio import save
-        gen = self._generate(text, voice)
+        gen = self._generate(text, voice, count)
         fnames = []
         for g in gen:
             fname = str(uuid4()) + ".wav"
@@ -70,12 +70,12 @@ class RealTTS:
             fnames.append(fname)
         return fnames
 
-    def alignment(self, text, voice):
+    def alignment(self, text, voice, count):
         from utils.wav2vec_alignment import Wav2VecAlignment
         import torch
 
         alignment = Wav2VecAlignment()
-        gen = self._generate(text, voice)
+        gen = self._generate(text, voice, count)
         fnames = []
         for g in gen:
             fname = str(uuid4()) + ".wav.bin"
@@ -87,7 +87,7 @@ class RealTTS:
         return fnames
 
 
-app = flask.Flask("tortoise-tts-web-server")
+app = flask.Flask("tortoise-tts-gui-server")
 
 @app.route('/exit', methods=['POST'])
 def exit():
@@ -101,7 +101,8 @@ def _run(method):
         data = flask.request.json
         voice = data['voice']
         text = data['text']
-        result = method(text, voice)
+        count = int(data['count'])
+        result = method(text, voice, count)
         js = flask.jsonify(result)
     except:
         return flask.jsonify(dict(_exception=traceback.format_exc()))

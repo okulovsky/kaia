@@ -1,39 +1,49 @@
 from typing import *
 import subprocess
 from pathlib import Path
-from ...core import IDecider
+from ..core import IDecider
 from IPython.display import HTML
 import requests
 import time
 from copy import copy
+from dataclasses import dataclass, field
+from kaia.infra import Loc
+
+@dataclass
+class OobaboogaSettings:
+    environment = 'oobabooga'
+    oobabooga_path = Loc.root_folder.parent/'text-generation-webui'
+    exec_path = Loc.root_folder.parent/'text-generation-webui'/('start_windows.bat' if Loc.is_windows else 'start_linux.sh')
+    port = 7860
+    api_port = 5000
+    default_model_name = '4bit_WizardLM-13B-Uncensored-4bit-128g'
+    max_boot_time_in_seconds: int = 20
+    request_timeout_in_seconds: int = 1000
+    default_request: Dict = field(default_factory=lambda:DEFAULT_REQUEST)
+
+    @property
+    def url(self):
+        return f'http://127.0.0.1:{self.api_port}'
+
+    @property
+    def gradio_url(self):
+        return f'http://127.0.0.1:{self.port}'
 
 
 class Oobabooga(IDecider):
-    def __init__(self,
-                 ooga_path: Path,
-                 exec_path: Path,
-                 port: int,
-                 api_port: int,
-                 model_name: str,
-                 boot_time_in_seconds: int = 20,
-                 request_timeout_in_seconds: int = 1000,
-                 ):
-        self.ooga_path = ooga_path
-        self.exec_path = exec_path
-        self.model_name = model_name
-        self.url = f'http://127.0.0.1:{api_port}'
-        self.gradio_url = f'http://127.0.0.1:{port}'
-        self.boot_time_in_seconds = boot_time_in_seconds
+    def __init__(self, settings: OobaboogaSettings):
+        self.settings = settings
         self.process = None #type: Optional[subprocess.Popen]
-        self.default_settings = DEFAULT_SETTINGS
-        self.request_timeout_in_seconds = request_timeout_in_seconds
 
 
+    def warmup(self, parameters: str):
+        model = parameters
+        if model is None:
+            model = self.settings.default_model_name
 
-    def warmup(self):
-        response = HTML(f'<a href={self.gradio_url} target=_blank>Open Oobabooga in browser</a>')
+        response = HTML(f'<a href={self.settings.gradio_url} target=_blank>Open Oobabooga in browser</a>')
         try:
-            reply = requests.get(self.url)
+            reply = requests.get(self.settings.url)
             print(reply.text)
             return response
         except:
@@ -41,18 +51,23 @@ class Oobabooga(IDecider):
 
         self.process = subprocess.Popen(
             [
-                self.exec_path,
-                '--api'
+                self.settings.exec_path,
+                '--listen',
+                '--api',
+                '--extensions',
+                'openai',
+                '--model',
+                model
             ],
             creationflags=subprocess.CREATE_NEW_CONSOLE,
-            cwd=self.ooga_path
+            cwd=self.settings.oobabooga_path
         )
 
         ok = False
-        for _ in range(self.boot_time_in_seconds):
+        for _ in range(self.settings.max_boot_time_in_seconds):
             time.sleep(1)
             try:
-                requests.get(self.url)
+                requests.get(self.settings.url)
                 ok = True
                 break
             except:
@@ -61,35 +76,37 @@ class Oobabooga(IDecider):
         if not ok:
             raise ValueError("Seems like Oobabooga server has failed to boot up")
 
-        reply = requests.post(self.url+'/api/v1/model', json={'action': 'load', 'model_name': self.model_name })
+        requested_model = parameters if parameters is not None else self.settings.default_model_name
+
+        reply = requests.post(self.settings.url+'/api/v1/model', json={'action': 'load', 'model_name': requested_model })
         if reply.status_code != 200:
             raise ValueError(f"load model request returned {reply.status_code}\n{reply.text}")
 
         model_name = reply.json().get('result', {}).get('model_name', '')
-        if model_name!=self.model_name:
-            raise ValueError(f'load model returned `{model_name}`, but `{self.model_name}` was expected\n{reply.json()}')
+        if model_name!=requested_model:
+            raise ValueError(f'load model returned `{model_name}`, but `{requested_model}` was expected\n{reply.json()}')
 
         return response
 
 
     def run(self, prompt, **kwargs):
-        request = copy(self.default_settings)
+        request = copy(self.settings.default_request)
         for key, value in kwargs.items():
             request[key] = value
         request['prompt'] = prompt
 
-        response = requests.post(self.url+'/api/v1/generate', json=request)
+        response = requests.post(self.settings.url+'/api/v1/generate', json=request)
         if response.status_code != 200:
             raise ValueError(f'Status code {response.status_code}, value\n{response.text}')
         return response.json()['results'][0]['text']
 
 
-    def cooldown(self):
+    def cooldown(self, parameters: str):
         if self.process is not None:
             self.process.terminate()
 
 
-DEFAULT_SETTINGS = {
+DEFAULT_REQUEST = {
         'prompt': None,
         'max_new_tokens': 250,
         'auto_max_new_tokens': False,
