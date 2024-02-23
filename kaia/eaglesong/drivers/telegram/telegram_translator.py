@@ -77,12 +77,15 @@ def _translate_output(output_pack: TranslatorOutputPackage):
         buttons = _get_keyboard(message.options)
         return TgCommand.mock().send_message(chat_id = outer_context.chat_id, **content_arg, reply_markup=buttons)
     if isinstance(message, prim.Audio):
-        uid = str(uuid.uuid4())
-        path = Loc.temp_folder/'telegram_files'/uid
-        os.makedirs(path.parent, exist_ok=True)
-        with open(path, 'wb') as stream:
-            stream.write(message.data)
-        return TgCommand.mock().send_voice(chat_id=outer_context.chat_id, voice=path)
+        with Loc.create_temp_file('telegram_files', 'wav') as path:
+            with open(path, 'wb') as stream:
+                stream.write(message.data)
+            return TgCommand.mock().send_voice(chat_id=outer_context.chat_id, voice=path)
+    elif isinstance(message, prim.Image):
+        with Loc.create_temp_file('telegram_files', 'png') as path:
+            with open(path, 'wb') as stream:
+                stream.write(message.data)
+            return TgCommand.mock().send_photo(chat_id=outer_context.chat_id, photo=open(path,'rb'))
     if isinstance(message, prim.Delete):
         return TgCommand.mock().delete_message(chat_id = outer_context.chat_id, message_id= message.id)
     return message

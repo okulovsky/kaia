@@ -6,11 +6,12 @@ import time
 from dataclasses import dataclass
 
 class Stage:
-    def __init__(self, prompt, wait_before: Optional[float], label: Optional[str]):
+    def __init__(self, prompt, wait_before: Optional[float], label: Optional[str], act_before: Optional[Callable]):
         self.wait_before = wait_before
         self.prompt = prompt
         self.label = label
         self.expectations = None #type: Optional[List[Callable]]
+        self.act_before = act_before
 
 @dataclass
 class LogItem:
@@ -34,17 +35,23 @@ class Scenario:
 
         self.stages = []  # type: List[Stage]
         self.wait_on_next_stage = None
+        self.act_on_next_stage = None
 
         self.stashed_values = {}
         self.log = [] #type: List[LogItem]
 
     def send(self, obj, label = None) -> 'Scenario':
-        self.stages.append(Stage(obj, self.wait_on_next_stage, label))
+        self.stages.append(Stage(obj, self.wait_on_next_stage, label, self.act_on_next_stage))
         self.wait_on_next_stage = None
+        self.act_on_next_stage = None
         return self
 
     def wait(self, value) ->'Scenario':
         self.wait_on_next_stage = value
+        return self
+
+    def act(self, callable: Callable) -> 'Scenario':
+        self.act_on_next_stage = callable
         return self
 
     @staticmethod
@@ -66,8 +73,6 @@ class Scenario:
         self.stages[-1].expectations = list(fixed_checkers)
         return self
 
-    def preview(self):
-        return self.validate(ignore_errors=True)
 
     def _validate_stage(self, stage_index: int, s: Stage, response: List):
         if s.expectations is not None:
@@ -92,6 +97,9 @@ class Scenario:
         for i, s in enumerate(self.stages):
             if s.wait_before is not None:
                 time.sleep(s.wait_before)
+            if s.act_before is not None:
+                s.act_before()
+
             interpreter.process(s.prompt)
             err = self._validate_stage(i,s,interpreter.current_log)
             item = LogItem(s.label, s.prompt, interpreter.current_log)
@@ -112,6 +120,11 @@ class Scenario:
         if self.printing is not None:
             self.printing(self.log)
         return self
+
+
+    def preview(self):
+        return self.validate(ignore_errors=True)
+
 
     @staticmethod
     def default_printing(log: List[LogItem]):

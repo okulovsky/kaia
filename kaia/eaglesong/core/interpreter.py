@@ -56,7 +56,7 @@ class Interpreter:
                 filter = candidate_filter
                 break
         if filter is None:
-            raise NotImplementedError(f'Missing handler for the response {response} on the input {item}')
+            raise NotImplementedError(f'Missing handler for the response {type(response)} on the input {item}')
         return response, filter
 
     async def _async_process(self, item):
