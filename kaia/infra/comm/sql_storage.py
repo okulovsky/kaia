@@ -1,9 +1,9 @@
 from typing import *
 from .i_storage import IStorage, StorageRecord
 from .i_sql_connection import ISqlConnection
-import jsonpickle
 from datetime import datetime
 from functools import partial
+import pickle
 
 
 class SqlStorage(IStorage):
@@ -15,7 +15,7 @@ class SqlStorage(IStorage):
         self.connection.perform(self._initialize)
 
     def _initialize(self, cursor):
-        cursor.execute(f'''CREATE TABLE IF NOT EXISTS {self.table_name} (id integer primary key, timestamp timestamp, key text, value text)''')
+        cursor.execute(f'''CREATE TABLE IF NOT EXISTS {self.table_name} (id integer primary key, timestamp timestamp, key text, value varbinary)''')
 
     def _save(self, cursor, key, value):
         cursor.execute(f'insert into {self.table_name} values(?, ?, ?, ?)',
@@ -23,7 +23,7 @@ class SqlStorage(IStorage):
                        )
 
     def save(self, key: str, value: Any):
-        value = jsonpickle.dumps(value)
+        value = pickle.dumps(value)
         self.connection.perform(partial(self._save, key=key, value=value))
 
     def _load(self, cursor, key, amount, last_update_id, last_update_timestamp):
@@ -61,7 +61,7 @@ class SqlStorage(IStorage):
         result = self.connection.perform(partial(self._load, key=key, amount=amount, last_update_id=last_update_id, last_update_timestamp=last_update_timestamp))
         if historical_order:
             result = reversed(result)
-        return [StorageRecord(s[0], s[1], jsonpickle.loads(s[2])) for s in result]
+        return [StorageRecord(s[0], s[1], pickle.loads(s[2])) for s in result]
 
 
 

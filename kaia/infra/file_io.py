@@ -1,8 +1,15 @@
+from typing import *
 import pickle
 import json
-import jsonpickle
+from pathlib import Path
+import os
 
 class FileIO:
+    @staticmethod
+    def read_bytes(filename):
+        with open(filename, 'rb') as file:
+            return file.read()
+
     @staticmethod
     def read_pickle(filename):
         with open(filename,'rb') as file:
@@ -15,14 +22,10 @@ class FileIO:
             return result
 
     @staticmethod
-    def read_text(filename):
-        with open(filename,'r') as file:
+    def read_text(filename, encoding='utf-8'):
+        with open(filename,'r', encoding=encoding) as file:
             return file.read()
 
-    @staticmethod
-    def read_jsonpickle(filename):
-        with open(filename,'r') as file:
-            return jsonpickle.loads(file.read())
 
     @staticmethod
     def write_pickle(data, filename):
@@ -39,7 +42,17 @@ class FileIO:
         with open(filename,'w') as file:
             file.write(data)
 
+
     @staticmethod
-    def write_jsonpickle(data, filename):
-        with open(filename,'w') as file:
-            file.write(jsonpickle.dumps(data))
+    def folder(location: Union[Path, str], pattern: str = '*'):
+        if isinstance(location, str):
+            location = Path(location)
+        elif isinstance(location, Path):
+            pass
+        else:
+            raise ValueError('Location should be either str or Path, but was {0}, {1}'.format(type(location), location))
+
+        if not os.path.isdir(location):
+            raise ValueError('{0} is not a directory'.format(location))
+
+        return location.glob(pattern)

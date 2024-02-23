@@ -5,7 +5,7 @@ import dateutil.parser
 from .i_messenger import *
 from .i_sql_connection import ISqlConnection
 from uuid import uuid4
-import jsonpickle
+import pickle
 from functools import partial
 
 
@@ -40,7 +40,7 @@ class SqlMessenger(IMessenger):
 
     def _initialize(self, cursor):
         tags = ', '.join(f'tag_{i} text' for i in range(self.tag_count))
-        cursor.execute(f'''CREATE TABLE IF NOT EXISTS {self.table_name} (id text, payload text, date_posted timestamp, open int, result text, tag_count int, {tags})''')
+        cursor.execute(f'''CREATE TABLE IF NOT EXISTS {self.table_name} (id text, payload varbinary, date_posted timestamp, open int, result varbinary, tag_count int, {tags})''')
 
     def _add(self, cursor, payload, tags):
         id = str(uuid4())
@@ -53,10 +53,10 @@ class SqlMessenger(IMessenger):
             f'insert into {self.table_name} values ({qlist})',
             (
                 id,
-                jsonpickle.dumps(payload),
+                pickle.dumps(payload),
                 datetime.now(),
                 1,
-                'null',
+                pickle.dumps(None),
                 len(tags),
                 *all_tags,
             ))
@@ -101,10 +101,10 @@ class SqlMessenger(IMessenger):
                 tags.append(row[f'tag_{i}'])
             task = Message(
                 row['id'],
-                jsonpickle.loads(row['payload']),
+                pickle.loads(row['payload']),
                 row['date_posted'],
                 row['open'],
-                jsonpickle.loads(row['result']),
+                pickle.loads(row['result']),
                 tags
             )
             if isinstance(task.date_posted, str): #TODO: why does this happen??
@@ -121,7 +121,7 @@ class SqlMessenger(IMessenger):
     def _close(self, cursor, id, result):
         cursor.execute(f'update {self.table_name} set open=?, result=? where id=?', (
             0,
-            jsonpickle.dumps(result),
+            pickle.dumps(result),
             id
         ))
 

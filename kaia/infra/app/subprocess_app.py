@@ -4,7 +4,6 @@ from threading import Thread
 import time
 import sys
 import traceback
-import jsonpickle
 import os
 
 entry = None
@@ -32,7 +31,7 @@ if __name__ == '__main__':
     if msg is None:
         raise ValueError('No initialization message is available')
     try:
-        entry = jsonpickle.loads(msg.payload)
+        entry = msg.payload
     except:
         rep = traceback.format_exc()
         messenger.close(msg.id, rep)

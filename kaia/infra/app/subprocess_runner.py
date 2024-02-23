@@ -1,8 +1,6 @@
 from typing import *
 import time
 
-import jsonpickle
-
 from .runner import IRunner
 import subprocess
 from ..comm import Sql
@@ -24,8 +22,7 @@ class SubprocessRunner(IRunner):
 
     def run(self):
         messenger = Sql.file(get_filename()).messenger()
-        src = jsonpickle.dumps(self.entry)
-        self.process_id = messenger.add(src, 'up')
+        self.process_id = messenger.add(self.entry, 'up')
         self.process = subprocess.Popen(
             [sys.executable, '-m', 'kaia.infra.app.subprocess_app', self.process_id],
         )

@@ -1,4 +1,6 @@
+from typing import *
 import pathlib
+import shutil
 import uuid
 from pathlib import Path
 import dotenv
@@ -7,15 +9,35 @@ import sys
 from uuid import uuid4
 
 class _TempFile:
-    def __init__(self, path: Path):
+    def __init__(self, path: Path, dont_delete: bool):
         self.path = path
+        self.dont_delete = dont_delete
 
     def __enter__(self):
         return self.path
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.path.is_file():
-            os.unlink(self.path)
+        if not self.dont_delete:
+            if self.path.is_file():
+                os.unlink(self.path)
+
+
+class _TempFolder:
+    def __init__(self, path: Path, dont_delete: bool = False):
+        self.path = path
+        self.dont_delete = dont_delete
+
+    def __enter__(self):
+        if self.path.is_dir():
+            shutil.rmtree(self.path)
+        os.makedirs(self.path)
+        return self.path
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if not self.dont_delete and self.path.is_dir():
+            shutil.rmtree(self.path, ignore_errors=True)
+
+
 
 
 class _Loc:
@@ -59,9 +81,29 @@ class _Loc:
     def test_location(self, name):
         return self.test_folder/name/str(uuid.uuid4())
 
-    def temp_file(self, subfolder: str, extension: str) -> _TempFile:
+    def create_temp_file(self, subfolder: str, extension: str, dont_delete: bool = False) -> _TempFile:
         path = self.temp_folder/subfolder/f'{uuid4()}.{extension}'
         os.makedirs(path.parent, exist_ok=True)
-        return _TempFile(path)
+        return _TempFile(path, dont_delete)
+
+    def create_temp_folder(self, subfolder: str, dont_delete: bool = False) -> _TempFolder:
+        return _TempFolder(self.temp_folder/subfolder, dont_delete)
+
+    def wsl_translate(self, path: Union[str, Path]):
+        if self.is_windows:
+            import win32com.client as com
+            parent_folder = str(path.parent)
+            fso = com.Dispatch("Scripting.FileSystemObject")
+            folder = fso.GetFolder(parent_folder)
+            result = folder.path
+            result = result.replace('\\','/')
+            result = result+'/'+path.name
+            result = '/mnt/'+result[0].lower()+'/'+result[3:]
+            return result
+        raise ValueError("Only makes sense under Windows")
+
+
+
+
 
 Loc = _Loc()
