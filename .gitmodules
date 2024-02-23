@@ -1,3 +1,3 @@
 [submodule "zoo/group_chatbot/externals/kittenbot"]
 	path = zoo/group_chatbot/externals/kittenbot
-	url = git@github.com:GioTheGreat/kittenbot.git
+	url = https://github.com/GioTheGreat/kittenbot.git
