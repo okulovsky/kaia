@@ -1,0 +1,85 @@
+from unittest import TestCase
+
+import pandas as pd
+
+from kaia.brainbox import BrainBoxTask, BrainBoxTestApi
+from kaia.avatar.dub.updater import CutSpec, DubbingFragment
+from kaia.brainbox.deciders.fake_dub_decider import DubCollector, FakeDubDecider, FakeDubCollectorProcessor
+from kaia.brainbox import MediaLibrary
+from kaia.infra import Loc
+
+import json
+
+
+
+
+
+class DubCollectorTestCase(TestCase):
+    def test_dub_collector(self):
+        Sentence1 = 'start first timer'
+        #            01234567890123456
+        Sentence2 = 'cancel the timer'
+        #            0123456789012345
+
+        spec = {
+            'id_1': [
+                CutSpec(0, 6, DubbingFragment('Test1', 'start', False)),
+                CutSpec(12, 5, DubbingFragment('Test1', 'timer', False)),
+            ],
+            'id_2': [
+                CutSpec(0, 16, DubbingFragment('Test2', 'cancel the timer', False))
+            ]
+        }
+
+        tasks = [
+            BrainBoxTask(
+                id='test-1',
+                decider='dub',
+                arguments=dict(voice='test', text=Sentence1),
+            ),
+            BrainBoxTask(
+                id='test-2',
+                decider='dub',
+                arguments=dict(voice='test', text=Sentence2)
+            ),
+            BrainBoxTask(
+                id='collect',
+                decider='collect',
+                arguments=dict(spec=spec),
+                dependencies=dict(
+                    id_1 = 'test-1',
+                    id_2 = 'test-2'
+                )
+            )
+        ]
+
+        with Loc.create_temp_folder('tests/dub_collector') as path:
+            jobs, _ = BrainBoxTestApi.execute_serverless(
+                tasks,
+                dict(dub=FakeDubDecider(2), collect=DubCollector(FakeDubCollectorProcessor())),
+                path
+            )
+            if not jobs[-1].success:
+                print(jobs[-1].error)
+            result = jobs[-1].result
+            result = MediaLibrary.read(path/result)
+
+            if len(result.errors)!=0:
+                print(result.errors)
+            self.assertEqual(0, len(result.errors))
+
+            df = pd.DataFrame([json.loads(r.get_content()) for r in result.records])
+            pd.options.display.width = None
+            print(list(df.text))
+            print(list(df.option_index))
+            self.assertListEqual(
+                ['start ', 'start ', 'timer', 'timer', 'cancel the timer', 'cancel the timer'],
+                list(df.text)
+            )
+            self.assertListEqual(
+                [0, 1, 0, 1, 0, 1],
+                list(df.option_index)
+            )
+
+
+
