@@ -82,6 +82,9 @@ class Slot(Generic[TType]):
     def name(self):
         return self._name
 
+    def length(self):
+        return len(self._history)
+
     @property
     def last_value(self) -> Optional[TType]:
         value = None

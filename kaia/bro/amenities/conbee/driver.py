@@ -25,6 +25,7 @@ class Driver:
             return Driver._current
         url = os.environ['CONBEE_URL']
         password = os.environ['CONBEE_PASSWORD']
+        print(url)
         Driver._current = Driver(url, password)
         return Driver._current
 
@@ -53,18 +54,23 @@ class Driver:
             lights=self._raw_lights_data()
         )
 
-
+    #TODO: remove. Use act instead
     def execute_switch_command(self, switch_key, command: bool):
         rq_address = f'{self.address}/api/{self.password}/lights/{switch_key}/state'
         response = requests.put(rq_address,json={'on':command})
         return response
         #print(response.text)
 
-    def act(self, switch_key, params):
-        rq_address = f'{self.address}/api/{self.password}/lights/{switch_key}/state'
-        response = requests.put(rq_address, json=params)
-        return response
-        # print(response.text)
+    def act(self,
+            section_key: str,
+            device_key: str,
+            property_endpoint: str,
+            property_name: str,
+            property_value: Any):
+        rq_address = f'{self.address}/api/{self.password}/{section_key}/{device_key}/{property_endpoint}'
+        response = requests.put(rq_address, json={property_name:property_value})
+        return response.text
+
 
 
 class Reader:

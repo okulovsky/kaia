@@ -4,7 +4,7 @@ from typing import *
 import pandas as pd
 
 from ....infra.comm import IMessenger, Message
-from ...core import Slot, RangeInput, BoolInput
+from ...core import Slot, RangeInput, SetInput
 from ..messenger_queue_controller import MessengerQueueController
 import gradio as gr
 import time
@@ -47,9 +47,9 @@ class Configurer:
                 label=label,
                 visible=False
             )
-        if isinstance(slot.input, BoolInput):
+        if isinstance(slot.input, SetInput):
             return gr.Radio(
-                choices=[True, False],
+                choices=slot.input.values,
                 label = label,
                 visible = False
             )
@@ -59,7 +59,7 @@ class Configurer:
         update = gr.Button('Update', visible=False)
         cancel = gr.Button('Cancel', visible=False)
         sliders = []
-        self.controlled_slots = []
+        self.controlled_slots = [] #type: List[Slot]
         for slot in self.slots:
             control = self._create_controls(slot)
             if control is not None:
@@ -72,21 +72,30 @@ class Configurer:
         cancel.click(self._cm_cancel, inputs=[cancel], outputs = all_settings)
 
 
-    def _cm_configure(self, *args):
-        current = self.pull()
-        if len(current)==0:
-            return self._reply(True, False, False)
-        current = current[-1]
-        values = [current[slot.name] for slot in self.controlled_slots]
-        return self._reply(False, True, True, controls_values=values)
-
-    def _cm_update(self, *values):
+    def _def_current_values_for_control_slots(self):
         current = self.pull()
         if len(current) == 0:
-            return self._reply(True, False, False)
+            return None
         current = current[-1]
+        values = []
+        for slot in self.controlled_slots:
+            if slot.input.current_value_from is not None:
+                values.append(current[slot.input.current_value_from])
+            else:
+                values.append(current[slot.name])
+        return values
+
+    def _cm_configure(self, *args):
+        values = self._def_current_values_for_control_slots()
+        if values is None:
+            return self._reply(True,False,False)
+        return self._reply(False, True, True, controls_values=values)
+
+
+    def _cm_update(self, *values):
+        current_values = self._def_current_values_for_control_slots()
         for i, slot in enumerate(self.controlled_slots):
-            if values[i] == current[slot.name]:
+            if values[i] == current_values[i]:
                 continue
             if values[i] is None:
                 continue

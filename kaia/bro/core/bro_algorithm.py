@@ -4,10 +4,28 @@ from .slot import Slot, Tracker
 from .unit import IUnit, GenericUnit
 from ...infra.comm import IStorage, IMessenger, MessengerQuery
 import pandas as pd
+from warnings import warn
+import traceback
+from abc import ABC, abstractmethod
+from enum import Enum
+
+class PlotMethod:
+    class Type(Enum):
+        Plotly = 0
+        Matplotlib = 1
+
+    @abstractmethod
+    def draw(self, df: pd.DataFrame, name: str):
+        pass
+
+    def plot_type(self):
+        return PlotMethod.Type.Plotly
+
+
 
 class BroAlgorithmPresentation:
     def __init__(self,
-                 plot_function: Optional[Callable[[pd.DataFrame], Any]] = None,
+                 plot_function: Optional[PlotMethod] = None,
                  data_update_in_milliseconds: Optional[int] = 1000,
                  plot_update_in_milliseconds: Optional[int] = 10000
                  ):

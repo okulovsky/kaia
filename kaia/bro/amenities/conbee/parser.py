@@ -6,14 +6,28 @@ import json
 class ParserRule:
     def __init__(self,
                  slot: Union[str, Slot],
-                 section,
-                 uid,
-                 transform
+                 section: Optional[str],
+                 uid: str,
+                 transform: Optional[Callable]
                  ):
         self.name = Slot.slotname(slot)
         self.section = section
         self.uid = uid
         self.transform = transform
+
+    def find_match(self, data):
+        for section_key, section_data in data.items():
+            for device_key, data in section_data.items():
+                if self.section is not None and self.section != section_key:
+                    continue
+                if data.get('uniqueid', '') != self.uid:
+                    continue
+                return dict(section_key = section_key, device_key = device_key, data = data)
+        else:
+            return None
+
+
+
 
 class Parser:
     def __init__(self,
@@ -22,7 +36,7 @@ class Parser:
                  ):
         self.source_slot = Slot.slotname(source_slot)
         self.last_update_slot = Slot.slotname(last_update_slot)
-        self.rules = []
+        self.rules = [] #type: List[ParserRule]
 
     def add_rule(self,
                  name: Union[str, Slot],
@@ -35,15 +49,12 @@ class Parser:
 
     def __call__(self, space: ISpace):
         all_data = space.get_slot(self.source_slot).current_value
-        for section_key, section_data in all_data.items():
-            for data in section_data.values():
-                for rule in self.rules:
-                    if rule.section!=section_key:
-                        continue
-                    if data.get('uniqueid', '') != rule.uid:
-                        continue
-                    if rule.transform is not None:
-                        space.get_slot(rule.name).current_value = rule.transform(data)
+        for rule in self.rules:
+            match = rule.find_match(all_data)
+            if match is not None:
+                space.get_slot(rule.name).current_value = rule.transform(match['data'])
+
+
 
 
 

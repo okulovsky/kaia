@@ -1,9 +1,7 @@
-from typing import *
 from .slot import Slot
 from yo_fluq_ds import *
 import pandas as pd
 from ...infra.comm import IStorage
-from collections import OrderedDict
 
 
 
@@ -15,7 +13,8 @@ class ISpace:
     def __post_init__(self):
         fields = vars(self)
         for k, v in fields.items():
-            v._name = k
+            if isinstance(v, Slot):
+                v._name = k
 
 
     def is_loggable(self):
@@ -107,8 +106,11 @@ class ISpace:
     def restore_from_storage(self, storage: IStorage, count: Optional[int] = None):
         data = storage.load(self.get_name(), count, historical_order=False)
         slots = self.get_slots()
+        history = {}
         for s in slots:
-            s._history = [c[s.name] for c in data]
+            history[s.name] = [c[s.name] if s.name in c else None for c in data]
+        for s in slots:
+            s._history = history[s.name]
 
     def setup_for_test(self, **slot_values: List):
         length = None

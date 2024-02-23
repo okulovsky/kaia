@@ -54,7 +54,7 @@ class GradioClient:
         if data is None or len(data) == 0:
             return None
         df = pd.DataFrame(data)
-        return self.presentation.plot_function(df)
+        return self.presentation.plot_function.draw(df, self.client.space.get_name())
 
     def generate_interface(self):
         with gr.Blocks() as demo:
