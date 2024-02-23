@@ -1,5 +1,6 @@
-from ..dub.languages.en import *
-from ..dialogue import AssistantSkill
+from typing import *
+from kaia.avatar.dub.languages.en import *
+from ..core import SingleLineKaiaSkill
 from datetime import datetime
 
 class TimeIntents(TemplatesCollection):
@@ -18,15 +19,12 @@ class TimeReplies(TemplatesCollection):
         minutes_word = PluralAgreement('minutes', 'minute', 'minutes')
     )
 
-class TimeSkill(AssistantSkill):
+class TimeSkill(SingleLineKaiaSkill):
     def __init__(self, datetime_factory: Callable[[], datetime] = datetime.now):
         self.datetime_factory = datetime_factory
         super().__init__(
-            self.run,
             TimeIntents,
             TimeReplies,
-            [TimeIntents.question],
-            {'/time': TimeIntents.question.utter()},
         )
 
     def run(self):

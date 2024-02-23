@@ -1,7 +1,7 @@
-from ...eaglesong.core import Return
-from ..dialogue import AssistantSkill
-from ..dub.languages.en import *
-from .common_replies import CommonReplies
+from typing import *
+from kaia.eaglesong.core import Return
+from ..core import SingleLineKaiaSkill
+from kaia.avatar.dub.languages.en import *
 from datetime import date, timedelta
 from enum import Enum
 
@@ -39,22 +39,18 @@ class DateReplies(TemplatesCollection):
     )
 
 
-class DateSkill(AssistantSkill):
+class DateSkill(SingleLineKaiaSkill):
     def __init__(self, datetime_factory: Callable[[], date] = date.today):
         self.datetime_factory = datetime_factory
         super().__init__(
-            self.run,
             DateIntents,
             DateReplies,
-            [DateIntents.question],
-            {'/date': DateIntents.question.utter()},
         )
 
     def run(self):
         input = yield #type: Utterance
 
         if input.template.name!=DateIntents.question.name:
-            yield CommonReplies.wrong_state.utter()
             raise Return()
 
         if 'delta' not in input.value:
