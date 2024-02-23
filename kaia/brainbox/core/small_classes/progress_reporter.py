@@ -1,4 +1,4 @@
-from ...infra.comm import IMessenger
+from ....infra.comm import IMessenger
 from abc import ABC, abstractmethod
 import sys
 from tqdm import tqdm, tqdm_notebook

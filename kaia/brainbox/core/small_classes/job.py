@@ -1,10 +1,9 @@
 from typing import *
-from sqlalchemy.orm import declarative_base, Mapped, mapped_column, Session
-from sqlalchemy import String, JSON
+from sqlalchemy.orm import declarative_base, Mapped, mapped_column
+from sqlalchemy import JSON, PickleType
 from datetime import datetime
 from .task import BrainBoxTask
-import json, jsonpickle
-
+from .decider_instance_dto import DeciderInstanceSpec
 
 
 Base = declarative_base()
@@ -14,8 +13,9 @@ class BrainBoxJob(Base):
 
     id: Mapped[str] = mapped_column(primary_key=True)
     decider: Mapped[str] = mapped_column()
-    method: Mapped[str] = mapped_column()
-    arguments: Mapped[Dict] = mapped_column(type_= JSON)
+    decider_parameters: Mapped[str] = mapped_column(nullable=True)
+    method: Mapped[str] = mapped_column(nullable=True)
+    arguments: Mapped[Any] = mapped_column(type_ = PickleType)
     back_track: Mapped[Any] = mapped_column(type_= JSON, nullable=True)
     received_timestamp: Mapped[datetime] = mapped_column()
     batch: Mapped[str] = mapped_column(nullable=True)
@@ -36,7 +36,7 @@ class BrainBoxJob(Base):
     finished: Mapped[bool] = mapped_column(default=False)
     finished_timestamp: Mapped[datetime] = mapped_column(nullable=True)
     success: Mapped[bool] = mapped_column(default=False)
-    result: Mapped[Any] = mapped_column(type_=JSON, nullable=True, default=None)
+    result: Mapped[Any] = mapped_column(type_ = PickleType, nullable=True, default=None)
     error: Mapped[str] = mapped_column(nullable=True, default=None)
 
 
@@ -47,15 +47,20 @@ class BrainBoxJob(Base):
                 result.append(self.dependencies[key])
         return result
 
+    def get_decider_instance_spec(self):
+        return DeciderInstanceSpec(self.decider, self.decider_parameters)
+
+
     @staticmethod
     def from_task(task:BrainBoxTask) -> 'BrainBoxJob':
         timestamp = datetime.now()
         return BrainBoxJob(
             id=task.id,
             decider=task.decider,
-            method=task.method,
+            decider_parameters = task.decider_parameters,
+            method=task.decider_method,
             batch=task.batch,
-            arguments=json.loads(jsonpickle.dumps(task.arguments)),
+            arguments=task.arguments,
             back_track=task.back_track,
             received_timestamp=timestamp,
             dependencies=task.dependencies,

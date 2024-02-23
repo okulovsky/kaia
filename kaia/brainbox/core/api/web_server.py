@@ -1,23 +1,29 @@
-import uuid
+import time
 from typing import *
 
 import pandas as pd
 import os
 
-from .brain_box_service import BrainBoxService
-from .job import BrainBoxJob, Base
-import json
+from .service import BrainBoxService
+from ..small_classes import BrainBoxJob, Base, BrainBoxTask
 import flask
-import jsonpickle
 from kaia.infra.comm import IComm
 import io
 from pathlib import Path
 from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session
 from threading import Thread
-from datetime import datetime
-import jsonpickle
 import logging
+from kaia.infra import MarshallingEndpoint
+from datetime import timedelta
+
+class BrainBoxEndpoints:
+    add = MarshallingEndpoint('/add', 'POST')
+    join = MarshallingEndpoint('/join', 'POST')
+    summary = MarshallingEndpoint('/summary', 'GET')
+    job = MarshallingEndpoint('/job','GET')
+    result = MarshallingEndpoint('/result', 'GET')
+
 
 class BrainBoxWebServer:
     def __init__(self,
@@ -46,51 +52,76 @@ class BrainBoxWebServer:
 
         self.app = flask.Flask('brainbox')
         self.app.add_url_rule('/', view_func=self.index, methods=['GET'])
-        self.app.add_url_rule('/add/<decider>/<method>', view_func=self.add, methods=['POST'])
-        self.app.add_url_rule('/jobs/', view_func=self.jobs, methods=['GET'], defaults = {'batch': None})
-        self.app.add_url_rule('/jobs/<batch>', view_func=self.jobs, methods=['GET'])
-        self.app.add_url_rule('/job/<id>', view_func=self.job, methods=['GET'])
-        self.app.add_url_rule('/result/<id>', view_func=self.result, methods=['GET'])
         self.app.add_url_rule('/file/<fname>', view_func=self.file, methods=['GET'])
-        self.app.add_url_rule('/cancel/<id>', view_func=self.cancel, methods=['POST'])
+        self.app.add_url_rule('/cancel/<id>', view_func=self.cancel, methods=['GET'])
+        self.app.add_url_rule('/cancel-all', view_func=self.cancel_all, methods=['GET'])
+
+        binder = MarshallingEndpoint.Binder(self.app)
+        binder.bind_all(BrainBoxEndpoints, self)
 
         self.app.run('0.0.0.0',self.port)
 
     def index(self):
-        df = pd.DataFrame(self._get_jobs(None))
+        df = pd.DataFrame(self.summary(None))
         if df.shape[0]!=0:
             df = df.sort_values('received_timestamp', ascending=False)
         return df.to_html()
 
 
-    def add(self, decider: str, method: str):
-        request = flask.request.json
-        arguments = request['arguments']
-        id = request.get('id', None)
-        if id is None:
-            id = str(uuid.uuid4())
-        dependencies = request.get('dependencies', None)
-        back_track = request.get('back_track', None)
-        batch = request.get('batch', None)
+    def file(self, fname):
+        with open(self.file_cache/fname, 'rb') as file:
+            return flask.send_file(
+                io.BytesIO(file.read()),
+                mimetype='application/octet-stream'
+            )
 
-        task = BrainBoxJob(
-            id = id,
-            batch = batch,
-            decider = decider,
-            method = method,
-            arguments = arguments,
-            dependencies = dependencies,
-            back_track = back_track,
-            received_timestamp = datetime.now()
-        )
+    def terminate(self):
+        if self.brainbox is not None:
+            self.brainbox.terminate()
+        os._exit(0)
 
+
+    def cancel(self, id: str):
+        self.brainbox.cancel(id)
+        return 'OK'
+
+    def cancel_all(self):
         with Session(self.engine) as session:
-            session.add(task)
+            jobs = list(session.scalars(select(BrainBoxJob).where(~BrainBoxJob.finished)))
+            for job in jobs:
+                self.cancel(job.id)
+        return "OK"
+
+
+    def add(self, tasks: List[BrainBoxTask]):
+        with Session(self.engine) as session:
+            for i, task in enumerate(tasks):
+                job = BrainBoxJob.from_task(task)
+                job.received_timestamp+=timedelta(microseconds=i)
+                session.add(job)
             session.commit()
 
-        return flask.jsonify(id)
 
-    def _get_jobs(self, batch):
+    def join(self, ids: List[str]):
+        while True:
+            with Session(self.engine) as session:
+                jobs: List[BrainBoxJob] = list(session.scalars(select(BrainBoxJob).where(BrainBoxJob.id.in_(ids))))
+            if len(jobs) != len(ids):
+                missing = list(set(ids) - set(j.id for j in jobs))
+                raise ValueError(f'Join_execute is missing jobs for ids {missing}')
+            id_to_job = {}
+            for job in jobs:
+                if not job.finished:
+                    break
+                if not job.success:
+                    raise ValueError(job.error)
+                id_to_job[job.id] = job
+            if len(id_to_job) == len(ids):
+                return [id_to_job[id].result for id in ids]
+            time.sleep(0.01)
+
+
+    def summary(self, batch: Optional[str] = None):
         with Session(self.engine) as session:
             query = select(
                 BrainBoxJob.id,
@@ -115,41 +146,21 @@ class BrainBoxWebServer:
             rows = list(dict(r._mapping) for r in session.execute(query))
         return rows
 
-    def jobs(self, batch):
-        print(f'Batch: {batch}')
-        jobs = self._get_jobs(batch)
-        return flask.jsonify(json.loads(jsonpickle.dumps(jobs)))
 
     def job(self, id):
         with Session(self.engine) as session:
             result = list(session.scalars(select(BrainBoxJob).where(BrainBoxJob.id == id)))
-        if len(result)==0:
-            return flask.jsonify(None)
-        record = result[0].__dict__
-        del record['_sa_instance_state']
-        return flask.jsonify(record)
+            if len(result)==0:
+                return None
+            record = result[0]
+            session.expunge(record)
+        return record
+
 
     def result(self, id):
         with Session(self.engine) as session:
             result = list(session.scalars(select(BrainBoxJob.result).where(BrainBoxJob.id == id)))
         if len(result)==0:
-            return flask.jsonify(None)
-        return flask.jsonify(result[0])
+            return None
+        return result[0]
 
-
-    def file(self, fname):
-        with open(self.file_cache/fname, 'rb') as file:
-            return flask.send_file(
-                io.BytesIO(file.read()),
-                mimetype='application/octet-stream'
-            )
-
-    def terminate(self):
-        if self.brainbox is not None:
-            self.brainbox.terminate()
-        os._exit(0)
-
-
-    def cancel(self, id: str):
-        self.brainbox.cancel(id)
-        return 'OK'

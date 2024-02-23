@@ -1,8 +1,22 @@
+from typing import *
 from abc import ABC, abstractmethod
 from .progress_reporter import IProgressReporter, EmptyProgressReporter
 from pathlib import Path
 from kaia.infra import Loc
 import os
+
+
+class DeciderForDebugging:
+    def __init__(self, decider: 'IDecider', parameters):
+        self.decider = decider
+        self.parameters = parameters
+
+
+    def __enter__(self):
+        self.decider.warmup(self.parameters)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.decider.cooldown(self.parameters)
 
 
 class IDecider:
@@ -30,9 +44,12 @@ class IDecider:
         self._file_cache = file_cache
 
     @abstractmethod
-    def warmup(self):
+    def warmup(self, parameters: str):
         pass
 
     @abstractmethod
-    def cooldown(self):
+    def cooldown(self, parameters: str):
         pass
+
+    def debug(self, parameters: Optional[str] = None):
+        return DeciderForDebugging(self, parameters)

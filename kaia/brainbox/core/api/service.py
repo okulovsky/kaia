@@ -1,18 +1,22 @@
+import copy
 import time
 from typing import *
-from .job import BrainBoxJob
+from ..small_classes import BrainBoxJob, DeciderInstance, IDecider, LogItem, LogFactory, DeciderInstanceSpec
 from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session
-from ...infra.comm import IMessenger
-from .decider import IDecider
-from .decider_instance import DeciderInstance
+from ....infra.comm import IMessenger
 import traceback
-from .planner import IPlanner
+from ..planers import IPlanner
 from datetime import datetime
-from yo_fluq_ds import *
-from .brain_box_log import LogItem, LogFactory
+from yo_fluq import *
 from pathlib import Path
 import os
+from dataclasses import dataclass
+
+@dataclass
+class FailedJobArgument:
+    job: BrainBoxJob
+
 
 class BrainBoxService:
     def __init__(self,
@@ -24,10 +28,9 @@ class BrainBoxService:
         self.logger = LogFactory(logger)
         self.cache_folder = cache_folder
         self.planner = planer
+        self.deciders = deciders
 
-        self.decider_instances = {} #type: Dict[str, DeciderInstance]
-        for name, decider in deciders.items():
-            self.decider_instances[name] = DeciderInstance(name, decider, self.logger, cache_folder)
+        self.decider_instances = {} #type: Dict[DeciderInstanceSpec, DeciderInstance]
 
         self.engine = None #type: Optional[Engine]
         self.messenger = None #type: Optional[IMessenger]
@@ -54,7 +57,7 @@ class BrainBoxService:
         self.logger.service().event('Exiting')
         for instance in self.decider_instances.values():
             if instance.state.up:
-                self.logger.decider(instance.state.name).event('Cooldown request')
+                self.logger.decider(instance.state.spec).event('Cooldown request')
                 instance.cool_down()
         self.update_tasks()
         self._terminated = True
@@ -72,7 +75,7 @@ class BrainBoxService:
                 self.terminate_internal()
                 return
             self.iteration()
-            time.sleep(0.1)
+            time.sleep(0.01)
 
     def update_tasks(self):
         with Session(self.engine) as session:
@@ -96,10 +99,24 @@ class BrainBoxService:
             for service in plan.cool_down:
                 self.logger.decider(service).event('Cooldown request')
                 self.decider_instances[service].cool_down()
+                del self.decider_instances[service]
+
+
         if plan.warm_up is not None:
             for service in plan.warm_up:
-                self.logger.decider(service).event('Warmup request')
-                self.decider_instances[service].warm_up(self.messenger)
+                try:
+                    self.logger.decider(service).event('Warmup request')
+                    self.decider_instances[service] = DeciderInstance(service, self.deciders[service.decider_name], self.logger, self.cache_folder)
+                    self.decider_instances[service].warm_up(self.messenger)
+                except Exception as ex:
+                    self.logger.decider(service).event("Warmup failed")
+                    with Session(self.engine) as session:
+                        tasks: Iterable[BrainBoxJob] = list(session.scalars(select(BrainBoxJob).where(~BrainBoxJob.finished)))
+                        for task in tasks:
+                            if task.get_decider_instance_spec() == service:
+                                self.close_task(task, f'Decider {service} failed to warm up:\n{traceback.format_exc()}')
+                        session.commit()
+
 
         if plan.assign_tasks is not None:
             for task_id in plan.assign_tasks:
@@ -108,20 +125,25 @@ class BrainBoxService:
 
     def assign_task(self, task_id: str):
         with Session(self.engine) as session:
-            task = session.scalar(select(BrainBoxJob).where(BrainBoxJob.id == task_id))
-            arguments = jsonpickle.loads(json.dumps(task.arguments))
+            task: BrainBoxJob = session.scalar(select(BrainBoxJob).where(BrainBoxJob.id == task_id))
+            if task.finished:
+                return
+            arguments = task.arguments
             if task.dependencies is not None:
                 requirements = list(task.dependencies.values())
                 required_tasks = list(session.scalars(select(BrainBoxJob).where(BrainBoxJob.id.in_(requirements))))
                 for arg_name, id in task.dependencies.items():
-                    dep = Query.en(required_tasks).where(lambda z: z.id == id).single_or_default()
+                    dep: BrainBoxJob = Query.en(required_tasks).where(lambda z: z.id == id).single_or_default()
                     if dep is None:
                         self.close_task(task, f'Something is wrong: task was ready, but dependency {id} for argument {arg_name} was not found')
                         return
-                    arguments[arg_name] = jsonpickle.loads(json.dumps(dep.result))
-            request = dict(decider=task.decider, method=task.method, arguments=arguments)
+                    if not dep.success:
+                        session.expunge(dep)
+                        arguments[arg_name] = FailedJobArgument(dep)
+                    else:
+                        arguments[arg_name] = dep.result
             try:
-                self.messenger.add(request, 'received', task.id)
+                self.messenger.add(task, 'received', task.id)
                 task.assigned = True
                 task.assigned_timestamp = datetime.now()
                 self.logger.task(task.id).event('Assigned')
@@ -136,11 +158,9 @@ class BrainBoxService:
         with Session(self.engine) as session:
             tasks = list(session.scalars(select(BrainBoxJob).where(~BrainBoxJob.finished)))
             for task in tasks:
-                if task.decider not in self.decider_instances:
+                if task.decider not in self.deciders:
                     self.close_task(task, f'Decider {task.decider} is not found')
             session.commit()
-            session.commit()
-
 
     def close_task(self, task: BrainBoxJob, custom_message=None):
         self.logger.task(task.id).event('Failed at service level')
@@ -167,11 +187,6 @@ class BrainBoxService:
                             break
 
                         if not id_to_task[id].finished:
-                            set_ready = False
-                            break
-
-                        if not id_to_task[id].success:
-                            self.close_task(task, f"id {id} is required by this task but failed")
                             set_ready = False
                             break
 

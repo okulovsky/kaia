@@ -1,36 +1,31 @@
 from typing import *
 from .decider import IDecider
-from ...infra.comm import IMessenger
+from ....infra.comm import IMessenger
 from .progress_reporter import MessengerProgressReporter
 from .job import BrainBoxJob
 import traceback
 from threading import Thread
 import time
-from yo_fluq_ds import Query
+from yo_fluq import Query
 from dataclasses import dataclass
 from datetime import datetime
 from .brain_box_log import LogFactory
 from pathlib import Path
-import jsonpickle
-import json
+from .decider_instance_dto import *
 
-@dataclass
-class DeciderState:
-    name: str
-    up: bool = False
-    busy: bool = False
-    not_busy_since: Optional[datetime] = None
+
+
 
 
 class DeciderInstance:
     def __init__(self,
-                 name: str,
+                 spec: DeciderInstanceSpec,
                  decider: IDecider,
                  logger: LogFactory,
                  file_cache: Path,
                  waiting_time_in_seconds: int = 5
                  ):
-        self.state = DeciderState(name)
+        self.state = DeciderState(spec)
         self.decider = decider
         self.logger = logger
         self.file_cache = file_cache
@@ -43,24 +38,27 @@ class DeciderInstance:
         if self.state.up:
             raise ValueError('Service is already up')
         self.messenger = messenger
-        self.logger.decider(self.state.name).event('Warming up')
+        self.logger.decider(self.state.spec).event('Warming up')
         self.decider._setup_environment(self.file_cache, None)
-        self.decider.warmup()
+        try:
+            self.decider.warmup(self.state.spec.parameters)
+        except Exception as e:
+            raise ValueError(f'Error when warm_up decider {self.state.spec}') from e
         self._exit_request = False
         self.thread = Thread(target=self.cycle)
         self.thread.start()
         self.state.up = True
         self.state.busy = False
-        self.logger.decider(self.state.name).event('Warmed up')
+        self.logger.decider(self.state.spec).event('Warmed up')
 
 
     def cool_down(self):
         if not self.state.up:
             raise ValueError('Service is already down')
-        self.logger.decider(self.state.name).event('Cooling down')
+        self.logger.decider(self.state.spec).event('Cooling down')
         self._exit_request = True
 
-        self.logger.decider(self.state.name).event('Waits for cycle exit')
+        self.logger.decider(self.state.spec).event('Waits for cycle exit')
         for i in range(self.waiting_time_in_seconds*10):
             if not self.thread.is_alive():
                 break
@@ -71,12 +69,12 @@ class DeciderInstance:
 
         self.thread = None
 
-        self.logger.decider(self.state.name).event('Exited cycle, external cooldown request')
-        self.decider.cooldown()
+        self.logger.decider(self.state.spec).event('Exited cycle, external cooldown request')
+        self.decider.cooldown(self.state.spec.parameters)
 
         self.state.up = False
         self.state.busy = False
-        self.logger.decider(self.state.name).event('Cooled down')
+        self.logger.decider(self.state.spec).event('Cooled down')
 
 
     def cycle(self):
@@ -96,26 +94,26 @@ class DeciderInstance:
 
     def iteration(self):
         open_request_messages = IMessenger.Query(tags=['received'], open=True).query(self.messenger)
-        valid_messages = Query.en(open_request_messages).where(lambda z: z.payload['decider'] == self.state.name).to_list()
+        valid_messages = Query.en(open_request_messages).where(lambda z: z.payload.get_decider_instance_spec() == self.state.spec).to_list()
 
         if len(valid_messages) == 0:
             if self.state.busy:
                 self.state.busy = False
                 self.state.not_busy_since = datetime.now()
-                self.logger.decider(self.state.name).event('Not busy')
+                self.logger.decider(self.state.spec).event('Not busy')
             return False
 
         if not self.state.busy:
             self.state.busy = True
-            self.logger.decider(self.state.name).event('Busy')
+            self.logger.decider(self.state.spec).event('Busy')
 
-        message = open_request_messages[0]
+        message = valid_messages[0]
         id = message.tags[1]
-        self.logger.decider(self.state.name).event(f'Processing task {id}')
+        self.logger.decider(self.state.spec).event(f'Processing task {id}')
 
 
-        method = message.payload['method']
-        arguments = message.payload['arguments']
+        method = message.payload.method
+        arguments = message.payload.arguments
 
         self.messenger.add(None, 'accepted', id)
         self.logger.task(id).event('Accepted')
@@ -123,7 +121,13 @@ class DeciderInstance:
         reporter = MessengerProgressReporter(id, self.messenger)
         self.decider._setup_environment(self.file_cache, reporter)
         try:
-            result = getattr(self.decider,method)(**arguments)
+            if method is not None:
+                method_instance = getattr(self.decider, method)
+            elif callable(self.decider):
+                method_instance = self.decider
+            else:
+                raise ValueError(f'Method is not set for {self.decider}, and the decider is not callable')
+            result = method_instance(**arguments)
             self.messenger.add(result, 'result', id)
             self.messenger.close(message.id, None)
             self.messenger.add(None, 'success', id)
@@ -164,7 +168,7 @@ class DeciderInstance:
                 continue
 
             if tag == 'result':
-                task.result = json.loads(jsonpickle.dumps(message.payload))
+                task.result = message.payload
                 continue
 
             if tag == 'progress':

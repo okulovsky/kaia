@@ -1,15 +1,14 @@
 from typing import *
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from .job import BrainBoxJob
-from .decider_instance import DeciderState
+from ..small_classes import BrainBoxJob, DeciderState, DeciderInstanceSpec
 
 class IPlanner(ABC):
     @dataclass
     class Response:
         assign_tasks: Optional[Tuple[str,...]] = None
-        warm_up: Optional[Tuple[str,...]] = None
-        cool_down: Optional[Tuple[str,...]] = None
+        warm_up: Optional[Tuple[DeciderInstanceSpec,...]] = None
+        cool_down: Optional[Tuple[DeciderInstanceSpec,...]] = None
 
     @abstractmethod
     def plan(self,
