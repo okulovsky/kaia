@@ -4,7 +4,7 @@ from kaia.bro.amenities import conbee
 from .space import Space
 from .decider import decider
 from . import mocks
-from .plot import draw
+from .plot import DehumidifierPlot
 from dataclasses import dataclass
 import os
 
@@ -48,12 +48,12 @@ def create_algorithm(space: Space, debug: bool, settings: DehumidifierSettings):
     if not debug:
         units.append(conbee.SwitchActuator(space.state_request, settings.dehumidifier_switch_id))
 
-    presentation = BroAlgorithmPresentation(draw)
+    presentation = BroAlgorithmPresentation(DehumidifierPlot())
 
     algorithm = BroAlgorithm(
         space,
         units,
-        min_history_length=3000,
+        min_history_length=8*60,
         update_interval_in_millisecods= 100 if debug else 60000,
         presentation = presentation
     )
