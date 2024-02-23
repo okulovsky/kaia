@@ -17,7 +17,7 @@ if __name__ == '__main__':
 
     ha = create_sandbox_assistant()
     pack = DubbingPack.from_zip(base_host_path, base_pack_path, assistant_pack_path)
-    rhasspy_api = RhasspyAPI.create('http://127.0.0.1:12101', ha.get_intents())
+    rhasspy_api = RhasspyAPI('http://127.0.0.1:12101', ha.get_intents())
     rhasspy_api.train()
 
     bot_factory = lambda context: Automaton(
