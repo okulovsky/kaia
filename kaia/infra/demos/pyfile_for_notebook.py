@@ -1,6 +1,6 @@
 
 from IPython.display import HTML
-from yo_fluq_ds import *
+from kaia.infra import FileIO
 import markdown
 from pygments import highlight
 from pygments.lexers import PythonLexer

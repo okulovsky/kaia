@@ -16,6 +16,7 @@ class Automaton(IAutomaton):
         self.generator = None #type: Optional[Generator]
         self._create_and_check_generator()
 
+
     def _create_and_check_generator(self):
         if not callable(self.function):
             raise ValueError(f'The function `{self.function}` is not callable.')

@@ -9,51 +9,60 @@ import subprocess
 import requests
 import time
 import atexit
-import traceback
+from dataclasses import dataclass
 
+@dataclass
+class TortoiseTTSSettings:
+    environment = 'tortoise-tts'
+    tortoise_tts_path = Loc.root_folder.parent / 'tortoise-tts'
+    port = 8091
+    test_voice = 'test_voice'
+    debug: bool = False
+    wait_time_in_seconds: int = 10
 
+    @property
+    def python_path(self):
+        return Loc.get_python_by_env(self.environment)
+
+    def get_voice_path(self, voice: Optional[str] = None):
+        result = self.tortoise_tts_path/'tortoise/voices'
+        if voice is not None:
+            result /= voice
+        return result
 
 class TortoiseTTS(IDecider):
     def __init__(self,
-                 python_path: Path,
-                 tortoise_path: Path,
-                 wait_time_in_seconds = 10,
-                 port = '8087',
-                 debug = False
+                 settings: TortoiseTTSSettings
                  ):
+        self.settings = settings
         self.process = None #type: Optional[subprocess.Popen]
-        self.python_path = python_path
-        self.tortoise_path = tortoise_path
-        self.wait_time_in_seconds = wait_time_in_seconds
-        self.port = port
-        self.debug = debug
-        atexit.register(self.cooldown)
+        atexit.register(lambda:self.cooldown(''))
 
 
-    def warmup(self):
+    def warmup(self, parameters: str):
         shutil.copy(
             Path(__file__).parent / 'web_server.py',
-            self.tortoise_path/'tortoise/web_server.py'
+            self.settings.tortoise_tts_path/'tortoise/web_server.py'
         )
         process = subprocess.Popen(
             [
-                self.python_path,
-                self.tortoise_path/'tortoise/web_server.py',
-                str(self.port),
-                'debug' if self.debug else 'tortoise',
+                self.settings.python_path,
+                self.settings.tortoise_tts_path/'tortoise/web_server.py',
+                str(self.settings.port),
+                'debug' if self.settings.debug else 'tortoise',
                 self.file_cache,
-                self.tortoise_path,
+                self.settings.tortoise_tts_path,
             ],
-            cwd = self.tortoise_path/'tortoise'
+            cwd = self.settings.tortoise_tts_path/'tortoise'
         )
         time.sleep(0.5)
         if process.poll() is not None:
-            raise ValueError("Failed to web server, crush on initialization")
+            raise ValueError("Failed to run server, crush on initialization")
         self.process = process
 
-        for _ in range(self.wait_time_in_seconds*10):
+        for _ in range(self.settings.wait_time_in_seconds*10):
             try:
-                reply = requests.get(f'http://localhost:{self.port}/status')
+                reply = requests.get(f'http://localhost:{self.settings.port}/status')
                 if reply.text=='ok':
                     return
             except:
@@ -64,22 +73,22 @@ class TortoiseTTS(IDecider):
         raise ValueError('Failed to start server')
 
 
-    def cooldown(self):
+    def cooldown(self, parameters: str):
         if self.process is None:
             return
         try:
-            requests.post(f'http://localhost:{self.port}/exit')
+            requests.post(f'http://localhost:{self.settings.port}/exit')
         except:
             pass
         self.process.terminate()
-        for _ in range(self.wait_time_in_seconds*10):
+        for _ in range(self.settings.wait_time_in_seconds*10):
             if self.process.poll() is not None:
                 self.process = None
                 return
         raise ValueError("Failed to stop the server gracefully")
 
-    def dub(self, voice: str, text: str):
-        reply = requests.post(f'http://localhost:{self.port}/dub', json=dict(text=text, voice=voice))
+    def __call__(self, voice: str, text: str, count=3):
+        reply = requests.post(f'http://localhost:{self.settings.port}/dub', json=dict(text=text, voice=voice, count=count))
         try:
             result = reply.json()
         except:
@@ -89,8 +98,8 @@ class TortoiseTTS(IDecider):
         return result
 
 
-    def aligned_dub(self, voice: str, text: str):
-        reply = requests.post(f'http://localhost:{self.port}/aligned_dub', json=dict(text=text, voice=voice))
+    def aligned_dub(self, voice: str, text: str, count=3):
+        reply = requests.post(f'http://localhost:{self.settings.port}/aligned_dub', json=dict(text=text, voice=voice, count=count))
         try:
             result = reply.json()
         except:

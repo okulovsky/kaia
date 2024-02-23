@@ -137,3 +137,19 @@ temp/
 externals/
 data/
 
+
+.dockerignore
+
+Dockerfile
+
+kaia_tests/sample
+
+kaia_tests/sample-journal
+
+recepies/creative_articulator/summarization
+
+demos/brainbox_deciders/examples
+
+demos/brainbox_deciders/cache/
+
+demos/brainbox/cache/

@@ -14,6 +14,9 @@ class SettingsHandler:
         slot = space.get_slot(self.slot_name)
         if slot.current_value is None:
             slot.current_value = slot.history.first_or_default(self.value)
+            if slot.current_value is None: #In case when it's a new field after deployment, history is null and default is not null
+                slot.current_value = self.value
+
 
 class Incrementer:
     def __init__(self, slot_name: Union[str, Slot], start_value: Any = 0, delta: Any = 1):

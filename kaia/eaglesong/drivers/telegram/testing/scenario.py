@@ -2,7 +2,7 @@ from .validators import TgCommandValidatorMock
 from ..primitives import TgUpdatePackage, TgCommand, TgChannel
 from .feedback import TelegramReplayGenerator
 from ....core import Scenario
-from yo_fluq_ds import Obj
+from .....infra import Obj
 import telegram as tg
 
 

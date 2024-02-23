@@ -2,18 +2,34 @@ from typing import *
 from abc import ABC, abstractmethod
 
 class SlotInput(ABC):
+    @property
+    def current_value_from(self):
+        if hasattr(self,'_current_value_from'):
+            return self._current_value_from
+        else:
+            return None
+
+    def value_from(self, slot: str) -> 'SlotInput':
+        self._current_value_from = slot
+        return self
+
     def validate(self, value) -> Any:
         pass
 
 
-class BoolInput(SlotInput):
-    def __init__(self, value_from: Optional[str] = None):
-        self.value_from = value_from
+class SetInput(SlotInput):
+    def __init__(self, values):
+        self.values = values
 
     def validate(self, value) -> Any:
-        if value in [True, False]:
+        if value in self.values:
             return value
         return None
+
+
+class BoolInput(SetInput):
+    def __init__(self):
+        super().__init__([True, False])
 
 
 class RangeInput(SlotInput):
@@ -22,12 +38,15 @@ class RangeInput(SlotInput):
                  max,
                  step = None,
                  type = None,
-                 custom_validator: Optional[Callable[[Any], Union[bool,str]]] = None):
+                 custom_validator: Optional[Callable[[Any], Union[bool,str]]] = None,
+                 value_from: Optional[str] = None
+                 ):
         self.min = min
         self.max = max
         self.step = step
         self.type = type
         self.custom_validator = custom_validator
+
 
     def validate(self, value) -> Any:
         if self.type is not None:

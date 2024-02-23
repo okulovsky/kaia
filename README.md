@@ -12,17 +12,13 @@ First, you need to install [Anaconda](https://www.anaconda.com/) to manage the d
 
 * Open Console in Linux or Anaconda Terminal in Windows
 
-* execute `conda create --name kaia python=3.8 -y`. 
-  * This will create an environment with Python 3.8. An old one, but this is what the library was tested with. 
+* execute `conda create --name kaia python=3.11 -y`. 
+  * This will create an environment with Python 3.11. 
 
 * execute `conda activate kaia`
   * This will activate the created environment 
 
 * change working dir to the root of the repository
-
-* execute `pip install -r requirements.kaia.txt`
-  * This will install to the environment the exact versions of the libraries that Kaia was tested with.
-  * ML projects inside Kaia might have different requirements. It will be discussed in their notebooks.
 
 * execute `pip install -e .`
 

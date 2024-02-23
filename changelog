@@ -1,3 +1,9 @@
+2.0.0
+    - First fully working version
+    - persona -> avatar, simplified
+    - brainbox is roughly finalized, few new deciders
+    - kaia is introduced, contains everything required for voice assistant
+    - no changes in bro, eaglesong
 1.0.0
     - eaglesong refactored with better input management (`input = yield Listen()` instead of yield Listen(); input = context.input`)
     - BrainBox, a web-server-decorator for different models, is introduced

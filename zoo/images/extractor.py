@@ -24,7 +24,7 @@ class Extractor:
         icons = []
         idx = 0
         for cluster_index, crop_file in (Query
-                .folder(self.folder)
+                .folder(self.folder,'**/*')
                 .where(lambda z: z.name.endswith('.crop.json'))
                 .feed(list ,Query.en ,fluq.with_progress_bar(), enumerate)
         ):
@@ -50,6 +50,8 @@ class Extractor:
 
                         image_size=(c.size[0 ] +c.size[1] ) /2,
                         output = f'{cluster_index}_{crop_index}_{file.name}',
+
+                        subpath = file.parent.relative_to(self.folder),
 
                         idx = idx
                     )
@@ -93,5 +95,11 @@ class Extractor:
         os.makedirs(folder)
         if df is None:
             df = self.df
+
         for row in Query.df(df):
-            self.images[row['idx']].resize((512,512)).save(folder/row['output'])
+            path = folder
+            if row['subpath']!='':
+                path/=row['subpath']
+            path/=row['output']
+            os.makedirs(path.parent, exist_ok=True)
+            self.images[row['idx']].resize((512,512)).save(path)

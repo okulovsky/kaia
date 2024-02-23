@@ -97,7 +97,7 @@ class ImageHolder(QLabel):
 class MainWindow(QWidget):
     def __init__(self, folder):
         ext = {'png','jpg','jpeg','jfif'}
-        self.files = Query.folder(folder).where(lambda z: z.name.split('.')[-1].lower() in ext).order_by(lambda z: z.name).to_list()
+        self.files = Query.folder(folder,'**/*').where(lambda z: z.name.split('.')[-1].lower() in ext).order_by(lambda z: z.name).to_list()
 
         self.file_index = 0
         super(MainWindow, self).__init__()

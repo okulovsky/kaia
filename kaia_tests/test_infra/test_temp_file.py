@@ -4,7 +4,7 @@ from pathlib import Path
 
 class TempFileTestCase(TestCase):
     def test_temp_file(self):
-        with Loc.temp_file('test','txt') as temp:
+        with Loc.create_temp_file('test', 'txt') as temp:
             with open(temp, 'w') as wstream:
                 wstream.write('test test')
             with open(temp,'r') as rstream:

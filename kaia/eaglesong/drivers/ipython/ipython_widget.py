@@ -53,11 +53,17 @@ class IPythonChatWidget:
                 button.on_click(self.push_button)
                 buttons.append(button)
             return widgets.VBox([self.convert_content(content.content), widgets.HBox(buttons)])
-        elif isinstance(content, Audio):
-            return widgets.VBox([
-                widgets.Audio(value = content.data, autoplay = False),
-                widgets.Label(content.text)
-                ])
+        elif isinstance(content, Media):
+            ar = []
+            if content.type == Media.Type.Audio:
+                ar.append(widgets.Audio(value = content.data, autoplay = False))
+            elif content.type == Media.Type.Image:
+                ar.append(widgets.Image(value = content.data))
+            else:
+                raise ValueError(f"Unexpected media type {content.type}")
+            if content.text is not None:
+                ar.append(widgets.Label(content.text))
+            return widgets.VBox(ar)
         elif isinstance(content, SelectedOption) or isinstance(content, TimerTick):
             return None
         else:

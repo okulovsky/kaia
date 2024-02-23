@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<body>
+<img src="/static/image.jpg">
+
+<table border="0" cellspacing="0" cellpadding="0" width="100%">
+    <tr>
+        <td width="50%" valign="top">
+            <img id="main_image" src="/static/empty.png" />
+        </td>
+        <td id="chat" valign="top">
+
+        </td>
+    </tr>
+</table>
+
+
+<script>
+
+
+function process_chat(data) {
+  if (data == null) {
+    return
+  }
+  html = ''
+  for (const element of data) {
+    if (element['is_error']) {
+      html+='<pre>\n'
+      html+=element['text']
+      html+='\n</pre>'
+      continue
+    }
+    html+='<p>';
+    if (element['is_bot']) html+='&gt; '
+    else html+='&lt; '
+    html+=element['text']+'</p>'
+  }
+  document.getElementById("chat").innerHTML = html
+}
+
+function process_image(data) {
+  if (data==null) {
+    return
+  }
+  document.getElementById("main_image").src = 'data:image/png;base64, '+data
+}
+
+
+function process_all(data) {
+  process_chat(data['chat'])
+  process_image(data['image'])
+}
+
+
+function make_fetch() {
+  fetch('/updates')
+  .then(response => response.json())
+  .then(data => process_all(data))
+  .catch(err => console.warn('Something went wrong.', err))
+}
+
+setInterval(make_fetch, 1000)
+</script>
+
+</body>
+</html>

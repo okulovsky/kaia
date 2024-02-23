@@ -27,7 +27,7 @@ class IPythonInterpreter(Interpreter):
         self.handle_type_async(int, self._process_content)
         self.handle_type_async(float, self._process_content)
         self.handle_type_async(Options, self._process_content)
-        self.handle_type_async(Audio, self._process_content)
+        self.handle_type_async(Media, self._process_content)
         self.handle_type_async(Delete, self._process_delete)
 
     def _process_listen(self, response: Listen):
