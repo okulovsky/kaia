@@ -4,6 +4,7 @@ from yo_fluq_ds import FileIO, Query, fluq
 import os
 import pandas as pd
 from PIL import Image
+import traceback
 
 class EditingPanel:
     def __init__(self, source_folder, annotation_folder, rdf, interrogation_path, on_ok, ban_list):
@@ -30,12 +31,18 @@ class EditingPanel:
 
 
     def _on_ok(self, button):
-        self.save(False)
-        self.on_ok_event(button)
+        try:
+            self.save(False)
+            self.on_ok_event(button)
+        except:
+            print(traceback.format_exc())
 
     def _on_skip(self, button):
-        self.save(True)
-        self.on_ok_event(button)
+        try:
+            self.save(True)
+            self.on_ok_event(button)
+        except:
+            print(traceback.format_exc())
 
     def set_button_style(self, button):
         button.button_style = 'success' if self.allowed[button.description] else 'danger'
@@ -111,16 +118,19 @@ class ImageTagAnnotator:
             self.rdf['has_file'] = self.rdf.annotation_path.isin(self.seen_files)
             not_annotated = self.rdf.loc[~self.rdf.has_file]
 
+
             if not_annotated.shape[0] == 0:
                 not_annotated = None
             else:
                 not_annotated = not_annotated.sample(1).interrogation_path.iloc[0]
         else:
-            if self.next_index>=self.rdf.shape[0]:
+            fdf = self.rdf.drop_duplicates('interrogation_path')
+            if self.next_index>=fdf.shape[0]:
                 not_annotated = None
             else:
-                not_annotated = self.rdf.interrogation_path.iloc[self.next_index]
+                not_annotated = fdf.interrogation_path.iloc[self.next_index]
                 self.next_index+=1
+                
 
         if not_annotated is not None:
             panel = EditingPanel(self.source_folder, self.annotation_folder, self.rdf, not_annotated, lambda _: self.setup(), self.ban_list)
