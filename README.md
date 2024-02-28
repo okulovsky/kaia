@@ -8,7 +8,7 @@ It employes state-of-the-art free models to generate content and personalize hom
 
 First, you need to install [Anaconda](https://www.anaconda.com/) to manage the dependencies.
 
-## Creating the environemnt
+## Creating the environment
 
 * Open Console in Linux or Anaconda Terminal in Windows
 
