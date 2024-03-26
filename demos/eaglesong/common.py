@@ -29,7 +29,7 @@ class Bot:
     def create_telegram_automaton(self, context):
         routine = self.function
         if self.add_telegram_filter:
-            routine = TelegramTranslator(routine).run
+            routine = TelegramTranslator(routine)
         return Automaton(routine, context)
 
 
