@@ -39,7 +39,7 @@ class FileIO:
 
     @staticmethod
     def write_text(data, filename):
-        with open(filename,'w') as file:
+        with open(filename,'w', encoding='utf-8') as file:
             file.write(data)
 
 

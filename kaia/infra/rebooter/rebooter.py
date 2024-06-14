@@ -1,3 +1,4 @@
+import os
 import time
 
 from .checkers import IRestartChecker
@@ -28,6 +29,7 @@ class Rebooter:
         dct['event'] = event
         dct['timestamp'] = str(datetime.now())
         dct['iteration'] = self.iteration
+        os.makedirs(self.log_file.parent, exist_ok=True)
         if self.log_file is not None:
             with open(self.log_file, 'a') as file:
                 file.write(json.dumps(dct)+'\n')
@@ -36,9 +38,13 @@ class Rebooter:
             print(json.dumps(dct))
 
     def _terminate(self):
-        self.controller.terminate(self.thread)
-        self._write_event('exited')
-        self._write_event('log', output=self.controller.get_output())
+        if self.controller.has_exited():
+            self._write_event('exited')
+            self._write_event('log', output=self.controller.get_output())
+        else:
+            self.controller.terminate(self.thread)
+            self._write_event('terminated')
+            self._write_event('log', output=self.controller.get_output())
 
 
     def _make_iteration(self):
@@ -68,7 +74,7 @@ class Rebooter:
             while True:
                 self.iteration+=1
                 self._make_iteration()
-        except:
+        except KeyboardInterrupt:
             self._aborted()
-
-
+        except:
+            raise

@@ -43,6 +43,10 @@ class _TempFolder:
 class _Loc:
     def __init__(self):
         self.root_folder = Path(__file__).parent.parent.parent
+
+        env_file = self.root_folder/'environment.env'
+        dotenv.load_dotenv(env_file)
+
         if isinstance(self.root_folder, pathlib.WindowsPath):
             self.is_windows = True
         else:
@@ -50,13 +54,18 @@ class _Loc:
         self.temp_folder = self.root_folder/'temp'
         self.test_folder = self.temp_folder/'tests'
         self.externals_folder = self.root_folder/'externals'
-        self.data_folder = self.root_folder/'data'
+
+        if 'CUSTOM_DATA_FOLDER' in os.environ:
+            self.data_folder = Path(os.environ['CUSTOM_DATA_FOLDER'])
+        else:
+            self.data_folder = self.root_folder/'data'
+
+        self.deciders_resources_folder = self.data_folder/'deciders_resources'
         os.makedirs(self.temp_folder, exist_ok=True)
         os.makedirs(self.externals_folder, exist_ok=True)
         os.makedirs(self.data_folder, exist_ok=True)
         os.makedirs(self.test_folder, exist_ok=True)
-        env_file = self.root_folder/'environment.env'
-        dotenv.load_dotenv(env_file)
+        os.makedirs(self.deciders_resources_folder, exist_ok=True)
 
         self.conda_folder = Path(sys.executable).parent.parent.parent
         self.env_folder = Path(sys.executable).parent
@@ -72,17 +81,11 @@ class _Loc:
         else:
             return self.conda_folder/env/'bin/python'
 
-    def get_ffmpeg(self):
-        if self.is_windows:
-            return self.root_folder.parent/'ffmpeg/bin/ffmpeg'
-        else:
-            return 'ffmpeg'
-
     def test_location(self, name):
         return self.test_folder/name/str(uuid.uuid4())
 
-    def create_temp_file(self, subfolder: str, extension: str, dont_delete: bool = False) -> _TempFile:
-        path = self.temp_folder/subfolder/f'{uuid4()}.{extension}'
+    def create_temp_file(self, subfolder: str, extension_without_leading_dot: str, dont_delete: bool = False) -> _TempFile:
+        path = self.temp_folder/subfolder/f'{uuid4()}.{extension_without_leading_dot}'
         os.makedirs(path.parent, exist_ok=True)
         return _TempFile(path, dont_delete)
 
@@ -101,9 +104,5 @@ class _Loc:
             result = '/mnt/'+result[0].lower()+'/'+result[3:]
             return result
         raise ValueError("Only makes sense under Windows")
-
-
-
-
 
 Loc = _Loc()

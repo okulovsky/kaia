@@ -13,7 +13,7 @@ class FFmpegTools:
             FileIO.write_text(control_content, control_path)
 
             args = [
-                str(Loc.get_ffmpeg()),
+                'ffmpeg',
                 '-f',
                 'concat',
                 '-safe',
@@ -31,3 +31,4 @@ class FFmpegTools:
     @staticmethod
     def make_video_from_audio_and_image(image_path, audio_file, output):
         subprocess.call(f'ffmpeg -y -loop 1 -i {image_path} -i {audio_file} -c:v libx264 -c:a mp3 -shortest {output} -y')
+
