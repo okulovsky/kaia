@@ -153,7 +153,3 @@ demos/brainbox_deciders/examples
 demos/brainbox_deciders/cache/
 
 demos/brainbox/cache/
-
-my/
-!my/__init__.py
-!my/demo

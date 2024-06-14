@@ -1,3 +1,12 @@
+2.1.0.
+    - New deciders in Brainbox, also new architecture of the deciders, based on Docker
+    - Brainbox's performance is optimized for the case with lots of tasks
+    - Rhasspy is now used only as NLU unit. Voice input is done by kaia.kaia.audio_control
+    - ML recepy on voice cloning is ready
+    - Demo that runs on the PC under Windows and Linux is available
+    - "Good image" added to ChangeImage skill.
+    - Initialization of assistant is redesigned as a wrap around KaiaAssistant, eliminating some rare-occuring problems
+    - Initialization of KaiaCoreService is streamlined
 2.0.0
     - First fully working version
     - persona -> avatar, simplified
