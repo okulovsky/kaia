@@ -2,13 +2,13 @@ from .settings import *
 from .space import Space
 
 class Decider:
-    def __init__(self, schedule: Dict[time, bool]):
+    def __init__(self, schedule: List[ScheduledSwitch]):
         self.schedule = schedule
 
     def __call__(self, space: Space):
         if space.timestamp.last_value is None or space.timestamp.current_value is None:
             return
-        for time, request in self.schedule.items():
-            if space.timestamp.current_value.time() > time and space.timestamp.last_value.time() <= time:
-                space.switch_request.current_value = request
+        for item in self.schedule:
+            if item.time.intersects_with_interval(space.timestamp.last_value, space.timestamp.current_value):
+                space.switch_request.current_value = item.switch_to_state
                 break

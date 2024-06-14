@@ -1,7 +1,7 @@
 from unittest import TestCase
-from datetime import datetime, timedelta
+from datetime import datetime
 from kaia.eaglesong.core import Automaton, Scenario, Return
-from zoo.assistant.skills.weather_skill import WeatherSkill, WeatherIntents, WeatherReply, get_sample
+from zoo.assistant.weather import WeatherSkill, WeatherIntents, WeatherReply, get_sample
 
 
 def S():
