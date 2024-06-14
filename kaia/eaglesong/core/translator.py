@@ -16,6 +16,8 @@ class TranslatorOutputPackage:
 
 
 class Translator:
+    InputPackage = TranslatorInputPackage
+    OutputPackage = TranslatorOutputPackage
     def __init__(self,
                  inner_function,
                  context_translator: Optional[Callable] = None,

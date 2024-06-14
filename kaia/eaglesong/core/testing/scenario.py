@@ -90,10 +90,13 @@ class Scenario:
                 if not catched and not result:
                     return None, ValueError(err_msg)
 
-    def validate(self, ignore_errors = False):
+    def validate(self):
         aut = self.automaton_factory()
         interpreter = TestingInterpreter(aut, self.feedback_factory)
         self.log = []
+        first_exception = None
+        first_exception_base = None
+
         for i, s in enumerate(self.stages):
             if s.wait_before is not None:
                 time.sleep(s.wait_before)
@@ -106,24 +109,24 @@ class Scenario:
 
             if err is not None:
                 base, ex = err
-                if not ignore_errors:
-                    if base is None:
-                        raise ex
-                    else:
-                        raise ex from base
-                else:
-                    item.exception = ex
-                    item.exception_base = base
+                item.exception = ex
+                item.exception_base = base
+                if first_exception is None:
+                    first_exception = ex
+                    first_exception_base = base
 
             self.log.append(item)
 
         if self.printing is not None:
             self.printing(self.log)
+
+        if first_exception is not None:
+            if first_exception_base is not None:
+                raise first_exception from first_exception_base
+            else:
+                raise first_exception
+
         return self
-
-
-    def preview(self):
-        return self.validate(ignore_errors=True)
 
 
     @staticmethod
