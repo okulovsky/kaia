@@ -156,3 +156,4 @@ demos/brainbox/cache/
 
 my/
 !my/__init__.py
+!my/demo
