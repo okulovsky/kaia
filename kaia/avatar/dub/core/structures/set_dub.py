@@ -12,13 +12,9 @@ T = TypeVar('T')
 
 
 class SetDub(ToStrDub, IRandomizableDub, ABC, Generic[T]):
-    def __init__(self, value_list, name: str, placeholder_value = None):
+    def __init__(self, value_list, name: str):
         self._value_list = value_list
         self._str_to_value = None
-        if placeholder_value is None:
-            self._placeholder_value = Query.dict(self.str_to_value()).argmin(lambda z: len(z.key)).value
-        else:
-            self._placeholder_value = placeholder_value
         self._name = name
 
     def get_name(self):
@@ -39,11 +35,6 @@ class SetDub(ToStrDub, IRandomizableDub, ABC, Generic[T]):
     def to_all_strs(self, value: T) -> Tuple[str,...]:
         return (self.to_str(value),)
 
-    def get_placeholder_value(self):
-        if self._placeholder_value is None:
-            return self.get_random_value()
-        else:
-            return self._placeholder_value
 
     def get_random_value(self, random_state: Optional[RandomState] = RandomState()):
         index = random_state.randint(0, len(self._value_list))
@@ -55,10 +46,9 @@ class SetDub(ToStrDub, IRandomizableDub, ABC, Generic[T]):
 class DictDub(SetDub[T]):
     def __init__(self, value_to_str: Dict[T, str], name: Optional[str] = None):
         self._value_to_str = value_to_str
-        short_value = Query.dict(value_to_str).order_by(lambda z: z.value).first().key
         if name is None:
             name = '[Dictionary]' + ','.join(f'{key}={value}' for key, value in value_to_str.items())
-        super().__init__(list(value_to_str), name, short_value)
+        super().__init__(list(value_to_str), name)
 
     def to_str(self, value: T) -> str:
         return self._value_to_str[value]

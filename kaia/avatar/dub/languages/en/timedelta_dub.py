@@ -38,8 +38,6 @@ class TimedeltaDub(UnionDub, IRandomizableDub):
     def get_random_value(self, random_state: Optional[np.random.RandomState] = np.random.RandomState()):
         return timedelta(seconds=random_state.randint(0,10000))
 
-    def get_placeholder_value(self):
-        return timedelta(seconds=2)
 
     def get_name(self):
         return 'TimedeltaDub'

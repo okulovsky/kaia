@@ -29,8 +29,8 @@ class AvatarAPI:
     def empty_image(self):
         return _empty_image
 
-    def image_report(self, id: str) -> None:
-        return self.caller.call(AvatarEndpoints.image_report, id)
+    def image_report(self, report: str) -> None:
+        return self.caller.call(AvatarEndpoints.image_report, report)
 
     def state_change(self, change: dict[str, Any]) -> None:
         return self.caller.call(AvatarEndpoints.state_change, change)

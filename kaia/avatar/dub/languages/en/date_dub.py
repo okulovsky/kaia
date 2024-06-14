@@ -64,10 +64,10 @@ class DateDub(UnionDub, IRandomizableDub):
         super().__init__(
             UnionDub.create_sequences(
                 strings = [
-                    "{month} {day} year {year}",
+                    "{month} {day}, year {year}",
                     "{month} {day}",
                     "{day} of {month}",
-                    "{day} of {month} year {year}"
+                    "{day} of {month}, year {year}"
                 ],
                 dubs=dict(
                     month = DictDub(months, 'MonthsDub'),
@@ -85,9 +85,6 @@ class DateDub(UnionDub, IRandomizableDub):
 
     def get_random_value(self, random_state: Optional[RandomState] = RandomState()):
         return date(2020, 1, 1) + timedelta(days = random_state.randint(1, 5000))
-
-    def get_placeholder_value(self):
-        return date(2020, 1, 1)
 
     def date_to_dict(self, dt: Union[date, datetime]):
         if isinstance(dt, datetime):

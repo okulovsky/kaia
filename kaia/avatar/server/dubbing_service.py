@@ -6,8 +6,8 @@ from abc import ABC, abstractmethod
 from ...eaglesong.core import Audio
 from ...brainbox import BrainBoxTaskPack, BrainBoxWebApi, BrainBoxTask, DownloadingPostprocessor
 from ..dub.core import Utterance
-from ..dub.updater import Dubber
 from ...infra import Loc, FileIO
+from ...infra.ffmpeg import FFmpegTools
 from uuid import uuid4
 
 
@@ -47,7 +47,7 @@ class IDubbingService(ABC):
             fnames.append(fname)
             texts.append(audio.text)
         output_file = path/(str(uuid4())+'.wav')
-        Dubber.concat_audio_with_ffmpeg(fnames, output_file)
+        FFmpegTools.concat_audio_with_ffmpeg(fnames, output_file)
         with open(output_file,'rb') as stream:
             buffer = stream.read()
         for fname in fnames:
