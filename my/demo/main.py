@@ -25,6 +25,7 @@ def create_app(
     rhasspy_api = deciders.RhasspyInstaller(deciders.RhasspySettings()).run_in_any_case_and_return_api()
     whisper_api: deciders.WhisperAPI = deciders.WhisperInstaller(deciders.WhisperSettings()).run_in_any_case_and_return_api()
     whisper_api.load_model('base')
+    open_tts_api = deciders.OpenTTSInstaller(deciders.OpenTTSSettings()).install_if_not_installed()
 
     _ = deciders.OpenTTSInstaller(deciders.OpenTTSSettings()).run_in_any_case_and_return_api()
 

@@ -6,7 +6,18 @@ It employes state-of-the-art free models to generate content and personalize hom
 
 # Quick start
 
-First, you need to install [Anaconda](https://www.anaconda.com/) to manage the dependencies.
+To run demo, the following external software is needed:
+
+* [Docker](http://docker.com) to manage containers. 
+On Windows, it must run while demo is working. 
+On Linux, it must run with current user's priviliges.
+* [FFMPEG](http://ffmpeg.org) to manage sound files.
+On Windows, it must be accessible from command line with `ffmpeg`.
+* [PyAudio](https://pypi.org/project/PyAudio/). 
+On Windows, no steps are required.
+On Linux, `sudo apt install python3-pyaudio`
+
+Then, you need to install [Anaconda](https://www.anaconda.com/) to manage the dependencies.
 
 ## Creating the environment
 
@@ -21,6 +32,22 @@ First, you need to install [Anaconda](https://www.anaconda.com/) to manage the d
 * change working dir to the root of the repository
 
 * execute `pip install -e .`
+
+If something went wrong during the installation or afterwards, reinstall the environment:
+
+* execute `conda deactivate`, if the environment is activated.
+
+* execute `conda remove --name kaia --all -y`
+
+* repeat steps to create the environment
+
+## Running a demo
+
+Run `python my/demo/run_demo.py`
+
+It will take __a lot__ of time for the first time, as three containers need to be downloaded or built.
+
+## Browsing the documentation
 
 * execute `jupyter notebook`
 
