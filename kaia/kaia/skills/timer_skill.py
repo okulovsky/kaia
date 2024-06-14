@@ -105,7 +105,7 @@ class TimerSkill(SingleLineKaiaSkill):
             if len(self.timers) == 0:
                 yield TimerReplies.timer_is_cancelled.utter()
             else:
-                yield TimerReplies.timer_is_set.utter(index = index)
+                yield TimerReplies.timer_is_cancelled.utter(index = index)
 
         if input.template.name == TimerIntents.how_much_timers.name:
             if len(self.timers) == 0:

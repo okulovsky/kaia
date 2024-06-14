@@ -28,10 +28,10 @@ class IKaiaSkill(ABC):
     def get_replies(self) -> Iterable[Template]:
         return []
 
-    def should_start(self, input) -> False:
+    def should_start(self, input) -> bool:
         return False
 
-    def should_proceed(self, input) -> False:
+    def should_proceed(self, input) -> bool:
         return False
 
 

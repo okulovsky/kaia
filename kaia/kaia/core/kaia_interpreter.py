@@ -1,22 +1,15 @@
 from typing import *
 from ...eaglesong.core import IAutomaton, Interpreter, primitives as prim
-from ...avatar.dub.core import RhasspyAPI
-from .kaia_message import KaiaMessage
-from .kaia_server import KaiaApi
-
-
-
-
-
+from ..gui import KaiaMessage, KaiaGuiApi
 
 
 class KaiaInterpreter(Interpreter):
     def __init__(self,
                  automaton: IAutomaton,
-                 rhasspy_api: RhasspyAPI,
-                 kaia_api: Optional[KaiaApi] = None
+                 audio_play_function: Callable[[bytes],None],
+                 kaia_api: Optional[KaiaGuiApi] = None
                  ):
-        self.rhasspy_url = rhasspy_api
+        self.audio_play_function = audio_play_function
         self.kaia_api = kaia_api
         super().__init__(automaton)
         self.handle_type(prim.Return, self._process_return)
@@ -41,7 +34,7 @@ class KaiaInterpreter(Interpreter):
         return Interpreter.reset_automaton()
 
     def _publish_voice(self, audio: prim.Audio):
-        self.rhasspy_url.play_wav(audio.data)
+        self.audio_play_function(audio.data)
 
     def _publish_message(self, message: KaiaMessage):
         if self.kaia_api is not None:

@@ -2,7 +2,7 @@ from typing import *
 from kaia.eaglesong.core import Return
 from ..core import SingleLineKaiaSkill
 from kaia.avatar.dub.languages.en import *
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from enum import Enum
 
 class RelativeDay(Enum):
@@ -59,6 +59,8 @@ class DateSkill(SingleLineKaiaSkill):
             delta = input.value['delta'].value
 
         date = self.datetime_factory() + timedelta(days=delta)
+        if isinstance(date, datetime):
+            date = date.date()
 
         yield DateReplies.answer.utter(
             weekday = Weekdays(date.weekday()),

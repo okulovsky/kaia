@@ -6,3 +6,4 @@ class KaiaMessage:
     text: str
     is_error: bool = False
     speaker: Optional[str] = None
+    avatar: Optional[str] = None

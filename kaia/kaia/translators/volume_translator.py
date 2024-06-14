@@ -1,7 +1,7 @@
 from typing import *
 from dataclasses import dataclass
-from ...eaglesong.core import Translator, TranslatorOutputPackage
-from .kaia_message import KaiaMessage
+from kaia.eaglesong.core import Translator, TranslatorOutputPackage
+from kaia.kaia.core import KaiaMessage
 
 @dataclass
 class VolumeCommand:
@@ -9,6 +9,7 @@ class VolumeCommand:
     relative_value: Optional[float] = None
     stash_to: Optional[str] = None
     restore_from: Optional[str] = None
+
 
 class VolumeTranslator(Translator):
     def __init__(self,

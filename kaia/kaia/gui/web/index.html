@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+
+<head>
+    <link rel="stylesheet" href="static/index.css">
+    <script src="static/jquery-3.7.0.js"></script>
+</head>
+
+<body>
+    <script>
+        function process_chat(data) {
+          if (data == null) {
+            return
+          }
+          html = ''
+          for (const element of data) {
+            p = ''
+            p+='<p class = "';
+
+            if (element['is_bot']) p+='left'
+            else p+='right'
+            p+='" '
+
+            if (element['avatar']) p+='style="background-image: url('+"'"+element['avatar']+"'"+');" '
+
+            p+='">'
+            p+=element['text'].replaceAll("\n", "<br /><br />")+'</p>'
+            console.log(p)
+            html+=p
+          }
+          control = document.getElementById("chat")
+          control.innerHTML = html
+          control.scrollTop = control.scrollHeight
+          
+        }
+        
+        function process_image(data) {
+          if (data==null) {
+            return
+          }
+          document.getElementById("main_image").src = 'data:image/png;base64, '+data
+        }
+        
+        
+        function process_all(data) {
+          process_chat(data['chat'])
+          process_image(data['image'])
+        }
+        
+        
+        function make_fetch() {
+          fetch('/updates')
+          .then(response => response.json())
+          .then(data => process_all(data))
+          .catch(err => console.warn('Something went wrong.', err))
+        }
+        
+        setInterval(make_fetch, 1000)
+        </script>
+
+<div id="content">
+    <div id="image"><img id="main_image" src="static/image.png" alt="main image"><div id="under_chat">&nbsp;</div></div>
+    
+    <div id="chat">    
+        <p class="error">
+            Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. <br /><br />
+            Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. <br /><br />
+            Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. <br /><br />
+        </p>
+        <p class="left" style="background-image: url('/additions/lina.png');">
+            Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor.
+        </p>
+        <p class="right">
+            Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. 
+        </p>
+    </div>
+    
+</div>
+
+<div id="loader"></div>
+<script>
+$( "#loader" ).delay( 2000 ).animate( {height: '9px'}, 200).delay( 2000 ).animate({height: '0px'}, 200);
+</script>
+
+<div id="buttons">
+    <table>
+        <tr>
+            <td class="button_1">1</td>
+            <td class="button_2">3</td>
+            <td class="button_3">&#x1F921;</td>
+            <td class="button_4">&#128251;</td>
+        </tr>
+        <tr>
+            <td class="button_5">5</td>
+            <td class="button_6">6</td>
+            <td class="button_7">7</td>
+            <td class="button_8">8</td>
+        </tr>
+        <tr>
+            <td class="button_9">9</td>
+            <td class="button_10">10</td>
+            <td class="button_11">11</td>
+            <td class="button_12">12</td>
+        </tr>
+        <tr>
+            <td class="button_13 active">&#x2B05;</td>
+            <td class="button_14">14</td>
+            <td class="button_15">15</td>
+            <td class="button_16 active">&#x2716;</td>
+        </tr>
+    </table>
+    <script>
+        $( ".button_13" ).on( "click", function() {
+            $( "#buttons" ).animate( {'margin-left': '-50vw'}, 200);
+        });
+        $(".button_16").on("click", function(){
+            top.close();
+        });
+        $("#main_image").on("click", function(){
+            $( "#buttons" ).animate( {'margin-left': '0'}, 200).animate({'padding' : '0px 5px'}, 60).animate({'padding' : '0px 0px'}, 120);
+        });
+    </script>
+
+</body>
+
+
+</html>

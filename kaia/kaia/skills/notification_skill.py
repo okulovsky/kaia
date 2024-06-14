@@ -1,5 +1,6 @@
 from typing import *
-from kaia.kaia.core import IKaiaSkill, VolumeCommand
+from kaia.kaia.core import IKaiaSkill
+from kaia.kaia.translators import VolumeCommand
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from kaia.eaglesong.core import TimerTick, Return, Listen
@@ -59,10 +60,10 @@ class NotificationSkill(IKaiaSkill):
         return IKaiaSkill.Type.MultiLine
 
 
-    def should_start(self, input) -> False:
+    def should_start(self, input) -> bool:
         return self._find_notification() is not None
 
-    def should_proceed(self, input) -> False:
+    def should_proceed(self, input) -> bool:
         return True
 
 

@@ -5,12 +5,10 @@ from .exception_in_skill import ExceptionHandledSkill
 
 class KaiaTestAssistant(KaiaAssistant):
     def __init__(self,
-                 skills: List[SingleLineKaiaSkill],
-                 initialization: Optional[Callable] = None
+                 skills: List[SingleLineKaiaSkill]
                  ):
         super().__init__(
             skills,
             AutomatonNotFoundSkill(),
             exception_in_skill=ExceptionHandledSkill(),
-            initialization = initialization
         )
