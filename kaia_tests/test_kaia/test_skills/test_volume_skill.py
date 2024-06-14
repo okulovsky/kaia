@@ -2,7 +2,8 @@ from unittest import TestCase
 from kaia.eaglesong.core import Automaton, Scenario
 from kaia.kaia.skills.volume_skill import VolumeSkill, VolumeReplies, VolumeIntents
 from kaia.kaia.skills import KaiaTestAssistant
-from kaia.kaia.core import VolumeTranslator, KaiaMessage
+from kaia.kaia.translators import VolumeTranslator
+from kaia.kaia.core import KaiaMessage
 
 
 

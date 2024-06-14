@@ -4,17 +4,8 @@ from kaia.eaglesong.core import Automaton, Scenario, TimerTick
 from kaia.kaia.skills.timer_skill import TimerSkill, TimerReplies, TimerIntents
 from kaia.kaia.skills.notification_skill import NotificationSkill, NotificationRegister
 from kaia.kaia.skills import KaiaTestAssistant
+from kaia.kaia.core import DateTimeTestFactory
 
-
-class DateTimeFactory:
-    def __init__(self):
-        self.dt = datetime(2023,2,10)
-
-    def add(self, seconds: int):
-        self.dt += timedelta(seconds = seconds)
-
-    def __call__(self):
-        return self.dt
 
 def _factory(dtf, beautification):
     register = NotificationRegister('Alarm', 'Alarm cancelled' if beautification else None)
@@ -22,13 +13,13 @@ def _factory(dtf, beautification):
     timer = TimerSkill(register, dtf)
     return Automaton(KaiaTestAssistant([timer, notification]), None)
 
-def S(dtf: DateTimeFactory, with_after_audio = False):
+def S(dtf: DateTimeTestFactory, with_after_audio = False):
     return Scenario(automaton_factory=lambda: _factory(dtf, with_after_audio))
 
 
 class TestDate(TestCase):
     def test_timer_create(self):
-        dtf = DateTimeFactory()
+        dtf = DateTimeTestFactory()
         (
             S(dtf)
             .send(TimerIntents.set_the_timer.utter(duration=timedelta(minutes=5)))
@@ -54,7 +45,7 @@ class TestDate(TestCase):
         )
 
     def test_timer_works(self):
-        dtf = DateTimeFactory()
+        dtf = DateTimeTestFactory()
         (
             S(dtf)
             .send(TimerIntents.set_the_timer.utter(duration=timedelta(minutes=5)))
@@ -77,7 +68,7 @@ class TestDate(TestCase):
         )
 
     def test_timer_beautification(self):
-        dtf = DateTimeFactory()
+        dtf = DateTimeTestFactory()
         (
             S(dtf, True)
             .send(TimerIntents.set_the_timer.utter(duration=timedelta(minutes=1)))

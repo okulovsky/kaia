@@ -1,7 +1,7 @@
 from kaia.brainbox import BrainBoxTestApi, BrainBoxTask, BrainBoxTaskPack, DownloadingPostprocessor, MediaLibrary
-from kaia.brainbox.deciders.fake_image_generator import FakeImageDecider
-from kaia.brainbox.deciders.collector import Collector
-from kaia.avatar.server import AvatarTestApi, AvatarSettings, SimpleImageService
+from kaia.brainbox.deciders.utils.fake_image_generator import FakeImageDecider
+from kaia.brainbox.deciders.utils.collector import Collector
+from kaia.avatar.server import AvatarTestApi, AvatarSettings,  AnyImageStrategy, ImageService
 from kaia.avatar.narrator import DummyNarrator
 from unittest import TestCase
 from uuid import uuid4
@@ -36,12 +36,22 @@ class AvatarDubbingTestCase(TestCase):
         with BrainBoxTestApi(services) as bb_api:
             media_library_path = bb_api.execute(pack)
             with Loc.create_temp_file('avatar_test', 'json') as stats_file:
-                image_service = SimpleImageService(media_library_path, stats_file)
+                image_service = ImageService(AnyImageStrategy(), media_library_path, stats_file)
                 with AvatarTestApi(AvatarSettings(), DummyNarrator(''), None, image_service) as avatar_api:
+                    avatar_api.state_change(dict(character='Alice'))
                     for i in range(10):
                         result = avatar_api.image_get()
                         dct = json.loads(result.data)
                         self.assertIn('prompt', dct)
                         self.assertIn('option_index', dct)
+                        self.assertIn('Alice', dct['prompt'])
+
+                    avatar_api.state_change(dict(character='Bob'))
+                    for i in range(10):
+                        result = avatar_api.image_get()
+                        dct = json.loads(result.data)
+                        self.assertIn('prompt', dct)
+                        self.assertIn('option_index', dct)
+                        self.assertIn('Bob', dct['prompt'])
 
 

@@ -3,9 +3,9 @@ from kaia.kaia.skills.date import DateSkill, DateReplies, DateIntents
 from kaia.kaia.skills.time import TimeSkill, TimeReplies, TimeIntents
 from kaia.kaia.skills.kaia_test_assistant import KaiaTestAssistant
 from kaia.kaia.skills.automaton_not_found_skill import AutomatonNotFoundReplies
-from kaia.kaia.core import UtterancesTranslator
+from kaia.kaia.translators import RhasspyInputTranslator, VoiceoverTranslator
 from kaia.brainbox import BrainBoxTestApi, BrainBoxTask, BrainBoxTaskPack, DownloadingPostprocessor
-from kaia.brainbox.deciders.fake_dub_decider import FakeDubDecider
+from kaia.brainbox.deciders.utils.fake_dub_decider import FakeDubDecider
 from kaia.avatar.server import BrainBoxDubbingService, AvatarTestApi, AvatarSettings
 from uuid import uuid4
 from kaia.infra import FileIO
@@ -48,9 +48,11 @@ class AssistantTestCase(TestCase):
     def test_text_wrapper(self):
         assistant = KaiaTestAssistant([DateSkill(), TimeSkill(lambda: datetime(2020, 1, 1, 13, 45))])
         intents = assistant.get_intents()
-        aut = UtterancesTranslator(assistant, RhasspyAPI(None, intents), None)
+        assistant = RhasspyInputTranslator(assistant, RhasspyAPI(None, intents))
+        assistant = VoiceoverTranslator(assistant, None)
 
-        (Scenario(lambda: Automaton(aut, None))
+
+        (Scenario(lambda: Automaton(assistant, None))
          .send('What time is it?')
          .check(TimeReplies.answer.utter(hours=13, minutes=45).to_str())
          .validate()
@@ -69,9 +71,10 @@ class AssistantTestCase(TestCase):
             )
             with AvatarTestApi(AvatarSettings(), DummyNarrator('test_voice'), dubbing_service, None) as avatar_api:
                 assistant = KaiaTestAssistant([DateSkill(), TimeSkill(lambda: datetime(2020, 1, 1, 13, 45))])
-                aut = UtterancesTranslator(assistant, RhasspyAPI(None, assistant.get_intents()), avatar_api)
+                assistant = RhasspyInputTranslator(assistant, RhasspyAPI(None, assistant.get_intents()))
+                assistant = VoiceoverTranslator(assistant, avatar_api)
 
-                resp = (Scenario(lambda: Automaton(aut, None))
+                resp = (Scenario(lambda: Automaton(assistant, None))
                  .send('What time is it?')
                  .validate()
                  .log[-1].response[0]

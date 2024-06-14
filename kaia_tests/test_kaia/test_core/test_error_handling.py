@@ -32,7 +32,12 @@ class ErroneousSkill(SingleLineKaiaSkill):
 
 class AssistantTestCase(TestCase):
     def test_error_handling(self):
-        (Scenario(lambda: Automaton(KaiaTestAssistant([StatefulSkill(), ErroneousSkill()]),None))
+        def create_assistant():
+            assistant = KaiaTestAssistant([StatefulSkill(), ErroneousSkill()])
+            assistant.raise_exceptions = False
+            return Automaton(assistant, None)
+
+        (Scenario(create_assistant)
          .send('A')
          .check(0)
          .send('A')

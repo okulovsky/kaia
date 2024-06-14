@@ -1,5 +1,5 @@
 from kaia.brainbox import BrainBoxTestApi, BrainBoxTask, BrainBoxTaskPack, DownloadingPostprocessor
-from kaia.brainbox.deciders.fake_dub_decider import FakeDubDecider
+from kaia.brainbox.deciders.utils.fake_dub_decider import FakeDubDecider
 from kaia.avatar.server import AvatarTestApi, BrainBoxDubbingService, AvatarSettings
 from kaia.avatar.narrator import DummyNarrator
 from unittest import TestCase

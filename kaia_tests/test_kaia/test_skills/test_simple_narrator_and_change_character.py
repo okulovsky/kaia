@@ -1,17 +1,17 @@
 import json
 
-from kaia.avatar.server import AvatarTestApi, BrainBoxDubbingService, SimpleImageService, AvatarSettings
+from kaia.avatar.server import AvatarTestApi, BrainBoxDubbingService, ImageService, AvatarSettings, NewImageStrategy
 from kaia.avatar.narrator import SimpleNarrator
 from unittest import TestCase
 from kaia.brainbox import BrainBoxTask, BrainBoxTaskPack, MediaLibrary, BrainBoxTestApi, DownloadingPostprocessor
-from kaia.brainbox.deciders.fake_dub_decider import FakeDubDecider
+from kaia.brainbox.deciders.utils.fake_dub_decider import FakeDubDecider
 from uuid import uuid4
 from kaia.infra import Loc, FileIO
 from kaia.kaia.skills import KaiaTestAssistant
 from kaia.kaia.skills.character_skill import ChangeCharacterIntents, ChangeCharacterSkill
 from kaia.kaia.skills.change_image_skill import ChangeImageSkill, ChangeImageIntents
 from kaia.kaia.skills.time import TimeSkill, TimeIntents
-from kaia.kaia.core import UtterancesTranslator
+from kaia.kaia.translators import VoiceoverTranslator
 from kaia.avatar.dub.core import RhasspyAPI
 from kaia.eaglesong.core import Automaton, Scenario
 from pprint import pprint
@@ -44,7 +44,7 @@ class SimpleNarratorCharacterTestCase(TestCase):
                 }
                 MediaLibrary.generate(media_library, tags)
                 with Loc.create_temp_file('tests/change_image/stats', 'json') as stats_file:
-                    image_service = SimpleImageService(media_library, stats_file, False)
+                    image_service = ImageService(NewImageStrategy(), media_library, stats_file)
                     with AvatarTestApi(AvatarSettings(), narrator, dubbing_service, image_service) as avatar_api:
                         char_skill = ChangeCharacterSkill(['Alice','Bob','Claire'], avatar_api)
                         assistant = KaiaTestAssistant([
@@ -52,7 +52,7 @@ class SimpleNarratorCharacterTestCase(TestCase):
                             ChangeImageSkill(avatar_api),
                             char_skill
                             ])
-                        aut = UtterancesTranslator(assistant, RhasspyAPI(None, assistant.get_intents()), avatar_api)
+                        aut = VoiceoverTranslator(assistant, avatar_api)
                         log = (
                             Scenario(lambda: Automaton(aut, None))
                             .send(TimeIntents.question.utter())

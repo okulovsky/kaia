@@ -3,8 +3,8 @@ from unittest import TestCase
 import pandas as pd
 
 from kaia.brainbox import BrainBoxTask, BrainBoxTestApi, IDecider
-from kaia.brainbox.deciders.fake_dub_decider import FakeDubDecider
-from kaia.brainbox.deciders.collector import Collector
+from kaia.brainbox.deciders.utils.fake_dub_decider import FakeDubDecider
+from kaia.brainbox.deciders.utils.collector import Collector
 from kaia.brainbox import MediaLibrary
 from kaia.infra import Loc
 

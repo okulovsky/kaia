@@ -3,7 +3,7 @@ from unittest import TestCase
 from kaia.eaglesong.core import Automaton, Scenario, Image
 from kaia.kaia.skills.change_image_skill import ChangeImageIntents, ChangeImageSkill
 from kaia.kaia.skills import KaiaTestAssistant
-from kaia.avatar.server import AvatarTestApi, SimpleImageService, AvatarSettings
+from kaia.avatar.server import AvatarTestApi, ImageService, AvatarSettings, NewImageStrategy
 from kaia.brainbox import MediaLibrary
 from kaia.infra import Loc
 from kaia.avatar.narrator import DummyNarrator
@@ -26,7 +26,7 @@ class ChangeImageTestCase(TestCase):
             tags = {str(i): {'tag': i} for i in range(3)}
             MediaLibrary.generate(media_library, tags)
             with Loc.create_temp_file('tests/change_image/stats','json') as stats_file:
-                image_service = SimpleImageService(media_library, stats_file, False)
+                image_service = ImageService(NewImageStrategy(False), media_library, stats_file)
                 with AvatarTestApi(AvatarSettings(), DummyNarrator(''), None, image_service) as api:
                     (
                         Scenario(lambda: Automaton(KaiaTestAssistant([ChangeImageSkill(api)]), None))
