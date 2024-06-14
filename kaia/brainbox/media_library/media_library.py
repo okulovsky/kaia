@@ -7,6 +7,7 @@ import zipfile
 from datetime import datetime
 import pickle
 from ...infra import FileIO
+from copy import deepcopy
 
 import pandas as pd
 from yo_fluq import Queryable
@@ -16,7 +17,6 @@ DESCRIPTION_FILE_NAME = 'description.pkl'
 ERRORS_FILE_NAME = 'errors.pkl'
 
 
-@dataclass(frozen=True)
 class MediaLibrary:
     @dataclass(frozen=True)
     class Record:
@@ -52,10 +52,46 @@ class MediaLibrary:
                 with zipfile.ZipFile(self.holder_location, 'r', zipfile.ZIP_DEFLATED) as zp:
                     return zp.read(self.filename)
 
-    records: Tuple['MediaLibrary.Record', ...] = ()
-    errors: Tuple[str,...] = ()
-    info: Any = None
+    def __init__(self,
+                 records: Tuple['MediaLibrary.Record', ...] = (),
+                 errors: Tuple[str,...] = (),
+                 info: Any = None
+                 ):
+        self._records = tuple(records)
+        self._errors = tuple(errors)
+        self._mapping = {r.filename: r for r in self.records}
+        self._info = info
 
+    @property
+    def records(self) -> Tuple[Record,...]:
+        return self._records
+
+    @property
+    def errors(self) -> Tuple[str,...]:
+        return self._errors
+
+    @property
+    def mapping(self) -> Mapping[str, Record]:
+        return self._mapping
+
+    @property
+    def info(self) -> Any:
+        return self._info
+
+    def clone(self) -> 'MediaLibrary':
+        return deepcopy(self)
+
+    def limit_to(self, ids: Iterable[str]):
+        ids = set(ids)
+        return MediaLibrary(
+            tuple(deepcopy(z) for z in self.records if z.filename in ids),
+            (),
+            self.info
+        )
+
+
+    def __getitem__(self, item: str) -> 'MediaLibrary.Record':
+        return self.mapping[item]
 
     def enumerate_content(self) -> Iterable[Tuple['MediaLibrary.Record',bytes]]:
         non_packed = []
@@ -79,9 +115,6 @@ class MediaLibrary:
         for field in ['filename','timestamp','job_id']:
             df[field] = [getattr(r, field) for r in self.records]
         return df
-
-    def to_dict(self) -> Dict[str, 'MediaLibrary.Record']:
-        return {r.filename: r for r in self.records}
 
 
     def save(self, location: Path, with_progress_bar: bool = False):
@@ -163,6 +196,7 @@ class MediaLibrary:
 
     @staticmethod
     def read(*zip_files: Path) -> 'MediaLibrary':
+        zip_files = [Path(p) for p in zip_files]
         return MediaLibrary._load_zips(zip_files, None)
 
 

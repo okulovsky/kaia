@@ -5,7 +5,7 @@ import pandas as pd
 import os
 
 from .service import BrainBoxService
-from ..small_classes import BrainBoxJob, Base, BrainBoxTask
+from ..small_classes import BrainBoxJob, BrainBoxBase, BrainBoxTask
 import flask
 from kaia.infra.comm import IComm
 import io
@@ -43,7 +43,7 @@ class BrainBoxWebServer:
 
     def __call__(self):
         self.engine = self.comm.engine()
-        Base.metadata.create_all(self.engine)
+        BrainBoxJob.metadata.create_all(self.engine)
         if self.brainbox is not None:
             logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
             messenger = self.comm.messenger()
@@ -52,9 +52,11 @@ class BrainBoxWebServer:
 
         self.app = flask.Flask('brainbox')
         self.app.add_url_rule('/', view_func=self.index, methods=['GET'])
+        self.app.add_url_rule('/status', view_func=self.status, methods=['GET'])
         self.app.add_url_rule('/file/<fname>', view_func=self.file, methods=['GET'])
         self.app.add_url_rule('/cancel/<id>', view_func=self.cancel, methods=['GET'])
         self.app.add_url_rule('/cancel-all', view_func=self.cancel_all, methods=['GET'])
+        self.app.add_url_rule('/upload', view_func=self.upload, methods=['POST'])
 
         binder = MarshallingEndpoint.Binder(self.app)
         binder.bind_all(BrainBoxEndpoints, self)
@@ -65,7 +67,11 @@ class BrainBoxWebServer:
         df = pd.DataFrame(self.summary(None))
         if df.shape[0]!=0:
             df = df.sort_values('received_timestamp', ascending=False)
+        df = df.reset_index(drop=True)
         return df.to_html()
+
+    def status(self):
+        return 'OK'
 
 
     def file(self, fname):
@@ -163,4 +169,10 @@ class BrainBoxWebServer:
         if len(result)==0:
             return None
         return result[0]
+
+    def upload(self):
+        for key, value in flask.request.files.items():
+            value.save(self.file_cache/key)
+        return 'OK'
+
 

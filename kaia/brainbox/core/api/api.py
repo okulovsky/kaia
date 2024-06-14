@@ -3,7 +3,7 @@ import os
 import time
 from typing import *
 import requests
-from ..small_classes import BrainBoxJob, BrainBoxTask, BrainBoxTaskPack, IDecider, Base, LogItem
+from ..small_classes import BrainBoxJob, BrainBoxTask, BrainBoxTaskPack, IDecider, BrainBoxBase, LogItem
 from ..planers import SimplePlanner
 from .web_server import BrainBoxEndpoints, BrainBoxWebServer
 from .service import BrainBoxService
@@ -77,7 +77,15 @@ class BrainBoxWebApi:
             file.flush()
         return custom_file_path
 
-
+    def upload(self, path: Path):
+        reply = requests.post(
+            f'http://{self.address}/upload',
+            files=(
+                ('file', open(path, 'rb')),
+            )
+        )
+        if reply.status_code != 200:
+            raise ValueError(reply.text)
 
 
 
@@ -124,7 +132,7 @@ class BrainBoxTestApi:
         jobs = [BrainBoxJob.from_task(t) for t in tasks]
         sql = Sql.test_file('service' + str(uuid.uuid4()))
         engine = sql.engine()
-        Base.metadata.create_all(engine)
+        BrainBoxBase.metadata.create_all(engine)
 
         with Session(engine) as session:
             session.add_all(jobs)

@@ -6,9 +6,9 @@ from .task import BrainBoxTask
 from .decider_instance_dto import DeciderInstanceSpec
 
 
-Base = declarative_base()
+BrainBoxBase = declarative_base()
 
-class BrainBoxJob(Base):
+class BrainBoxJob(BrainBoxBase):
     __tablename__ = "brain_box_jobs"
 
     id: Mapped[str] = mapped_column(primary_key=True)
@@ -21,6 +21,7 @@ class BrainBoxJob(Base):
     batch: Mapped[str] = mapped_column(nullable=True)
 
     dependencies: Mapped[Optional[Dict[str, str]]] = mapped_column(type_=JSON, default = None)
+    has_dependencies: Mapped[bool] = mapped_column(nullable=False)
     ready: Mapped[bool] = mapped_column(default=False)
     ready_timestamp: Mapped[datetime] = mapped_column(nullable=True)
 
@@ -64,5 +65,6 @@ class BrainBoxJob(Base):
             back_track=task.back_track,
             received_timestamp=timestamp,
             dependencies=task.dependencies,
+            has_dependencies=task.dependencies is not None
         )
 
