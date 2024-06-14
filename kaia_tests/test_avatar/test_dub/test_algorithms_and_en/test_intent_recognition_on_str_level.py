@@ -2,9 +2,10 @@ from unittest import TestCase
 from kaia.avatar.dub.sandbox import Intents
 from kaia.avatar.dub.core import TestingTools, RhasspyHandler
 from kaia.avatar.dub.core.utils import rhasspy_nlu
+from time import sleep
 
 class IntentRecognitionTestCase(TestCase):
-    def test_intent_recognition(self):
+    def test_intent_recognition(self): 
         intents = Intents.get_templates()
 
         ttools = TestingTools(intents)
@@ -15,7 +16,7 @@ class IntentRecognitionTestCase(TestCase):
         for sample in ttools.samples:
             sample.against_utterance(handler.parse_string(sample.s))
             sample.recognition_obj = handler.recognitions_
-            print(sample.s)
+            sleep(0.01)
             sample.make_assert(self)
 
 

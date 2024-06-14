@@ -68,16 +68,22 @@ class TestingTools:
         elif isinstance(intents, Template):
             intents = [intents.with_name('intent')]
         samples = []
-        for intent in intents:
-            seen_strings = set()
-            for i in range(random_count):
-                value = intent.get_random_value()
-                strings = intent.to_all_strs(value)
-                for s in strings:
-                    if s in seen_strings:
-                        continue
-                    seen_strings.add(s)
-                    samples.append(Sample(intent, s, intent.name, value))
+        for index, intent in enumerate(intents):
+            if intent is None:
+                continue
+            try:
+                seen_strings = set()
+                for i in range(random_count):
+                    value = intent.get_random_value()
+                    strings = intent.to_all_strs(value)
+                    for s in strings:
+                        if s in seen_strings:
+                            continue
+                        seen_strings.add(s)
+                        samples.append(Sample(intent, s, intent.name, value))
+            except Exception as ex:
+                raise ValueError(f"At intent #{index}") from ex
+
         self.samples = samples
         self.intents = intents
 

@@ -14,8 +14,6 @@ class IRandomizableDub(ABC):
     def get_random_value(self, random_state: Optional[np.random.RandomState] = np.random.RandomState()):
         pass
 
-    def get_placeholder_value(self):
-        return self.get_random_value()
 
 
 class ToStrDub(Dub, ABC):

@@ -1,2 +1,1 @@
-from .console_executor import ConsoleExecutor
 from .pyfile_for_notebook import py_to_notebook

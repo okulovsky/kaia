@@ -1,4 +1,5 @@
 import os
+import time
 from typing import *
 import dataclasses
 import re
@@ -100,4 +101,26 @@ class MarshallingEndpoint:
                     raise ValueError(f'Endpoint {endpoint.endpoint} returned status_code {reply.status_code}.\n{reply.text}')
             return pickle.loads(reply.content)
 
+
+    class API:
+        def __init__(self, address: str):
+            self.caller = MarshallingEndpoint.Caller(address)
+
+        def check_availability(self):
+            try:
+                result = requests.get(f'http://{self.caller.address}')
+                if result.status_code == 200:
+                    return True
+            except:
+                return False
+
+        def wait_for_availability(self, time_in_seconds: int|None = None):
+            begin = datetime.now()
+            while True:
+                if self.check_availability():
+                    return
+                time.sleep(0.1)
+                if time_in_seconds is not None:
+                    if (datetime.now() - begin).seconds > time_in_seconds:
+                        raise ValueError("Couldn't wait for server to start")
 

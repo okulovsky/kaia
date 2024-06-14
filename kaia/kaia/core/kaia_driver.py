@@ -10,10 +10,16 @@ from websocket import create_connection
 from threading import Thread
 import json
 from queue import Queue
-from .kaia_server import KaiaApi, KaiaMessage
+from ..gui import KaiaGuiApi, KaiaMessage
+from .kaia_assistant import KaiaAssistant
 import traceback
 from pathlib import Path
 from dataclasses import dataclass
+from abc import ABC, abstractmethod
+
+@dataclass
+class Start:
+    first_time: bool
 
 
 lock = threading.Lock()
@@ -23,26 +29,59 @@ lock = threading.Lock()
 class KaiaContext:
     driver: 'KaiaDriver'
 
+
+class LogWriter:
+    def __init__(self, log_file):
+        self.log_file = log_file
+
+    def write(self, type, content):
+        if self.log_file is not None:
+            with lock:
+                os.makedirs(self.log_file.parent, exist_ok=True)
+                with open(self.log_file,'a') as file:
+                    file.write(json.dumps(dict(type=type, timestamp=str(datetime.now()), content=content)))
+
+
+
+
+
+
+class ICommandSource(ABC):
+    @abstractmethod
+    def get_name(self) -> str:
+        pass
+
+    @abstractmethod
+    def start(self, queue: Queue, log_writer: LogWriter):
+        pass
+
+
+
 class KaiaDriver:
     def __init__(self,
                  automaton_factory: Callable[[KaiaContext], IAutomaton],
-                 rhasspy_api: RhasspyAPI,
-                 kaia_api: Optional[KaiaApi] = None,
+                 audio_play_function: Callable[[bytes], None],
+                 command_sources: Iterable[ICommandSource],
+                 kaia_api: Optional[KaiaGuiApi] = None,
                  time_tick_frequency_in_seconds: Optional[int] = None,
                  sleep_in_seconds: float = 0.1,
                  enable_time_tick: bool = False,
-                 log_file: Optional[Path] = None
+                 log_file: Optional[Path] = None,
                  ):
+        self.command_sources = tuple(command_sources)
         self.last_time_tick: Optional[datetime] = None
         self.time_tick_frequency_in_seconds = time_tick_frequency_in_seconds
         self.sleep_in_seconds = sleep_in_seconds
         self.automaton_factory = automaton_factory
         self.interpreter: Optional[KaiaInterpreter] = None
-        self.rhasspy_api = rhasspy_api
+        self.audio_play_function = audio_play_function
         self.enable_time_tick = enable_time_tick
         self.queue = Queue()
         self.kaia_api = kaia_api
         self.log_file = log_file
+        self.first_time = True
+        self.log_writer: None|LogWriter = None
+
 
 
     def _process(self, item):
@@ -50,7 +89,9 @@ class KaiaDriver:
         if self.interpreter is None:
             context = KaiaContext(self)
             automaton = self.automaton_factory(context)
-            self.interpreter = KaiaInterpreter(automaton, self.rhasspy_api, self.kaia_api)
+            self.interpreter = KaiaInterpreter(automaton, self.audio_play_function, self.kaia_api)
+            self.interpreter.process(Start(self.first_time))
+            self.first_time = False
         try:
             self.interpreter.process(item)
         except:
@@ -59,7 +100,10 @@ class KaiaDriver:
             self.interpreter = None
 
     def run(self):
-        Thread(target=self._run_intents_listener, daemon=True).start()
+        self.log_writer = LogWriter(self.log_file)
+        for source in self.command_sources:
+            print(f'Starting {source.get_name()}')
+            source.start(self.queue, self.log_writer)
         print('[MAIN] entering main cycle')
         while True:
             now = datetime.now()
@@ -74,28 +118,10 @@ class KaiaDriver:
                 
             time.sleep(self.sleep_in_seconds)
 
-    def write_log_entry(self, type, content):
-        if self.log_file is not None:
-            with lock:
-                os.makedirs(self.log_file.parent, exist_ok=True)
-                with open(self.log_file,'a') as file:
-                    file.write(json.dumps(dict(type=type, timestamp=str(datetime.now()), content=content)))
-
-    def _run_intents_listener(self):
-        ws = create_connection(f"ws://{self.rhasspy_api.address}/api/events/intent")
-        print("[RHASSPY] Web-socket open")
-        while True:
-            result = json.loads(ws.recv())
-            self.write_log_entry('RhasspyIntentReceived', result)
-            utterance = self.rhasspy_api.handler.parse_json(result)
-            if utterance is None:
-                self.write_log_entry('RhasspyIntentNotRecognized', result)
-            else:
-                self.queue.put(utterance)
 
 
 
 
 
-    
+
 

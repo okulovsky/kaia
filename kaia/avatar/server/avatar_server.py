@@ -61,8 +61,8 @@ class AvatarWebServer:
     def state_get(self):
         return self.narrator.get_state()
 
-    def image_report(self, id: str):
-        return self.image_service.report(id)
+    def image_report(self, report: str):
+        return self.image_service.feedback(report)
 
 
 

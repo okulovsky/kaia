@@ -55,9 +55,6 @@ class Template:
         options = randomizer.walk(self.dub).to_list()
         return random_state.choice(options)
 
-    def get_placeholder_value(self):
-        randomizer = Randomizer(lambda z: z.get_placeholder_value())
-        return randomizer.walk(self.dub).first()
 
     def utter(self, *args, **kwargs):
         if len(args)>1:
@@ -75,6 +72,18 @@ class Template:
         template.name = self.name
         template.reply_to = self.reply_to
         return template
+
+    def __eq__(self, other):
+        if self is other:
+            return True
+        if not isinstance(other, Template):
+            return False
+        if self.name is not None and other.name is not None and self.name == other.name:
+            return True
+        return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 

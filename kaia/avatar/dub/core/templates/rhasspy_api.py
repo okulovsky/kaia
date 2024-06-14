@@ -5,42 +5,22 @@ from pathlib import Path
 import subprocess
 from kaia.infra import Loc, MarshallingEndpoint
 from .template import Utterance, Template
-from .....brainbox.deciders.docker_based import initialize
 
 
 class RhasspyAPI:
     def __init__(self,
-                 address: str,
+                 address: str | None,
                  intents: Optional[Iterable[Template]] = None,
                  timeout: int = 5
                  ):
         if address is not None:
             MarshallingEndpoint.check_address(address)
         self.address = address
+        self.handler: None|RhasspyHandler = None
         if intents is not None:
             self.handler = RhasspyHandler(intents)
-        else:
-            self.handler = None
         self.timeout = timeout
         self.last_set_volume = None
-
-    @staticmethod
-    def warmup(
-            data_folder: Path = Loc.data_folder/'rhasspy/profiles',
-            enable_sound_processing: bool = not Loc.is_windows):
-        arguments = []
-        arguments.append('docker run -d -p 12101:12101 --name rhasspy ')
-        arguments.append('--restart unless-stopped ')
-        arguments.append(f'-v "{data_folder}" ')
-        arguments.append('-v "/etc/localtime:/etc/localtime:ro" ')
-        if enable_sound_processing:
-            arguments.append('--device /dev/snd:/dev/snd ')
-        arguments.append('rhasspy/rhasspy ')
-        arguments.append('--user-profiles /profiles ')
-        arguments.append('--profile en')
-        args = ''.join(arguments)
-
-        initialize('rhasspy/rhasspy', args, 2, f'http://127.0.0.1:12101')
 
 
     def setup_intents(self, intents: Iterable[Template]):
@@ -84,7 +64,7 @@ class RhasspyAPI:
             output_name = '.'.join(name_parts[:-1]) + '.recoded.wav'
             output_file = file.parent / output_name
         subprocess.call([
-            Loc.get_ffmpeg(),
+            'ffmpeg',
             '-i',
             file,
             output_file,

@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from copy import copy
 
 @dataclass
 class BrainBoxTask:
@@ -28,6 +29,14 @@ class BrainBoxTask:
     @staticmethod
     def safe_id():
         return 'id_'+str(uuid4()).replace('-','')
+
+
+    def clone(self, **kwargs):
+        result = copy(self)
+        for k, v in kwargs.items():
+            setattr(result, k, v)
+        return result
+
 
 
 class IPackPostprocessor(ABC):

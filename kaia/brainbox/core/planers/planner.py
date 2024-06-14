@@ -1,7 +1,12 @@
 from typing import *
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from ..small_classes import BrainBoxJob, DeciderState, DeciderInstanceSpec
+from ..small_classes import DeciderState, DeciderInstanceSpec
+from .brain_box_job_for_planner import BrainBoxJobForPlanner
+
+
+
+
 
 class IPlanner(ABC):
     @dataclass
@@ -12,7 +17,7 @@ class IPlanner(ABC):
 
     @abstractmethod
     def plan(self,
-             non_finished_tasks: Iterable[BrainBoxJob],
+             non_finished_tasks: Iterable[BrainBoxJobForPlanner],
              instances: Iterable[DeciderState]
              ) -> 'IPlanner.Response':
         pass

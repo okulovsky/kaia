@@ -4,7 +4,7 @@ from yo_fluq import *
 
 class SimplePlanner(IPlanner):
     def plan(self,
-             non_finished_tasks: Iterable[BrainBoxJob],
+             non_finished_tasks: Iterable[BrainBoxJobForPlanner],
              instances: Iterable[DeciderState]
              ) -> 'IPlanner.Response':
         active_service = Query.en(instances).where(lambda z: z.up).single_or_default()
@@ -12,7 +12,6 @@ class SimplePlanner(IPlanner):
         if active_service is None:
             activate: List[DeciderInstanceSpec] = (Query
                         .en(non_finished_tasks)
-                        .where(lambda z: z.ready)
                         .group_by(lambda z: z.get_decider_instance_spec())
                         .select(lambda z: (z.key, len(z.value)))
                         .order_by_descending(lambda z: z[1])
@@ -25,7 +24,7 @@ class SimplePlanner(IPlanner):
             else:
                 return IPlanner.Response(None, (activate[0],), None)
 
-        tasks_for_active_service = Query.en(non_finished_tasks).where(lambda z: z.get_decider_instance_spec()==active_service.spec and z.ready).to_list()
+        tasks_for_active_service = Query.en(non_finished_tasks).where(lambda z: z.get_decider_instance_spec()==active_service.spec).to_list()
         if len(tasks_for_active_service) == 0:
             return IPlanner.Response(None, None, (active_service.spec,))
 

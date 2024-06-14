@@ -5,15 +5,17 @@ from copy import copy
 class DummyNarrator(INarrator):
     def __init__(self, default_voice: str):
         self.default_voice = default_voice
+        self.state = {}
 
     def get_voice(self) -> str:
         return self.default_voice
 
     def get_image_tags(self) -> dict[str,str]:
-        return {}
+        return self.state
 
     def apply_change(self, change: dict[str, str]):
-        pass
+        for key, value in change.items():
+            self.state[key] = value
 
     def get_state(self) -> dict[str, Any]:
         return {}

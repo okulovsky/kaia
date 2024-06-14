@@ -1,12 +1,11 @@
 import requests
 import time
-from .kaia_server import KaiaApi
-from .kaia_message import KaiaMessage
+from ..gui import *
 
 
 class FakeKaiaProcess:
     def __init__(self,
-                 api: KaiaApi
+                 api: KaiaGuiApi
                  ):
         self.api = api
         self.actions = []

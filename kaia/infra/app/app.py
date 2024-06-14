@@ -43,3 +43,20 @@ class KaiaApp:
         while True:
             time.sleep(1)
 
+
+    def test_runner(self):
+        return KaiaAppTestRunner(self)
+
+
+class KaiaAppTestRunner:
+    def __init__(self, app: KaiaApp):
+        self.app = app
+
+    def __enter__(self):
+        self.app.run_services_only()
+
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.app.exit()
+
+

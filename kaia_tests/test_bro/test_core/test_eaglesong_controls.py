@@ -27,7 +27,7 @@ class EaglesongUnitTest(TestCase):
          .check(Delete, Options)
          .send(SelectedOption('True'))
          .send(SelectedOption('←'))
-         .preview()
+         .validate()
          )
         print(messenger.read())
 
@@ -39,7 +39,7 @@ class EaglesongUnitTest(TestCase):
          .send(SelectedOption('amplitude'))
          .check(Delete, str)
          .send('6.5')
-         .preview()
+         .validate()
          )
 
         data = messenger.read()

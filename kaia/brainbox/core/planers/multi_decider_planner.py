@@ -15,14 +15,14 @@ class DeciderStats:
 
 @dataclass
 class PlanerStats:
-    non_finished_tasks: Tuple[BrainBoxJob]
+    non_finished_tasks: Tuple[BrainBoxJobForPlanner]
     deciders_stats: Dict[DeciderInstanceSpec, DeciderStats]
 
 
 
 class MultiDeciderPlanner(IPlanner):
     def plan(self,
-             non_finished_tasks: Iterable[BrainBoxJob],
+             non_finished_tasks: Iterable[BrainBoxJobForPlanner],
              instances: Iterable[DeciderState]
              ) -> 'IPlanner.Response':
         stats: Dict[DeciderInstanceSpec,DeciderStats] = {}
@@ -36,8 +36,6 @@ class MultiDeciderPlanner(IPlanner):
             else:
                 stats[spec].waiting.append(task.id)
             interaction_time = task.received_timestamp
-            if task.finished:
-                interaction_time = task.finished_timestamp
             delta = (current_time - interaction_time).total_seconds()/60
             if stats[spec].last_interaction_minutes_ago is None or stats[spec].last_interaction_minutes_ago > delta:
                 stats[spec].last_interaction_minutes_ago = delta

@@ -1,5 +1,6 @@
 from kaia.avatar.dub.languages.en import *
-from kaia.kaia.core import SingleLineKaiaSkill, VolumeCommand
+from kaia.kaia.core import SingleLineKaiaSkill
+from kaia.kaia.translators import VolumeCommand
 
 class VolumeIntents(TemplatesCollection):
     increase = Template(
