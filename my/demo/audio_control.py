@@ -4,7 +4,8 @@ from kaia.kaia.audio_control import core as ac
 
 def create_test_control_settings(rhasspy_api, whisper_api, samples):
     return AudioControlSettings(
-        mic_data=MicData(16000, 512),
+        mic_device_index=-1,
+        mic_data=MicData(sample_rate = 16000, frame_length = 512),
         silence_margin_in_seconds=0.01,
         pause_between_iterations_in_seconds=0,
         rhasspy_api = rhasspy_api,

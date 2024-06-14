@@ -11,7 +11,7 @@ if __name__ == '__main__':
     #VolumeTest(settings, [0.1, 0.3, 0.5])()
     #EchoTest(settings)()
     #PipelineTest(settings, 10)()
-    #SilenceTest(settings)()
-    ServerTest(settings)()
+    SilenceTest(settings)()
+    #ServerTest(settings)()
 
 
