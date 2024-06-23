@@ -23,7 +23,8 @@ class DemoCoreService(KaiaCoreAudioControlService):
         skills_list.append(skills.DateSkill())
         skills_list.append(skills.TimeSkill())
         # The latitude of Alexanderplatz, Berlin, Germany is 52.521992, and the longitude is 13.413244.
-        skills_list.append(weather.WeatherSkill(52.521992, 13.413244, 'Europe/Berlin'))
+        weather_settings = weather.WeatherSettings(52.521992, 13.413244, 'Europe/Berlin')
+        skills_list.append(weather.WeatherSkill(weather_settings))
         skills_list.append(joke.JokeSkill())
 
         timer_audio = Audio.from_file(Path(__file__).parent/'files/sounds/alarm.wav')
