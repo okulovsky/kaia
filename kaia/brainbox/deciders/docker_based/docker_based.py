@@ -72,7 +72,7 @@ class DockerBasedInstaller(IInstaller):
 
 
     def is_installed(self) -> bool:
-        output = self.executor.execute(f'docker images -q {self._pusher.get_remote_name()}', deployment.ExecuteOptions(return_output=True))
+        output = self.executor.execute(['docker','images','-q', self._pusher.get_remote_name()], deployment.ExecuteOptions(return_output=True))
         return len(output) > 0
 
     def create_api(self):
@@ -80,10 +80,10 @@ class DockerBasedInstaller(IInstaller):
 
     def uninstall(self):
         deployment.Deployment.kill_by_ancestor_name(self.executor, self._pusher.get_ancestor())
-        output = self.executor.execute(f'docker images -q {self._pusher.get_remote_name()}', deployment.ExecuteOptions(return_output=True))
+        output = self.executor.execute(['docker','images','-q', self._pusher.get_remote_name()], deployment.ExecuteOptions(return_output=True))
         image = output.decode('utf-8').strip()
         if len(output) > 0:
-            self.executor.execute(f'docker image rm -f {image}')
+            self.executor.execute(['docker','image','rm','-f',image])
 
     def build(self):
         self._container_builder.build_container()

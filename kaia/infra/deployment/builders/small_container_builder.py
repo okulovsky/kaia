@@ -30,7 +30,7 @@ class SmallContainerBuilder(IContainerBuilder):
 
     def build_container(self) -> None:
         self._prepare_container_folder()
-        self.executor.execute(f'docker build -t {self.image_name} .', ExecuteOptions(workdir=self.code_path))
+        self.executor.execute(['docker','build','-t', self.image_name,'.'], ExecuteOptions(workdir=self.code_path))
 
 
 
@@ -55,10 +55,10 @@ class RemoteSmallContainerBuilder(IContainerBuilder):
                 continue
             rel_path = file.relative_to(self.inner_builder.code_path)
             remote_path = remote_folder/rel_path
-            #print(f"copying file {file} -> {remote_path}")
+            print(f"copying file {file} -> {remote_path}")
             self.executor.create_empty_folder(remote_path.parent)
             self.executor.upload_file(file, str(remote_path))
-        self.executor.execute(f'docker build -t {self.inner_builder.image_name} {remote_folder}')
+        self.executor.execute(['docker','build','-t',self.inner_builder.image_name,remote_folder])
 
     def get_local_name(self) -> str:
         return self.inner_builder.get_local_name()

@@ -37,9 +37,9 @@ class SSHExecutor(IExecutor):
     def create_empty_folder(self, path: str|Path):
         self.inner_executor.execute(self.fix(self._get_prefix() + ['mkdir', '-p', str(path)]))
 
-    def execute(self, command: str | Iterable[str], options: ExecuteOptions|None = None):
+    def execute(self, command: Iterable[str], options: ExecuteOptions|None = None):
         if isinstance(command, str):
-            command = ' '.join(self._get_prefix()) + ' ' + command
+            raise TypeError("`str` type for command is no longer supported. Use array of commands")
         else:
             command = self._get_prefix() + list(command)
         return self.inner_executor.execute(self.fix(command), options)

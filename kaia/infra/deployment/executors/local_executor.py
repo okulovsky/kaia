@@ -16,6 +16,11 @@ class LocalExecutor(IExecutor):
 
 
     def execute(self, command: str | Iterable[str], options: ExecuteOptions|None = None):
+        if isinstance(command, str):
+            raise TypeError("`str` type for command is no longer supported. Use array of commands")
+
+        command = list(command)
+
         if options is None:
             options = ExecuteOptions()
 
@@ -28,7 +33,7 @@ class LocalExecutor(IExecutor):
             try:
                 result = subprocess.call(command, **kw)
             except Exception as ex:
-                raise ValueError(f"Error launching subprocess with parameters\n{command}") from ex
+                raise ValueError(f"Error launching subprocess with parameters\n{str_cmd}") from ex
 
             if result!=0:
                 raise ValueError(f'Error running subprocess, arguments:\n{str_cmd}')

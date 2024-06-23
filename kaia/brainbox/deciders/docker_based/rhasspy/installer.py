@@ -43,6 +43,7 @@ class RhasspyInstaller(DockerBasedInstaller):
 
 
     def install(self, build: bool = True):
+        self.executor.upload_file(self.settings.profile, str(self.settings.folder / 'en/profile.json'))
         self.build()
         self.server_endpoint.run()
         self.server_endpoint.kill()

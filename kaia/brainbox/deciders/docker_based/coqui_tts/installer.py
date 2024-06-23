@@ -32,7 +32,7 @@ class CoquiTTSInstaller(DockerBasedInstaller):
             propagate_gpu=self.settings.use_gpu,
             daemon=True,
         )
-        self.server_endpoint = DockerBasedInstallerEndpoint(self, server_config, 15)
+        self.server_endpoint = DockerBasedInstallerEndpoint(self, server_config, 15, self.settings.port)
 
         super().__init__(builder)
 
