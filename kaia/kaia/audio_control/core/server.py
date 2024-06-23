@@ -82,7 +82,7 @@ class AudioControlServer:
             time.sleep(0.1)
 
     def set_mode(self, mode: str):
-        self.cycle.states_requests_queue.put(mode)
+        self.cycle.set_pipeline(mode)
 
 
     def get_command(self):

@@ -49,6 +49,8 @@ class AudioControl:
         self.responds_log: list[AudioControlLog] = []
         self.responds_log_length = 20
 
+    def set_pipeline(self, mode: str):
+        self.states_requests_queue.put(mode)
 
 
     def run(self):

@@ -24,7 +24,7 @@ def task_generator(s, voice):
 class AvatarDubbingTestCase(TestCase):
     def test_images(self):
         services = dict(fake_image=FakeImageDecider(), collector=Collector())
-        picture_template = Template("{character} {scene}", character = IdentityDub(), scene=IdentityDub())
+        picture_template = Template("{character} {scene}", character = ToStrDub(), scene=ToStrDub())
         task_generator = PictureTaskGenerator(
             picture_template,
             BrainBoxTask.template('fake_image'),

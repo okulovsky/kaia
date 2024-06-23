@@ -11,8 +11,8 @@ class NutritionReplies(TemplatesCollection):
     eaten_confirm = Template(
         '{food}, {amount}.',
         '{food}, {amount} of {unit}{s}.',
-        food = IdentityDub(),
+        food = ToStrDub(),
         amount = CardinalDub(0, 1000),
-        unit = IdentityDub(),
+        unit = ToStrDub(),
         s = PluralAgreement('amount','', 's')
     )

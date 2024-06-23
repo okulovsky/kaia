@@ -10,6 +10,9 @@ from .kaia_message import KaiaMessage
 import base64
 import re
 
+from datetime import datetime
+import logging
+
 
 class KaiaEndpoints:
     add_message = MarshallingEndpoint('/change/add_message')
@@ -55,11 +58,14 @@ class KaiaGuiService:
         self._static_folders = static_folders
         self._chat = []
         self._image: Optional[bytes] = None
+        self._updated_at: Optional[datetime] = None
+        self._last_update_requests: Dict[str,datetime] = {}
 
 
     def __call__(self):
         self.app = flask.Flask('Kaia', static_folder = None)
         self.app.add_url_rule('/', view_func=self.index, methods=['GET'])
+        self.app.add_url_rule('/updates/<session_id>', view_func=self.updates, methods=['GET'])
         self.app.add_url_rule('/updates', view_func=self.updates, methods=['GET'])
 
         if self._static_folders is not None:
@@ -70,6 +76,9 @@ class KaiaGuiService:
 
         binder = MarshallingEndpoint.Binder(self.app)
         binder.bind_all(KaiaEndpoints, self)
+
+        log = logging.getLogger('werkzeug')
+        log.setLevel(logging.ERROR)
         self.app.run('0.0.0.0', self._port)
 
 
@@ -77,8 +86,20 @@ class KaiaGuiService:
         return self._main_page
 
 
-    def updates(self):
-        update = dict(chat = self._chat)
+    def updates(self, session_id = None):
+        if (
+            session_id is not None and
+            session_id in self._last_update_requests and
+            self._updated_at is not None and
+            self._updated_at < self._last_update_requests[session_id]
+        ):
+            self._last_update_requests[session_id] = datetime.now()
+            return dict(updated=False)
+
+        if session_id is not None:
+            self._last_update_requests[session_id] = datetime.now()
+
+        update = dict(updated=True, chat = self._chat)
         if self._image is not None:
             update['image'] = base64.b64encode(self._image).decode('ascii')
         else:
@@ -86,13 +107,16 @@ class KaiaGuiService:
         return flask.jsonify(update)
 
     def add_message(self, message: KaiaMessage):
+        self._updated_at = datetime.now()
         dct = message.__dict__
         dct['text'] = re.sub('\*([^*+])\*', '<i>\1</i>', dct['text'])
         self._chat.append(dct)
+
         # self._chat = self._chat[-10:]
         return ''
 
     def set_image(self, image: bytes):
+        self._updated_at = datetime.now()
         self._image = image
 
 

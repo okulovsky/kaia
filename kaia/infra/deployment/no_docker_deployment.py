@@ -30,18 +30,18 @@ class NoDockerDeployment:
         remote_zip = self.remote_path+'/archive.zip'
         self.executor.upload_file(zip_path, remote_zip)
         src = self.get_src_path()
-        self.executor.execute(f'rm -rf {src}')
-        self.executor.execute(f'mkdir {src}')
-        self.executor.execute(f'cd {src}; unzip {remote_zip}')
+        self.executor.execute(['rm','-rf',src])
+        self.executor.execute(['mkdir',src])
+        self.executor.execute(f'cd {src}; unzip {remote_zip}') #TODO: convert to array too
 
     def setup_environment(self):
-        self.executor.execute(f'{self.conda_path}/bin/conda remove --name {self.env_name} --all -y')
-        self.executor.execute(f'{self.conda_path}/bin/conda create --name {self.env_name} python={self.container_builder.python_version} -y')
-        self.executor.execute(f'{self.conda_path}/envs/{self.env_name}/bin/python -m pip install '+' '.join(self.container_builder.dependencies))
+        self.executor.execute([f'{self.conda_path}/bin/conda','remove','--name',self.env_name,'--all','-y'])
+        self.executor.execute([f'{self.conda_path}/bin/conda','create','--name',self.env_name,f'python={self.container_builder.python_version}', '-y'])
+        self.executor.execute([f'{self.conda_path}/envs/{self.env_name}/bin/python', '-m', 'pip', 'install'] +list(self.container_builder.dependencies))
 
     def run(self):
-        self.executor.execute(f'{self.conda_path}/envs/{self.env_name}/bin/python -m pip install -e {self.get_src_path()}')
-        self.executor.execute(f'{self.conda_path}/envs/{self.env_name}/bin/python {self.get_src_path()}/entry.py')
+        self.executor.execute([f'{self.conda_path}/envs/{self.env_name}/bin/python','-m','pip','install','-e',self.get_src_path()])
+        self.executor.execute([f'{self.conda_path}/envs/{self.env_name}/bin/python',f'{self.get_src_path()}/entry.py'])
 
 
 

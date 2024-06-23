@@ -1,4 +1,4 @@
-from .dub import Dub, IRandomizableDub, ToStrDub, IdentityDub
+from .dub import Dub, IRandomizableDub, ToStrDub
 from .constant_dub import ConstantDub
 from .set_dub import SetDub, DictDub, EnumDub, StringSetDub
 from .sequence_dub import SequenceDub

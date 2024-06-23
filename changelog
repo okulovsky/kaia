@@ -1,3 +1,8 @@
+2.1.1.
+    - Dubs parsing is improved
+    - Executors require command in array format for linux-compatibility
+    - Chat is Kaia GUI is now scrollable, not selectable
+    - Traffic between browser and Kaia GUI is optimized
 2.1.0.
     - New deciders in Brainbox, also new architecture of the deciders, based on Docker
     - Brainbox's performance is optimized for the case with lots of tasks

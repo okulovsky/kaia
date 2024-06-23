@@ -1,5 +1,5 @@
 from typing import *
-from .ints import OrdinalDub, CardinalDub
+from .int_dub import OrdinalDub, CardinalDub
 from ...core import UnionDub, DictDub, SetDub, IRandomizableDub, SetUnionDub
 from datetime import date, datetime, timedelta
 from numpy.random import RandomState

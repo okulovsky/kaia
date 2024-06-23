@@ -1,6 +1,6 @@
 # Description
 
-`kaia` is an open-source home assistant with AI-generated voice, face and personality. 
+Kaia (Kitchen AI-Assistant) is an open-source home assistant with AI-generated voice, face and personality. 
 It employes state-of-the-art free models to generate content and personalize home assistant. 
 
 
@@ -9,13 +9,13 @@ It employes state-of-the-art free models to generate content and personalize hom
 To run demo, the following external software is needed:
 
 * [Docker](http://docker.com) to manage containers. 
-On Windows, it must run while demo is working. 
-On Linux, it must run with current user's priviliges.
+  * On Windows, Docker Desktop app must run while demo is working. 
+  * On Linux, it must run with current user's priviliges.
 * [FFMPEG](http://ffmpeg.org) to manage sound files.
-On Windows, it must be accessible from command line with `ffmpeg`.
-* [PyAudio](https://pypi.org/project/PyAudio/). 
-On Windows, no steps are required.
-On Linux, `sudo apt install python3-pyaudio`
+  * On Windows, it must be accessible from command line with `ffmpeg`.
+* [PyAudio](https://pypi.org/project/PyAudio/).
+  * On Windows, no steps are required.
+  * On Linux, `sudo apt install python3-pyaudio`
 
 Then, you need to install [Anaconda](https://www.anaconda.com/) to manage the dependencies.
 

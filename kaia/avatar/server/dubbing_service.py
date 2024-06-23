@@ -70,7 +70,7 @@ class BrainBoxDubbingService(IDubbingService):
     def __init__(self,
                  task_generator: Callable[[str, str], BrainBoxTaskPack],
                  brain_box_api: BrainBoxWebApi,
-                 cache_ttl_in_seconds: float = 60*10
+                 cache_ttl_in_seconds: float = 10*60
                  ):
         self.task_generator = task_generator
         self.brain_box_api = brain_box_api
@@ -80,13 +80,17 @@ class BrainBoxDubbingService(IDubbingService):
 
     def _try_from_cache(self, s: str, voice: str):
         for key in list(self.cache):
-            if (self.cache[key].timestamp - datetime.datetime.now()).total_seconds() > self.cache_ttl_in_minutes:
+            if (datetime.datetime.now() - self.cache[key].timestamp).total_seconds() > self.cache_ttl_in_minutes:
                 del self.cache[key]
         key = (s, voice)
         if key not in self.cache:
             return None
-        result = self.brain_box_api.join(self.cache[key].pack)
-        return result
+        try:
+            result = self.brain_box_api.join(self.cache[key].pack)
+            return result
+        except:
+            del self.cache[key]
+        return None
 
 
     def dub_string(self, s: str, voice: str) -> Audio:

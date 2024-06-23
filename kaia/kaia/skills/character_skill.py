@@ -10,7 +10,7 @@ class ChangeCharacterReplies(TemplatesCollection):
     )
     all_characters = Template(
         "The characters available are: {character_list}",
-        character_list = IdentityDub()
+        character_list = ToStrDub()
     )
 
 

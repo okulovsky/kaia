@@ -1,1 +1,1 @@
-from .skill.skill import WeatherSkill, WeatherIntents, WeatherReply
+from .skill import *

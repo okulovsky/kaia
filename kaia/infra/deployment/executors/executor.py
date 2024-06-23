@@ -11,11 +11,14 @@ class ExecuteOptions:
 
 class IExecutor(ABC):
     @abstractmethod
-    def execute(self, command: str | Iterable[str], options: ExecuteOptions|None = None):
+    def execute(self, command: Iterable[str], options: ExecuteOptions|None = None):
         pass
 
-    def execute_several(self, commands: Iterable[str|Iterable[str]]):
+    def execute_several(self, commands: Iterable[Iterable[str]]):
         for command in commands:
+            if isinstance(command, str):
+                raise TypeError("`str` type for command is no longer supported. Use array of commands")
+            command = list(command)
             if len(command) == 0:
                 continue
             self.execute(command)

@@ -1,4 +1,5 @@
-from .kaia_driver import ICommandSource, LogWriter, Queue
+from .kaia_driver import ICommandSource, Queue
+from .kaia_log import KaiaLog
 from ...avatar.dub.core import RhasspyAPI
 from websocket import create_connection
 import json
@@ -8,18 +9,18 @@ class RhasspyCommandSource(ICommandSource):
     def __init__(self, rhasspy_api: RhasspyAPI):
         self.rhasspy_api = rhasspy_api
 
-    def start(self, queue: Queue, log_writer: LogWriter):
-        Thread(target = self._run_intents_listener, args=(queue, log_writer), daemon=True).start()
+    def start(self, queue: Queue):
+        Thread(target = self._run_intents_listener, args=(queue,), daemon=True).start()
 
-    def _run_intents_listener(self, queue: Queue, log_writer: LogWriter):
+    def _run_intents_listener(self, queue: Queue):
         ws = create_connection(f"ws://{self.rhasspy_api.address}/api/events/intent")
-        print("[RHASSPY] Web-socket open")
+        KaiaLog.write('Rhasspy CS init', 'Web socket open')
         while True:
             result = json.loads(ws.recv())
-            log_writer.write('RhasspyIntentReceived', result)
+            KaiaLog.write('Rhasspy intent received', result)
             utterance = self.rhasspy_api.handler.parse_json(result)
             if utterance is None:
-                log_writer.write('RhasspyIntentNotRecognized', result)
+                KaiaLog.write('Rhasspy intent not recognized', result)
             else:
                 queue.put(utterance)
 

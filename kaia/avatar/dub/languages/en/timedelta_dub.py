@@ -1,6 +1,6 @@
 from typing import *
 from ...core import UnionDub, IRandomizableDub
-from .ints import CardinalDub
+from .int_dub import CardinalDub
 from .plural_agreement import PluralAgreement
 from datetime import timedelta, time
 import numpy as np

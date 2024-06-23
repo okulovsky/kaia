@@ -4,10 +4,18 @@ from enum import Enum
 from abc import ABC, abstractmethod
 from yo_fluq import Query
 from numpy.random import RandomState
-
+from uuid import uuid4
 
 T = TypeVar('T')
 
+class SetDubValuesCache:
+    _cache = {}
+
+    @staticmethod
+    def get(dub: 'SetDub'):
+        if dub._uuid not in SetDubValuesCache._cache:
+            SetDubValuesCache._cache[dub._uuid] =  {s: v for v in dub.get_all_values() for s in dub.to_all_strs(v)}
+        return SetDubValuesCache._cache[dub._uuid]
 
 
 
@@ -16,6 +24,8 @@ class SetDub(ToStrDub, IRandomizableDub, ABC, Generic[T]):
         self._value_list = value_list
         self._str_to_value = None
         self._name = name
+        self._uuid = uuid4()
+
 
     def get_name(self):
         return self._name
@@ -24,13 +34,18 @@ class SetDub(ToStrDub, IRandomizableDub, ABC, Generic[T]):
         return list(self._value_list)
 
     def str_to_value(self):
+        return SetDubValuesCache.get(self)
+
+    def _old_str_to_value(self):
         if self._str_to_value is None:
             self._str_to_value = {s: v for v in self.get_all_values() for s in self.to_all_strs(v)}
         return self._str_to_value
 
+
     @abstractmethod
     def to_str(self, value: T) -> str:
         pass
+
 
     def to_all_strs(self, value: T) -> Tuple[str,...]:
         return (self.to_str(value),)

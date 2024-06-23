@@ -19,8 +19,8 @@ class KaiaCoreAudioControlServiceSettings:
     kaia_api: kaia_core.KaiaGuiApi
     audio_api: ac.AudioControlAPI
     initial_volume: float = 0.1
-    log_file: Path | None = None
     delay_for_ac_server: int = 10
+    log_file: Path|None = None
 
 
 class KaiaCoreAudioControlService(kaia_core.KaiaCoreService):
@@ -51,6 +51,7 @@ class KaiaCoreAudioControlService(kaia_core.KaiaCoreService):
         self.settings.audio_api.wait_for_availability(self.settings.delay_for_ac_server)
         kaia_core.RhasspyDriverSetup(self.settings.rhasspy_api, self.settings.kaia_api, True, None)(self)
         self.settings.audio_api.set_volume(self.settings.initial_volume)
+
 
 
     def create_driver(self) -> kaia_core.KaiaDriver:

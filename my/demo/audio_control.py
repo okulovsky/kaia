@@ -12,7 +12,7 @@ def create_test_control_settings(rhasspy_api, whisper_api, samples):
         whisper_api = whisper_api,
         silence_level=400,
         environment=AudioControlSettings.Environments.Test,
-        add_debug_output=True,
+        #add_debug_output=True,
         load_mic_samples=samples,
     )
 

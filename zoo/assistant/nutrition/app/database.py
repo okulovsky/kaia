@@ -10,7 +10,7 @@ class DiaryRecord(Base):
     __tablename__ = "diary"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    username: Mapped[str] = mapped_column()
+    user: Mapped[str] = mapped_column(nullable=True)
     timestamp: Mapped[datetime] = mapped_column()
     food: Mapped[str] = mapped_column()
     amount: Mapped[float] = mapped_column()
