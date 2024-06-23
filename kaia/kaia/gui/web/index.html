@@ -7,6 +7,8 @@
 
 <body>
     <script>
+        var session_id =  Math.floor(Math.random() * 1000000).toString()
+
         function process_chat(data) {
           if (data == null) {
             return
@@ -23,7 +25,7 @@
             if (element['avatar']) p+='style="background-image: url('+"'"+element['avatar']+"'"+');" '
 
             p+='">'
-            p+=element['text'].replaceAll("\n", "<br /><br />")+'</p>'
+            p+=element['text'].replaceAll("\n", "<br />")+'</p>'
             console.log(p)
             html+=p
           }
@@ -42,25 +44,29 @@
         
         
         function process_all(data) {
-          process_chat(data['chat'])
-          process_image(data['image'])
+          if (data['updated']) {
+            process_chat(data['chat'])
+            process_image(data['image'])
+          }
         }
         
         
         function make_fetch() {
-          fetch('/updates')
+          fetch('/updates/'+session_id)
           .then(response => response.json())
           .then(data => process_all(data))
           .catch(err => console.warn('Something went wrong.', err))
         }
         
         setInterval(make_fetch, 1000)
+
+
         </script>
 
 <div id="content">
     <div id="image"><img id="main_image" src="static/image.png" alt="main image"><div id="under_chat">&nbsp;</div></div>
     
-    <div id="chat">    
+    <div id="chat">
         <p class="error">
             Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. <br /><br />
             Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. <br /><br />
@@ -70,9 +76,47 @@
             Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor.
         </p>
         <p class="right">
-            Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. 
+            Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. <br /><br />
+            Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. <br /><br />
+            Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. <br /><br />
+                        Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. <br /><br />
+            Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. <br /><br />
+            Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. <br /><br />
+                        Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. <br /><br />
+            Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. <br /><br />
+            Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. <br /><br />
+                        Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. <br /><br />
+            Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. <br /><br />
+            Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. <br /><br />
+                        Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. <br /><br />
+            Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. <br /><br />
+            Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. <br /><br />
+                        Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. <br /><br />
+            Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. <br /><br />
+            Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. <br /><br />
         </p>
+
     </div>
+
+    <script>
+        var down=false;
+        var scrollTop=0;
+        var y = 0;
+
+        $('#chat').mousedown(function(e) {
+            down = true;
+            scrollTop = this.scrollTop;
+            y = e.clientY;
+        }).mouseup(function() {
+            down = false;
+        }).mousemove(function(e) {
+            if (down) {
+               this.scrollTop = scrollTop + y - e.clientY;
+            }
+        }).mouseleave(function() {
+            down = false;
+        });
+    </script>
     
 </div>
 

@@ -18,10 +18,8 @@ class HelpSkill(SingleLineKaiaSkill):
             raise ValueError("Skill is misconfigured, no assistant is provided")
         reply = []
         for skill in self.assistant.skills:
-            reply.append(skill.get_name())
-            for intent in skill.get_intents():
-                for template in intent.string_templates:
-                    reply.append("- "+template)
+            commands = ', '.join(template for intent in skill.get_intents() for template in intent.string_templates)
+            reply.append(f'{skill.get_name()}: {commands}')
             reply.append('')
         yield KaiaMessage(True, '\n'.join(reply))
         yield HelpReplies.help.utter()

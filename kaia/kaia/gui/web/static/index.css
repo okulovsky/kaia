@@ -65,6 +65,7 @@ body {
     scroll-snap-align: end;
     overscroll-behavior-y: contain;
     scroll-snap-type: y proximity;
+    user-select: none;
 }
 
 #chat p {

@@ -1,4 +1,4 @@
-from kaia.kaia.core import KaiaContext, SingleLineKaiaSkill
+from kaia.kaia.core import KaiaContext, SingleLineKaiaSkill, KaiaLog
 from kaia.eaglesong.core import ContextRequest
 from kaia.avatar.dub.languages.en import *
 
@@ -13,9 +13,6 @@ class LogFeedbackSkill(SingleLineKaiaSkill):
         super().__init__(LogFeedbackIntents, LogFeedbackReplies)
 
     def run(self):
-        context: KaiaContext = yield ContextRequest()
-        if context.driver is None:
-            raise ValueError("The service is misconfigured: `driver` is missing from KaiaContext")
         input: Utterance = yield
-        context.driver.log_writer.write('VocalFeedback', dict(intent=input.template.name))
+        KaiaLog.write('VocalFeedback', str(dict(intent=input.template.name)))
         yield LogFeedbackReplies.answer.utter()

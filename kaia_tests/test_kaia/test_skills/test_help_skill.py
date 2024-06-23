@@ -10,7 +10,10 @@ def create_automaton():
     help.assistant = assistant
     return Automaton(assistant, None)
 
+right_answer = '''TimeSkill: What time is it?, What is the time?
 
+HelpSkill: What can you do?
+'''
 
 class ChangeImageTestCase(TestCase):
     def test_change_image(self):
@@ -21,5 +24,6 @@ class ChangeImageTestCase(TestCase):
             .validate()
             .log
         )
-        self.assertEqual('TimeSkill\n- What time is it?\n- What is the time?\n\nHelpSkill\n- What can you do?\n', log[-1].response[0].text)
+        print(f"'''{log[-1].response[0].text}'''")
+        self.assertEqual(right_answer, log[-1].response[0].text)
 

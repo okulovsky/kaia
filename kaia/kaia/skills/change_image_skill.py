@@ -12,7 +12,6 @@ class ChangeImageIntents(TemplatesCollection):
     good_image = Template('Good image')
 
 class ChangeImageReplies(TemplatesCollection):
-    answer = Template("Here is a new image for you")
     thanks = Template("Thanks, I'm flattered! You're cute too!")
 
 
