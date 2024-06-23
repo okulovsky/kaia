@@ -10,12 +10,14 @@ class UnionDub(Dub):
                  sequences: Iterable[SequenceDub],
                  value_to_dict: Optional[Callable[[Any], Dict]] = None,
                  dict_to_value: Optional[Callable[[Dict], Any]] = None,
-                 strict_dict_equality_in_to_str=True
+                 strict_dict_equality_in_to_str=True,
+                 treat_none_as_missing_value=True
                  ):
         self._sequences = tuple(sequences)
         self._value_to_dict = value_to_dict
         self._dict_to_value = dict_to_value
         self._strict_dict_equality_in_to_str = strict_dict_equality_in_to_str
+        self._treat_none_as_missing_value=treat_none_as_missing_value
         self._name = '/'.join(c.get_name() for c in self._sequences)
 
     @property
@@ -33,6 +35,10 @@ class UnionDub(Dub):
     @property
     def strict_dict_equality_in_to_str(self):
         return self._strict_dict_equality_in_to_str
+
+    @property
+    def treat_none_as_missing_value(self):
+        return self._treat_none_as_missing_value
 
     def get_name(self):
         return self._name

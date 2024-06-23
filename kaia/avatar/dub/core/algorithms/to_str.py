@@ -25,7 +25,10 @@ class ToStr(WalkerState):
                 raise ValueError(
                     f'If no `value_to_dict` converter is provided, the argument must be dict, but was {value} in template {template}')
 
-        keys = tuple(sorted(value))
+        if template.treat_none_as_missing_value:
+            keys = tuple(sorted(k for k,v in value.items() if v is not None))
+        else:
+            keys = tuple(sorted(value))
         if template.strict_dict_equality_in_to_str:
             if sequence.consumed_keys != keys:
                 return ()
@@ -33,7 +36,6 @@ class ToStr(WalkerState):
             for key in sequence.consumed_keys:
                 if key not in keys:
                     return ()
-
         return (self.spawn(value = value, stack_level = self.stack_level+1), )
 
     def pop(self, name: Optional[str], template: UnionDub, sequence: SequenceDub) -> Iterable['WalkerState']:

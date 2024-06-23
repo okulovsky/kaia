@@ -25,6 +25,7 @@ class RhasspyHandler:
     def _make_parse(self, intent_name, entities) -> Optional[Utterance]:
         if intent_name not in self.intent_to_template:
             return None
+        # TODO: Actually, we can use a ValuesConvolutor here as well, but I'm afraid to touch it
         template = self.intent_to_template[intent_name]
         rule = self.intent_to_rules[intent_name]
         s = rule.to_sample_str(entities)

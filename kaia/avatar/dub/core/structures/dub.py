@@ -17,12 +17,6 @@ class IRandomizableDub(ABC):
 
 
 class ToStrDub(Dub, ABC):
-    @abstractmethod
-    def to_str(self, value):
-        pass
-
-
-
-class IdentityDub(ToStrDub):
     def to_str(self, value):
         return str(value)
+
