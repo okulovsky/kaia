@@ -1,0 +1,2 @@
+from .wake_word import IWakeWordDetector
+from .porcupine_wake_word import PorcupineDetector

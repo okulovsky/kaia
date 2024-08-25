@@ -1,45 +1,44 @@
 from typing import *
 from unittest import TestCase
-from kaia.avatar.dub.core import Utterance
-from kaia.infra import FileIO
-from kaia_tests.test_kaia.test_audio_control.audio_control_cycle import create_audio_control_settings, get_intents
+from kaia_tests.test_kaia.test_audio_control.setup import *
 from pathlib import Path
-from kaia.kaia.audio_control import core as ac
-from yo_fluq import *
-
+from kaia.kaia.audio_control.audio_control_cycle import AudioControlCycle, MicState, IterationResult
+from kaia.kaia.audio_control.inputs import FakeInput
 
 class Checker:
-    def __init__(self, tc: TestCase, result):
+    def __init__(self, tc: TestCase, result: List[IterationResult]):
         self.tc = tc
         self.result = result
         self.index = 0
 
     def check(self,
-              from_state: str,
-              to_state: str,
-              started_content: str|None = None,
-              finished_content: str|None = None,
-              input_result_checker: Optional[Callable] = None
+              from_state: MicState,
+              to_state: MicState,
+              playing_before: str|None = None,
+              playing_now: str|None = None,
+              file_is_none: bool = True
               ):
         result = self.result[self.index]
         self.index+=1
-        self.tc.assertEqual(from_state, result.from_state)
-        self.tc.assertEqual(to_state, result.to_state)
-        self.tc.assertEqual(started_content is None, result.audio_sample_playing is None)
-        if started_content is not None:
-            self.tc.assertEqual(started_content.encode('utf-8'), result.audio_sample_started.template.content)
-        self.tc.assertEqual(finished_content is None, result.audio_sample_finished is None)
-        if finished_content is not None:
-            self.tc.assertEqual(finished_content.encode('utf-8'), result.audio_sample_finished.template.content)
-        self.tc.assertEqual(input_result_checker is None, result.processed_input is None)
-        if input_result_checker is not None:
-            self.tc.assertTrue(input_result_checker(result.processed_input))
+        self.tc.assertEqual(from_state, result.mic_state_before)
+        self.tc.assertEqual(to_state, result.mic_state_now)
+        self.tc.assertEqual(playing_before is None, result.playing_before is None)
+        if playing_before is not None:
+            self.tc.assertEqual(playing_before.encode('utf-8'), result.playing_before.recording.content)
+        self.tc.assertEqual(playing_now is None, result.playing_now is None)
+        if playing_now is not None:
+            self.tc.assertEqual(playing_now.encode('utf-8'), result.playing_now.recording.content)
+        self.tc.assertEqual(file_is_none, result.produced_file_name is None)
+
+    def print_current(self):
+        for x in self.result[self.index:]:
+            print(x)
 
 
 
 class ControlCycleTestCase(TestCase):
-    def _run(self, cc: ac.AudioControl):
-        mic: ac.FakeInput = cc.input
+    def _run(self, cc: AudioControlCycle):
+        mic: FakeInput = cc._drivers.input
         mic.next_buffer()
         result = []
         while not mic.is_buffer_empty():
@@ -55,11 +54,10 @@ class ControlCycleTestCase(TestCase):
             Path(__file__).parent/'files/silence.wav',
             Path(__file__).parent/'files/computer.wav',
             Path(__file__).parent/'files/are_you_here.wav',
-            Path(__file__).parent/'files/random_text_outside_of_intents.wav',
+            Path(__file__).parent/'files/make_me_a_sandwich.wav',
 
         ]
-        settings.rhasspy_api.setup_intents(get_intents())
-        settings.rhasspy_api.train()
+
         cc = settings.create_audio_control()
 
 
@@ -67,46 +65,46 @@ class ControlCycleTestCase(TestCase):
         r2 = self._run(cc)
         r3 = self._run(cc)
         r4 = self._run(cc)
-        cc.set_pipeline('whisper')
+        cc.request_state(MicState.Open)
         r5 = self._run(cc)
-        result = r1 + r2 + r3 + r4 + r5
-        result = [r for r in result if not r.is_empty()]
-        for r in result:
-            print(r)
 
-        p='porcupine'
-        r='rhasspy'
-        w='whisper'
-
+        result = r1+r2+r3+r4+r5
+        result = [r for r in result if r.is_significant]
         c = Checker(self, result)
 
-        #Computer
-        c.check(p, r, input_result_checker=lambda z: z is not None and z.collected_data is None)
-        c.check(r, r, started_content='awake')
-        c.check(r, r, finished_content='awake')
+        s = MicState.Standby
+        o = MicState.Open
+        r = MicState.Recording
 
-        #Silence
-        c.check(r, p, input_result_checker=lambda z: z is not None and z.play_sound=='error')
-        c.check(p, p, started_content='error')
-        c.check(p, p, finished_content='error')
+        # Computer
+        c.check(s, o)
+        c.check(o, o, playing_now='open')
+        c.check(o, o, playing_before='open')
 
-        #Computer
-        c.check(p, r, input_result_checker=lambda z: z is not None and z.collected_data is None)
-        c.check(r, r, started_content='awake')
-        c.check(r, r, finished_content='awake')
+        # Silence
+        c.check(o, s)
+        c.check(s, s, playing_now='error')
+        c.check(s, s, playing_before='error')
 
-        #Are you here?
-        c.check(r, p, input_result_checker=lambda z: isinstance(z.collected_data, dict))
-        c.check(p, p, started_content='confirmed')
-        c.check(p, p, finished_content='confirmed')
+        # Computer
+        c.check(s, o)
+        c.check(o, o, playing_now='open')
+        c.check(o, o, playing_before='open')
 
-        #External text
-        c.check(w, w, started_content='open')
-        c.check(w, w, finished_content='open')
-        c.check(w, p, input_result_checker=lambda z: isinstance(z.collected_data, str))
-        c.check(p, p, started_content='confirmed')
-        c.check(p, p, finished_content='confirmed')
+        # Are you here?
+        c.check(o, r)
+        c.check(r, s, file_is_none=False)
+        c.check(s, s, playing_now='confirmed')
+        c.check(s, s, playing_before='confirmed')
 
 
+        #Manual state request
+        c.check(s, o)
+        c.check(o, o, playing_now='open')
+        c.check(o, o, playing_before='open')
+        c.check(o, r)
+        c.check(r, s, file_is_none=False)
+        c.check(s, s, playing_now='confirmed')
+        c.check(s, s, playing_before='confirmed')
 
-
+        self.assertEqual(c.index, len(c.result))
