@@ -22,9 +22,9 @@ def get_random_weighed_element(elements) -> int:
 
 
 
-class IImageServiceStrategy(ABC):
+class IContentStrategy(ABC):
     @abstractmethod
-    def choose_image_filename(self, ml: MediaLibrary) -> str | None:
+    def choose_filename(self, ml: MediaLibrary) -> str | None:
         pass
 
     def ensure(self, df, *required_columns):
@@ -36,11 +36,11 @@ class IImageServiceStrategy(ABC):
 
 
 
-class NewImageStrategy(IImageServiceStrategy):
+class NewContentStrategy(IContentStrategy):
     def __init__(self, randomize: bool = True):
         self.randomize = randomize
 
-    def choose_image_filename(self, ml: MediaLibrary) -> str|None:
+    def choose_filename(self, ml: MediaLibrary) -> str|None:
         df = ml.to_df()
         self.ensure(df, 'feedback_bad', 'feedback_seen')
         df = df.loc[df.feedback_bad==0]
@@ -54,8 +54,8 @@ class NewImageStrategy(IImageServiceStrategy):
         else:
             return df.filename.iloc[0]
 
-class GoodImageStrategy(IImageServiceStrategy):
-    def choose_image_filename(self, ml: MediaLibrary) -> str | None:
+class GoodContentStrategy(IContentStrategy):
+    def choose_filename(self, ml: MediaLibrary) -> str | None:
         df = ml.to_df()
         self.ensure(df, 'feedback_bad', 'feedback_seen', 'feedback_good')
         df = df.loc[df.feedback_bad==0]
@@ -67,35 +67,36 @@ class GoodImageStrategy(IImageServiceStrategy):
         return df.filename.iloc[num]
 
 
-class AnyImageStrategy(IImageServiceStrategy):
-    def choose_image_filename(self, ml: MediaLibrary) -> str | None:
+class AnyContentStrategy(IContentStrategy):
+    def choose_filename(self, ml: MediaLibrary) -> str | None:
         df = ml.to_df()
         return df.sample(1).filename.iloc[0]
 
 
-@dataclass
-class ImageStrategyWithWeight:
-    strategy: IImageServiceStrategy
-    weight: float
+class SequentialStrategy(IContentStrategy):
+    def __init__(self, *strategies):
+        self.strategies = strategies
 
-
-class CombinedStrategy(IImageServiceStrategy):
-    def __init__(self,
-                 random_strategies: tuple[ImageStrategyWithWeight,...],
-                 fallback_stack: tuple[IImageServiceStrategy]
-                 ):
-        self.random_strategies = random_strategies
-        self.fallback_stack = fallback_stack
-
-    def choose_image_filename(self, ml: MediaLibrary) -> str | None:
-        random_strategy = get_random_weighed_element([s.weight for s in self.random_strategies])
-        result = self.random_strategies[random_strategy].strategy.choose_image_filename(ml)
-        if result is not None:
-            return result
-        for s in self.fallback_stack:
-            result = s.choose_image_filename(ml)
+    def choose_filename(self, ml: MediaLibrary) -> str | None:
+        for s in self.strategies:
+            result = s.choose_filename(ml)
             if result is not None:
                 return result
         return None
+
+
+class WeightedStrategy:
+    @dataclass
+    class Item:
+        strategy: IContentStrategy
+        weight: float
+
+    def __init__(self, *weighted_strategies: 'WeightedStrategy.Item'):
+        self.random_strategies = weighted_strategies
+
+    def choose_filename(self, ml: MediaLibrary) -> str | None:
+        random_strategy = get_random_weighed_element([s.weight for s in self.random_strategies])
+        result = self.random_strategies[random_strategy].strategy.choose_filename(ml)
+        return result
 
 

@@ -1,24 +1,21 @@
 from typing import *
-from ..dub.core import Utterance, Template
 from .avatar_server import AvatarEndpoints, AvatarWebServer, AvatarSettings
-from ..narrator import INarrator
-from .dubbing_service import IDubbingService
-from .image_service import IImageService
-from ...infra import MarshallingEndpoint
-from ...eaglesong.core import Audio, Image
-from ...infra.app import KaiaApp, SubprocessRunner
-from ...infra import Loc
+from .dubbing_service import TextLike, DubbingServiceOutput
+from kaia.infra import MarshallingEndpoint
+from kaia.eaglesong.core import Image, Audio
+from kaia.infra.app import KaiaApp, SubprocessRunner
+
 
 class AvatarAPI:
     def __init__(self,
                  address: str):
         self.caller = MarshallingEndpoint.Caller(address)
 
-    def dub_utterance(self, utterance: Utterance) -> Audio:
-        return self.caller.call(AvatarEndpoints.dub_utterance, utterance)
+    def dub(self, text: TextLike) -> DubbingServiceOutput:
+        return self.caller.call(AvatarEndpoints.dub, text)
 
-    def dub_string(self, s: str) -> Audio:
-        return self.caller.call(AvatarEndpoints.dub_string, s)
+    def dub_get_result(self, job_id: str) -> Audio:
+        return self.caller.call(AvatarEndpoints.dub_get_result, job_id)
 
     def image_get(self, empty_image_if_none = True) -> Optional[Image]:
         image = self.caller.call(AvatarEndpoints.image_get)
@@ -40,24 +37,11 @@ class AvatarAPI:
 
 
 class AvatarTestApi:
-    def __init__(self,
-                 settings: AvatarSettings,
-                 narrator: INarrator,
-                 dubbing_service: IDubbingService,
-                 image_service: IImageService):
+    def __init__(self, settings: AvatarSettings):
         self.settings = settings
-        self.narrator = narrator
-        self.dubbing_service = dubbing_service
-        self.image_service = image_service
 
     def __enter__(self):
-        service = AvatarWebServer(
-            AvatarSettings(),
-            self.narrator,
-            self.dubbing_service,
-            self.image_service,
-            Loc.temp_folder/'avatar_service_error_path'
-        )
+        service = AvatarWebServer(self.settings)
         self.app = KaiaApp()
         self.app.add_runner(SubprocessRunner(service, 5))
         self.app.run_services_only()

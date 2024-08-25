@@ -1,6 +1,6 @@
 import numpy as np
 from unittest import TestCase
-from kaia.avatar.server.image_service.strategy import get_random_weighed_element
+from kaia.avatar.media_library_manager.strategies import get_random_weighed_element
 
 import pandas as pd
 
