@@ -1,7 +1,7 @@
 from typing import *
 from kaia.eaglesong.core import Translator, Audio, TranslatorInputPackage, TranslatorOutputPackage
-from kaia.avatar.dub.core import RhasspyAPI, Utterance
-from kaia.avatar.server import AvatarAPI
+from kaia.avatar import AvatarAPI, TextLike, DubbingServiceOutput
+from kaia.dub import Utterance, UtterancesSequence
 
 
 class VoiceoverTranslator(Translator):
@@ -13,33 +13,40 @@ class VoiceoverTranslator(Translator):
 
         super(VoiceoverTranslator, self).__init__(
             inner_function,
-            None,
-            None,
-            None,
-            self.translate_outgoing
+            output_generator_translator=self.translate_outgoing
         )
 
-    def utterances_to_audio_or_text(self, utterance: Utterance):
-        s = utterance.to_str()
-        if self.avatar_api is not None:
-            return self.avatar_api.dub_utterance(utterance)
+    def _to_audio(self, s: TextLike):
+        if self.avatar_api is None:
+            if isinstance(s, str):
+                yield s
+            elif isinstance(s, Utterance):
+                yield s.to_str()
+            elif isinstance(s, UtterancesSequence):
+                yield " ".join(u.to_str() for u in s.utterances)
+            else:
+                yield str(s)
         else:
-            return s
-
-    def str_to_audio_or_text(self, s: str):
-        if self.avatar_api is not None:
-            return self.avatar_api.dub_string(s)
-        else:
-            return s
+            result = self.avatar_api.dub(s)
+            if isinstance(result, Audio):
+                yield result
+            elif isinstance(result, DubbingServiceOutput):
+                yield result.full_text
+                for job in result.jobs:
+                    yield self.avatar_api.dub_get_result(job)
+            else:
+                raise ValueError(f"Expected Audio or DubbingServiceOutput, but was\n{result}")
 
 
     def translate_outgoing(self, o: TranslatorOutputPackage):
-        if isinstance(o.inner_output, Utterance):
-            return self.utterances_to_audio_or_text(o.inner_output)
-        elif isinstance(o.inner_output, str):
-            return self.str_to_audio_or_text(o.inner_output)
+        if (
+                isinstance(o.inner_output, Utterance)
+                or isinstance(o.inner_output, str)
+                or isinstance(o.inner_output, UtterancesSequence)
+        ):
+            yield from self._to_audio(o.inner_output)
         else:
-            return o.inner_output
+            yield o.inner_output
 
 
 
