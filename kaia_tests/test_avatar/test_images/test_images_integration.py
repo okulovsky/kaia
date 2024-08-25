@@ -3,7 +3,7 @@ from kaia.brainbox.deciders.fake_image_generator import FakeImageDecider
 from kaia.brainbox.deciders.collector import Collector
 from kaia.avatar import AvatarTestApi, AvatarSettings,  AnyContentStrategy, ImageService, MediaLibraryManager
 from kaia.narrator import SimpleNarrator
-from kaia.narrator.task_generators import PictureTaskGenerator
+from kaia.narrator.task_generators.images import PictureTaskGenerator
 from unittest import TestCase
 from uuid import uuid4
 from kaia.infra import Loc

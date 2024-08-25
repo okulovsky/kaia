@@ -9,7 +9,7 @@ class CharacterTestCase(TestCase):
     def test_character_binding(self):
         template = Template(
             'Name is {x}',
-            x = CharacterDubBinding('character')
+            x = CharacterDubBinding(['character'])
         )
         self.assertEqual(
             'Name is X',

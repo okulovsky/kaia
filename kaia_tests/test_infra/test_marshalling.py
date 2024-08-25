@@ -44,7 +44,7 @@ class MarshallingTestCase(TestCase):
         with Loc.create_temp_folder('mashalling_test') as folder:
             server = Server(folder)
             app = KaiaApp()
-            app.add_runner(SubprocessRunner(server, 5))
+            app.add_runner(SubprocessRunner(server))
             app.run_services_only()
 
             address = '127.0.0.1:8999'

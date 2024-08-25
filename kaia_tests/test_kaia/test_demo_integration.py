@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from my.demo.main import create_app
+from demos.kaia.main import create_app
 from pprint import pprint
 from kaia.brainbox.deciders import WhisperInstaller, RhasspyInstaller, WhisperSettings, RhasspySettings
 

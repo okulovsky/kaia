@@ -3,7 +3,7 @@ from .templates import WeatherIntents, WeatherReply
 from kaia.kaia.core import SingleLineKaiaSkill
 from datetime import datetime
 from .request import get_open_meteo, parse_open_meteo
-from kaia.avatar.dub.core import Utterance
+from kaia.dub.core import Utterance
 from .forecast import make_forecast, convert_forecast_to_utterance
 from .settings import WeatherSettings
 

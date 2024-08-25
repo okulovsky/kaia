@@ -23,6 +23,6 @@ def create_brainbox_test_api(cache_folder = None):
 
 
 def create_audio_control_settings(wav_api=None):
-    from my.demo.audio_control import create_test_control_settings
+    from demos.kaia.audio_control import create_test_control_settings
     settings = create_test_control_settings(wav_api, [])
     return settings

@@ -43,7 +43,7 @@ class ParaphraseTestCase(TestCase):
                     NewContentStrategy(False),
                     ml_path,
                     path/'feedback',
-                    ExactTagMatcher.Factory([World.character.field_name])
+                    ExactTagMatcher.SubsetFactory(World.character.field_name)
                 )
                 settings = AvatarSettings(
                     brain_box_api=bb_api,

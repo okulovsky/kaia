@@ -43,7 +43,7 @@ class AvatarTestApi:
     def __enter__(self):
         service = AvatarWebServer(self.settings)
         self.app = KaiaApp()
-        self.app.add_runner(SubprocessRunner(service, 5))
+        self.app.add_runner(SubprocessRunner(service))
         self.app.run_services_only()
 
         api = AvatarAPI(f'127.0.0.1:{self.settings.port}')

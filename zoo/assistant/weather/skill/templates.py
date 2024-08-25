@@ -1,4 +1,4 @@
-from kaia.avatar.dub.languages.en import *
+from kaia.dub.languages.en import *
 
 
 # https://open-meteo.com/en/docs#hourly=temperature_2m,weathercode

@@ -1,6 +1,6 @@
 from kaia.brainbox import BrainBoxTask
 from kaia.brainbox.deciders import FakeLLMDecider
-from kaia.narrator.task_generators import ParaphraseTaskGenerator
+from kaia.narrator.task_generators.paraphrase import TaskGenerator
 from kaia.narrator import World, Character, Prompt
 from kaia.dub import Template, PredefinedField
 from unittest import TestCase
@@ -17,19 +17,19 @@ def get_df(template):
     users = [Character('user_0', Character.Gender.Feminine), Character('user_1', Character.Gender.Masculine)]
     users = {u.name: u for u in users}
 
-    resulting_template = Template.free(f'{World.user}/{World.character}/{ParaphraseTaskGenerator.prompt_type_field}/{ParaphraseTaskGenerator.story_field}')
+    resulting_template = Template.free(f'{World.user}/{World.character}/{TaskGenerator.prompt_type_field}/{TaskGenerator.story_field}')
     prompt = (
         Prompt()
         .add_binding('result', resulting_template)
     )
-    generator = ParaphraseTaskGenerator(
+    generator = TaskGenerator(
         task_factory,
         prompt,
         [template],
         users,
         {World.character.field_name: characters}
     )
-    builder = generator.create_builder()
+    builder = generator.generate()
     return builder.to_debug_df().sort_values('prompt')
 
 
