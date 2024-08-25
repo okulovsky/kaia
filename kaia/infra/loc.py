@@ -1,3 +1,4 @@
+import subprocess
 from typing import *
 import pathlib
 import shutil
@@ -70,16 +71,13 @@ class _Loc:
         self.conda_folder = Path(sys.executable).parent.parent.parent
         self.env_folder = Path(sys.executable).parent
 
-        if self.is_windows:
-            self.call_conda = f"call {self.conda_folder/'condabin/conda.bat'}"
-        else:
-            self.call_conda = self.conda_folder.parent/'bin/conda'
-
-    def get_python_by_env(self, env):
-        if self.is_windows:
-            return self.conda_folder / 'envs' / env / 'python.exe'
-        else:
-            return self.conda_folder/env/'bin/python'
+        self.host_user_group_id = 1000
+        self.username = ''
+        self.hostname = ''
+        if not self.is_windows:
+            self.username = subprocess.check_output(['whoami']).decode('ascii')
+            self.hostname = subprocess.check_output(['hostname']).decode('ascii')
+            self.host_user_group_id = int(subprocess.check_output(['id', '-g']).decode('ascii'))
 
     def test_location(self, name):
         return self.test_folder/name/str(uuid.uuid4())

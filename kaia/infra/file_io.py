@@ -44,6 +44,11 @@ class FileIO:
 
 
     @staticmethod
+    def write_bytes(data, filename):
+        with open(filename,'wb') as file:
+            file.write(data)
+
+    @staticmethod
     def folder(location: Union[Path, str], pattern: str = '*'):
         if isinstance(location, str):
             location = Path(location)

@@ -18,7 +18,7 @@ def monitor_termination(id):
         messenger.close(msg.id, None)
         if hasattr(entry, 'terminate'):
             entry.terminate()
-        os._exit(1)
+        os._exit(0)
         break
 
 

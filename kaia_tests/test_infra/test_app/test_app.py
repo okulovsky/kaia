@@ -45,7 +45,7 @@ class AppTestCase(TestCase):
         app.run()
 
     def test_subprocess_exits(self):
-        runner = SubprocessRunner(KaiaApp.run_forever, debug=True)
+        runner = SubprocessRunner(KaiaApp.run_forever)
         runner.run()
         time.sleep(0.5)
         runner.stop()
