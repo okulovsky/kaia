@@ -1,5 +1,5 @@
 from typing import *
-from dataclasses import dataclass
+from dataclasses import dataclass,field
 from pathlib import Path
 import shutil
 import os
@@ -21,10 +21,11 @@ class MediaLibrary:
     @dataclass(frozen=True)
     class Record:
         filename: str
-        holder_location: Path
-        timestamp: datetime
-        job_id: str
-        tags: Dict[str, Any]
+        holder_location: Path|None
+        timestamp: None|datetime = None
+        job_id: None|str = None
+        tags: Dict[str, Any] = field(default_factory=dict)
+        inline_content: Any = None
 
         def get_full_path(self):
             if self.packed:
@@ -36,14 +37,20 @@ class MediaLibrary:
 
         @property
         def unpacked(self):
-            return self.holder_location.is_dir()
+            return self.inline_content is None and self.holder_location.is_dir()
 
         @property
         def packed(self):
-            return self.holder_location.is_file()
+            return self.inline_content is None and self.holder_location.is_file()
+
+        @property
+        def inline(self):
+            return self.inline_content is not None
 
         def get_content(self, zip_file = None):
-            if self.unpacked:
+            if self.inline:
+                return self.inline_content
+            elif self.unpacked:
                 with open(self.holder_location / self.filename, 'rb') as stream:
                     return stream.read()
             else:
@@ -93,6 +100,9 @@ class MediaLibrary:
     def __getitem__(self, item: str) -> 'MediaLibrary.Record':
         return self.mapping[item]
 
+    def __iter__(self):
+        yield from self.records
+
     def enumerate_content(self) -> Iterable[Tuple['MediaLibrary.Record',bytes]]:
         non_packed = []
         packed = {}
@@ -120,17 +130,14 @@ class MediaLibrary:
     def save(self, location: Path, with_progress_bar: bool = False):
         with zipfile.ZipFile(location, 'w', zipfile.ZIP_DEFLATED) as zp:
             source = Queryable(self.enumerate_content(), len(self.records))
-            if with_progress_bar:
-                pass
-                #source = source.feed(fluq.with_progress_bar())
 
             records = {}
             for record, content in source:
-                zp.writestr(record.filename, content)
+                if not record.inline:
+                    zp.writestr(record.filename, content)
                 dct = copy(record.__dict__)
                 del dct['holder_location']
                 records[record.filename] = dct
-
 
             zp.writestr(DESCRIPTION_FILE_NAME, pickle.dumps(records))
             zp.writestr(ERRORS_FILE_NAME, pickle.dumps(list(self.errors)))
@@ -145,15 +152,12 @@ class MediaLibrary:
         os.makedirs(folder)
 
         source = Queryable(self.enumerate_content(), len(self.records))
-        if with_progress_bar:
-            pass
-            #source = source.feed(fluq.with_progress_bar())
-
 
         records = []
         for record, content in source:
-            with open(folder/record.filename, 'wb') as stream:
-                stream.write(content)
+            if not record.inline:
+                with open(folder/record.filename, 'wb') as stream:
+                    stream.write(content)
             records.append(record.change_folder(folder))
 
         return MediaLibrary(tuple(records), self.errors)
@@ -176,10 +180,19 @@ class MediaLibrary:
             desc = pickle.loads(zp.read(DESCRIPTION_FILE_NAME))
             name_list = zp.namelist()
             for key, value in desc.items():
-                if key not in name_list:
-                    raise ValueError(
-                        f'File {key} is listed in {DESCRIPTION_FILE_NAME}, but is absent from archive file {zip_file}')
-                item = MediaLibrary.Record(holder_location=zip_file if host_folder is None else host_folder, **value)
+                if 'inline_content' not in value:
+                    value['inline_content'] = None #compatibility assignment
+                if value['inline_content'] is None and key not in name_list:
+                    raise ValueError(f'File {key} is listed in {DESCRIPTION_FILE_NAME}, but is absent from archive file {zip_file}')
+
+                if value['inline_content'] is not None:
+                    location = None
+                elif host_folder is None:
+                    location = zip_file
+                else:
+                    location = host_folder
+
+                item = MediaLibrary.Record(holder_location=location, **value)
                 result.append(item)
         return MediaLibrary(tuple(result), tuple(errors))
 
@@ -211,7 +224,8 @@ class MediaLibrary:
                 holder_location=folder,
                 timestamp=datetime.now(),
                 job_id='',
-                tags = tags
+                tags = tags,
+                inline_content=None
             )
             records.append(record)
             FileIO.write_json(tags, folder/fname)

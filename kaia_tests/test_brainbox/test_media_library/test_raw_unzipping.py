@@ -1,8 +1,8 @@
 from kaia.brainbox.media_library import MediaLibrary
 from kaia.brainbox import BrainBoxTestApi, BrainBoxTask, BrainBoxTaskPack, DownloadingPostprocessor
 from unittest import TestCase
-from kaia.brainbox.deciders.utils.fake_dub_decider import FakeDubDecider
-from kaia.brainbox.deciders.utils.collector import Collector
+from kaia.brainbox.deciders.fake_dub_decider import FakeDubDecider
+from kaia.brainbox.deciders.collector import Collector
 from pathlib import Path
 
 import zipfile

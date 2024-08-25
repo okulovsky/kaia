@@ -161,7 +161,3 @@ class ServiceTestCase(TestCase):
             self.assertFalse(task.success)
             self.assertIsNotNone(task.error)
 
-
-
-
-

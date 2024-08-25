@@ -75,6 +75,12 @@ class AlwaysOnPlanner(MultiDeciderPlanner):
         up = self.up_the_required_deciders(stats)
         return IPlanner.Response(assign, up, ())
 
+    def logout(self, instances: Iterable[DeciderState]):
+        return []
+
+    def shallow_warmup_only(self, decider_to_warmup: DeciderInstanceSpec, instances: Iterable[DeciderState]):
+        return True
+
 
 
 

@@ -1,7 +1,8 @@
 import copy
 import time
 from typing import *
-from ..small_classes import BrainBoxJob, DeciderInstance, IDecider, LogItem, LogFactory, DeciderInstanceSpec
+from ..small_classes import BrainBoxJob, IDecider, LogItem, LogFactory, DeciderInstanceSpec
+from .decider_instance import DeciderInstance
 from sqlalchemy import Engine, select, update
 from sqlalchemy.orm import Session
 from ....infra.comm import IMessenger
@@ -63,10 +64,11 @@ class BrainBoxService:
 
     def terminate_internal(self):
         self.logger.service().event('Exiting')
-        for instance in self.decider_instances.values():
-            if instance.state.up:
-                self.logger.decider(instance.state.spec).event('Cooldown request')
-                instance.cool_down()
+        instances = tuple(instance.state for instance in self.decider_instances.values())
+        cooldown_instances = self.planner.logout(instances)
+        for instance in cooldown_instances:
+            self.logger.decider(instance).event('Cooldown request')
+            self.decider_instances[instance].cool_down()
         self.update_tasks()
         self._terminated = True
 
@@ -134,10 +136,14 @@ class BrainBoxService:
             return self.non_finished_tasks_for_planner
 
 
+    def _get_states_for_planner(self):
+        states = tuple(instance.state for instance in self.decider_instances.values())
+        return states
+
     def run_planer(self):
         non_finished_tasks = self.get_non_finished_tasks()
+        states = self._get_states_for_planner()
 
-        states = tuple(instance.state for instance in self.decider_instances.values())
         plan = self.planner.plan(non_finished_tasks, states)
 
         if plan.cool_down is not None:
@@ -151,8 +157,11 @@ class BrainBoxService:
             for service in plan.warm_up:
                 try:
                     self.logger.decider(service).event('Warmup request')
+                    if service.decider_name not in self.deciders:
+                        raise ValueError(f'Decider {service.decider_name} is not found, available {list(self.deciders)}')
+                    shallow_warmup = self.planner.shallow_warmup_only(service, self._get_states_for_planner())
                     self.decider_instances[service] = DeciderInstance(service, self.deciders[service.decider_name], self.logger, self.cache_folder)
-                    self.decider_instances[service].warm_up(self.messenger)
+                    self.decider_instances[service].warm_up(self.messenger, shallow_warmup)
                 except Exception as ex:
                     self.logger.decider(service).event("Warmup failed")
                     with Session(self.engine) as session:
@@ -221,7 +230,7 @@ class BrainBoxService:
                     ~BrainBoxJob.decider.in_(deciders)
             )))
             for task in tasks:
-                self.close_task(self.get_task_by_id(session, task.id), f'Decider {task.decider} is not found')
+                self.close_task(self.get_task_by_id(session, task.id), f'Decider {task.decider} is not found. Available are: {deciders}')
             session.commit()
 
     def get_task_by_id(self, session: Session, id: str):

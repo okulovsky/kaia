@@ -4,6 +4,7 @@ from .progress_reporter import IProgressReporter, EmptyProgressReporter
 from pathlib import Path
 from kaia.infra import Loc
 import os
+from uuid import uuid4
 
 
 class DeciderForDebugging:
@@ -19,7 +20,7 @@ class DeciderForDebugging:
         self.decider.cooldown(self.parameters)
 
 
-class IDecider:
+class IApiDecider:
     @property
     def progress_reporter(self) -> IProgressReporter:
         if hasattr(self, '_progress_reporter'):
@@ -39,10 +40,33 @@ class IDecider:
             os.makedirs(path, exist_ok=True)
             return path
 
-    def _setup_environment(self, file_cache: Path,  progress_reporter: IProgressReporter):
+    @property
+    def current_job_id(self) -> str:
+        if hasattr(self,'_current_job_id'):
+            return self._current_job_id
+        else:
+            return str(uuid4())
+
+    @property
+    def running_from_brainbox(self) -> bool:
+        if hasattr(self,'_running_from_brainbox'):
+            return self._running_from_brainbox
+        else:
+            return False
+
+
+    def _setup_environment(self,
+                           file_cache: Path,
+                           progress_reporter: IProgressReporter,
+                           current_job_id: str
+                           ):
         self._progress_reporter = progress_reporter
         self._file_cache = file_cache
+        self._current_job_id = current_job_id
+        self._running_from_brainbox = True
 
+
+class IDecider(ABC, IApiDecider):
     @abstractmethod
     def warmup(self, parameters: str):
         pass

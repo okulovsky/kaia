@@ -1,8 +1,10 @@
 from .brain_box_log import *
 from .decider import *
-from .decider_instance import *
 from .decider_instance_dto import *
 from .job import *
 from .progress_reporter import *
 from .task import *
-from .installer import IInstallable, IInstaller
+from .installer import IInstaller
+from .file import File
+from .integration_test_result import IntegrationTestResult
+from .warmuper import InstallerWithOneModelWarmuper

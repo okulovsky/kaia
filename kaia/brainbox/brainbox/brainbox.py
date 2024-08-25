@@ -1,5 +1,5 @@
 from typing import Optional
-from ..core import BrainBoxService, BrainBoxWebServer, BrainBoxTestApi, BrainBoxWebApi
+from ..core import BrainBoxService, BrainBoxWebServer, BrainBoxTestApi, BrainBoxApi
 from ...infra.comm import Sql
 from ...infra import Loc
 from ..core.planers import SimplePlanner
@@ -7,17 +7,15 @@ from ..core.planers import SimplePlanner
 
 class BrainBoxSettings:
     def __init__(self):
-        from ..deciders.legacy.automatic1111 import Automatic1111Settings
-        from ..deciders.legacy.oobabooga import OobaboogaSettings
 
-        from ..deciders.docker_based import OpenTTSSettings, CoquiTTSSettings, WhisperSettings, TortoiseTTSSettings
+        from .. import deciders
 
-        self.automatic1111 = Automatic1111Settings()
-        self.oobabooga = OobaboogaSettings()
-        self.tortoise_tts = TortoiseTTSSettings()
-        self.open_tts = OpenTTSSettings()
-        self.coqui_tts = CoquiTTSSettings()
-        self.whisper = WhisperSettings()
+        self.tortoise_tts = deciders.TortoiseTTSSettings()
+        self.open_tts = deciders.OpenTTSSettings()
+        self.coqui_tts = deciders.CoquiTTSSettings()
+        self.whisper = deciders.WhisperSettings()
+        self.rhasspy = deciders.RhasspySettings()
+        self.oobabooga = deciders.OobaboogaSettings()
 
         self.file_cache_path = Loc.temp_folder / 'brainbox_cache'
         self.brainbox_database = Loc.temp_folder / 'queue'
@@ -32,25 +30,20 @@ class BrainBox:
         self.settings = BrainBoxSettings() if settings is None else settings
 
     def create_deciders_dict(self):
-        from ..deciders.legacy.automatic1111 import Automatic1111
-        from ..deciders.legacy.oobabooga import Oobabooga
-        from ..deciders.docker_based import OpenTTS, CoquiTTS, Whisper, TortoiseTTS
-        from ..deciders.utils.collector import Collector
-        from ..deciders.utils.output_translator import OutputTranslator
-#
-        deciders = dict()
-        deciders['Automatic1111'] = Automatic1111(self.settings.automatic1111)
-        deciders['Oobabooga'] = Oobabooga(self.settings.oobabooga)
 
-        deciders['TortoiseTTS'] = TortoiseTTS(self.settings.tortoise_tts)
-        deciders['OpenTTS'] = OpenTTS(self.settings.open_tts)
-        deciders['CoquiTTS'] = CoquiTTS(self.settings.coqui_tts)
-        deciders['Whisper'] = Whisper(self.settings.whisper)
+        from .. import deciders
+        deciders_dict = {}
+        deciders_dict['TortoiseTTS'] = deciders.TortoiseTTSInstaller(self.settings.tortoise_tts)
+        deciders_dict['OpenTTS'] = deciders.OpenTTSInstaller(self.settings.open_tts)
+        deciders_dict['CoquiTTS'] = deciders.CoquiTTSInstaller(self.settings.coqui_tts)
+        deciders_dict['Whisper'] = deciders.WhisperInstaller(self.settings.whisper)
+        deciders_dict['Rhasspy'] = deciders.RhasspyInstaller(self.settings.rhasspy)
+        deciders_dict['Oobabooga'] = deciders.OobaboogaInstaller(self.settings.oobabooga)
 
-        deciders['Collector'] = Collector()
-        deciders['OutputTranslator'] = OutputTranslator()
+        deciders_dict['Collector'] = deciders.Collector()
+        deciders_dict['OutputTranslator'] = deciders.OutputTranslator()
 
-        return deciders
+        return deciders_dict
 
     def create_service(self):
         return BrainBoxService(
@@ -75,7 +68,7 @@ class BrainBox:
         )
 
     def create_api(self, address):
-        return BrainBoxWebApi(address+f':{self.settings.brain_box_web_port}', self.settings.file_cache_path)
+        return BrainBoxApi(address + f':{self.settings.brain_box_web_port}', self.settings.file_cache_path)
 
 
     def create_test_api(self):

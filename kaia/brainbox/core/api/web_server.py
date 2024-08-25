@@ -120,7 +120,8 @@ class BrainBoxWebServer:
                 if not job.finished:
                     break
                 if not job.success:
-                    raise ValueError(job.error)
+                    stars='*~'*30
+                    raise ValueError(f"{job.decider}/{job.decider_parameters} threw an error:\n{stars}\n{job.error}\n{stars}")
                 id_to_job[job.id] = job
             if len(id_to_job) == len(ids):
                 return [id_to_job[id].result for id in ids]

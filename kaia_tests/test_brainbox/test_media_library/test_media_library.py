@@ -24,7 +24,8 @@ def create_library(folder):
                 src,
                 datetime.now(),
                 f'job-{lb}',
-                dict(lb=lb, i=i)
+                dict(lb=lb, i=i),
+
             ))
         library = MediaLibrary(tuple(content))
         library.save(folder / f'lb_{lb}.zip')

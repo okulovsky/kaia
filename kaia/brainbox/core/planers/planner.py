@@ -21,3 +21,11 @@ class IPlanner(ABC):
              instances: Iterable[DeciderState]
              ) -> 'IPlanner.Response':
         pass
+
+    def shallow_warmup_only(self, decider_to_warmup: DeciderInstanceSpec, instances: Iterable[DeciderState]):
+        return False
+
+    def logout(self, instances: Iterable[DeciderState]):
+        return [i.spec for i in instances if i.up]
+
+

@@ -9,7 +9,7 @@ from kaia.infra.comm import  Sql
 from functools import partial
 
 if __name__ == '__main__':
-    if subprocess.call('docker ps') != 0:
+    if subprocess.call(['docker','ps']) != 0:
         print('Docker is not running. Please install/run docker before running BrainBox')
         exit(1)
 
