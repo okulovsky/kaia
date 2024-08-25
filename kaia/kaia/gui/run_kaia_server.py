@@ -8,7 +8,7 @@ if __name__ == '__main__':
         with open(Path(__file__).parent/'example.png','rb') as file:
             bytes = file.read()
         yield api.set_image(bytes)
-        yield api.add_message(KaiaMessage(True, 'How are you doing', avatar='/test_files/lina.png'))
+        yield api.add_message(KaiaMessage(True, 'How are you doing', avatar='/test_dataset/lina.png'))
         yield api.add_message(KaiaMessage(False, 'Doing just fine, thank you'))
 
 
@@ -17,7 +17,7 @@ if __name__ == '__main__':
         gui_folder/'index.html',
         {
             'static': gui_folder/'static',
-            'test_files': gui_folder.parent/'test_files'
+            'test_dataset': gui_folder.parent/'test_dataset'
         },
         updates,
         cmd_prefix="firefox",

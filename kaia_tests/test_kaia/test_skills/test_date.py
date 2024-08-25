@@ -18,7 +18,7 @@ class TestDate(TestCase):
             S()
             .send(DateIntents.question.utter())
             .check(
-                DateReplies.answer.utter(weekday=Weekdays.Tuesday, date = d(0)).assertion,
+                DateReplies.answer.utter(weekday=Weekdays.Tuesday, date = d(0)),
                 Return
             )
             .validate()
@@ -29,7 +29,7 @@ class TestDate(TestCase):
             S()
             .send(DateIntents.question.utter(delta=RelativeDay.The_day_after_tomorrow))
             .check(
-                DateReplies.answer.utter(weekday=Weekdays.Thursday, date = d(2)).assertion,
+                DateReplies.answer.utter(weekday=Weekdays.Thursday, date = d(2)),
                 Return
             )
             .validate()

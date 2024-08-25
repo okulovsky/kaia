@@ -1,21 +1,19 @@
+from unittest import TestCase
+
 class CheckType:
     def __init__(self, type):
         self.type = type
 
-    def __call__(self, v):
-        if not isinstance(v, self.type):
-            raise ValueError(f"Value {v} is expected to be of type {self.type}, but was `{v}`")
-        return True
+    def __call__(self, v, tc: TestCase):
+        tc.assertIsInstance(v, self.type)
 
 
 class CheckValue:
     def __init__(self, expected):
         self.expected = expected
 
-    def __call__(self, v):
-        if v != self.expected:
-            raise ValueError(f"Expected `{self.expected}` but was `{v}`")
-        return True
+    def __call__(self, v, tc: TestCase):
+        tc.assertEqual(self.expected, v)
 
 
 class Stash:
@@ -23,6 +21,5 @@ class Stash:
         self.slot = slot
         self.scenario = None
 
-    def __call__(self, v):
+    def __call__(self, v, tc: TestCase):
         self.scenario.stashed_values[self.slot] = v
-        return True

@@ -13,15 +13,17 @@ def produce(text):
 
 def produce_silence():
     wavfile = wave.open('files/silence.wav', 'w')
-    wavfile.setparams((1, 2, 16000, 512, "NONE", "NONE"))
-    for i in range(11*16000//512):
+    rate = 22050
+    wavfile.setparams((1, 2, rate, 512, "NONE", "NONE"))
+    for i in range(11*rate//512):
         data = [0 for _ in range(512)]
         wavfile.writeframes(struct.pack("h" * len(data), *data))
     wavfile.close()
 
 if __name__ == '__main__':
-    #installer.run_in_any_case_and_return_api()
+    installer.run_in_any_case_and_create_api()
     #produce('Computer')
     #produce('Are you here')
     #produce('Repeat after me')
+    #produce("Make me a sandwich")
     produce_silence()

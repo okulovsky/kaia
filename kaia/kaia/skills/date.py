@@ -1,9 +1,10 @@
 from typing import *
 from kaia.eaglesong.core import Return
 from ..core import SingleLineKaiaSkill
-from kaia.avatar.dub.languages.en import *
+from kaia.dub.languages.en import *
 from datetime import date, timedelta, datetime
 from enum import Enum
+from kaia.narrator import World
 
 class RelativeDay(Enum):
     Today = 0
@@ -32,11 +33,14 @@ class DateIntents(TemplatesCollection):
     )
 
 class DateReplies(TemplatesCollection):
-    answer = Template(
-        "It is {weekday}, {date}.",
-        weekday = EnumDub(Weekdays),
-        date = DateDub()
+    answer = (
+        Template(
+            "It is {weekday}, {date}.",
+            weekday = EnumDub(Weekdays),
+            date = DateDub())
+        .paraphrase.after(f"{World.user} asks what date is today, and {World.character} replies with an exact answer.")
     )
+
 
 
 class DateSkill(SingleLineKaiaSkill):

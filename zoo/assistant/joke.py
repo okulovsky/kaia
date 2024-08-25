@@ -1,5 +1,5 @@
 import requests
-from kaia.avatar.dub.languages.en import *
+from kaia.dub.languages.en import *
 from kaia.kaia.core import SingleLineKaiaSkill
 
 

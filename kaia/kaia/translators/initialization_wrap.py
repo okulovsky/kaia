@@ -1,5 +1,5 @@
 from typing import *
-from kaia.eaglesong.core import Listen, Automaton, ContextRequest, AutomatonExit
+from kaia.eaglesong.core import Listen, Automaton, ContextRequest
 from ..core import Start
 
 class InitializationWrap:
@@ -23,9 +23,7 @@ class InitializationWrap:
         for command in commands:
             input = command
             while True:
-                output = automaton.process(input)
-                if isinstance(output, AutomatonExit):
-                    raise output
+                output = automaton.process_and_rethrow_exit(input)
                 if isinstance(output, Listen):
                     break
                 if not self.supress_output:
@@ -39,10 +37,8 @@ class InitializationWrap:
         while True:
             input = yield
             if isinstance(input, Start):
-                input = yield from self.initialize(input, automaton)
+                yield from self.initialize(input, automaton)
             else:
-                output = automaton.process(input)
-                if isinstance(output, AutomatonExit):
-                    raise output
-                input = yield output
+                output = automaton.process_and_rethrow_exit(input)
+                yield output
 

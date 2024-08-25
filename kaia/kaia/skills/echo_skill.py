@@ -1,10 +1,18 @@
 from typing import *
 from ..core import IKaiaSkill
-from ...avatar.dub.core import Template, Utterance, TemplatesCollection
-from ..translators import Listen
+from kaia.dub.core import Template, Utterance, TemplatesCollection
+from ..translators import AudioControlListen
+from kaia.narrator import World
 
 class EchoIntents(TemplatesCollection):
     echo = Template("Repeat after me!")
+
+
+class EchoReplies(TemplatesCollection):
+    echo_request = (
+        Template("Say anything and I will repeat")
+        .paraphrase(f"{World.user} asks {World.character} to reply whatever {World.user} says, and {World.character} agrees to play this game.")
+    )
 
 
 class EchoSkill(IKaiaSkill):
@@ -37,7 +45,7 @@ class EchoSkill(IKaiaSkill):
 
     def run(self):
         yield "Say anything and I will repeat"
-        s = yield Listen().open_mic()
+        s = yield AudioControlListen(True, AudioControlListen.NLU.Whisper)
         yield s
 
 

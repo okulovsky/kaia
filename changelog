@@ -1,3 +1,13 @@
+3.0.0.
+    - Brainbox is refactored to self-testing docker-based containers. `Deployment` is now part of Brainbox
+    - Dubs are moved to repo's root. Templates syntaxis is greatly improved, metadata for paraphrasees are added
+    - Eaglesong uses IAssert in Scenarios for better assertion
+    - Avatar supports paraphrases, image handling is refactored to MediaLibraryManager
+    - Narration library is added, with the aim to content creation. Paraphrases are supported
+    - AudioControl is greatly streamlined, all the processing logic is moved downstream
+    - Skills are now supporting paraphrases
+    - Kaia's demo is moved from `my` to `demos/kaia`. `my` folder is now empty
+
 2.1.1.
     - Dubs parsing is improved
     - Executors require command in array format for linux-compatibility

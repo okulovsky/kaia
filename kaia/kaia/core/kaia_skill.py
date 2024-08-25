@@ -1,7 +1,6 @@
 from typing import *
 from abc import ABC, abstractmethod
-from ...avatar.dub.core import Template, Utterance, TemplatesCollection
-import copy
+from kaia.dub.core import Template, Utterance, TemplatesCollection
 from enum import Enum
 
 class IKaiaSkill(ABC):

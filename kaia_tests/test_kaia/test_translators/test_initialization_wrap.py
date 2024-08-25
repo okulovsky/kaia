@@ -27,9 +27,9 @@ class TestDate(TestCase):
         (
             S(False)
             .send(Start(False))
-            .check(DateReplies.answer.utter(weekday=Weekdays.Tuesday, date = date(2023,10,10)).assertion)
+            .check(DateReplies.answer.utter(weekday=Weekdays.Tuesday, date = date(2023,10,10)))
             .send(DateIntents.question.utter())
-            .check(DateReplies.answer.utter(weekday=Weekdays.Tuesday, date = date(2023,10,10)).assertion)
+            .check(DateReplies.answer.utter(weekday=Weekdays.Tuesday, date = date(2023,10,10)))
             .validate()
         )
 
@@ -39,11 +39,11 @@ class TestDate(TestCase):
             S(False)
             .send(Start(True))
             .check(
-                TimeReplies.answer.utter(hours=13, minutes=46).assertion,
-                #DateReplies.answer.utter(weekday=Weekdays.Tuesday, date = date(2023,10,10)).assertion,
+                TimeReplies.answer.utter(hours=13, minutes=46),
+                #DateReplies.answer.utter(weekday=Weekdays.Tuesday, date = date(2023,10,10)),
             )
             .send(TimeIntents.question.utter())
-            .check(TimeReplies.answer.utter(hours=13, minutes=46).assertion)
+            .check(TimeReplies.answer.utter(hours=13, minutes=46))
             .validate()
         )
 
@@ -53,6 +53,6 @@ class TestDate(TestCase):
             .send(Start(True))
             .check()
             .send(TimeIntents.question.utter())
-            .check(TimeReplies.answer.utter(hours=13, minutes=46).assertion)
+            .check(TimeReplies.answer.utter(hours=13, minutes=46))
             .validate()
         )

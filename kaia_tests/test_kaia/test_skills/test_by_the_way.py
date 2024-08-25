@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, time
 from kaia.eaglesong.core import Automaton, Scenario, TimerTick
 from kaia.kaia.skills import KaiaTestAssistant, TimeSkill, DateSkill, ByTheWayIntentTrigger, ByTheWaySkill, ByTheWayNotification
 from kaia.infra import ScheduledTime
-from kaia.avatar.dub.core import Utterance, Template
+from kaia.dub.core import Utterance, Template
 from kaia.kaia.skills.time import TimeIntents
 from kaia.kaia.skills.date import DateIntents
 from kaia.kaia.core import DateTimeTestFactory
@@ -42,7 +42,7 @@ class ByTheWayTestCase(TestCase):
             .send(TimeIntents.question.utter())
             .check(Utterance)
             .send(TimerTick())
-            .check(ut.assertion)
+            .check(ut)
             .validate()
         )
 
@@ -82,7 +82,7 @@ class ByTheWayTestCase(TestCase):
             .check()
             .act(lambda: factory.add(1))
             .send(TimerTick())
-            .check(ut.assertion)
+            .check(ut)
             .validate()
         )
 
@@ -99,12 +99,12 @@ class ByTheWayTestCase(TestCase):
             .send(TimeIntents.question.utter())
             .check(Utterance)
             .send(TimerTick())
-            .check(ut.assertion)
+            .check(ut)
             .act(lambda: factory.add(1))
             .send(TimeIntents.question.utter())
             .check(Utterance)
             .send(TimerTick())
-            .check(ut.assertion)
+            .check(ut)
             .validate()
         )
 
@@ -121,7 +121,7 @@ class ByTheWayTestCase(TestCase):
             .send(TimeIntents.question.utter())
             .check(Utterance)
             .send(TimerTick())
-            .check(ut.assertion)
+            .check(ut)
             .send(TimeIntents.question.utter())
             .check(Utterance)
             .send(TimerTick())
@@ -130,7 +130,7 @@ class ByTheWayTestCase(TestCase):
             .send(TimeIntents.question.utter())
             .check(Utterance)
             .send(TimerTick())
-            .check(ut.assertion)
+            .check(ut)
             .validate()
         )
 
@@ -159,7 +159,7 @@ class ByTheWayTestCase(TestCase):
             .check() #Because second intent should have overriden the first
             .act(lambda: factory.add(12))
             .send(TimerTick())
-            .check(ut.assertion)
+            .check(ut)
             .validate()
         )
 

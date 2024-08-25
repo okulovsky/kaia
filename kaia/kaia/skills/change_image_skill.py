@@ -1,9 +1,9 @@
 from typing import *
 from kaia.eaglesong.core import Image
-from kaia.avatar.dub.languages.en import *
+from kaia.dub.languages.en import *
 from kaia.kaia.core import SingleLineKaiaSkill
-from kaia.avatar.server import AvatarAPI
-
+from kaia.avatar import AvatarAPI
+from kaia.narrator import World
 
 class ChangeImageIntents(TemplatesCollection):
     change_image = Template("Change image")
@@ -12,7 +12,10 @@ class ChangeImageIntents(TemplatesCollection):
     good_image = Template('Good image')
 
 class ChangeImageReplies(TemplatesCollection):
-    thanks = Template("Thanks, I'm flattered! You're cute too!")
+    thanks = (
+        Template("Thanks, I'm flattered! You're cute too!")
+        .paraphrase(f'{World.user} sees {World.character} and says that {World.character} looks good')
+    )
 
 
 

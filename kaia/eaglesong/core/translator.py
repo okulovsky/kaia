@@ -55,10 +55,8 @@ class Translator:
             else:
                 inner_input = outer_input
 
-            inner_output = automaton.process(inner_input)
-            if isinstance(inner_output, AutomatonExit):
-                raise inner_output
-
+            inner_output = automaton.process_and_rethrow_exit(inner_input)
+            
             output_pack = TranslatorOutputPackage(outer_context, inner_context, inner_output)
             if self.output_function_translator is not None:
                 outer_input = yield self.output_function_translator(output_pack)

@@ -14,10 +14,11 @@ def get_filename():
 
 
 class SubprocessRunner(IRunner):
-    def __init__(self, entry, wait_in_seconds = 10, debug = False):
+    def __init__(self, entry):
         self.entry = entry
         self.process = None #type: Optional[subprocess.Popen]
-        self.wait_in_seconds = wait_in_seconds
+        self.wait_for_run_in_seconds = 10
+        self.wait_for_exit_in_seconds = 2
         self.process_id = None #type: Optional[str]
 
     def run(self):
@@ -26,7 +27,7 @@ class SubprocessRunner(IRunner):
         self.process = subprocess.Popen(
             [sys.executable, '-m', 'kaia.infra.app.subprocess_app', self.process_id],
         )
-        for _ in range(self.wait_in_seconds*10):
+        for _ in range(self.wait_for_run_in_seconds*10):
             msg = messenger.Query(self.process_id).query_single(messenger)
             if msg.open:
                 time.sleep(0.1)
@@ -37,17 +38,21 @@ class SubprocessRunner(IRunner):
         raise ValueError(f'Failed to start entry {self.entry}')
 
     def stop(self):
+        if self.process is None:
+            return
+        if self.process.returncode is not None:
+            return
         if self.process is not None:
             messenger = Sql.file(get_filename()).messenger()
             id = messenger.add(None,'down',self.process_id)
-            for _ in range(self.wait_in_seconds * 10):
-                msg = messenger.Query(id).query_single(messenger)
+            for _ in range(self.wait_for_exit_in_seconds * 10):
                 time.sleep(0.1)
+                msg = messenger.Query(id).query_single(messenger)
                 if not msg.open:
                     self.process.terminate()
                     return
             self.process.terminate()
-            raise ValueError('Cannot terminate process gracefully')
+            raise ValueError(f'Cannot terminate process {self.entry} gracefully')
 
 
 

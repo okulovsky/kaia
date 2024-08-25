@@ -1,1 +1,1 @@
-from .scenario import Scenario
+from .scenario import Scenario, IAsserter

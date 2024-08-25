@@ -14,16 +14,22 @@ class DefaultFeedbackFactory:
 class TestingInterpreter(Interpreter):
     def __init__(self,
                  automaton: IAutomaton,
-                 feedback_factory: Callable[[Any], Any]
+                 feedback_factory: Callable[[Any], Any],
+                 keep_listens_type: Tuple[Type,...]
                  ):
         super(TestingInterpreter, self).__init__(automaton)
         self.filters.append(InterpreterFilter(lambda _: True, self.handle_everything))
         self.current_log = []
         self.feedback_factory = feedback_factory
+        self.keep_listens_type = keep_listens_type
 
     def handle_everything(self, response):
         if not isinstance(response, Listen):
             self.current_log.append(response)
+        if isinstance(response, Listen):
+            for keep_type in self.keep_listens_type:
+                if isinstance(response, keep_type):
+                    self.current_log.append(response)
         if isinstance(response, Return) or isinstance(response, Terminate) or isinstance(response, Listen):
             return Interpreter.interrupt_cycle()
         feedback = self.feedback_factory(response)

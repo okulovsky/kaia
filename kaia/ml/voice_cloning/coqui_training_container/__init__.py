@@ -1,2 +1,1 @@
-from .settings import CoquiTrainingContainerSettings
 from .installer import CoquiTrainingContainerInstaller, SupportedModels

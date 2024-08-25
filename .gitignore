@@ -148,8 +148,6 @@ kaia_tests/sample-journal
 
 recepies/creative_articulator/summarization
 
-demos/brainbox_deciders/examples
+kaia_tests/streaming_test.wav
 
-demos/brainbox_deciders/cache/
-
-demos/brainbox/cache/
+my/deployment/local_run/logs.txt

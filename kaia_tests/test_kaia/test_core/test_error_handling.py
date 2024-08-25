@@ -43,7 +43,7 @@ class AssistantTestCase(TestCase):
          .send('A')
          .check(1)
          .send('B')
-         .check(KaiaMessage, ExceptionInSkillReplies.answer.utter().assertion)
+         .check(KaiaMessage, ExceptionInSkillReplies.answer.utter())
          .send('A')
          .check(2)
          .validate()
