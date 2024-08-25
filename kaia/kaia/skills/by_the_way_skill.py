@@ -2,7 +2,7 @@ from typing import *
 from ..core import IKaiaSkill, KaiaAssistant, AssistantHistoryItem
 from kaia.infra import ScheduledTime
 from dataclasses import dataclass
-from ...avatar.dub.core import Template, Utterance
+from kaia.dub.core import Template, Utterance
 from datetime import datetime, timedelta
 from ...eaglesong.core import TimerTick
 from abc import ABC, abstractmethod
@@ -134,7 +134,12 @@ class ByTheWaySkill(IKaiaSkill):
         yield notification.output
 
 
-
+    def get_replies(self) -> Iterable[Template]:
+        result = []
+        for notification in self.notifications:
+            if isinstance(notification.output, Utterance):
+                result.append(notification.output.template)
+        return result
 
 
 

@@ -24,22 +24,20 @@ class TestDate(TestCase):
             S(dtf)
             .send(TimerIntents.set_the_timer.utter(duration=timedelta(minutes=5)))
             .check(
-                TimerReplies.timer_is_set.utter(duration=timedelta(minutes=5)).assertion,
+                TimerReplies.timer_is_set.utter(duration=timedelta(minutes=5)),
             )
             .send(TimerIntents.how_much_timers.utter())
             .check(
-                TimerReplies.you_have.utter(amount=1).assertion,
-                TimerReplies.timer_description.utter(index=1, remaining_time = timedelta(minutes=5)).assertion,
+                TimerReplies.you_have.utter(amount=1) + TimerReplies.timer_description.utter(index=1, remaining_time = timedelta(minutes=5)),
             )
             .act(lambda: dtf.add(30))
             .send(TimerIntents.how_much_timers.utter())
             .check(
-                TimerReplies.you_have.utter(amount=1).assertion,
-                TimerReplies.timer_description.utter(index=1, remaining_time=timedelta(minutes=4, seconds=30)).assertion,
+                TimerReplies.you_have(amount=1) + TimerReplies.timer_description(index=1, remaining_time=timedelta(minutes=4, seconds=30)),
             )
             .send(TimerIntents.cancel_the_timer.utter())
             .check(
-                TimerReplies.timer_is_cancelled.utter().assertion,
+                TimerReplies.timer_is_cancelled.utter(),
             )
             .validate()
         )
@@ -50,7 +48,7 @@ class TestDate(TestCase):
             S(dtf)
             .send(TimerIntents.set_the_timer.utter(duration=timedelta(minutes=5)))
             .check(
-                TimerReplies.timer_is_set.utter(duration=timedelta(minutes=5)).assertion,
+                TimerReplies.timer_is_set.utter(duration=timedelta(minutes=5)),
             )
             .act(lambda: dtf.add(4*60+59))
             .send(TimerTick())
@@ -73,7 +71,7 @@ class TestDate(TestCase):
             S(dtf, True)
             .send(TimerIntents.set_the_timer.utter(duration=timedelta(minutes=1)))
             .check(
-                TimerReplies.timer_is_set.utter(duration=timedelta(minutes=1)).assertion,
+                TimerReplies.timer_is_set.utter(duration=timedelta(minutes=1)),
             )
             .act(lambda: dtf.add(60))
             .send(TimerTick())

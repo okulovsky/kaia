@@ -1,4 +1,4 @@
-from kaia.avatar.dub.languages.en import *
+from kaia.dub.languages.en import *
 from kaia.kaia.core import SingleLineKaiaSkill
 from kaia.kaia.translators import VolumeCommand
 

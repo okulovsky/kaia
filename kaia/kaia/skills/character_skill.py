@@ -1,13 +1,16 @@
 import random
 from typing import *
-from kaia.avatar.dub.languages.en import *
+from kaia.dub.languages.en import *
 from kaia.kaia.core import SingleLineKaiaSkill
-from kaia.avatar.server import AvatarAPI
+from kaia.avatar import AvatarAPI
+from kaia.narrator import World
 
 class ChangeCharacterReplies(TemplatesCollection):
-    hello = Template(
-        "Hello! Nice to see you!"
+    hello = (
+        Template("Hello! Nice to see you!")
+        .paraphrase(f'{World.character} comes to the room and sees {World.user} for the first time today.')
     )
+
     all_characters = Template(
         "The characters available are: {character_list}",
         character_list = ToStrDub()
@@ -18,7 +21,7 @@ class ChangeCharacterIntents(TemplatesCollection):
     change_character = Template(
         'Change character!',
         "I want to talk with {character}",
-        character = Dub()
+        character = ToStrDub()
     )
     all_characters = Template(
         "What characters are available?"
@@ -28,11 +31,9 @@ class ChangeCharacterSkill(SingleLineKaiaSkill):
     def __init__(self,
                  characters_list: Iterable[str],
                  avatar_api: AvatarAPI,
-                 character_field_name: str = 'character',
                  dont_randomly_switch_to: Optional[Iterable[str]] = None
                  ):
         self.avatar_api = avatar_api
-        self.character_field_name = character_field_name
         self.characters_list = tuple(characters_list)
         self.dont_randomly_switch_to = list(dont_randomly_switch_to) if dont_randomly_switch_to is not None else []
         substitution = dict(character = StringSetDub(self.characters_list))
@@ -48,13 +49,13 @@ class ChangeCharacterSkill(SingleLineKaiaSkill):
             value = input.value.get('character', None)
             if value is None:
                 current_state = self.avatar_api.state_get()
-                current_character = current_state[self.character_field_name]
+                current_character = current_state[World.character.field_name]
                 other_characters = [c for c in self.characters_list if c != current_character and c not in self.dont_randomly_switch_to]
                 if len(other_characters) == 0:
                     return
                 value = other_characters[random.randint(0, len(other_characters)-1)]
 
-            self.avatar_api.state_change({self.character_field_name:value})
+            self.avatar_api.state_change({World.character.field_name:value})
             yield self.avatar_api.image_get()
             yield ChangeCharacterReplies.hello.utter()
 

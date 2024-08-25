@@ -1,6 +1,6 @@
 from kaia.kaia.core import KaiaContext, SingleLineKaiaSkill, KaiaLog
 from kaia.eaglesong.core import ContextRequest
-from kaia.avatar.dub.languages.en import *
+from kaia.dub.languages.en import *
 
 class LogFeedbackIntents(TemplatesCollection):
     report = Template("Something is wrong", "You're misbehaving")

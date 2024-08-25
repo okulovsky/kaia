@@ -1,16 +1,16 @@
 from kaia.eaglesong.core import Return
 from typing import *
-from kaia.avatar.dub.languages.en import *
+from kaia.dub.languages.en import *
 from kaia.kaia.core import SingleLineKaiaSkill
 from datetime import datetime
 from kaia.kaia.skills.notification_skill import NotificationRegister, NotificationInfo
-
+from kaia.narrator import World
 
 class TimerIntents(TemplatesCollection):
     set_the_timer = Template(
         'Set the timer for {duration}',
         'Set the {index} timer for {duration}',
-        duration = TimedeltaDub(),
+        duration = TimedeltaDub(0, 2),
         index = OrdinalDub(1,10)
     )
     cancel_the_timer = Template(
@@ -29,28 +29,34 @@ class TimerReplies(TemplatesCollection):
         '{index} timer for {duration} is set',
         duration = TimedeltaDub(),
         index = OrdinalDub(1, 10)
-    )
+    ).paraphrase.after(f'{World.user} asks {World.character} to monitor a timer for {World.user}, and {World.character} responds with an agreement.')
+
     timer_is_cancelled = Template(
         'The timer is cancelled',
         'The {index} timer is cancelled',
         index = OrdinalDub(1, 10)
-    )
+    ).paraphrase.after(f'{World.user} asked {World.character} to monitor a timer, but then changed his mind and said not to monitor timer anymore. {World.character} responds with a confirmation.')
+
     which_timer_error = Template(
         'You have {amount} timers, I do not know which one to cancel.',
         amount = CardinalDub(1, 10)
     )
+
     no_such_timer = Template(
         'I do not have the {index} timer',
         index = OrdinalDub(1, 10)
     )
+
     no_timers = Template(
         'I do not have timers'
     )
+
     you_have = Template(
         "You have {amount} {timers}",
         amount = CardinalDub(1, 10),
         timers = PluralAgreement('amount','timer','timers')
     )
+
     timer_description = Template(
         'The {index} timer has {remaining_time}',
         index = OrdinalDub(1, 10),
@@ -111,10 +117,11 @@ class TimerSkill(SingleLineKaiaSkill):
             if len(self.timers) == 0:
                 yield TimerReplies.no_timers.utter()
             else:
-                yield TimerReplies.you_have.utter(amount=len(self.timers))
+                utterances = [TimerReplies.you_have.utter(amount=len(self.timers))]
                 for index in sorted(self.timers):
                     info = self.timers[index]
-                    yield TimerReplies.timer_description.utter(index=index, remaining_time = info.duration - (self.datetime_factory() - info.start))
+                    utterances.append(TimerReplies.timer_description.utter(index=index, remaining_time = info.duration - (self.datetime_factory() - info.start)))
+                yield UtterancesSequence(*utterances)
 
 
 

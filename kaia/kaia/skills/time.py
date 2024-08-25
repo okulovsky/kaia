@@ -1,7 +1,8 @@
 from typing import *
-from kaia.avatar.dub.languages.en import *
+from kaia.dub.languages.en import *
 from ..core import SingleLineKaiaSkill
 from datetime import datetime
+from kaia.narrator import World
 
 class TimeIntents(TemplatesCollection):
     question = Template(
@@ -11,12 +12,14 @@ class TimeIntents(TemplatesCollection):
 
 
 class TimeReplies(TemplatesCollection):
-    answer = Template(
+    answer = (
+        Template(
         'It is {hours} {hours_word} and {minutes} {minutes_word}.',
         hours = CardinalDub(0, 24),
         hours_word = PluralAgreement('hours', 'hour', 'hours'),
         minutes = CardinalDub(0, 60),
-        minutes_word = PluralAgreement('minutes', 'minute', 'minutes')
+        minutes_word = PluralAgreement('minutes', 'minute', 'minutes'))
+        .paraphrase.after(f'{World.user} asks {World.character} what time is it, and {World.character} provides an exact and correct answer.')
     )
 
 class TimeSkill(SingleLineKaiaSkill):

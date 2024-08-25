@@ -1,5 +1,5 @@
 from typing import *
-from kaia.avatar.dub.languages.en import *
+from kaia.dub.languages.en import *
 from ..core import SingleLineKaiaSkill
 from datetime import datetime
 

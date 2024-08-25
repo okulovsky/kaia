@@ -9,7 +9,7 @@ class TimeSkillTestCase(TestCase):
         (
             Scenario(lambda: Automaton(skill.run, None))
             .send(TimeIntents.question.utter())
-            .check(TimeReplies.answer.utter(hours=13, minutes=25).assertion, Return)
+            .check(TimeReplies.answer.utter(hours=13, minutes=25), Return)
             .validate()
         )
 

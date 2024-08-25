@@ -20,7 +20,7 @@ class ChangeImageTestCase(TestCase):
         log = (
             Scenario(create_automaton)
             .send(HelpIntents.help.utter())
-            .check(KaiaMessage, HelpReplies.help.utter().assertion)
+            .check(KaiaMessage, HelpReplies.help.utter())
             .validate()
             .log
         )

@@ -1,6 +1,6 @@
 from typing import *
 from kaia.kaia.core import KaiaAssistant, SingleLineKaiaSkill, KaiaMessage
-from kaia.avatar.dub.languages.en import *
+from kaia.dub.languages.en import *
 
 class HelpIntents(TemplatesCollection):
     help = Template("What can you do?")
