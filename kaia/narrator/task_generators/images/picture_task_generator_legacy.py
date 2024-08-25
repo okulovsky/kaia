@@ -1,47 +1,35 @@
 from typing import *
 from kaia.brainbox import BrainBoxTaskPack, BrainBoxTask, MediaLibrary, DownloadingPostprocessor
-from kaia.avatar.dub.core import Template
+from kaia.brainbox.deciders import Collector
+from kaia.dub.core import Template
 from copy import deepcopy
 from uuid import uuid4
+from functools import partial
 
 class PictureTaskGenerator:
     def __init__(self,
                  prompt_template: Template,
-                 brain_box_task_template: Optional[BrainBoxTask] = None,
-                 collecting_task_template: Optional[BrainBoxTask] = None,
+                 task_decider: Optional = None,
+                 collecting_decider: Optional = None,
                  values_to_model: Optional[Callable[[Dict], str]] = None,
                  values_to_negative: Optional[Callable[[Dict], str]] = None
                  ):
         self.prompt_template = prompt_template
-        if brain_box_task_template is not None:
-            self.brain_box_task_template = brain_box_task_template
-        else:
-            self.brain_box_task_template = BrainBoxTask(
-                id = '',
-                decider = 'Automatic1111',
-                arguments={},
-            )
-        if collecting_task_template is not None:
-            self.collecting_task_template = collecting_task_template
-        else:
-            self.collecting_task_template = BrainBoxTask(
-                id='',
-                decider='Collector',
-                arguments={},
-            )
+        self.task_decider = task_decider if task_decider is not None else 'Automatic1111'
+        self.collecting_decider = collecting_decider if collecting_decider is not None else Collector.to_media_library
         self.values_to_model = values_to_model
         self.values_to_negative = values_to_negative
 
     def generate_task(self, value: Dict) -> BrainBoxTask:
         prompt = self.prompt_template.to_str(value)
-        task = deepcopy(self.brain_box_task_template)
-        task.arguments['prompt'] = prompt
+        task = BrainBoxTask(
+            decider=self.task_decider,
+            arguments = dict(prompt=prompt),
+        )
         if self.values_to_negative is not None:
             task.arguments['negative_prompt'] = self.values_to_negative(value)
         if self.values_to_model is not None:
             task.decider_parameters = self.values_to_model(value)
-        id = 'id_' + str(uuid4()).replace('-', '')
-        task.id = id
         return task
 
 
@@ -55,10 +43,11 @@ class PictureTaskGenerator:
             dependencies[task.id] = task.id
             intermediate.append(task)
 
-        collect = deepcopy(self.collecting_task_template)
-        collect.id = str(uuid4())
-        collect.arguments = {'tags': tags}
-        collect.dependencies = dependencies
+        collect = BrainBoxTask(
+            decider=self.collecting_decider,
+            arguments=dict(tags=tags),
+            dependencies = dependencies
+        )
 
         return BrainBoxTaskPack(
             collect,
