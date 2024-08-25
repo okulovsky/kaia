@@ -1,6 +1,6 @@
 from zoo.assistant import weather, joke
 from kaia.kaia import skills
-from .narration import characters
+from .avatar import characters
 from .common_intents import CommonIntents
 from kaia.kaia.audio_control_core_service import KaiaCoreAudioControlServiceSettings, KaiaCoreAudioControlService
 from kaia.kaia.core import KaiaMessage

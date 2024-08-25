@@ -1,7 +1,7 @@
 from typing import *
 from .kaia_skill import IKaiaSkill
 from ...eaglesong.core import Automaton, ContextRequest, AutomatonExit, Listen
-from ...avatar.dub.core import Template
+from kaia.dub.core import Template
 from ..gui import KaiaMessage
 from dataclasses import dataclass, field
 import traceback

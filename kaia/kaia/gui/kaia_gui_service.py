@@ -9,6 +9,7 @@ from kaia.infra.marshalling_api import MarshallingEndpoint
 from .kaia_message import KaiaMessage
 import base64
 import re
+import os
 
 from datetime import datetime
 import logging
@@ -77,8 +78,6 @@ class KaiaGuiService:
         binder = MarshallingEndpoint.Binder(self.app)
         binder.bind_all(KaiaEndpoints, self)
 
-        log = logging.getLogger('werkzeug')
-        log.setLevel(logging.ERROR)
         self.app.run('0.0.0.0', self._port)
 
 
@@ -118,6 +117,10 @@ class KaiaGuiService:
     def set_image(self, image: bytes):
         self._updated_at = datetime.now()
         self._image = image
+
+
+    def terminate(self):
+        os._exit(0)
 
 
     @staticmethod

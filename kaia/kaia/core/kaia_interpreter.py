@@ -16,9 +16,13 @@ class KaiaInterpreter(Interpreter):
         self.handle_type(prim.Listen, self._process_listen)
         self.handle_type(prim.Terminate, self._process_terminate)
         self.handle_type(prim.Audio, self._process_audio)
-        self.handle_type(KaiaMessage, self._publish_message)
         self.handle_type(prim.Image, self._process_image)
-        self.handle_type(str, self._process_str)
+        self.handle_type(prim.Empty, self._process_empty)
+        self.handle_type(KaiaMessage, self._publish_message)
+
+
+    def _process_empty(self, response):
+        return Interpreter.continue_cycle()
 
     def _process_listen(self, response):
         return Interpreter.interrupt_cycle()
@@ -53,10 +57,6 @@ class KaiaInterpreter(Interpreter):
 
     def _process_image(self, item: prim.Image):
         self.kaia_api.set_image(item.data)
-        return Interpreter.continue_cycle()
-
-    def _process_str(self, item: str):
-        self._publish_message(KaiaMessage(True, item))
         return Interpreter.continue_cycle()
 
     def process(self, item):

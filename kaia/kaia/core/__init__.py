@@ -5,6 +5,5 @@ from .kaia_assistant import KaiaAssistant, AssistantHistoryItem, AssistantHistor
 from .kaia_core_service import KaiaCoreService, RhasspyDriverSetup
 from .fake_processor import FakeKaiaProcess
 from .datetime_test_factory import DateTimeTestFactory
-from .rhasspy_command_source import RhasspyCommandSource
 from ..gui import KaiaMessage, KaiaGuiApi, KaiaGuiService
 from .kaia_log import KaiaLog

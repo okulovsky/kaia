@@ -43,7 +43,7 @@ If something went wrong during the installation or afterwards, reinstall the env
 
 ## Running a demo
 
-Run `python my/demo/run_demo.py`. No GPU is required for this.
+Run `python demos/kaia/run_demo.py`. No GPU is required for this.
 
 For the first time, it will take __a lot__ of time, as 3 containers will need to be downloaded/built.
 
@@ -55,15 +55,29 @@ At this point, you may open `localhost:8890` in your web-browser.
 To talk with Kaia, say wake word `computer`, wait for confirmation sound, 
 and utter the command, e.g. "What can you do?"
 
-It may not work out of the box, because you may need to additionally configure your audio system. 
-At the moment, it can only be done via the code in `my/demo/audio_control.py`
-* `mic_device_index` set to -1 means default mic. Configure your system if it's not the expected mic.
-* `sample_rate` is a parameter of your mic. 
-To be fair, I have no idea how to detect it. If something doesn't work, try using 44100 and 48000 values.
-* `silence_level` is a value used to tell voice and silence apart. To retrieve it:
-  * run `python my/demo/audio_test.py`
-  * Say "computer" several times. 
-  * Each time, the levels of the last frames are produced, get the border somewhere between first and last.
+### Troubleshooting
+
+If you hear "Hello, nice to see you", but the system doesn't hear you, you would need to adjust your input settings.
+They are located in `demos/kaia/audio_control.py`, method `create_release_control_settings`.
+
+If you say "computer" and then __do not__ hear a confirmation sound:
+check `mic_device_index`, by default it is set -1, which is default mic.
+Try to change the value, or physically find your system default mic and speak into it.
+Restart the app.
+ 
+If you hear confirmation after "computer", but not after the command you say:
+you probably need to adjust your silence levels. 
+Go to 127.0.0.1:12111/graph - it draws a graph of everything you say in the mic within last couple of seconds.
+Find a value that clearly separates silence from signal, and put it in `silence_level` argument.
+Restart the app.
+
+If you hear both confirmation signals, but the command is consistantly misrecognized:
+Go to 121.0.0.1:8090 , this is BrainBox console. Find a job belonging to Rhasspy with ID like 
+`<ID>.rhasspy`.
+Then get the file `121.0.0.1:8090/file/<ID>.input.wav` and listen to this. 
+If you hear too high/too low pitch, wrong `sample_rate` is the reason. 
+Find out which sample rate your OS runs the mic, update the settings and restart the app.
+ 
 
 ## Browsing the documentation
 
@@ -74,7 +88,7 @@ the releases, but it might be imperfect.
 
 To view the notebooks:
 
-* execute `jupyter notebook` in console with activated `kaia` environment
+* execute `jupyter lab` in console with activated `kaia` environment
 
 * do not close the console.
 
