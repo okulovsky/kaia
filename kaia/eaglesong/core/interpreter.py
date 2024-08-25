@@ -42,10 +42,10 @@ class Interpreter:
     def reset_automaton():
         return _InterpreterInstruction(True, True, None)
 
-    def handle_type(self, type: Type, handler: Callable[[Any,Any], _InterpreterInstruction]):
+    def handle_type(self, type: Type, handler: Callable[[Any], _InterpreterInstruction]):
         self.filters.append(InterpreterFilter(lambda z: isinstance(z, type), handler))
 
-    def handle_type_async(self, type: Type, handler: Callable[[Any,Any], Awaitable[_InterpreterInstruction]]):
+    def handle_type_async(self, type: Type, handler: Callable[[Any], Awaitable[_InterpreterInstruction]]):
         self.filters.append(InterpreterFilter(lambda z: isinstance(z, type), handler))
 
     def _process_and_get_filter(self, item):

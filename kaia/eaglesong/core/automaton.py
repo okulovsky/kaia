@@ -50,15 +50,18 @@ class Automaton(IAutomaton):
                     item_to_send = item
                 else:
                     return returned_value
-        except StopIteration:
+        except StopIteration as stop_iteration_exception:
             self.generator = None
-            return Return()
-        except Return:
+            return Return(stop_iteration_exception.value)
+        except AutomatonExit as automaton_exit:
             self.generator = None
-            return Return()
-        except Terminate as terminate:
-            self.generator = None
-            return terminate
+            return automaton_exit
+
+    def process_and_rethrow_exit(self, item: Any):
+        result = self.process(item)
+        if isinstance(result, AutomatonExit):
+            raise result
+        return result
 
 
 

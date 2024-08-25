@@ -29,7 +29,8 @@ class AutomatonExit(Exception):
 
 
 class Return(AutomatonExit):
-    pass
+    def __init__(self, value = None):
+        self.value = value
 
 @dataclass
 class Terminate(AutomatonExit):
@@ -39,6 +40,10 @@ class Terminate(AutomatonExit):
 class Listen:
     pass
 
+
+@dataclass
+class Empty:
+    pass
 
 class IBotOutput:
     pass

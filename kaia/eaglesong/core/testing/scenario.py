@@ -1,9 +1,13 @@
+import copy
+from unittest import TestCase
 from ..interpreter import IAutomaton
 from .helping_types import Stash, CheckType, CheckValue
 from .testing_interpreter import DefaultFeedbackFactory, TestingInterpreter
 from typing import *
 import time
 from dataclasses import dataclass
+import inspect
+from abc import ABC, abstractmethod
 
 class Stage:
     def __init__(self, prompt, wait_before: Optional[float], label: Optional[str], act_before: Optional[Callable]):
@@ -22,22 +26,31 @@ class LogItem:
     exception_base: Any = None
 
 
+class IAsserter(ABC):
+    @abstractmethod
+    def assertion(self, actual, test_case: TestCase):
+        pass
+
+
 
 class Scenario:
     def __init__(self,
                  automaton_factory: Callable[[], IAutomaton],
                  printing = None,
-                 feedback_factory = None
+                 feedback_factory = None,
+                 keep_listens_type_in_log: Optional[Iterable[Type]] = None
                  ):
         self.automaton_factory = automaton_factory
         self.feedback_factory = DefaultFeedbackFactory() if feedback_factory is None else feedback_factory
         self.printing = Scenario.default_printing if printing is None else printing
+        self.keep_listens_type = tuple(keep_listens_type_in_log) if keep_listens_type_in_log is not None else ()
 
         self.stages = []  # type: List[Stage]
         self.wait_on_next_stage = None
         self.act_on_next_stage = None
 
         self.stashed_values = {}
+        self._forks: Dict[str,'Scenario'] = {}
         self.log = [] #type: List[LogItem]
 
     def send(self, obj, label = None) -> 'Scenario':
@@ -54,6 +67,14 @@ class Scenario:
         self.act_on_next_stage = callable
         return self
 
+    def fork(self, name: str) -> 'Scenario':
+        self._forks[name] = copy.deepcopy(self)
+        return self
+
+    def get_fork(self, name: str) -> 'Scenario':
+        return copy.deepcopy(self._forks[name])
+
+
     @staticmethod
     def stash(slot):
         return Stash(slot)
@@ -68,31 +89,41 @@ class Scenario:
                 fixed_checkers.append(checker)
             elif callable(checker):
                 fixed_checkers.append(checker)
+            elif isinstance(checker, IAsserter):
+                fixed_checkers.append(checker.assertion)
             else:
                 fixed_checkers.append(CheckValue(checker))
         self.stages[-1].expectations = list(fixed_checkers)
         return self
 
 
-    def _validate_stage(self, stage_index: int, s: Stage, response: List):
+    def _validate_stage(self, stage_index: int, s: Stage, response: List, test_case: TestCase) -> Tuple[Optional[Exception], Optional[str]]:
         if s.expectations is not None:
             if len(s.expectations) != len(response):
-                return None, ValueError(f"Error at stage#{stage_index}: wrong amount of output, expected {len(s.expectations)} but was {len(response)}")
+                return None, f"Error at stage#{stage_index}: wrong amount of output, expected {len(s.expectations)} but was {len(response)}"
             for j, q in enumerate(zip(s.expectations, response)):
-                catched = False
-                result = False
                 err_msg = f'Stage {stage_index}, expectation {j}\n> {s.prompt} \n< {q[1]}\nExpectation: {q[0]}\n\n'
-                try:
-                    result = q[0](q[1])
-                except Exception as e:
-                    catched = True
-                    return e, ValueError(err_msg)
-                if not catched and not result:
-                    return None, ValueError(err_msg)
+                signature = inspect.signature(q[0])
+                if len(signature.parameters) == 2:
+                    try:
+                        q[0](q[1], test_case)
+                    except Exception as e:
+                        return e, err_msg
+                elif len(signature.parameters) == 1:
+                    try:
+                        result = q[0](q[1])
+                        if not result:
+                            return None, err_msg+f"Returned {result}"
+                    except Exception as e:
+                        return e, err_msg
+        return None, None
 
-    def validate(self):
+    def validate(self, test_case: TestCase|None = None):
+        if test_case is None:
+            test_case = TestCase()
+
         aut = self.automaton_factory()
-        interpreter = TestingInterpreter(aut, self.feedback_factory)
+        interpreter = TestingInterpreter(aut, self.feedback_factory, self.keep_listens_type)
         self.log = []
         first_exception = None
         first_exception_base = None
@@ -103,22 +134,29 @@ class Scenario:
             if s.act_before is not None:
                 s.act_before()
 
-            interpreter.process(s.prompt)
-            err = self._validate_stage(i,s,interpreter.current_log)
+            try:
+                interpreter.process(s.prompt)
+            except Exception as ex:
+                if self.printing is not None:
+                    self.printing(self.log, True)
+                raise ValueError(f"Error when processing input {s.prompt}") from ex
+
+
+            base_exception, error_msg = self._validate_stage(i,s,interpreter.current_log, test_case)
             item = LogItem(s.label, s.prompt, interpreter.current_log)
 
-            if err is not None:
-                base, ex = err
-                item.exception = ex
-                item.exception_base = base
+            if error_msg is not None:
+                exception = ValueError(error_msg)
+                item.exception = exception
+                item.exception_base = base_exception
                 if first_exception is None:
-                    first_exception = ex
-                    first_exception_base = base
+                    first_exception = exception
+                    first_exception_base = base_exception
 
             self.log.append(item)
 
         if self.printing is not None:
-            self.printing(self.log)
+            self.printing(self.log, first_exception is not None)
 
         if first_exception is not None:
             if first_exception_base is not None:
@@ -130,11 +168,15 @@ class Scenario:
 
 
     @staticmethod
-    def default_printing(log: List[LogItem]):
-        return Scenario.default_printing_generic(log, str, str)
+    def default_printing(log: List[LogItem], failure: bool = False):
+        return Scenario.default_printing_generic(log, str, str, failure)
 
     @staticmethod
-    def default_printing_generic(log: List[LogItem], prompt_to_str, response_to_str):
+    def default_printing_generic(log: List[LogItem], prompt_to_str, response_to_str, failure: bool):
+        if failure:
+            print('\033[91mFAILURE\033[0m')
+        else:
+            print('\033[92mSUCCESS\033[0m')
         for item in log:
             if item.label is not None:
                 print('\033[92m'+item.label+'\033[0m')
@@ -145,3 +187,4 @@ class Scenario:
                 print('\033[91m' + 'exception'.ljust(10) + '\033[0m', item.exception)
             if item.exception is not None:
                 print('\033[91m' + 'exc_base'.ljust(10) + '\033[0m', item.exception_base)
+        print('\n\n')

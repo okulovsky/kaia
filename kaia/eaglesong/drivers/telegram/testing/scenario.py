@@ -26,8 +26,8 @@ def resp_to_str(v):
         return str(v)
 
 
-def telegram_printing(log):
-    return Scenario.default_printing_generic(log, prompt_to_str, resp_to_str)
+def telegram_printing(log, failure):
+    return Scenario.default_printing_generic(log, prompt_to_str, resp_to_str, failure)
 
 
 class TelegramScenario(Scenario):
