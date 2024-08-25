@@ -1,9 +1,8 @@
 from pathlib import Path
-from kaia.infra import Loc, deployment
-from kaia.brainbox.deciders.docker_based.docker_based import DockerBasedInstaller, DockerBasedInstallerEndpoint
-import requests
-from unittest import TestCase
-from .settings import CoquiTrainingContainerSettings
+from kaia.infra import Loc
+from kaia.brainbox import deployment
+from kaia.brainbox.deciders.arch import LocalImageInstaller, BrainBoxServiceRunner, DockerService
+from kaia.brainbox.deployment import SmallImageBuilder
 from enum import Enum
 
 class SupportedModels(Enum):
@@ -12,65 +11,38 @@ class SupportedModels(Enum):
     VitsMultispeaker = 'vits-multispeaker'
 
 
-class CoquiTrainingContainerInstaller(DockerBasedInstaller):
-    def __init__(self, settings: CoquiTrainingContainerSettings):
-        self.settings = settings
-        builder = deployment.SmallContainerBuilder(
-            self.settings.image_name,
+class CoquiTrainingContainerInstaller(LocalImageInstaller):
+    def __init__(self):
+        service = DockerService(
+            self, None, None,
+            BrainBoxServiceRunner(
+                gpu_required=BrainBoxServiceRunner.GPURequirement.Mandatory
+            )
+        )
+
+        super().__init__(
+            'coqui-tts-training',
             Path(__file__).parent/'container',
             DOCKERFILE,
-            DEPENDENCIES
-            )
-
-        notebook_config = deployment.DockerRun(
-            open_ports=[8899],
-            mount_folders={Loc.root_folder:'/repo', self.settings.resource_folder: '/data'},
-            additional_arguments=[ '--rm'],
-            propagate_gpu=True,
-            command_line_arguments=['notebook']
+            DEPENDENCIES,
+            service,
         )
-        self.notebook_endpoint = DockerBasedInstallerEndpoint(self, notebook_config)
 
-        phonemize_config = deployment.DockerRun(
-            mount_folders={Loc.data_folder: '/data'},
-            additional_arguments=['--rm'],
-            propagate_gpu=False,
-            command_line_arguments=['phonemize']
-        )
-        self.phonemize_endpoint = DockerBasedInstallerEndpoint(self, phonemize_config, 8899)
+        self.notebook_service = service.as_notebook_service()
+        self.phonemize_service = service.as_service_worker('phonemize')
 
-        super().__init__(builder)
 
-    def install(self):
-        self.build()
-        self.executor.create_empty_folder(self.settings.resource_folder)
-
-    def create_train_process(self,
+    def create_train_service(self,
                              model: SupportedModels,
                              path_to_model: str,
                              path_to_dataset: str
                              ):
-        config = deployment.DockerRun(
-            mount_folders={self.settings.resource_folder: '/data'},
-            propagate_gpu=True,
-            command_line_arguments=[model.value, path_to_dataset, path_to_model]
-        )
-        return DockerBasedInstallerEndpoint(self, config)
+        return self.main_service.as_service_worker(model.value, path_to_dataset, path_to_model)
 
 
 
-DOCKERFILE = '''
+DOCKERFILE = f'''
 FROM python:3.11
-
-RUN pip install {dependencies}
-
-RUN git clone https://github.com/coqui-ai/TTS
-
-WORKDIR TTS
-
-RUN git reset --hard eef419b37393b11cc741662d041d8d793e011f2d
-
-RUN pip install -e .[all,dev,notebooks]
 
 RUN apt-get update
 
@@ -80,9 +52,23 @@ RUN apt-get install ffmpeg -y
 
 RUN apt-get install sox -y
 
-COPY . /TTS/runner
+{{{SmallImageBuilder.ADD_USER_PLACEHOLDER}}}
 
-ENTRYPOINT ["python3","runner/main.py"]
+{{{SmallImageBuilder.PIP_INSTALL_PLACEHOLDER}
+
+WORKDIR home/app/
+
+RUN git clone https://github.com/coqui-ai/TTS
+
+WORKDIR home/app/TTS
+
+RUN git reset --hard eef419b37393b11cc741662d041d8d793e011f2d
+
+RUN pip install -e .[all,dev,notebooks]
+
+COPY . home/app/TTS/runner
+
+ENTRYPOINT ["python3","/home/app/TTS/runner/main.py"]
 '''
 
 DEPENDENCIES = '''
@@ -287,7 +273,7 @@ soundfile==0.12.1
 soupsieve==2.5
 soxr==0.3.7
 spacy==3.7.4
-spacy-legacy==3.0.12
+spacy-deciders_legacy==3.0.12
 spacy-loggers==1.0.5
 srsly==2.4.8
 stack-data==0.6.3

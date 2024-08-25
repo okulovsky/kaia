@@ -1,5 +1,6 @@
 from yo_fluq_ds import *
 from kaia.brainbox import BrainBoxTask, BrainBoxTaskPack, MediaLibrary
+from kaia.brainbox.deciders import Collector
 from ipywidgets import VBox, HBox, Audio, Label
 from copy import copy
 
@@ -52,8 +53,7 @@ def generate_tasks(
             tasks.append(task)
 
     collection = BrainBoxTask(
-        id=BrainBoxTask.safe_id(),
-        decider='Collector',
+        decider=Collector.to_media_library,
         arguments=dict(tags=tags),
         dependencies={i: i for i in ids}
     )
