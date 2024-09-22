@@ -153,3 +153,4 @@ class KaiaGuiService:
 
         if stay_after_commands:
             time.sleep(1000)
+
