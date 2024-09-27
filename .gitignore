@@ -151,3 +151,5 @@ recepies/creative_articulator/summarization
 kaia_tests/streaming_test.wav
 
 my/deployment/local_run/logs.txt
+
+kaia_tests/test_kaia/streaming_test.wav

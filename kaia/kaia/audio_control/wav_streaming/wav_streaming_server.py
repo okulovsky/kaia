@@ -37,20 +37,20 @@ class WavStreamingServer:
     def __call__(self):
         os.makedirs(self.settings.folder, exist_ok=True)
         app = flask.Flask(__name__)
-        app.add_url_rule('/upload/<file_name>', view_func=self.upload, methods=['POST'])
+        app.add_url_rule('/upload/<sample_rate>/<frame_length>/<file_name>', view_func=self.upload, methods=['POST'])
         app.add_url_rule('/download/<file_name>', view_func=self.download, methods=['GET'])
         app.run('0.0.0.0', self.settings.port)
 
 
-    def upload(self, file_name):
+    def upload(self, sample_rate, frame_length, file_name):
         stream = flask.request.stream
-        header = stream.read(4*3)
-        sample_rate, frame_length, chunk_size = struct.unpack('iii', header)
+        sample_rate = int(sample_rate)
+        frame_length = int(frame_length)
 
         with open(self.settings.folder/file_name, 'wb') as file:
             writer = WavWriter(file, sample_rate, frame_length)
             while True:
-                buffer = stream.read(chunk_size)
+                buffer = stream.read()
                 writer.write_packed(buffer)
                 if len(buffer) == 0:
                     break

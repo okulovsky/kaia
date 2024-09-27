@@ -7,7 +7,7 @@ import re
 import os
 from datetime import datetime
 from kaia.infra import Loc, FileIO
-from bus import Bus, BusItem
+from .bus import Bus, BusItem
 from dataclasses import dataclass, field
 
 
@@ -66,7 +66,7 @@ class KaiaServer:
             session_id = session_id,
             timestamp = datetime.now(),
             type = command_type,
-            payload = json.dumps(flask.request.json)
+            payload = flask.request.json
         ))
         return "OK"
 
@@ -79,7 +79,7 @@ class KaiaServer:
                 id = item.id,
                 timestamp = str(item.timestamp),
                 type = item.type,
-                payload = json.loads(item.payload)
+                payload = item.payload
             ))
         return flask.jsonify(result)
 

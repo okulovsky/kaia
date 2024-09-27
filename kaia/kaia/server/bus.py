@@ -1,5 +1,6 @@
+from typing import *
 from sqlalchemy.orm import declarative_base, Mapped, mapped_column, Session
-from sqlalchemy import create_engine, func
+from sqlalchemy import create_engine, func, JSON, Column
 from datetime import datetime
 
 
@@ -12,7 +13,7 @@ class BusItem(Base):
     session_id: Mapped[str] = mapped_column()
     timestamp: Mapped[datetime] = mapped_column()
     type: Mapped[str] = mapped_column()
-    payload: Mapped[str] = mapped_column()
+    payload = Column('payload', JSON)
 
 
 class Bus:

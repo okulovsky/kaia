@@ -16,7 +16,6 @@ class Drivers:
     streaming_api: WavStreamingApi
 
 
-
 @dataclass
 class AudioControlSettings:
     class Environments(Enum):
@@ -42,6 +41,7 @@ class AudioControlSettings:
     play_api_address: str | None = '127.0.0.1:13001'
     max_log_entries: int = 20
     max_levels_entries_in_seconds = 60
+    api_call_on_produced_file: Optional[Callable[[str], None]] = None
 
     def __post_init__(self):
         if self.environment == AudioControlSettings.Environments.Test:

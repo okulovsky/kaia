@@ -1,22 +1,38 @@
 var session_id =  Math.floor(Math.random() * 1000000).toString()
 var last_message = 0
 
-function build_message_p(msg) {
+function build_message_p(payload) {
     p = ''
     p+='<p class = "';
 
-    if (msg['type'] == 'FromUser') p+='right'
+    if (payload['type'] == 'FromUser') p+='right'
     else p+='left'
     p+='" '
 
-    if (msg['avatar']) p+='style="background-image: url('+"'"+msg['avatar']+"'"+');" '
+    if (payload['avatar']) p+='style="background-image: url('+"'"+payload['avatar']+"'"+');" '
 
     p+=">"
-    p+=msg['text']
+    p+=payload['text']
     p+="</p>"
     return p
 }
 
+function add_message(payload) {
+    html_addition = build_message_p(payload)
+    control = document.getElementById("chat")
+    control.innerHTML += html_addition
+    control.scrollTop = control.scrollHeight
+}
+
+function add_sound(payload) {
+    var audio_control = new Audio('/file/'+payload['filename'])
+    audio_control.play()
+}
+
+function add_image(payload) {
+    image_control = document.getElementById("main_image")
+    image_control.src = '/file/' + payload['filename']
+}
 
 function process_updates(data) {
     new_last_message_id = last_message
@@ -26,35 +42,17 @@ function process_updates(data) {
 
     for (const element of data) {
         if (element['type'] == 'reaction_message') {
-            html_addition+=build_message_p(element['payload'])
+            add_message(element['payload'])
         }
         if (element['type'] == 'reaction_image') {
-            image = element['payload']
+            add_image(element['payload'])
         }
         if (element['type'] == 'reaction_audio') {
-            play_queue.push(element['payload'])
+            add_sound(element['payload'])
         }
         if (element['id'] > new_last_message_id) {
-            new_last_message_id = element['id']
+            last_message = element['id']
         }
-    }
-
-    last_message = new_last_message_id
-
-    if (html_addition != '') {
-        control = document.getElementById("chat")
-        control.innerHTML += html_addition
-        control.scrollTop = control.scrollHeight
-    }
-
-    if (image) {
-        image_control = document.getElementById("main_image")
-        image_control.src = '/file/' + image
-    }
-
-    for (const audio of data) {
-        //var audio_control = new Audio('/file/'+audio)
-        //audio_control.play()
     }
 }
 

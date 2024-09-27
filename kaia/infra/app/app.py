@@ -47,6 +47,13 @@ class KaiaApp:
     def test_runner(self):
         return KaiaAppTestRunner(self)
 
+    def __enter__(self) -> 'KaiaApp':
+        self.run_services_only()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.exit()
+
 
 class KaiaAppTestRunner:
     def __init__(self, app: KaiaApp):

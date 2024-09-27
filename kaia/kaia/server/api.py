@@ -1,5 +1,6 @@
 import json
 import os
+import subprocess
 import time
 
 from kaia.infra import MarshallingEndpoint
@@ -37,7 +38,7 @@ class KaiaApi:
             session_id = self.session_id,
             timestamp = datetime.now(),
             type = "reaction_image",
-            payload = json.dumps(image)
+            payload = dict(filename=image)
         ))
 
     def add_sound(self, sound: str):
@@ -45,7 +46,7 @@ class KaiaApi:
             session_id = self.session_id,
             timestamp = datetime.now(),
             type = "reaction_audio",
-            payload = json.dumps(sound)
+            payload = dict(filename=sound)
         ))
 
     def add_message(self, message: Message):
@@ -53,12 +54,12 @@ class KaiaApi:
             session_id = self.session_id,
             timestamp = datetime.now(),
             type = 'reaction_message',
-            payload = json.dumps(dict(
+            payload = dict(
                 type = message.type.name,
                 text = message.text,
                 sender = message.sender,
                 avatar = message.avatar
-            ))))
+            )))
 
     def get_updates(self, last_message_id: int|None = None) -> list[BusItem]:
         return self.bus.get_messages(self.session_id, last_message_id)
@@ -94,13 +95,13 @@ class KaiaApi:
 
             bus = Bus(self.settings.db_path)
             current_sessions = bus.get_sessions()
-            os.system(f'{self.browser_command} http://127.0.0.1:{self.settings.port}/')
+
+            subprocess.Popen([self.browser_command, f'http://127.0.0.1:{self.settings.port}/'])
 
             new_session = None
             for i in range(100):
                 new_sessions = bus.get_sessions()
-                print(current_sessions, new_sessions)
-
+                
                 if len(new_sessions) > len(current_sessions):
                     new_session = [s for s in new_sessions if s not in current_sessions][0]
                     break

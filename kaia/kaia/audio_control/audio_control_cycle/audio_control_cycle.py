@@ -145,6 +145,8 @@ class AudioControlCycle:
         self._streaming_request.send()
         self._produced_files.put(fname)
         self._streaming_request = None
+        if self._settings.api_call_on_produced_file is not None:
+            self._settings.api_call_on_produced_file(fname)
         self._mic_state = MicState.Standby
         self._play_internal_recording(self._settings.confirmed_recording)
         return fname

@@ -19,5 +19,5 @@ if __name__ == '__main__':
             api.add_message(Message(Message.Type.FromUser, "Hello!", avatar='/alt/lina.png'))
             api.add_image('img1.png')
             api.add_sound('sound1.mpeg')
-            api.add_sound('sound2.mpeg')
+            #api.add_sound('sound2.mpeg')
             time.sleep(60*60)

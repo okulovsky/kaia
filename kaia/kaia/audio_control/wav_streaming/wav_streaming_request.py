@@ -27,7 +27,6 @@ class WavStreamingRequest:
         self.queue = Queue()
         self.thread = Thread(target = self._make_request, daemon=True)
         self.thread.start()
-        self.first_time = True
         for data in initial_buffer:
             self.add_wav_data(data)
 
@@ -45,7 +44,10 @@ class WavStreamingRequest:
     def _make_request(self):
         try:
             if self.address is not None:
-                requests.post(f'http://{self.address}/upload/{self.file_name}', data=self._generator())
+                requests.post(
+                    f'http://{self.address}/upload/{self.sample_rate}/{self.frame_length}/{self.file_name}',
+                    data=self._generator()
+                )
             else:
                 for _ in self._generator():
                     pass
@@ -55,10 +57,6 @@ class WavStreamingRequest:
 
     def add_wav_data(self, data):
         to_send = struct.pack("h"*len(data), *data)
-        if self.first_time:
-            header = struct.pack('iii',*[self.sample_rate, self.frame_length, len(to_send)])
-            self.queue.put(header)
-            self.first_time = False
         self.queue.put(to_send)
 
     def send(self):
