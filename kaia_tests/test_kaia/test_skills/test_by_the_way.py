@@ -1,19 +1,19 @@
 from unittest import TestCase
 from datetime import datetime, timedelta, time
 from kaia.eaglesong.core import Automaton, Scenario, TimerTick
-from kaia.kaia.skills import KaiaTestAssistant, TimeSkill, DateSkill, ByTheWayIntentTrigger, ByTheWaySkill, ByTheWayNotification
+from kaia.kaia.skills import TimeSkill, DateSkill, ByTheWayIntentTrigger, ByTheWaySkill, ByTheWayNotification
 from kaia.infra import ScheduledTime
 from kaia.dub.core import Utterance, Template
 from kaia.kaia.skills.time import TimeIntents
 from kaia.kaia.skills.date import DateIntents
-from kaia.kaia.core import DateTimeTestFactory
+from kaia.kaia.core import DateTimeTestFactory, KaiaAssistant
 
 ut = Template('By the way, test').utter()
 
 def get_scenario(*notification: ByTheWayNotification):
     factory = DateTimeTestFactory()
     btw = ByTheWaySkill(notification, factory)
-    assistant = KaiaTestAssistant(
+    assistant = KaiaAssistant(
         [
             TimeSkill(),
             DateSkill(),

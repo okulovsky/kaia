@@ -1,8 +1,7 @@
 from kaia.brainbox import BrainBoxTestApi, BrainBoxTask, BrainBoxTaskPack, DownloadingPostprocessor
 from kaia.brainbox.deciders.fake_image_generator import FakeImageDecider
 from kaia.brainbox.deciders.collector import Collector
-from kaia.avatar import AvatarTestApi, AvatarSettings,  AnyContentStrategy, ImageService, MediaLibraryManager
-from kaia.narrator import SimpleNarrator
+from kaia.avatar import AvatarApi, AvatarSettings,  AnyContentStrategy, MediaLibraryManager
 from kaia.narrator.task_generators.images import PictureTaskGenerator
 from unittest import TestCase
 from uuid import uuid4
@@ -36,7 +35,7 @@ class AvatarDubbingTestCase(TestCase):
             media_library_path = bb_api.execute(pack)
             with Loc.create_temp_file('avatar_test', 'json') as stats_file:
                 image_manager = MediaLibraryManager(AnyContentStrategy(), media_library_path, stats_file)
-                with AvatarTestApi(AvatarSettings(image_media_library_manager=image_manager)) as avatar_api:
+                with AvatarApi.Test(AvatarSettings(image_media_library_manager=image_manager)) as avatar_api:
                     avatar_api.state_change(dict(character='character_0'))
                     for i in range(10):
                         result = avatar_api.image_get()

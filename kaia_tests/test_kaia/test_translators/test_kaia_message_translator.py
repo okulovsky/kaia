@@ -3,7 +3,7 @@ from kaia.kaia.core import KaiaMessage
 from kaia.eaglesong import Listen, Scenario, Automaton, IAsserter
 from unittest import TestCase
 from kaia.kaia.translators import KaiaMessageTranslator
-from kaia.avatar import AvatarTestApi, AvatarSettings
+from kaia.avatar import AvatarApi, AvatarSettings
 from kaia.narrator import World
 from kaia.dub import Template
 
@@ -31,7 +31,7 @@ class Adder(IAsserter):
 
 class KaiaMessageTranslatorTestCase(TestCase):
     def test_kaia_message_translator(self):
-        with AvatarTestApi(AvatarSettings()) as api:
+        with AvatarApi.Test(AvatarSettings()) as api:
             fake_kaia_api = FakeGuiApi()
             adder = Adder(fake_kaia_api)
             skill = KaiaMessageTranslator(echo, fake_kaia_api, api, lambda z:z+'.png')

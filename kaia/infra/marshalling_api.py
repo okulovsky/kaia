@@ -13,6 +13,10 @@ from uuid import uuid4
 import base64
 import pickle
 import io
+from .app import KaiaApp
+from typing import TypeVar, Generic
+
+
 
 class _MarshallingExecutor:
     def __init__(self,
@@ -69,11 +73,19 @@ class MarshallingEndpoint:
                 view_func=_MarshallingExecutor(endpoint, function, self.errors_folder)
             )
 
+        def _heartbeat(self):
+            return 'OK'
+
         def bind_all(self, endpoints_class: Type, functions_obj):
             for field in vars(endpoints_class):
                 obj = getattr(endpoints_class, field)
                 if isinstance(obj, MarshallingEndpoint):
                     self.bind(obj, getattr(functions_obj, field))
+            self.app.add_url_rule(
+                '/heartbeat',
+                methods=['GET'],
+                view_func=self._heartbeat
+            )
 
     class Caller:
         def __init__(self, address: str):
@@ -104,11 +116,12 @@ class MarshallingEndpoint:
 
     class API:
         def __init__(self, address: str):
+            self.address = address
             self.caller = MarshallingEndpoint.Caller(address)
 
         def check_availability(self):
             try:
-                result = requests.get(f'http://{self.caller.address}')
+                result = requests.get(f'http://{self.caller.address}/heartbeat')
                 if result.status_code == 200:
                     return True
             except:
@@ -123,4 +136,16 @@ class MarshallingEndpoint:
                 if time_in_seconds is not None:
                     if (datetime.now() - begin).seconds > time_in_seconds:
                         raise ValueError("Couldn't wait for server to start")
+
+
+    class TestAPI:
+        def _prepare_service(self, api, service, seconds_to_wait: int = 5):
+            self.app = KaiaApp()
+            self.app.add_subproc_service(service)
+            self.app.run_services_only()
+            api.wait_for_availability(seconds_to_wait)
+            return api
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            self.app.exit()
 

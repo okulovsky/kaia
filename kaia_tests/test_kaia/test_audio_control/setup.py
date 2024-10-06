@@ -9,13 +9,15 @@ class TestIntents(TemplatesCollection):
 
 
 def create_brainbox_test_api(cache_folder = None):
-    deciders.RhasspyInstaller(deciders.RhasspySettings()).run_in_any_case_and_create_api()
-    deciders.WhisperInstaller(deciders.WhisperSettings()).run_in_any_case_and_create_api()
+    deciders.RhasspyKaldiInstaller(deciders.RhasspyKaldiSettings()).run_in_any_case_and_create_api()
+    api = deciders.WhisperInstaller(deciders.WhisperSettings()).run_in_any_case_and_create_api()
+    api.load_model('base')
     return BrainBoxTestApi(
         {
-            'Rhasspy': deciders.RhasspyInstaller(deciders.RhasspySettings()),
+            'RhasspyKaldi': deciders.RhasspyKaldiInstaller(deciders.RhasspyKaldiSettings()),
             'Whisper': deciders.WhisperInstaller(deciders.WhisperSettings()),
             'Collector': deciders.Collector(),
+            'OpenTTS': deciders.OpenTTSInstaller(deciders.OpenTTSSettings()),
         },
         always_on_planner = True,
         cache_folder=cache_folder

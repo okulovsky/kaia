@@ -2,8 +2,8 @@ import json
 from unittest import TestCase
 from kaia.eaglesong.core import Automaton, Scenario, Image
 from kaia.kaia.skills.change_image_skill import ChangeImageIntents, ChangeImageSkill
-from kaia.kaia.skills import KaiaTestAssistant
-from kaia.avatar import AvatarTestApi, AvatarSettings, NewContentStrategy, MediaLibraryManager
+from kaia.kaia.core import KaiaAssistant
+from kaia.avatar import AvatarApi, AvatarSettings, NewContentStrategy, MediaLibraryManager
 from kaia.brainbox import MediaLibrary
 from kaia.infra import Loc
 
@@ -22,9 +22,9 @@ class ChangeImageTestCase(TestCase):
             MediaLibrary.generate(media_library, tags)
             with Loc.create_temp_file('tests/change_image/stats','json') as stats_file:
                 manager = MediaLibraryManager(NewContentStrategy(False), media_library, stats_file)
-                with AvatarTestApi(AvatarSettings(image_media_library_manager=manager)) as api:
+                with AvatarApi.Test(AvatarSettings(image_media_library_manager=manager)) as api:
                     (
-                        Scenario(lambda: Automaton(KaiaTestAssistant([ChangeImageSkill(api)]), None))
+                        Scenario(lambda: Automaton(KaiaAssistant([ChangeImageSkill(api)], raise_exception=False), None))
                         .send(ChangeImageIntents.change_image.utter())
                         .check(check_image(0))
                         .send(ChangeImageIntents.change_image.utter())

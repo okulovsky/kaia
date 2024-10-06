@@ -2,6 +2,8 @@ from typing import *
 from ...eaglesong.core import IAutomaton, Interpreter, primitives as prim
 from ..gui import KaiaMessage, KaiaGuiApi
 
+class Confirmation:
+    pass
 
 class KaiaInterpreter(Interpreter):
     def __init__(self,
@@ -43,7 +45,7 @@ class KaiaInterpreter(Interpreter):
     def _publish_message(self, message: KaiaMessage):
         if self.kaia_api is not None:
             self.kaia_api.add_message(message)
-        return Interpreter.continue_cycle()
+        return Interpreter.continue_cycle(Confirmation())
 
 
     def _process_audio(self, item: prim.Audio):
@@ -53,11 +55,11 @@ class KaiaInterpreter(Interpreter):
                 item.text
             ))
         self._publish_voice(item)
-        return Interpreter.continue_cycle()
+        return Interpreter.continue_cycle(Confirmation())
 
     def _process_image(self, item: prim.Image):
         self.kaia_api.set_image(item.data)
-        return Interpreter.continue_cycle()
+        return Interpreter.continue_cycle(Confirmation())
 
     def process(self, item):
         return self._process(item)

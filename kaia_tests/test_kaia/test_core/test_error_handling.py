@@ -1,7 +1,6 @@
-from kaia.kaia.core import SingleLineKaiaSkill, KaiaMessage
+from kaia.kaia.core import SingleLineKaiaSkill, KaiaMessage, KaiaAssistant
+from kaia.kaia.core.exception_in_skill import ExceptionInSkillReplies
 from unittest import TestCase
-from kaia.kaia.skills.kaia_test_assistant import KaiaTestAssistant
-from kaia.kaia.skills.exception_in_skill import ExceptionInSkillReplies
 from kaia.eaglesong.core import Automaton, Scenario
 
 
@@ -33,8 +32,7 @@ class ErroneousSkill(SingleLineKaiaSkill):
 class AssistantTestCase(TestCase):
     def test_error_handling(self):
         def create_assistant():
-            assistant = KaiaTestAssistant([StatefulSkill(), ErroneousSkill()])
-            assistant.raise_exceptions = False
+            assistant = KaiaAssistant([StatefulSkill(), ErroneousSkill()])
             return Automaton(assistant, None)
 
         (Scenario(create_assistant)

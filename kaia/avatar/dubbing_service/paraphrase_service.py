@@ -17,6 +17,7 @@ class ParaphraseService:
         content = self.manager.find_content(state, {Conventions.template_to_paraphrase_tag_name: u.template.name})
         if content is None:
             return [u]
+        self.manager.feedback(content.file_id, 'seen')
         self.last_file_id = content.file_id
         if u.template.meta.paraphrase.type == ParaphraseInfo.Type.After:
             return [u, Utterance.from_string(content.content)]

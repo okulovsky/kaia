@@ -1,6 +1,6 @@
 from typing import *
 from abc import ABC, abstractmethod
-from kaia.dub.core import Template, Utterance, TemplatesCollection
+from kaia.dub.core import Template, Utterance, TemplatesCollection, IntentsPack
 from enum import Enum
 
 class IKaiaSkill(ABC):
@@ -32,6 +32,9 @@ class IKaiaSkill(ABC):
 
     def should_proceed(self, input) -> bool:
         return False
+
+    def get_extended_intents_packs(self) -> Iterable[IntentsPack]:
+        return []
 
 
 class SingleLineKaiaSkill(IKaiaSkill):

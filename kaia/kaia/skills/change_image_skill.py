@@ -2,7 +2,7 @@ from typing import *
 from kaia.eaglesong.core import Image
 from kaia.dub.languages.en import *
 from kaia.kaia.core import SingleLineKaiaSkill
-from kaia.avatar import AvatarAPI
+from kaia.avatar import AvatarApi
 from kaia.narrator import World
 
 class ChangeImageIntents(TemplatesCollection):
@@ -22,7 +22,7 @@ class ChangeImageReplies(TemplatesCollection):
 
 
 class ChangeImageSkill(SingleLineKaiaSkill):
-    def __init__(self, avatar_api: AvatarAPI):
+    def __init__(self, avatar_api: AvatarApi):
         super().__init__(ChangeImageIntents, ChangeImageReplies)
         self.avatar_api = avatar_api
         self.last_image: Optional[Image] = None

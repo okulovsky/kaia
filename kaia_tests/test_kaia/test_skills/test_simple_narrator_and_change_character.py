@@ -1,13 +1,12 @@
 import json
 
-from kaia.avatar import AvatarTestApi, DubbingService, ImageService, AvatarSettings, NewContentStrategy, TestTaskGenerator, MediaLibraryManager
-from kaia.narrator import SimpleNarrator
+from kaia.avatar import AvatarApi, DubbingService, ImageService, AvatarSettings, NewContentStrategy, TestTaskGenerator, MediaLibraryManager
 from unittest import TestCase
 from kaia.brainbox import BrainBoxTask, BrainBoxTaskPack, MediaLibrary, BrainBoxTestApi, DownloadingPostprocessor
 from kaia.brainbox.deciders.fake_dub_decider import FakeDubDecider
 from uuid import uuid4
 from kaia.infra import Loc, FileIO
-from kaia.kaia.skills import KaiaTestAssistant
+from kaia.kaia.core import KaiaAssistant
 from kaia.kaia.skills.character_skill import ChangeCharacterIntents, ChangeCharacterSkill
 from kaia.kaia.skills.change_image_skill import ChangeImageSkill, ChangeImageIntents
 from kaia.kaia.skills.time import TimeSkill, TimeIntents
@@ -38,9 +37,9 @@ class SimpleNarratorCharacterTestCase(TestCase):
                         dubbing_task_generator=TestTaskGenerator(),
                         image_media_library_manager=MediaLibraryManager(NewContentStrategy(), media_library, stats_file)
                     )
-                    with AvatarTestApi(settings) as avatar_api:
+                    with AvatarApi.Test(settings) as avatar_api:
                         char_skill = ChangeCharacterSkill(['character_0','character_1','character_2'], avatar_api)
-                        assistant = KaiaTestAssistant([
+                        assistant = KaiaAssistant([
                             TimeSkill(),
                             ChangeImageSkill(avatar_api),
                             char_skill

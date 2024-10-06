@@ -4,8 +4,8 @@ from kaia.brainbox import MediaLibrary, BrainBoxTestApi
 from kaia.brainbox.deciders import FakeDubDecider
 from kaia.infra import Loc
 from kaia.avatar import (
-    AvatarTestApi, AvatarSettings, TestTaskGenerator, MediaLibraryManager,
-    NewContentStrategy, ExactTagMatcher, ParaphraseService
+    AvatarApi, AvatarSettings, TestTaskGenerator, MediaLibraryManager,
+    NewContentStrategy, ExactTagMatcher
 )
 
 from kaia.narrator import World, Conventions
@@ -50,7 +50,7 @@ class ParaphraseTestCase(TestCase):
                     paraphrase_media_library_manager=manager,
                     dubbing_task_generator=TestTaskGenerator()
                 )
-                with AvatarTestApi(settings) as api:
+                with AvatarApi.Test(settings) as api:
                     preview = api.dub(templates[0].utter())
                     self.assertEqual('Test_1/character_0/0.', preview.full_text)
 

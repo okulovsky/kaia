@@ -66,7 +66,7 @@ class FloatDub(UnionDub, IRandomizableDub):
 
     def _dict_to_value(self, d):
         if 'special_fraction' in d:
-            return d['int_value'] + 1/d['special_fraction']
+            return d['int_value'] + round(1/d['special_fraction'], self.precision)
         elif 'fraction' in d:
             fraction = d['fraction'] / (10**(len(str(d['fraction'])) + d.get('zero_count', 0)))
             return d['int_value'] + fraction
@@ -74,5 +74,5 @@ class FloatDub(UnionDub, IRandomizableDub):
             return d['int_value']
 
     def get_random_value(self, random_state: Optional[np.random.RandomState] = np.random.RandomState()):
-        value = random_state.random()*(self.max_value*10**self.precision)/(10**self.precision)
+        value = int(random_state.random()*(self.max_value*10**self.precision))/(10**self.precision)
         return value

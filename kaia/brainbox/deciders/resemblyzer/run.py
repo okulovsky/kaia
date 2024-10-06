@@ -3,6 +3,6 @@ from unittest import TestCase
 
 if __name__ == '__main__':
     installer = ResemblyzerInstaller(ResemblyzerSettings())
-    #installer.install()
+    installer.install()
     installer.brainbox_self_test()
 

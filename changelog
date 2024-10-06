@@ -1,3 +1,12 @@
+3.2.0.
+    - Avatar Service is significantly refactored:
+        - There is no narrator anymore. Avatar holds the State. If there is a need of story, the state must be modified by the external service
+        - Avatar keeps track of its procedures
+        - NLU is now completely on the Avatar side. Avatar thus incapsulates all BrainBox calls in the app
+    - RhasspyKaldi NLU is recognized: now we can have several Kaldi models, e.g. one model per complex skill
+    - Input preprocessing is modified: Listen can now store various additional attributes, and PartialListenTranslators modify the stack's behaviour accordingly
+
+
 3.1.0.
     - A draft for new bus-based backend and frontend
 3.0.0.

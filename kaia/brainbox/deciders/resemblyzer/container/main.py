@@ -1,4 +1,3 @@
-import sys
 import subprocess
 from server import ResemblyzerServer
 import argparse
@@ -15,3 +14,5 @@ if __name__ == '__main__':
         exit(0)
 
     ResemblyzerServer()()
+
+

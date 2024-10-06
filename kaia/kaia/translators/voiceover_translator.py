@@ -1,13 +1,13 @@
 from typing import *
 from kaia.eaglesong.core import Translator, Audio, TranslatorInputPackage, TranslatorOutputPackage
-from kaia.avatar import AvatarAPI, TextLike, DubbingServiceOutput
+from kaia.avatar import AvatarApi, TextLike, DubbingServiceOutput
 from kaia.dub import Utterance, UtterancesSequence
 
 
 class VoiceoverTranslator(Translator):
     def __init__(self,
                  inner_function,
-                 avatar_api: Optional[AvatarAPI],
+                 avatar_api: Optional[AvatarApi],
                  ):
         self.avatar_api = avatar_api
 

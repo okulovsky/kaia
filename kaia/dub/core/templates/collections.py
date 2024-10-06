@@ -47,3 +47,6 @@ class TemplatesCollection:
             new_templates[key] = template.substitute(dubs)
         return DynamicTemplatesCollection(new_templates)
 
+
+
+

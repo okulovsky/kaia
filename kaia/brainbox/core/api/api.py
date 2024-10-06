@@ -16,11 +16,11 @@ from sqlalchemy.orm import Session
 from threading import Thread
 from sqlalchemy import select
 from io import BytesIO
+from .execute_serverless import execute_serverless
 
-class BrainBoxApi:
+class BrainBoxApi(MarshallingEndpoint.API):
     def __init__(self, address: str, cache_folder: Path = Loc.temp_folder / 'brainbox_cache'):
-        self.address = address
-        self.caller = MarshallingEndpoint.Caller(address)
+        super().__init__(address)
         self.cache_folder = cache_folder
 
     def add(self, task: Union[BrainBoxTaskPack, BrainBoxTask, Iterable[BrainBoxTask]]):
@@ -119,104 +119,32 @@ class BrainBoxApi:
 
 
 
-    def is_available(self) -> bool:
-        try:
-            reply = requests.get('http://'+self.address, timeout=0.5)
-            return True
-        except:
-            return False
+    class Test(MarshallingEndpoint.TestAPI):
+        def __init__(self,
+                     services,
+                     cache_folder = None,
+                     address = '127.0.0.1:8099',
+                     always_on_planner: bool = False
+                     ):
+            if cache_folder is None:
+                cache_folder = Loc.temp_folder / 'tests/brainboxwebservicetextfilecache'
+            self.cache_folder = cache_folder
+            self.address = address
+            self.services = services
+            self.always_on_planner = always_on_planner
 
+        def __enter__(self) -> 'BrainBoxApi':
+            service = BrainBoxService(
+                self.services,
+                AlwaysOnPlanner(False) if self.always_on_planner else SimplePlanner(),
+                self.cache_folder,
+            )
+            server = BrainBoxWebServer(8099, Sql.test_file('brainbox_web_test_db_' + str(uuid.uuid4())), self.cache_folder, service)
+            api = BrainBoxApi(self.address, self.cache_folder)
+            return self._prepare_service(api, server)
 
-class BrainBoxTestApi:
-    def __init__(self,
-                 services,
-                 cache_folder = None,
-                 address = '127.0.0.1:8099',
-                 always_on_planner: bool = False
-                 ):
-        if cache_folder is None:
-            cache_folder = Loc.temp_folder / 'tests/brainboxwebservicetextfilecache'
-        self.cache_folder = cache_folder
-        self.address = address
-        self.services = services
-        self.always_on_planner = always_on_planner
-
-    def __enter__(self):
-        service = BrainBoxService(
-            self.services,
-            AlwaysOnPlanner() if self.always_on_planner else SimplePlanner(),
-            self.cache_folder,
-        )
-        server = BrainBoxWebServer(8099, Sql.test_file('brainbox_web_test_db_' + str(uuid.uuid4())), self.cache_folder, service)
-        self.app = KaiaApp()
-        self.app.add_runner(SubprocessRunner(server))
-        self.app.run_services_only()
-
-        while True:
-            try:
-                requests.get('http://127.0.0.1:8099')
-                break
-            except:
-                time.sleep(0.01)
-
-
-        api = BrainBoxApi(self.address, self.cache_folder)
-        return api
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.app.exit()
-
-    @staticmethod
-    def execute_serverless(
-                tasks: List[BrainBoxTask],
-                services: Dict[str, IDecider],
-                folder: Optional[Path] = None
-        ) -> tuple[list[BrainBoxJob],list[str]]:
-
-        jobs = [BrainBoxJob.from_task(t) for t in tasks]
-        sql = Sql.test_file('service' + str(uuid.uuid4()))
-        engine = sql.engine()
-        BrainBoxBase.metadata.create_all(engine)
-
-        with Session(engine) as session:
-            session.add_all(jobs)
-            session.commit()
-
-        class Logger:
-            def __init__(self):
-                self.buffer = []
-
-            def __call__(self, item: LogItem):
-                # print(f'{item.level} {item.id} {item.event}')
-                self.buffer.append(item)
-
-        loger = Logger()
-        if folder is None:
-            folder = Loc.temp_folder / 'tests/brainboxtextfilecache'
-
-        service = BrainBoxService(
-            services,
-            SimplePlanner(),
-            folder,
-            loger
-        )
-        thread = Thread(target=service.cycle, args=[engine, sql.messenger()])
-        thread.start()
-        while True:
-            with Session(engine) as session:
-                cnt = sum(session.scalars(select(BrainBoxJob.finished)))
-                print(f'*** {cnt}')
-                if cnt == len(tasks):
-                    break
-                time.sleep(0.5)
-        service.terminate()
-        thread.join()
-        with Session(engine) as session:
-            finished_tasks = list(session.scalars(select(BrainBoxJob)))
-        return finished_tasks, loger.buffer
+        execute_serverless = execute_serverless
 
 
 
-
-
-
+BrainBoxTestApi = BrainBoxApi.Test

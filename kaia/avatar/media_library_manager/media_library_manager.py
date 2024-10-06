@@ -21,7 +21,6 @@ class MediaLibraryManager:
         self.strategy = strategy
         self.media_library = MediaLibrary.read(media_library_path)
         self.feedback_provider = FeedbackProvider(feedback_file_path)
-        self.last_image_id: None | str = None
         self.tag_matcher_factory = tag_matcher_factory
 
     def find_content(self, state: dict[str, str], additional_required_tags: None|dict[str, str] = None) -> Optional['MediaLibraryManager.Record']:
@@ -33,23 +32,18 @@ class MediaLibraryManager:
         choosen_id = self.strategy.choose_filename(ml)
         if choosen_id is None:
             return None
-        self.last_image_id = choosen_id
-        self.feedback_provider.append_feedback(self.last_image_id, dict(seen=1))
         return MediaLibraryManager.Record(choosen_id, ml.mapping[choosen_id].get_content())
 
 
     def get_content(self, state: dict[str,str], additional_required_tags: None|dict[str, str] = None) -> 'MediaLibraryManager.Record':
         content = self.find_content(state, additional_required_tags)
         if content is None:
-            self.last_image_id = None
             raise ValueError("No content can be found")
         return content
 
 
-    def feedback(self, feedback: str) -> None:
-        if self.last_image_id is None:
-            raise ValueError(f'No image was sent, so no feedback is going to be provided')
-        self.feedback_provider.append_feedback(self.last_image_id, {feedback:1})
+    def feedback(self, last_file_id: str, feedback: str) -> None:
+        self.feedback_provider.append_feedback(last_file_id, {feedback:1})
 
 
 

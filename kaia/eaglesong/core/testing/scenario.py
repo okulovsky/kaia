@@ -177,10 +177,10 @@ class Scenario:
             print('\033[91mFAILURE\033[0m')
         else:
             print('\033[92mSUCCESS\033[0m')
-        for item in log:
+        for index, item in enumerate(log):
             if item.label is not None:
                 print('\033[92m'+item.label+'\033[0m')
-            print('\033[94m' + 'prompt'.ljust(10) + '\033[0m', prompt_to_str(item.prompt))
+            print('\033[94m' + str(index).ljust(3) + 'prompt'.ljust(10) + '\033[0m', prompt_to_str(item.prompt))
             for response in item.response:
                 print('\033[94m' + 'response'.ljust(15) + '\033[0m', response_to_str(response))
             if item.exception is not None:

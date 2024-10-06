@@ -59,14 +59,25 @@ class SetDub(ToStrDub, IRandomizableDub, ABC, Generic[T]):
 
 
 class DictDub(SetDub[T]):
-    def __init__(self, value_to_str: Dict[T, str], name: Optional[str] = None):
+    def __init__(self, value_to_str: Dict[T, str|list[str]], name: Optional[str] = None):
         self._value_to_str = value_to_str
         if name is None:
             name = '[Dictionary]' + ','.join(f'{key}={value}' for key, value in value_to_str.items())
         super().__init__(list(value_to_str), name)
 
     def to_str(self, value: T) -> str:
-        return self._value_to_str[value]
+        result = self._value_to_str[value]
+        if isinstance(result, str):
+            return result
+        else:
+            return result[0]
+
+    def to_all_strs(self, value: T) -> Tuple[str,...]:
+        result = self._value_to_str[value]
+        if isinstance(result, str):
+            return (result,)
+        else:
+            return tuple(result)
 
 
 

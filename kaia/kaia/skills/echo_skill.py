@@ -1,7 +1,9 @@
 from typing import *
 from ..core import IKaiaSkill
 from kaia.dub.core import Template, Utterance, TemplatesCollection
-from ..translators import AudioControlListen
+from kaia.eaglesong import Listen
+from ..translators import OpenMic
+from kaia.avatar import RecognitionSettings
 from kaia.narrator import World
 
 class EchoIntents(TemplatesCollection):
@@ -45,7 +47,7 @@ class EchoSkill(IKaiaSkill):
 
     def run(self):
         yield "Say anything and I will repeat"
-        s = yield AudioControlListen(True, AudioControlListen.NLU.Whisper)
+        s = yield Listen().store(RecognitionSettings(RecognitionSettings.NLU.Whisper)).store(OpenMic())
         yield s
 
 

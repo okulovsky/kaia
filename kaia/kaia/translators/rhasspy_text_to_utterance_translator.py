@@ -1,15 +1,18 @@
 from typing import *
 from kaia.eaglesong.core import Translator, TranslatorInputPackage
-from kaia.dub import Template
+from kaia.dub import Template, IntentsPack
 from kaia.dub.rhasspy_utils import RhasspyHandler
 
 
 class RhasspyTextToUtteranceTranslator(Translator):
     def __init__(self,
                  inner_function,
-                 intents: Iterable[Template]
+                 intents: Iterable[IntentsPack]
                  ):
-        self.handler = RhasspyHandler(intents)
+        intents = list(intents)
+        if len(intents) != 1:
+            raise ValueError("Exactly one intent pack is expected")
+        self.handler = RhasspyHandler(intents[0].templates)
         super().__init__(
             inner_function,
             input_function_translator=self.translate_input

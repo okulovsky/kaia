@@ -36,9 +36,27 @@ class Return(AutomatonExit):
 class Terminate(AutomatonExit):
     message: str
 
-@dataclass
+T = TypeVar('T')
+
 class Listen:
-    pass
+    def __init__(self):
+        self._payload: dict[Type, Any] = {}
+
+    def __getitem__(self, type: Type[T]) -> T:
+        return self._payload[type]
+
+    def store(self, value: Any) -> 'Listen':
+        self._payload[type(value)] = value
+        return self
+
+    def get(self, type: Type):
+        return self._payload[type]
+
+    def __contains__(self, item: Type):
+        return item in self._payload
+
+
+
 
 
 @dataclass

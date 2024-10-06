@@ -25,6 +25,7 @@ class BrainBoxServiceRunner(IContainerRunner):
     mount_data_folder: bool = True
     dont_rm_debug_only: bool = False
     restart_unless_stopped: bool = False
+    run_as_root: bool = False
 
     _installer: None | DockerInstaller = None
     _mount_folders: None|dict[str,str] = None
@@ -84,7 +85,7 @@ class BrainBoxServiceRunner(IContainerRunner):
             + ['--name', container_name]
             + ( ['--detach'] if self._detach else [])
             + ( ['--rm'] if not self.dont_rm_debug_only else [] )
-            + ['--user', f'{executor.get_machine().user_id}:{executor.get_machine().user_id}']
+            + (['--user', f'{executor.get_machine().user_id}:{executor.get_machine().user_id}'] if not self.run_as_root else [])
             + ( ['--restart', 'unless-stopped'] if self.restart_unless_stopped else [])
             + list(self.custom_flags)
             + [image_name]

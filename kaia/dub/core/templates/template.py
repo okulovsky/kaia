@@ -4,7 +4,7 @@ from ..algorithms import ToStr, RegexpParser, Randomizer
 from numpy.random import RandomState
 from copy import copy, deepcopy
 from uuid import uuid4
-from .template_metadata import TemplateMetadata
+from .template_metadata import TemplateMetadata, DescriptionAsInput
 from .paraphrase import Paraphrase
 from .predefined_fields import PredefinedField
 
@@ -146,5 +146,12 @@ class Template:
     @property
     def paraphrase(self) -> 'Paraphrase[Template]':
         return Paraphrase(self)
+
+    def as_input(self,
+                 caption: None | str = None,
+                 description: None | str = None,
+                 can_be_button: bool = False,
+    ) -> 'Template':
+        return self.meta.set(as_input=DescriptionAsInput(caption, description, can_be_button))
 
 

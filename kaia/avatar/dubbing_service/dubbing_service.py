@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 from .text_processor import TextLike, TextProcessor
 from .task_generator import IDubTaskGenerator
-
 from kaia.eaglesong.core import Audio
 from kaia.brainbox import BrainBoxApi
 from ..media_library_manager import MediaLibraryManager
 from .paraphrase_service import ParaphraseService
+from ..state import State
 
 @dataclass
 class DubbingServiceOutput:
@@ -40,10 +40,10 @@ class DubbingService:
         result = self.task_generator.unpack_result(self.api, result)
         return Audio(result, data.full_text)
 
-    def dub(self, text: TextLike, state: dict[str, str]):
+    def dub(self, state: State, text: TextLike):
         if self.paraphraser is not None:
-            text = self.paraphraser.paraphrase(text, state)
-        return self.stream_dub(text, state)
+            text = self.paraphraser.paraphrase(text, state.get_state())
+        return self.stream_dub(text, state.get_state())
 
 
     def get_result(self, job_id: str):

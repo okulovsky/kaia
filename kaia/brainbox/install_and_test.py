@@ -69,6 +69,10 @@ class InstallAndTestCase(TestCase):
         from kaia.brainbox.deciders import RhasspySettings, RhasspyInstaller
         self.run_test(RhasspySettings(), RhasspyInstaller)
 
+    def test_rhasspy_kaldi(self):
+        from kaia.brainbox.deciders import RhasspyKaldiSettings, RhasspyKaldiInstaller
+        self.run_test(RhasspyKaldiSettings(), RhasspyKaldiInstaller, True, True)
+
     def test_tortoise_tts(self):
         from kaia.brainbox.deciders import TortoiseTTSSettings, TortoiseTTSInstaller
         self.run_test(TortoiseTTSSettings(), TortoiseTTSInstaller, dont_test=False)
@@ -76,6 +80,7 @@ class InstallAndTestCase(TestCase):
     def test_whisper(self):
         from kaia.brainbox.deciders import WhisperSettings, WhisperInstaller
         self.run_test(WhisperSettings(), WhisperInstaller)
+
 
 
 

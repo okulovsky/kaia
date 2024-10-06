@@ -1,7 +1,8 @@
 from kaia.dub import Template, TemplatesCollection
 from unittest import TestCase
-from kaia.kaia.skills import SmalltalkSkill, KaiaTestAssistant
+from kaia.kaia.skills import SmalltalkSkill
 from kaia.eaglesong import Automaton, Scenario
+from kaia.kaia.core import KaiaAssistant
 
 class Intents(TemplatesCollection):
     how_are_how = Template("How are you?")
@@ -13,7 +14,7 @@ class Replies(TemplatesCollection):
 
 def create_automaton():
     skills = [SmalltalkSkill(Intents, Replies)]
-    assistant = KaiaTestAssistant(skills)
+    assistant = KaiaAssistant(skills)
     help.assistant = assistant
     return Automaton(assistant, None)
 

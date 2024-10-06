@@ -213,6 +213,7 @@ class MediaLibrary:
         return MediaLibrary._load_zips(zip_files, None)
 
 
+
     @staticmethod
     def generate(path: Path, tags_array: Dict[str,Dict[str,Any]]):
         folder = path.parent/("tmp_"+path.name)

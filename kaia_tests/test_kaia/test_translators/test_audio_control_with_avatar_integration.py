@@ -1,9 +1,10 @@
 from unittest import TestCase
 from kaia.brainbox import IDecider, BrainBoxTestApi
 from kaia.brainbox.deciders import Collector
-from kaia.avatar import AvatarAPI, AvatarTestApi, AvatarSettings
-from kaia.kaia.translators import AudioControlListen, AudioControlHandler, AudioControlCommand
-from kaia.eaglesong import Scenario, Automaton
+from kaia.avatar import AvatarApi, AvatarSettings, RecognitionSettings
+from kaia.kaia.translators import RecognitionTranslator
+from kaia.kaia.audio_control import AudioControlCommand
+from kaia.eaglesong import Scenario, Automaton, Listen
 
 
 class FakeWhisper(IDecider):
@@ -32,22 +33,21 @@ class FakeAudioControl:
         pass
 
 class Skill:
-    def __init__(self, avatar_api: AvatarAPI):
+    def __init__(self, avatar_api: AvatarApi):
         self.avatar_api = avatar_api
 
     def __call__(self):
         while True:
-            input = yield AudioControlListen(True, AudioControlListen.NLU.Whisper, '')
+            input = yield Listen().store(RecognitionSettings(RecognitionSettings.NLU.Whisper))
             yield dict(input=input, state = self.avatar_api.state_get())
 
 class ACAndAvatarTestCase(TestCase):
     def test_ac_and_avatar_test_integration(self):
         services = dict(Whisper=FakeWhisper(), Resemblyzer=FakeResemblyzer(), Collector = Collector())
         with BrainBoxTestApi(services) as bb_api:
-            with AvatarTestApi(AvatarSettings()) as avatar_api:
+            with AvatarApi.Test(AvatarSettings(brain_box_api=bb_api, resemblyzer_model_name='x')) as avatar_api:
                 skill = Skill(avatar_api)
-                handler = AudioControlHandler(FakeAudioControl(), bb_api, None, lambda:[], 'test', avatar_api)
-                skill = handler.create_translator(skill)
+                skill = RecognitionTranslator(skill, avatar_api)
                 S = Scenario(lambda: Automaton(skill, None))
                 (
                     S

@@ -2,7 +2,7 @@ import random
 from typing import *
 from kaia.dub.languages.en import *
 from kaia.kaia.core import SingleLineKaiaSkill
-from kaia.avatar import AvatarAPI
+from kaia.avatar import AvatarApi
 from kaia.narrator import World
 
 class ChangeCharacterReplies(TemplatesCollection):
@@ -30,7 +30,7 @@ class ChangeCharacterIntents(TemplatesCollection):
 class ChangeCharacterSkill(SingleLineKaiaSkill):
     def __init__(self,
                  characters_list: Iterable[str],
-                 avatar_api: AvatarAPI,
+                 avatar_api: AvatarApi,
                  dont_randomly_switch_to: Optional[Iterable[str]] = None
                  ):
         self.avatar_api = avatar_api

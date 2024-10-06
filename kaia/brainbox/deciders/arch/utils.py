@@ -1,10 +1,11 @@
+from typing import Any
 from unittest import TestCase
 from kaia.infra import Loc
 from pathlib import Path
 from io import BytesIO
 from ...core import File
 from kaia.infra import FileIO
-
+from dataclasses import dataclass
 
 
 def check_if_its_sound(file, tc: TestCase):
@@ -17,9 +18,14 @@ def check_if_its_sound(file, tc: TestCase):
     f.close()
 
 class FileLike:
-    Type = str|Path|bytes|File
+    Type = str|Path|bytes|File|BytesIO
 
-    def __init__(self, file: str|Path|bytes, cache_folder: None|Path):
+    @dataclass
+    class AlreadyStream:
+        stream: Any
+
+
+    def __init__(self, file: str|Path|bytes|BytesIO, cache_folder: None|Path):
         self.file = file
         self.cache_folder = cache_folder
         self.stream = None
@@ -35,7 +41,14 @@ class FileLike:
         elif isinstance(self.file, bytes):
             self.stream = BytesIO(self.file)
         elif isinstance(self.file, File):
-            self.stream = BytesIO(self.file.content)
+            if self.file.content is not None:
+                self.stream = BytesIO(self.file.content)
+            elif self.cache_folder is not None:
+                self.stream = open(self.cache_folder / self.file.name, 'rb')
+            else:
+                self.stream = open(self.file.name, 'rb')
+        elif isinstance(self.file, FileLike.AlreadyStream):
+            self.stream = self.file.stream
         else:
             raise ValueError(f'File should be path, str (with path) or bytes, but was: {self.file}')
         return self.stream

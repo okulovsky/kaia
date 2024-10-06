@@ -1,14 +1,9 @@
-import traceback
-
 import flask
-from pathlib import Path
 import shutil
 import os
 import pickle
 import uuid
 import traceback
-
-import pandas as pd
 
 from classifier import *
 
@@ -30,20 +25,43 @@ class ResemblyzerServer:
         app.add_url_rule('/', view_func=self.index, methods=['GET'])
         app.run('0.0.0.0',8084)
 
+    def classify(self, model: str):
+        try:
+            path = Path('/data') / str(uuid.uuid4())
+            file = flask.request.files['file']
+            file.save(path)
+            embedding = self.wav_processor.get_encoding(path)
+            os.unlink(path)
+            if model not in self.models_cache:
+                with open(MODELS_FOLDER / model, 'rb') as file:
+                    self.models_cache[model] = Model(**pickle.load(file))
+            winner = self.models_cache[model].compute_winner(embedding)
+            if winner is None:
+                raise ValueError("Undef winner")
+            return flask.jsonify(dict(speaker=winner))
+        except:
+            return traceback.format_exc(), 500
+
     def index(self):
         return 'OK'
 
 
     def upload_dataset_file(self, model, split, speaker, file):
-        path = DATASETS_PATH/model/split/speaker/file
-        os.makedirs(path.parent, exist_ok=True)
-        file = flask.request.files['file']
-        file.save(path)
-        return 'OK'
+        try:
+            path = DATASETS_PATH/model/split/speaker/file
+            os.makedirs(path.parent, exist_ok=True)
+            file = flask.request.files['file']
+            file.save(path)
+            return 'OK'
+        except:
+            return traceback.format_exc(), 500
 
     def delete_dataset(self, model):
-        shutil.rmtree(DATASETS_PATH/model, ignore_errors=True)
-        return 'OK'
+        try:
+            shutil.rmtree(DATASETS_PATH/model, ignore_errors=True)
+            return 'OK'
+        except:
+            return traceback.format_exc(), 500
 
     def train(self, model: str):
         try:
@@ -56,7 +74,9 @@ class ResemblyzerServer:
             os.makedirs(MODELS_FOLDER, exist_ok=True)
             with open(MODELS_FOLDER/model,'wb') as file:
                 pickle.dump(model_instance.__dict__, file)
-            stats_df = {column: list(model_instance.stats[column]) for column in model_instance.stats}
+            stats_df = model_instance.stats
+            if stats_df is not None:
+                stats_df = {column: list(model_instance.stats[column]) for column in stats_df}
             return flask.jsonify(dict(accuracy=model_instance.accuracy, stats = stats_df))
         except:
             return traceback.format_exc(), 500

@@ -2,14 +2,14 @@ from typing import *
 from kaia.eaglesong.core import Translator, TranslatorInputPackage, Empty
 from kaia.dub.core import Utterance
 from kaia.kaia.gui import KaiaGuiApi, KaiaMessage
-from kaia.avatar import AvatarAPI
-from kaia.narrator import INarrator, World
+from kaia.avatar import AvatarApi
+from kaia.narrator import World
 
 class KaiaMessageTranslator(Translator):
     def __init__(self,
                  inner_function,
                  kaia_api: KaiaGuiApi,
-                 avatar_api: None|AvatarAPI = None,
+                 avatar_api: None|AvatarApi = None,
                  name_to_image: Optional[Callable[[str], str]] = None
                  ):
         self.kaia_api = kaia_api

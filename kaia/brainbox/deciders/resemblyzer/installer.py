@@ -2,7 +2,7 @@ from pathlib import Path
 from .settings import ResemblyzerSettings
 from ..arch import LocalImageInstaller, DockerService, BrainBoxServiceRunner
 from ...deployment import SmallImageBuilder
-from .api import Resemblyzer, ResemblyzerExtendedApi
+from .api import Resemblyzer
 from unittest import TestCase
 from kaia.brainbox.media_library import MediaLibrary
 from ...core import BrainBoxApi, BrainBoxTask, IntegrationTestResult, File, BrainBoxTaskPack
@@ -11,7 +11,6 @@ from ..collector import Collector
 class ResemblyzerInstaller(LocalImageInstaller):
     def __init__(self, settings: ResemblyzerSettings):
         self.settings = settings
-
 
         service = DockerService(
             self, self.settings.port, self.settings.startup_time_in_seconds,
@@ -29,20 +28,17 @@ class ResemblyzerInstaller(LocalImageInstaller):
 
         self.notebook_service = service.as_notebook_service()
 
-    def create_api(self) -> ResemblyzerExtendedApi:
-        return ResemblyzerExtendedApi(f'{self.ip_address}:{self.settings.port}')
+    def create_brainbox_decider_api(self, parameters: str) -> Resemblyzer:
+        return Resemblyzer(f'{self.ip_address}:{self.settings.port}', parameters)
+
+    def create_api(self) -> Resemblyzer:
+        return Resemblyzer(f'{self.ip_address}:{self.settings.port}')
 
     def _brainbox_self_test_internal(self, api: BrainBoxApi, tc: TestCase):
-        self.run_if_not_running_and_wait()
-        full_api = self.create_api()
-        full_api.delete_dataset('test_dataset')
-        ml = MediaLibrary.read(Path(__file__).parent/'test_media_library.zip')
-        full_api.upload_dataset('test_dataset', ml)
-        stats = full_api.train('test_dataset')
-        print(stats)
-        tc.assertGreater(stats['accuracy'], 0.9)
-        self.kill()
+        media_library_path = Path(__file__).parent/'test_media_library.zip'
+        api.execute(BrainBoxTask.call(Resemblyzer).train_on_media_library(media_library_path=media_library_path))
 
+        ml = MediaLibrary.read(media_library_path)
         builder = Collector.PackBuilder()
         contents = {}
         speakers = []
@@ -65,13 +61,6 @@ class ResemblyzerInstaller(LocalImageInstaller):
                 yield IntegrationTestResult(0, None, contents[r['tags']['record_id']])
 
 
-
-
-
-
-
-    def create_brainbox_decider_api(self, parameters: str) -> Resemblyzer:
-        return Resemblyzer(f'{self.ip_address}:{self.settings.port}', parameters)
 
 
 

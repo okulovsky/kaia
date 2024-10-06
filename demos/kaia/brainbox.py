@@ -3,8 +3,9 @@ from kaia.brainbox import (
 )
 from kaia.brainbox.core.planers import AlwaysOnPlanner
 from kaia.brainbox.deciders import (
-    OpenTTSInstaller, OpenTTSSettings, RhasspyInstaller, RhasspySettings, WhisperInstaller, WhisperSettings,
-    ResemblyzerInstaller, ResemblyzerSettings, Collector
+    OpenTTSInstaller, OpenTTSSettings, RhasspyKaldiInstaller, RhasspyKaldiSettings,
+    WhisperInstaller, WhisperSettings, ResemblyzerInstaller, ResemblyzerSettings,
+    Collector
 )
 from kaia.infra import Loc, Sql
 
@@ -14,7 +15,7 @@ def create_brainbox_service_and_api(services = None, folder = 'demo/brainbox'):
         services = {
             'OpenTTS': OpenTTSInstaller(OpenTTSSettings()),
             'Whisper': WhisperInstaller(WhisperSettings()),
-            'Rhasspy': RhasspyInstaller(RhasspySettings()),
+            'RhasspyKaldi': RhasspyKaldiInstaller(RhasspyKaldiSettings()),
             'Collector': Collector(),
             'Resemblyzer': ResemblyzerInstaller(ResemblyzerSettings())
         }

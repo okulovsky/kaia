@@ -18,6 +18,7 @@ class TranslatorOutputPackage:
 class Translator:
     InputPackage = TranslatorInputPackage
     OutputPackage = TranslatorOutputPackage
+    NoInput = object()
     def __init__(self,
                  inner_function,
                  context_translator: Optional[Callable] = None,
@@ -54,6 +55,9 @@ class Translator:
                 inner_input = yield from self.input_generator_translator(input_pack)
             else:
                 inner_input = outer_input
+
+            if inner_input is Translator.NoInput:
+                continue
 
             inner_output = automaton.process_and_rethrow_exit(inner_input)
             

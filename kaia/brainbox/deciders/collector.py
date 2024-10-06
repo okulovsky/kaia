@@ -91,16 +91,27 @@ class Collector(IDecider):
         @dataclasses.dataclass
         class Record:
             task: BrainBoxTask
-            tags: dict[str, Any]
+            tags: None|dict[str, Any]
 
 
-        def __init__(self, records: Optional[Iterable['Collector.PackBuilder.Record']] = None):
+        def __init__(self,
+                     records: Optional[Iterable['Collector.PackBuilder.Record']] = None,
+                     limit_records_for_test_purposes_at: None|int = None
+                     ):
             self.records = [] if records is None else list(records)
+            self.limit_records_for_test_purposes_at = limit_records_for_test_purposes_at
 
-        def append(self, task: BrainBoxTask|BrainBoxTaskBuilderResult, tags: dict[str, Any]):
+        def _can_add(self):
+            if self.limit_records_for_test_purposes_at is None:
+                return True
+            return len(self.records) < self.limit_records_for_test_purposes_at
+
+
+        def append(self, task: BrainBoxTask|BrainBoxTaskBuilderResult, tags: None|dict[str, Any]):
             if isinstance(task, BrainBoxTaskBuilderResult):
                 task = task.to_task()
-            self.records.append(Collector.PackBuilder.Record(task, tags))
+            if self._can_add():
+                self.records.append(Collector.PackBuilder.Record(task, tags))
 
 
         def to_collector_pack(self, method: str):
@@ -110,8 +121,9 @@ class Collector(IDecider):
 
             for record in self.records:
                 tasks.append(record.task)
-                tags[record.task.id] =record.tags
-                dependencies[record.task.id] = record.task.id
+                if record.tags is not None:
+                    tags[record.task.id] = record.tags
+                    dependencies[record.task.id] = record.task.id
 
             return BrainBoxTaskPack(
                 BrainBoxTask(

@@ -4,6 +4,7 @@ from .oobabooga import Oobabooga, OobaboogaInstaller, OobaboogaSettings
 from .open_tts import OpenTTS, OpenTTSInstaller, OpenTTSSettings
 from .resemblyzer import Resemblyzer, ResemblyzerSettings, ResemblyzerInstaller
 from .rhasspy import Rhasspy, RhasspySettings, RhasspyInstaller
+from .rhasspy_kaldi import RhasspyKaldiInstaller, RhasspyKaldi, RhasspyKaldiSettings
 from .tortoise_tts import TortoiseTTS, TortoiseTTSSettings, TortoiseTTSInstaller
 from .whisper import Whisper, WhisperInstaller, WhisperSettings, WhisperExtendedAPI
 from .collector import Collector

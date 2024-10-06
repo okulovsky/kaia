@@ -74,5 +74,8 @@ class Model:
         if total > 0:
             self.stats = pd.concat(dfs)
             self.accuracy = matches / total
+        else:
+            self.stats = None
+            self.accuracy = None
 
 

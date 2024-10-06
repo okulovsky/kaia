@@ -9,7 +9,7 @@ class OpenTTS(IApiDecider):
         MarshallingEndpoint.check_address(address)
         self.address = address
 
-    def __call__(self,
+    def voiceover(self,
                  text: str,
                  voice: str = 'coqui-tts:en_vctk',
                  lang: str = 'en',
@@ -22,3 +22,11 @@ class OpenTTS(IApiDecider):
             raise ValueError(f'OpenTTS server returned {reply.status_code}\n{reply.text}')
         result = File(self.current_job_id+'.output.wav', reply.content, File.Kind.Audio)
         return result
+
+    def __call__(self,
+                  text: str,
+                  voice: str = 'coqui-tts:en_vctk',
+                  lang: str = 'en',
+                  speakerId: Optional[str] = 'p256'
+                  ):
+        return self.voiceover(text,voice,lang,speakerId)

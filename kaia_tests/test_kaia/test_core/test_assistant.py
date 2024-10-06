@@ -1,13 +1,13 @@
 from unittest import TestCase
 from kaia.kaia.skills.date import DateSkill, DateReplies, DateIntents
 from kaia.kaia.skills.time import TimeSkill, TimeReplies, TimeIntents
-from kaia.kaia.skills.kaia_test_assistant import KaiaTestAssistant
-from kaia.kaia.skills.automaton_not_found_skill import AutomatonNotFoundReplies
+from kaia.kaia.core import KaiaAssistant
+from kaia.kaia.core.automaton_not_found_skill import AutomatonNotFoundReplies
 from kaia.kaia.translators import VoiceoverTranslator, RhasspyTextToUtteranceTranslator
 from kaia.brainbox import BrainBoxTestApi
 from kaia.brainbox.deciders.fake_dub_decider import FakeDubDecider
-from kaia.avatar import DubbingService, AvatarTestApi, AvatarSettings, TestTaskGenerator
-from kaia.narrator import SimpleNarrator
+from kaia.avatar import DubbingService, AvatarApi, AvatarSettings, TestTaskGenerator
+
 
 
 from kaia.eaglesong.core import Automaton, Scenario
@@ -16,7 +16,7 @@ from datetime import datetime
 
 class AssistantTestCase(TestCase):
     def test_utterance_level(self):
-        aut = KaiaTestAssistant([DateSkill(), TimeSkill()])
+        aut = KaiaAssistant([DateSkill(), TimeSkill()])
         (Scenario(lambda: Automaton(aut,None))
          .send(TimeIntents.question.utter())
          .check(lambda z: z in TimeReplies.answer)
@@ -26,7 +26,7 @@ class AssistantTestCase(TestCase):
         )
 
     def test_wrong_intent(self):
-        aut = KaiaTestAssistant([DateSkill()])
+        aut = KaiaAssistant([DateSkill()])
         (Scenario(lambda: Automaton(aut, None))
          .send(TimeIntents.question.utter())
          .check(AutomatonNotFoundReplies.answer.utter())
@@ -45,8 +45,8 @@ class AssistantTestCase(TestCase):
                 TestTaskGenerator(),
                 bb_api
             )
-            with AvatarTestApi(AvatarSettings(dubbing_task_generator=TestTaskGenerator(), brain_box_api=bb_api)) as avatar_api:
-                assistant = KaiaTestAssistant([DateSkill(), TimeSkill(lambda: datetime(2020, 1, 1, 13, 45))])
+            with AvatarApi.Test(AvatarSettings(dubbing_task_generator=TestTaskGenerator(), brain_box_api=bb_api)) as avatar_api:
+                assistant = KaiaAssistant([DateSkill(), TimeSkill(lambda: datetime(2020, 1, 1, 13, 45))])
                 assistant = RhasspyTextToUtteranceTranslator(assistant, assistant.get_intents())
                 assistant = VoiceoverTranslator(assistant, avatar_api)
 

@@ -1,7 +1,7 @@
 from unittest import TestCase
 from kaia.kaia.skills.date import DateSkill, DateReplies, DateIntents, Weekdays
 from kaia.kaia.skills.time import TimeSkill, TimeIntents, TimeReplies
-from kaia.kaia.skills import KaiaTestAssistant
+from kaia.kaia.core import KaiaAssistant
 from kaia.kaia.translators import InitializationWrap
 from datetime import datetime, date
 from kaia.eaglesong.core import Automaton, Scenario, Return
@@ -12,7 +12,7 @@ from kaia.kaia.core import Start
 
 def S(supress_outputs):
     dt = lambda: datetime(2023,10,10,13,46)
-    assistant = KaiaTestAssistant([DateSkill(dt), TimeSkill(dt)])
+    assistant = KaiaAssistant([DateSkill(dt), TimeSkill(dt)])
     translator = InitializationWrap(assistant, [DateIntents.question.utter()], [TimeIntents.question.utter()], supress_outputs)
     aut = Automaton(translator, None)
     return Scenario(lambda: aut)

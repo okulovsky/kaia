@@ -36,7 +36,10 @@ class Automatic1111Installer(LocalImageInstaller):
             model_arg = ['--ckpt', '/home/app/stable-diffusion-webui/models/Stable-diffusion/'+model_name]
 
         runner = BrainBoxServiceRunner(
-            mount_resource_folders={'models': '/home/app/stable-diffusion-webui/models/'},
+            mount_resource_folders={
+                'models': '/home/app/stable-diffusion-webui/models/',
+                'embeddings': '/home/app/stable-diffusion-webui/embeddings'
+            },
             gpu_required=BrainBoxServiceRunner.GpuRequirement.Mandatory,
             vram_in_gb_required=5,
             publish_ports={self.settings.port: 7860},
@@ -138,7 +141,6 @@ RUN chmod +x /home/app/webui.sh
 
 USER app
 
-# setup venv in /venv to avoid conflict with volume in /stable-diffusion-webui
 RUN echo 'venv_dir=/home/app/venv' > /home/app/webui-user.sh
 
 ENV install_dir=/home/app

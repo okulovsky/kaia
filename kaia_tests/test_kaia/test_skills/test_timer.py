@@ -3,15 +3,14 @@ from datetime import datetime, timedelta
 from kaia.eaglesong.core import Automaton, Scenario, TimerTick
 from kaia.kaia.skills.timer_skill import TimerSkill, TimerReplies, TimerIntents
 from kaia.kaia.skills.notification_skill import NotificationSkill, NotificationRegister
-from kaia.kaia.skills import KaiaTestAssistant
-from kaia.kaia.core import DateTimeTestFactory
+from kaia.kaia.core import DateTimeTestFactory, KaiaAssistant
 
 
 def _factory(dtf, beautification):
     register = NotificationRegister('Alarm', 'Alarm cancelled' if beautification else None)
     notification = NotificationSkill([register], dtf, 10 if beautification else None)
     timer = TimerSkill(register, dtf)
-    return Automaton(KaiaTestAssistant([timer, notification]), None)
+    return Automaton(KaiaAssistant([timer, notification]), None)
 
 def S(dtf: DateTimeTestFactory, with_after_audio = False):
     return Scenario(automaton_factory=lambda: _factory(dtf, with_after_audio))

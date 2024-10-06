@@ -1,11 +1,13 @@
 from typing import *
 from .kaia_skill import IKaiaSkill
 from ...eaglesong.core import Automaton, ContextRequest, AutomatonExit, Listen
-from kaia.dub.core import Template
+from kaia.dub.core import Template, IntentsPack
 from ..gui import KaiaMessage
 from dataclasses import dataclass, field
 import traceback
 from datetime import datetime
+from .automaton_not_found_skill import AutomatonNotFoundSkill
+from .exception_in_skill import ExceptionHandledSkill
 
 @dataclass
 class ActiveSkill:
@@ -38,13 +40,14 @@ class AssistantHistoryItem:
 class KaiaAssistant:
     def __init__(self,
                  skills: Iterable[IKaiaSkill],
-                 automaton_not_found_skill: IKaiaSkill,
+                 automaton_not_found_skill: IKaiaSkill| None = None,
                  additional_intents: Optional[Iterable[Template]] = None,
                  additional_replies: Optional[Iterable[Template]] = None,
                  exception_in_skill: Optional[IKaiaSkill] = None,
                  max_history_length = 20,
                  datetime_factory: Callable[[], datetime] = datetime.now,
-                 raise_exception: bool = True
+                 raise_exception: bool = False,
+                 custom_words_in_core_intents: dict[str, str] = None
                  ):
         self.skills = tuple(skills)
         self.active_skill: Optional[ActiveSkill] = None
@@ -52,23 +55,34 @@ class KaiaAssistant:
         self.max_history_length = max_history_length
         self.datetime_factory = datetime_factory
         self.raise_exceptions = raise_exception
+        self.custom_words_in_core_intents = custom_words_in_core_intents
 
-        all_skills = list(skills)
+        self.all_skills = tuple(skills)
 
-        self.automaton_not_found_skill = automaton_not_found_skill
-        if self.automaton_not_found_skill.get_type() != IKaiaSkill.Type.SingleLine:
-            raise ValueError('Only a single-line skill can be `automaton_not_found_skill')
-        all_skills.append(self.automaton_not_found_skill)
+        self.automaton_not_found_skill = self._check_special_skill(
+            automaton_not_found_skill,
+            AutomatonNotFoundSkill(),
+            'automaton_not_found_skill'
+        )
+        self.exception_in_skill = self._check_special_skill(
+            exception_in_skill,
+            ExceptionHandledSkill(),
+            'exception_in_skill'
+        )
 
-        self.exception_in_skill = exception_in_skill
-        if self.exception_in_skill is not None:
-            if self.exception_in_skill.get_type() != IKaiaSkill.Type.SingleLine:
-                raise ValueError('Only a single-line skill can be `exception_in_skill')
-            all_skills.append(self.exception_in_skill)
-
-        self.all_skills = tuple(all_skills)
         self.additional_intents = [] if additional_intents is None else list(additional_intents)
         self.additional_replies = [] if additional_replies is None else list(additional_replies)
+
+
+    def _check_special_skill(self, skill, default, field):
+        result = default
+        if skill is not None:
+            if skill.get_type() != IKaiaSkill.Type.SingleLine:
+                raise ValueError(f'Only a single-line skill can be `{field}')
+            result = skill
+        self.all_skills+=(result,)
+        return result
+
 
 
 
@@ -85,8 +99,17 @@ class KaiaAssistant:
         return templates
 
 
-    def get_intents(self):
-        return [i for skill in self.all_skills for i in skill.get_intents()] + self.additional_intents
+    def get_intents(self) -> list[IntentsPack]:
+        core_intents = [i for skill in self.all_skills for i in skill.get_intents()] + self.additional_intents
+        packs = []
+        packs.append(IntentsPack(
+            'CORE',
+            tuple(core_intents),
+            {} if self.custom_words_in_core_intents is None else self.custom_words_in_core_intents
+        ))
+        for skill in self.all_skills:
+            packs.extend(skill.get_extended_intents_packs())
+        return packs
 
 
     def _get_automaton(self, input, context) -> Tuple[Optional[Automaton], bool]:

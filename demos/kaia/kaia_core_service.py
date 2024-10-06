@@ -3,7 +3,7 @@ from kaia.kaia import skills
 from .avatar import characters
 from .common_intents import CommonIntents
 from kaia.kaia.audio_control_core_service import KaiaCoreAudioControlServiceSettings, KaiaCoreAudioControlService
-from kaia.kaia.core import KaiaMessage
+from kaia.kaia.core import KaiaMessage, KaiaAssistant
 from pathlib import Path
 from kaia.eaglesong.core import Audio
 
@@ -39,7 +39,7 @@ class DemoCoreService(KaiaCoreAudioControlService):
         skills_list.append(skills.LogFeedbackSkill())
         skills_list.append(skills.ChangeCharacterSkill(characters, self.settings.avatar_api))
 
-        assistant = skills.KaiaTestAssistant(skills_list)
+        assistant = KaiaAssistant(skills_list)
         assistant.raise_exceptions = False
         help.assistant = assistant
         assistant.additional_intents.extend(CommonIntents.get_templates())

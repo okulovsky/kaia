@@ -15,6 +15,16 @@ class Rhasspy(IApiDecider):
         self.address = address
         self.timeout = timeout
 
+
+    def recognize(self, file:FileLike.Type):
+        with FileLike(file, self.file_cache) as stream:
+            data = stream.read()
+            reply = requests.post(f'http://{self.address}/api/speech-to-intent', data=data, timeout=self.timeout)
+            if reply.status_code != 200:
+                raise ValueError(f'Rhasspy failed to recognize bytes\n{reply.text}')
+            return reply.json()
+
+
     def train(self, intents: Iterable[Template]):
         handler = RhasspyHandler(intents)
         ini = handler.ini_file
@@ -31,13 +41,6 @@ class Rhasspy(IApiDecider):
 
         return result
 
-    def recognize(self, file:FileLike.Type):
-        with FileLike(file, self.file_cache) as stream:
-            data = stream.read()
-            reply = requests.post(f'http://{self.address}/api/speech-to-intent', data=data, timeout=self.timeout)
-            if reply.status_code != 200:
-                raise ValueError(f'Rhasspy failed to recognize bytes\n{reply.text}')
-            return reply.json()
 
 
     def set_custom_words(self, custom_words: dict[str,str]):

@@ -16,6 +16,7 @@ class BrainBoxSettings:
         self.whisper = deciders.WhisperSettings()
         self.rhasspy = deciders.RhasspySettings()
         self.oobabooga = deciders.OobaboogaSettings()
+        self.rhasspy_kaldi = deciders.RhasspyKaldiSettings()
 
         self.file_cache_path = Loc.temp_folder / 'brainbox_cache'
         self.brainbox_database = Loc.temp_folder / 'queue'
@@ -39,6 +40,7 @@ class BrainBox:
         deciders_dict['Whisper'] = deciders.WhisperInstaller(self.settings.whisper)
         deciders_dict['Rhasspy'] = deciders.RhasspyInstaller(self.settings.rhasspy)
         deciders_dict['Oobabooga'] = deciders.OobaboogaInstaller(self.settings.oobabooga)
+        deciders_dict['RhasspyKaldi'] = deciders.RhasspyKaldiInstaller(self.settings.rhasspy_kaldi)
 
         deciders_dict['Collector'] = deciders.Collector()
         deciders_dict['OutputTranslator'] = deciders.OutputTranslator()

@@ -204,7 +204,8 @@ class BrainBoxService:
                     if id not in requirement_to_result:
                         self.close_task(task, f'Something is wrong: task was ready, but dependency {id} for argument {arg_name} was not found')
                         return
-                    arguments[arg_name] = requirement_to_result[id]
+                    if isinstance(arg_name, str) and len(arg_name)>0 and arg_name[0]!='*':
+                        arguments[arg_name] = requirement_to_result[id]
 
             try:
                 self.messenger.add(task, 'received', task.id)

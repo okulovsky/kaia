@@ -5,7 +5,7 @@ from kaia.kaia import audio_control as ac
 from kaia.kaia.skills.change_image_skill import ChangeImageIntents
 from kaia.kaia.skills.character_skill import ChangeCharacterIntents
 
-from kaia.avatar import AvatarAPI
+from kaia.avatar import AvatarApi
 from pathlib import Path
 from kaia.eaglesong.core import Automaton
 from dataclasses import dataclass
@@ -15,7 +15,7 @@ from kaia.brainbox import BrainBoxApi
 
 @dataclass
 class KaiaCoreAudioControlServiceSettings:
-    avatar_api: AvatarAPI
+    avatar_api: AvatarApi
     kaia_api: kaia_core.KaiaGuiApi
     audio_api: ac.AudioControlAPI
     brainbox_api: BrainBoxApi
@@ -35,23 +35,11 @@ class KaiaCoreAudioControlService(kaia_core.KaiaCoreService):
         self.settings = settings
         self.intents_ = []
         self.replies_ = []
-        self.audio_control_handler = kaia_translators.AudioControlHandler(
-            self.settings.audio_api,
-            self.settings.brainbox_api,
-            self.settings.kaia_api,
-            self._create_intents,
-            self.settings.resemblyzer_model_name,
-            self.settings.avatar_api
-        )
 
-    def _create_intents(self):
-        return self.create_assistant().get_intents()
+
 
     def create_automaton(self, context):
         assistant = self.create_assistant()
-        self.intents_ = assistant.get_intents()
-        self.replies_ = assistant.get_replies()
-
 
         assistant = kaia_translators.InitializationWrap(
             assistant,
@@ -63,19 +51,10 @@ class KaiaCoreAudioControlService(kaia_core.KaiaCoreService):
         assistant = kaia_translators.VoiceoverTranslator(assistant, self.settings.avatar_api)
         assistant = kaia_translators.KaiaMessageTranslator(assistant, self.settings.kaia_api, self.settings.avatar_api, self.settings.name_to_avatar_image)
         assistant = kaia_translators.VolumeTranslator(assistant, self.settings.audio_api.set_volume, self.settings.initial_volume)
-        assistant = self.audio_control_handler.create_translator(assistant)
+        assistant = kaia_translators.RecognitionTranslator(assistant, self.settings.avatar_api)
+        assistant = kaia_translators.OpenMicTranslator(assistant, self.settings.audio_api)
 
         return Automaton(assistant, context)
-
-    def pre_run_setup(self):
-        for template in self.intents_:
-            template.prepare()
-        for template in self.replies_:
-            template.prepare()
-        self.settings.audio_api.wait_for_availability(self.settings.delay_for_ac_server)
-        self.audio_control_handler.setup()
-        self.settings.audio_api.set_volume(self.settings.initial_volume)
-
 
     def create_driver(self) -> kaia_core.KaiaDriver:
         command_source = ac.AudioControlCommandSource(self.settings.audio_api)
@@ -89,3 +68,17 @@ class KaiaCoreAudioControlService(kaia_core.KaiaCoreService):
             enable_time_tick=True,
             log_file=self.settings.log_file
         )
+
+    def pre_run_setup(self):
+        self.settings.audio_api.wait_for_availability(self.settings.delay_for_ac_server)
+
+        assistant = self.create_assistant()
+        intents = tuple(assistant.get_intents())
+        self.settings.kaia_api.add_message(kaia_core.KaiaMessage(True, f"Training {len(intents)} Rhasspy models"))
+        self.settings.avatar_api.recognition_train(
+            intents,
+            assistant.get_replies()
+        )
+        self.settings.kaia_api.add_message(kaia_core.KaiaMessage(True, "Rhasspy is trained"))
+
+        self.settings.audio_api.set_volume(self.settings.initial_volume)

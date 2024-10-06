@@ -70,6 +70,9 @@ class MultiDeciderPlanner(IPlanner):
 
 
 class AlwaysOnPlanner(MultiDeciderPlanner):
+    def __init__(self, shallow_warmup_only: bool = True):
+        self._shallow_warmup_only = shallow_warmup_only
+
     def plan_inner(self, stats: PlanerStats) -> 'IPlanner.Response':
         assign = self.assign_tasks_to_active_deciders(stats)
         up = self.up_the_required_deciders(stats)
@@ -79,7 +82,7 @@ class AlwaysOnPlanner(MultiDeciderPlanner):
         return []
 
     def shallow_warmup_only(self, decider_to_warmup: DeciderInstanceSpec, instances: Iterable[DeciderState]):
-        return True
+        return self._shallow_warmup_only
 
 
 
