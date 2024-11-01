@@ -2,7 +2,7 @@ from unittest import TestCase
 from ..arch import LocalImageInstaller, DockerService, BrainBoxServiceRunner
 from ..arch.utils import check_if_its_sound
 from kaia.brainbox.deployment import SmallImageBuilder
-from ...core import BrainBoxApi, BrainBoxTask, IntegrationTestResult, InstallerWithOneModelWarmuper
+from ...core import BrainBoxApi, BrainBoxTask, IntegrationTestResult, OneModelWarmuper
 from .settings import CoquiTTSSettings
 from .api import CoquiTTS, CoquiTTSExtendedAPI
 from pathlib import Path
@@ -31,7 +31,7 @@ class CoquiTTSInstaller(LocalImageInstaller):
         )
 
         self.notebook_service = self.main_service.as_notebook_service()
-        self.warmuper = InstallerWithOneModelWarmuper()
+        self.warmuper = OneModelWarmuper()
 
     def install_model_endpoint(self, model_name, mode) -> DockerService:
         return self.main_service.as_service_worker('--install', model_name, '--install-mode', mode)

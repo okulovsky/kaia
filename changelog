@@ -1,3 +1,9 @@
+3.3.0.
+    - ComfiUI decider is added to Brainbox, with TextToImage, Upscale and WD14Tagger workflows
+    - WD14Tagger is added to Brainbox
+    - Upscale endpoint is added to Automatic1111
+    - Small refactoring in Brainbox
+    - LoRA training recipe components
 3.2.0.
     - Avatar Service is significantly refactored:
         - There is no narrator anymore. Avatar holds the State. If there is a need of story, the state must be modified by the external service

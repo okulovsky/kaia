@@ -6,7 +6,7 @@ from ...deployment import SmallImageBuilder, IContainerRunner
 from kaia.brainbox.deciders.whisper.api import Whisper, WhisperExtendedAPI
 from unittest import TestCase
 from pathlib import Path
-from ...core import BrainBoxApi, BrainBoxTask, IntegrationTestResult, File, InstallerWithOneModelWarmuper
+from ...core import BrainBoxApi, BrainBoxTask, IntegrationTestResult, File, OneModelWarmuper
 
 class WhisperInstaller(LocalImageInstaller):
     def __init__(self, settings: WhisperSettings):
@@ -30,7 +30,7 @@ class WhisperInstaller(LocalImageInstaller):
         )
 
         self.notebook_service = service.as_notebook_service()
-        self.warmuper = InstallerWithOneModelWarmuper()
+        self.warmuper = OneModelWarmuper()
 
 
     def create_api(self):

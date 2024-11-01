@@ -6,6 +6,7 @@ from io import BytesIO
 from ...core import File
 from kaia.infra import FileIO
 from dataclasses import dataclass
+from uuid import uuid4
 
 
 def check_if_its_sound(file, tc: TestCase):
@@ -16,6 +17,8 @@ def check_if_its_sound(file, tc: TestCase):
         duration = f.frames / f.samplerate
         tc.assertGreater(duration, 1)
     f.close()
+
+
 
 class FileLike:
     Type = str|Path|bytes|File|BytesIO
@@ -29,6 +32,28 @@ class FileLike:
         self.file = file
         self.cache_folder = cache_folder
         self.stream = None
+
+    @staticmethod
+    def get_name(file: 'FileLike.Type', raise_if_no_name: bool = False):
+        if isinstance(file, str):
+            return file
+        elif isinstance(file, Path):
+            return file.name
+        elif isinstance(file, File):
+            return file.name
+        else:
+            if raise_if_no_name:
+                raise ValueError("This FileLike must define a name, but doesn't")
+            return str(uuid4())
+
+    @staticmethod
+    def get_name_and_extension(file: 'FileLike.Type'):
+        parts = FileLike.get_name(file).split('.')
+        if len(parts) == 1:
+            return parts[0], ''
+        return '.'.join(parts[:-1]), '.'+parts[-1]
+
+
 
     def __enter__(self):
         if isinstance(self.file, Path):

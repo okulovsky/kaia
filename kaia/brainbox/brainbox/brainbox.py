@@ -7,17 +7,6 @@ from ..core.planers import SimplePlanner
 
 class BrainBoxSettings:
     def __init__(self):
-
-        from .. import deciders
-
-        self.tortoise_tts = deciders.TortoiseTTSSettings()
-        self.open_tts = deciders.OpenTTSSettings()
-        self.coqui_tts = deciders.CoquiTTSSettings()
-        self.whisper = deciders.WhisperSettings()
-        self.rhasspy = deciders.RhasspySettings()
-        self.oobabooga = deciders.OobaboogaSettings()
-        self.rhasspy_kaldi = deciders.RhasspyKaldiSettings()
-
         self.file_cache_path = Loc.temp_folder / 'brainbox_cache'
         self.brainbox_database = Loc.temp_folder / 'queue'
         self.brain_box_web_port = 8090
@@ -34,13 +23,16 @@ class BrainBox:
 
         from .. import deciders
         deciders_dict = {}
-        deciders_dict['TortoiseTTS'] = deciders.TortoiseTTSInstaller(self.settings.tortoise_tts)
-        deciders_dict['OpenTTS'] = deciders.OpenTTSInstaller(self.settings.open_tts)
-        deciders_dict['CoquiTTS'] = deciders.CoquiTTSInstaller(self.settings.coqui_tts)
-        deciders_dict['Whisper'] = deciders.WhisperInstaller(self.settings.whisper)
-        deciders_dict['Rhasspy'] = deciders.RhasspyInstaller(self.settings.rhasspy)
-        deciders_dict['Oobabooga'] = deciders.OobaboogaInstaller(self.settings.oobabooga)
-        deciders_dict['RhasspyKaldi'] = deciders.RhasspyKaldiInstaller(self.settings.rhasspy_kaldi)
+        deciders_dict['TortoiseTTS'] = deciders.TortoiseTTSInstaller(deciders.TortoiseTTSSettings())
+        deciders_dict['OpenTTS'] = deciders.OpenTTSInstaller(deciders.OpenTTSSettings())
+        deciders_dict['ComfyUI'] = deciders.ComfyUIInstaller(deciders.ComfyUISettings())
+        deciders_dict['CoquiTTS'] = deciders.CoquiTTSInstaller(deciders.CoquiTTSSettings())
+        deciders_dict['Whisper'] = deciders.WhisperInstaller(deciders.WhisperSettings())
+        deciders_dict['Rhasspy'] = deciders.RhasspyInstaller(deciders.RhasspySettings())
+        deciders_dict['Oobabooga'] = deciders.OobaboogaInstaller(deciders.OobaboogaSettings())
+        deciders_dict['RhasspyKaldi'] = deciders.RhasspyKaldiInstaller(deciders.RhasspyKaldiSettings())
+        deciders_dict['Automatic1111'] = deciders.Automatic1111Installer(deciders.Automatic1111Settings())
+        deciders_dict['WD14Tagger'] = deciders.WD14TaggerInstaller(deciders.WD14TaggerSettings())
 
         deciders_dict['Collector'] = deciders.Collector()
         deciders_dict['OutputTranslator'] = deciders.OutputTranslator()

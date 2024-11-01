@@ -135,7 +135,7 @@ class BrainBoxWebServer:
                 BrainBoxJob.decider,
                 BrainBoxJob.method,
                 BrainBoxJob.batch,
-                BrainBoxJob.back_track,
+                BrainBoxJob.info,
                 BrainBoxJob.received_timestamp,
                 BrainBoxJob.ready,
                 BrainBoxJob.ready_timestamp,

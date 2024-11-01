@@ -55,3 +55,8 @@ class PipTimeMachine:
         for name in package_names:
             rows.append(dict(package=name ,version=self._process_package(name)))
         return rows
+
+    def process_pip_freeze(self, pip_freeze: Iterable[str]):
+        package_names = [z.split('==')[0] for z in pip_freeze if z.strip()!='']
+        with_versions = self.process_packages(package_names)
+        return '\n'.join([p['package']+'=='+p['version'] for p in with_versions])

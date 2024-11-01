@@ -8,6 +8,7 @@ from kaia.infra import Loc
 from kaia.infra.comm import  Sql
 from functools import partial
 
+
 if __name__ == '__main__':
     if subprocess.call(['docker','ps']) != 0:
         print('Docker is not running. Please install/run docker before running BrainBox')
@@ -17,7 +18,7 @@ if __name__ == '__main__':
     settings = BrainBoxSettings()
     settings.main_iteration_sleep = 1
     settings.raise_exceptions_in_main_cycle = False
-    settings.planner_factory = SimplePlanner
+    settings.planner_factory = partial(SimplePlanner, cooldown_delay_in_seconds=600)
     server = BrainBox(settings).create_web_service(comm)
     server()
 

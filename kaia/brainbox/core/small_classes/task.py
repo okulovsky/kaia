@@ -10,77 +10,113 @@ from .arguments_validator import ArgumentsValidator
 
 T = TypeVar('T')
 
+
+def fix_decider_and_decider_method(decider:  Union[str,type,Callable], decider_method: Union[None, str, Callable]) \
+        -> tuple[str,str, Callable]:
+
+    _method_to_validate = None
+    fixed_decider_method = None
+
+    if isinstance(decider, type):
+        fixed_decider = decider.__name__
+    elif isinstance(decider, str):
+        fixed_decider = decider
+    elif callable(decider):
+        if decider_method is not None:
+            raise ValueError("decider is callable, but decider_method is not None. Callable decider sets both decider and decider_method")
+        _method_to_validate = decider
+        parts = decider.__qualname__.split('.')
+        if len(parts) > 2:
+            raise ValueError("If `decider` is a function, it must be exactly 2 parts in qualname, Type.Method")
+        fixed_decider = parts[0]
+        fixed_decider_method = parts[1]
+    else:
+        raise ValueError(f'decider must be str, type, or callable type method, but was {decider}')
+
+    if callable(decider_method):
+        fixed_decider_method = decider_method.__name__
+        _method_to_validate = decider_method
+    elif isinstance(decider_method, str):
+        fixed_decider_method = decider_method
+    elif decider_method is None:
+        pass
+    else:
+        raise ValueError(f'decider must be str, method or None, but was {decider}')
+
+    return fixed_decider, fixed_decider_method, _method_to_validate
+
+
+def fix_arguments_and_dependencies(arguments, dependencies) -> tuple[dict, dict]:
+    if arguments is None:
+        arguments = {}
+    if dependencies is None:
+        dependencies = {}
+
+    for key in arguments:
+        if key in dependencies:
+            raise ValueError("Key {key} exist in both arguments and dependencies")
+
+    fixed_arguments = {}
+    for key, value in arguments.items():
+        if isinstance(value, BrainBoxTask.Dependency):
+            dependencies[key] = value.id
+        else:
+            fixed_arguments[key] = value
+
+    return fixed_arguments, dependencies
+
+
+def check_method(method_to_validate, arguments, dependencies):
+    validator = ArgumentsValidator.from_signature(method_to_validate)
+    array = []
+    array.extend(arguments)
+    array.extend(dependencies)
+    validator.validate(array)
+
+
+
 class BrainBoxTask:
+    class Dependency:
+        def __init__(self, task: Union[str,'BrainBoxTask']):
+            if isinstance(task, str):
+                self.id = task
+            elif isinstance(task, BrainBoxTask):
+                self.id = task.id
+            else:
+                raise ValueError(f"Task must be str (id) or BrainBoxTask, but was {task}")
+
+
     def __init__(self,
                  *,
                  decider: Union[str,type,Callable],
                  arguments: None|dict = None,
                  id: str | None = None,
                  dependencies: dict|None = None,
-                 back_track:Any = None,
-                 batch: str = None,
+                 info:Any = None,
+                 batch: str|None = None,
                  decider_method: Union[None, str, Callable] = None,
-                 decider_parameters: None|str = None
+                 decider_parameters: None|str = None,
+                 ordering_token: str|None = None,
                  ):
         if id is not None:
             self.id = id
         else:
             self.id = BrainBoxTask.safe_id()
 
-        _method_to_validate = None
-        self.decider_method = None
-        self.arguments = None
+        self.decider, self.decider_method, _method_to_validate = fix_decider_and_decider_method(decider, decider_method)
 
-        if isinstance(decider, type):
-            self.decider = decider.__name__
-        elif isinstance(decider, str):
-            self.decider = decider
-        elif callable(decider):
-            if decider_method is not None:
-                raise ValueError("decider is callable, but decider_method is not None. Callable decider sets both decider and decider_method")
-            _method_to_validate = decider
-            parts = decider.__qualname__.split('.')
-            if len(parts) > 2:
-                raise ValueError("If `decider` is a function, it must be exactly 2 parts in qualname, Type.Method")
-            self.decider = parts[0]
-            self.decider_method = parts[1]
-        else:
-            raise ValueError(f'decider must be str, type, or callable type method, but was {decider}')
-
-        if callable(decider_method):
-            self.decider_method = decider_method.__name__
-            _method_to_validate = decider_method
-        elif isinstance(decider_method, str):
-            self.decider_method = decider_method
-        elif decider_method is None:
-            pass
-        else:
-            raise ValueError(f'decider must be str, method or None, but was {decider}')
-
-        if self.arguments is None:
-            self.arguments = arguments
-
-        if self.arguments is None:
-            self.arguments = {}
-
+        self.arguments, self.dependencies = fix_arguments_and_dependencies(arguments, dependencies)
         if _method_to_validate is not None:
-            validator = ArgumentsValidator.from_signature(_method_to_validate)
-            array = []
-            if self.arguments is not None:
-                array.extend(self.arguments)
-            if dependencies is not None:
-                array.extend(dependencies)
-            validator.validate(array)
+            check_method(_method_to_validate, self.arguments, self.dependencies)
 
-        self.dependencies = dependencies
-        self.back_track = back_track
+        self.info = info
         self.batch = batch
         self.decider_parameters = decider_parameters
+        self.ordering_token = ordering_token
 
 
     def __repr__(self):
         return self.__dict__.__repr__()
-
 
     @staticmethod
     def call(type: Type[T]) -> T:
@@ -99,38 +135,3 @@ class BrainBoxTask:
         return result
 
 
-
-class IPackPostprocessor(ABC):
-    @abstractmethod
-    def postprocess(self, result, api):
-        pass
-
-class DefaultPostprocessor(IPackPostprocessor):
-    def postprocess(self, result, api):
-        return result
-
-class DownloadingPostprocessor(IPackPostprocessor):
-    def __init__(self,
-                 take_element_before_downloading: Optional[int] = None,
-                 opener: Optional[Callable[[Path], Any]] = None
-                 ):
-        self.take_element_before_downloading = take_element_before_downloading
-        self.opener = opener
-    def postprocess(self, result, api):
-        if self.take_element_before_downloading is not None:
-            try:
-                result = result[self.take_element_before_downloading]
-            except Exception as ex:
-                raise ValueError(f"Cannot take element {self.take_element_before_downloading} from value {result}") from ex
-        result = api.download(result)
-        if self.opener is not None:
-            result = self.opener(result)
-        return result
-
-
-@dataclass
-class BrainBoxTaskPack:
-    resulting_task: BrainBoxTask
-    intermediate_tasks: Tuple[BrainBoxTask, ...] = ()
-    postprocessor: IPackPostprocessor = field(default_factory=DefaultPostprocessor)
-    uploads: Dict[str, Union[bytes|Path]] = None

@@ -24,12 +24,15 @@ class BrainBoxApi(MarshallingEndpoint.API):
         self.cache_folder = cache_folder
 
     def add(self, task: Union[BrainBoxTaskPack, BrainBoxTask, Iterable[BrainBoxTask]]):
+        return_id = None
         if isinstance(task, BrainBoxTask) or isinstance(task, BrainBoxTaskBuilderResult):
+            return_id = task.id
             task = [task]
         elif isinstance(task, BrainBoxTaskPack):
             if task.uploads is not None:
                 for key, data in task.uploads.items():
                     self.upload(key, data)
+            return_id = task.resulting_task.id
             task = list(task.intermediate_tasks) + [task.resulting_task]
 
         final_task = []
@@ -43,6 +46,7 @@ class BrainBoxApi(MarshallingEndpoint.API):
 
 
         self.caller.call(BrainBoxEndpoints.add, list(final_task))
+        return return_id
 
     def execute(self, task: Union[BrainBoxTaskPack, BrainBoxTask, Iterable[BrainBoxTask]]) -> Any:
         self.add(task)
@@ -136,7 +140,7 @@ class BrainBoxApi(MarshallingEndpoint.API):
         def __enter__(self) -> 'BrainBoxApi':
             service = BrainBoxService(
                 self.services,
-                AlwaysOnPlanner(False) if self.always_on_planner else SimplePlanner(),
+                AlwaysOnPlanner(False) if self.always_on_planner else SimplePlanner(5),
                 self.cache_folder,
             )
             server = BrainBoxWebServer(8099, Sql.test_file('brainbox_web_test_db_' + str(uuid.uuid4())), self.cache_folder, service)

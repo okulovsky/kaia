@@ -14,7 +14,7 @@ if __name__ == '__main__':
     print(f'Running with arguments {args}')
 
     if args.notebook:
-        subprocess.call(['jupyter', 'notebook', '--allow-root', '--port', '8899', '--ip', '0.0.0.0'], cwd='/repo')
+        subprocess.call([sys.executable, '-m', 'notebook', '--allow-root', '--port', '8899', '--ip', '0.0.0.0'], cwd='/repo')
         exit(0)
 
     factory = WhisperApp(args.autoload)

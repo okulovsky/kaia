@@ -1,6 +1,7 @@
 import subprocess
 from server import ResemblyzerServer
 import argparse
+import sys
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -10,7 +11,7 @@ if __name__ == '__main__':
     print(f"Running with arguments\n{args}")
 
     if args.notebook:
-        subprocess.call(['jupyter', 'notebook', '--allow-root', '--port', '8899', '--ip', '0.0.0.0'], cwd='/repo')
+        subprocess.call([sys.executable, '-m', 'notebook', '--allow-root', '--port', '8899', '--ip', '0.0.0.0'], cwd='/repo')
         exit(0)
 
     ResemblyzerServer()()

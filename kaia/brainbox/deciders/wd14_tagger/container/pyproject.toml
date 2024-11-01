@@ -1,0 +1,7 @@
+[project]
+name = "wd14_tagger"
+description = ""
+version = "0.0.0"
+
+[tool.setuptools]
+py-modules = ["tagger"]

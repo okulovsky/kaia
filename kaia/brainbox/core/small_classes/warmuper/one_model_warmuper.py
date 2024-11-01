@@ -1,7 +1,7 @@
 from typing import *
-from .installer import IInstaller
+from ..installer import IInstaller
 
-class InstallerWithOneModelWarmuper:
+class OneModelWarmuper:
     def __init__(self,
                  installer_get_running_model: Optional[Callable[[IInstaller], Any]] = None,
                  installer_set_running_model_name: Optional[Callable[[IInstaller, str], None]] = None,

@@ -68,6 +68,7 @@ class IInstaller(ABC):
         if not self.is_running():
             self.run()
             self.wait_for_running()
+        return self.create_api()
 
     def run_in_any_case_and_create_api(self):
         if not self.is_installed():

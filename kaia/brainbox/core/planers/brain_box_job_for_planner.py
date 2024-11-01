@@ -9,6 +9,7 @@ class BrainBoxJobForPlanner:
     decider_parameters: str|None
     received_timestamp: datetime
     assigned: bool
+    ordering_token: str|None
 
     def get_decider_instance_spec(self):
         return DeciderInstanceSpec(self.decider, self.decider_parameters)

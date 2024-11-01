@@ -16,9 +16,11 @@ class BrainBoxJob(BrainBoxBase):
     decider_parameters: Mapped[str] = mapped_column(nullable=True)
     method: Mapped[str] = mapped_column(nullable=True)
     arguments: Mapped[Any] = mapped_column(type_ = PickleType)
-    back_track: Mapped[Any] = mapped_column(type_= JSON, nullable=True)
+    info: Mapped[Any] = mapped_column(type_= PickleType, nullable=True)
+    batch: Mapped[str] = mapped_column()
+    ordering_token: Mapped[str] = mapped_column(nullable=True)
+
     received_timestamp: Mapped[datetime] = mapped_column()
-    batch: Mapped[str] = mapped_column(nullable=True)
 
     dependencies: Mapped[Optional[Dict[str, str]]] = mapped_column(type_=JSON, default = None)
     has_dependencies: Mapped[bool] = mapped_column(nullable=False)
@@ -60,9 +62,10 @@ class BrainBoxJob(BrainBoxBase):
             decider=task.decider,
             decider_parameters = task.decider_parameters,
             method=task.decider_method,
-            batch=task.batch,
+            batch=task.batch if task.batch is not None else task.id,
+            ordering_token = task.ordering_token,
             arguments=task.arguments,
-            back_track=task.back_track,
+            info=task.info,
             received_timestamp=timestamp,
             dependencies=task.dependencies,
             has_dependencies=task.dependencies is not None
