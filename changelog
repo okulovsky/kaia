@@ -1,3 +1,5 @@
+3.3.1.
+    - Test server for the new protocol is now dockerized
 3.3.0.
     - ComfiUI decider is added to Brainbox, with TextToImage, Upscale and WD14Tagger workflows
     - WD14Tagger is added to Brainbox

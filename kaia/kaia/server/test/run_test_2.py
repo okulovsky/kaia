@@ -5,14 +5,12 @@ from demos.kaia.audio_control import create_release_control_settings
 from kaia.infra.app import KaiaApp
 from kaia.kaia.audio_control.audio_control_cycle import AudioControlCycle
 from kaia.kaia.server.api import KaiaApi, KaiaServerSettings, Message
-from kaia.kaia.server.test_2_bridge import AudioCycleToKaiaServerBridge, AudioControlBridge
+from kaia.kaia.server.test.test_2_bridge import AudioCycleToKaiaServerBridge, AudioControlBridge
 from kaia.infra import Loc
 
 #BROWSER = 'C:\\Program Files\\Mozilla Firefox\\firefox.exe'
 BROWSER = 'firefox'
 SILENCE_LEVEL = 50
-
-
 
 if __name__ == '__main__':
     with Loc.create_temp_folder('kaia_server_test_2_file_cache') as cache:
@@ -27,11 +25,9 @@ if __name__ == '__main__':
                     app = KaiaApp()
                     app.add_subproc_service(control_bridge)
                     with app:
-                        last_seen_message = 0
                         while True:
-                            updates = kaia_api.get_updates(last_seen_message)
+                            updates = kaia_api.pull_updates()
                             for update in updates:
-                                last_seen_message = update.id
                                 if update.type == 'audio_command':
                                     kaia_api.add_message(Message(Message.Type.ToUser, 'Message received'))
                                     kaia_api.add_sound(update.payload['filename'])

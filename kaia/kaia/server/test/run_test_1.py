@@ -11,7 +11,7 @@ if __name__ == '__main__':
     with Loc.create_temp_file('kaia-server-tests','db') as fname:
         settings = KaiaServerSettings(
             db_path = fname,
-            file_cache_folder = Path(__file__).parent/'test_1/files/cache',
+            file_cache_folder = Path(__file__).parent/'files/cache',
             additional_static_folders = dict(alt=Path(__file__).parent/'test_1/files/alternative_static')
         )
         with KaiaApi.Test(settings) as api:

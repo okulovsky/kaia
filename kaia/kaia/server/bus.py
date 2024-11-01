@@ -27,9 +27,11 @@ class Bus:
             session.commit()
 
 
-    def get_messages(self, session_id: str, last_message_id: int|None):
+    def get_messages(self, session_id: str|None, last_message_id: int|None):
         with Session(self.engine) as session:
-            query = session.query(BusItem).where(BusItem.session_id==session_id)
+            query = session.query(BusItem)
+            if session_id is not None:
+                query = query.where(BusItem.session_id == session_id)
             if last_message_id is not None:
                 query = query.where(BusItem.id>last_message_id)
             return query.all()

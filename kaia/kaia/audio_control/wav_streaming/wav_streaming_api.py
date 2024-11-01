@@ -3,6 +3,7 @@ from .wav_streaming_request import WavStreamingRequest
 from dataclasses import dataclass
 from kaia.infra.app import KaiaApp
 import requests
+from pathlib import Path
 
 @dataclass
 class WavApiSettings:
@@ -17,19 +18,44 @@ class WavStreamingApi:
         self.settings = settings
 
     def create_request(self, file_name: str, initial_buffer: list[list[int]]):
-        return WavStreamingRequest(
+        request =  WavStreamingRequest(
             self.settings.address,
             file_name,
             self.settings.sample_rate,
             self.settings.frame_length,
             initial_buffer
         )
+        return request
 
     def download(self, file_name: str):
         response = requests.get(f'http://{self.settings.address}/download/{file_name}')
         if response.status_code!=200:
             raise ValueError(response.text)
         return response.content
+
+    @staticmethod
+    def get_file_framerate(input_file_name):
+        import wave
+        with open(input_file_name,'rb') as file:
+            with wave.open(file, "rb") as wave_file:
+                return wave_file.getframerate()
+
+
+    def send_file_right_away(self, input_file_name: Path, target_file_id: str):
+        from ..inputs import FakeInput
+
+        input = FakeInput([input_file_name])
+        input.next_buffer()
+        input.start()
+
+        request = self.create_request(target_file_id, [])
+        while not input.is_buffer_empty():
+            data = input.read()
+            request.add_wav_data(data)
+
+        request.send()
+
+
 
 
 class WavStreamingTestApi:

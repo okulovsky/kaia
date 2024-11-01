@@ -29,9 +29,10 @@ class Message:
 
 
 class KaiaApi:
-    def __init__(self, bus: Bus, session_id: str):
+    def __init__(self, bus: Bus, session_id: str, last_message_id: int|None = None):
         self.bus = bus
         self.session_id = session_id
+        self.last_message_id: int|None = last_message_id
 
     def add_image(self, image: str):
         self.bus.add_message(BusItem(
@@ -61,16 +62,22 @@ class KaiaApi:
                 avatar = message.avatar
             )))
 
-    def get_updates(self, last_message_id: int|None = None) -> list[BusItem]:
-        return self.bus.get_messages(self.session_id, last_message_id)
+    def pull_updates(self):
+        updates = self.bus.get_messages(self.session_id, self.last_message_id)
+        for update in updates:
+            self.last_message_id = update.id
+        return updates
+
 
     class Test:
         def __init__(self,
                      settings: KaiaServerSettings,
-                     browser_command: str = 'firefox',
+                     browser_command: str|None = 'firefox',
+                     custom_session_id: str|None = None
                      ):
             self.settings = settings
             self.browser_command = browser_command
+            self.custom_session_id = custom_session_id
             self.app: KaiaApp|None = None
 
         def __enter__(self):
