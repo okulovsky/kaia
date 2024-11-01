@@ -42,10 +42,9 @@ class IApiDecider:
 
     @property
     def current_job_id(self) -> str:
-        if hasattr(self,'_current_job_id'):
-            return self._current_job_id
-        else:
-            return str(uuid4())
+        if not hasattr(self, '_current_job_id'):
+            self._current_job_id = str(uuid4())
+        return self._current_job_id
 
     @property
     def running_from_brainbox(self) -> bool:

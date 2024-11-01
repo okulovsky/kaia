@@ -122,7 +122,8 @@ class BrainBoxService:
                     BrainBoxJob.decider,
                     BrainBoxJob.decider_parameters,
                     BrainBoxJob.received_timestamp,
-                    BrainBoxJob.assigned
+                    BrainBoxJob.assigned,
+                    BrainBoxJob.ordering_token
                 )
                 .where(
                     ~BrainBoxJob.finished &

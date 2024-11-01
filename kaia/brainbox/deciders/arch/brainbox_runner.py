@@ -26,6 +26,7 @@ class BrainBoxServiceRunner(IContainerRunner):
     dont_rm_debug_only: bool = False
     restart_unless_stopped: bool = False
     run_as_root: bool = False
+    mount_custom_folders: None|dict[str,str] = None
 
     _installer: None | DockerInstaller = None
     _mount_folders: None|dict[str,str] = None
@@ -53,7 +54,7 @@ class BrainBoxServiceRunner(IContainerRunner):
             elif self.vram_in_gb_required is None:
                 return gpu
             elif self.vram_in_gb_required > available_vram:
-                raise ValueError(f"Machine has {available_vram}, but {self.vram_in_gb_required} is available")
+                raise ValueError(f"Machine has {available_vram}, but {self.vram_in_gb_required} requested")
             else:
                 return gpu
 
@@ -72,6 +73,9 @@ class BrainBoxServiceRunner(IContainerRunner):
             mount_folders = {}
         if self.mount_data_folder:
             mount_folders[self._installer.resource_folder()] = '/data'
+        if self.mount_custom_folders is not None:
+            for key, value in self.mount_custom_folders.items():
+                mount_folders[key] = value
 
         arguments = (
             ['docker','run']

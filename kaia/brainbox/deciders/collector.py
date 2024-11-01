@@ -11,7 +11,7 @@ from kaia.brainbox.media_library import MediaLibrary
 from kaia.infra import FileIO
 from uuid import uuid4
 from datetime import datetime
-
+from pathlib import Path
 
 class Collector(IDecider):
     def warmup(self, parameters: str):
@@ -100,6 +100,7 @@ class Collector(IDecider):
                      ):
             self.records = [] if records is None else list(records)
             self.limit_records_for_test_purposes_at = limit_records_for_test_purposes_at
+            self.uploads: dict[str,Path] = {}
 
         def _can_add(self):
             if self.limit_records_for_test_purposes_at is None:
@@ -112,6 +113,7 @@ class Collector(IDecider):
                 task = task.to_task()
             if self._can_add():
                 self.records.append(Collector.PackBuilder.Record(task, tags))
+            return task
 
 
         def to_collector_pack(self, method: str):
@@ -125,15 +127,23 @@ class Collector(IDecider):
                     tags[record.task.id] = record.tags
                     dependencies[record.task.id] = record.task.id
 
-            return BrainBoxTaskPack(
-                BrainBoxTask(
+            resulting_task = BrainBoxTask(
                     decider='Collector',
                     decider_method=method,
                     dependencies=dependencies,
                     arguments=dict(tags=tags)
-                ),
+                )
+
+            for task in tasks:
+                task.batch = resulting_task.id
+            resulting_task.batch = resulting_task.id
+
+            return BrainBoxTaskPack(
+                resulting_task,
                 tuple(tasks),
+                uploads=self.uploads
             )
+
 
         def to_debug_array(self) -> list[dict]:
             result = []

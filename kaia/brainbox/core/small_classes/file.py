@@ -12,6 +12,7 @@ class File:
         Audio = 1
         Image = 2
         Json = 3
+        Text = 4
 
     def __init__(self,
                  name: str,
@@ -70,7 +71,8 @@ class File:
 _FILETYPES = {
     File.Kind.Audio: {'wav','mp3','ogg'},
     File.Kind.Image: {'png','jpg','jpeg','bmp'},
-    File.Kind.Json: {'json'}
+    File.Kind.Json: {'json'},
+    File.Kind.Text: {'txt'}
 }
 
 

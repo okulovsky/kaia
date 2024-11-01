@@ -8,18 +8,21 @@ class LocalImageInstaller(DockerInstaller):
                  path_to_container_code: Path,
                  dockerfile_template: str,
                  dependency_listing: None|str,
-                 main_service: DockerService
+                 main_service: DockerService,
+                 custom_dependencies: None|list[list[str]] = None
                  ):
+        if dependency_listing is not None:
+            if not isinstance(dependency_listing, str):
+                raise ValueError("Legacy issue. Use custom_dependencies instead")
+            if custom_dependencies is not None:
+                raise ValueError("Specify either dependency_listing or custom dependencies")
+            custom_dependencies = [[c.strip() for c in dependency_listing.split('\n') if c.strip()!='']]
 
-        if isinstance(dependency_listing, str):
-            dependencies = [c.strip() for c in dependency_listing.split('\n') if c.strip()!='']
-        else:
-            dependencies = dependency_listing
 
         builder = SmallImageBuilder(
             path_to_container_code,
             dockerfile_template,
-            dependencies,
+            custom_dependencies,
         )
 
         source = LocalImageSource(name)

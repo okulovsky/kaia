@@ -2,12 +2,13 @@ import threading
 import time
 from typing import Iterable
 from unittest import TestCase
+import json
 
 import requests
 
 from ..arch import LocalImageInstaller, DockerService, BrainBoxServiceRunner
 from kaia.brainbox.deployment import SmallImageBuilder
-from ...core import BrainBoxApi, BrainBoxTask, IntegrationTestResult, InstallerWithOneModelWarmuper
+from ...core import BrainBoxApi, BrainBoxTask, IntegrationTestResult, OneOrNoneModelWarmuper, File
 from .settings import Automatic1111Settings
 from .api import Automatic1111
 from pathlib import Path
@@ -25,8 +26,8 @@ class Automatic1111Installer(LocalImageInstaller):
             self._create_endpoint(None)
         )
 
-        self.warmuper = InstallerWithOneModelWarmuper(
-            Automatic1111Installer._get_model,
+        self.warmuper = OneOrNoneModelWarmuper(
+            Automatic1111Installer._get_status,
             Automatic1111Installer.run_with_given_model,
         )
 
@@ -47,11 +48,17 @@ class Automatic1111Installer(LocalImageInstaller):
         )
         return DockerService(self, self.settings.port, 20, runner)
 
-    def _get_model(self):
+    def _get_status(self):
         if not self.main_service.is_running():
-            return None
-        opt = requests.get(f'http://{self.ip_address}:{self.settings.port}/sdapi/v1/options').json()
-        return dict(name=opt['sd_model_checkpoint'])
+            return OneOrNoneModelWarmuper.Status(False, None)
+
+        for i in range(10):
+            opt = requests.get(f'http://{self.ip_address}:{self.settings.port}/sdapi/v1/options').json()
+            if 'sd_model_checkpoint' in opt and opt['sd_model_checkpoint'] is not None:
+                checkpoint = opt['sd_model_checkpoint'].split(' ')[0]
+                return OneOrNoneModelWarmuper.Status(True, checkpoint)
+            time.sleep(1)
+
 
 
     def run_with_given_model(self, model: str):
@@ -82,12 +89,13 @@ class Automatic1111Installer(LocalImageInstaller):
             self._executor.execute(['curl','-L',model.url,'--output',str(fname)])
 
     def _brainbox_self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable[IntegrationTestResult]:
+        yield  IntegrationTestResult(0, "Generation")
         prompt = "masterpiece, best quality, city, japan, sunny day, ocean, mountain"
         yield IntegrationTestResult(1, "Prompt", prompt)
         negative_prompt = "bad quality, dull colors, monochrome"
         yield IntegrationTestResult(1, "Negative prompt", negative_prompt)
         for model in self.settings.sd_models_to_download:
-            yield IntegrationTestResult(0, f"Model {model.filename}")
+            yield IntegrationTestResult(2, f"Model {model.filename}")
             task = BrainBoxTask.call(Automatic1111).text_to_image(
                 prompt=prompt,
                 negative_prompt=negative_prompt
@@ -95,8 +103,21 @@ class Automatic1111Installer(LocalImageInstaller):
             results = api.execute(task)
             for result in results:
                 api.pull_content(result)
-                yield IntegrationTestResult(1, None, result)
+                yield IntegrationTestResult(2, None, result)
 
+        yield IntegrationTestResult(0, "Image processing")
+        image = File.read(Path(__file__).parent/'image.png')
+        yield IntegrationTestResult(1, "Input image", image)
+
+        api.upload(image.name, image.content)
+
+        interrogation = api.execute(BrainBoxTask.call(Automatic1111).interrogate(image=image.name))
+        js = File("response.json", json.dumps(interrogation), File.Kind.Json)
+        yield IntegrationTestResult(2, "Interrogation", js)
+
+        upscale = api.execute(BrainBoxTask.call(Automatic1111).upscale(image=image.name))
+        api.pull_content(upscale)
+        yield IntegrationTestResult(2, "Upscaling", upscale)
 
 
 
@@ -134,6 +155,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 {{{SmallImageBuilder.ADD_USER_PLACEHOLDER}}}
 
 COPY webui.sh /home/app/webui.sh
+
+RUN sed -i 's/\r$//' /home/app/webui.sh
 
 USER root
 
