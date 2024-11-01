@@ -5,7 +5,7 @@ from unittest import TestCase
 from ..arch import LocalImageInstaller, DockerService, BrainBoxServiceRunner
 from kaia.brainbox.deployment import IContainerRunner, SmallImageBuilder, IExecutor, Deployment
 from .settings import OobaboogaSettings
-from ...core import BrainBoxApi, BrainBoxTask, IntegrationTestResult, InstallerWithOneModelWarmuper, File
+from ...core import BrainBoxApi, BrainBoxTask, IntegrationTestResult, OneModelWarmuper, File
 from .api import Oobabooga
 from pathlib import Path
 import requests
@@ -58,7 +58,7 @@ class OobaboogaInstaller(LocalImageInstaller):
             gpu_required=BrainBoxServiceRunner.GpuRequirement.Mandatory,
         )
 
-        self.warmuper = InstallerWithOneModelWarmuper(
+        self.warmuper = OneModelWarmuper(
             OobaboogaInstaller.get_running_model,
             OobaboogaInstaller.run_with_given_model,
             OobaboogaInstaller._model_to_model_name

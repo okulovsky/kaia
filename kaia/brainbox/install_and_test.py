@@ -47,6 +47,10 @@ class InstallAndTestCase(TestCase):
         from kaia.brainbox.deciders.automatic1111 import Automatic1111Installer, Automatic1111Settings
         self.run_test(Automatic1111Settings(), Automatic1111Installer)
 
+    def test_comfyui(self):
+        from kaia.brainbox.deciders.compfyui import ComfyUIInstaller, ComfyUISettings
+        self.run_test(ComfyUISettings(), ComfyUIInstaller)
+
     def test_coqui_tts(self):
         from kaia.brainbox.deciders.coqui_tts import CoquiTTSSettings, CoquiTTSInstaller
         self.run_test(CoquiTTSSettings(), CoquiTTSInstaller)
@@ -76,6 +80,11 @@ class InstallAndTestCase(TestCase):
     def test_tortoise_tts(self):
         from kaia.brainbox.deciders import TortoiseTTSSettings, TortoiseTTSInstaller
         self.run_test(TortoiseTTSSettings(), TortoiseTTSInstaller, dont_test=False)
+
+
+    def test_wd14_tagger(self):
+        from kaia.brainbox.deciders import WD14TaggerSettings, WD14TaggerInstaller
+        self.run_test(WD14TaggerSettings(), WD14TaggerInstaller)
 
     def test_whisper(self):
         from kaia.brainbox.deciders import WhisperSettings, WhisperInstaller
