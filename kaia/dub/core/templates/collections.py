@@ -36,7 +36,7 @@ class TemplatesCollection:
         return result
 
     @classmethod
-    def get_templates(cls) -> List[Template]:
+    def get_templates(cls) -> list[Template]:
         return list(cls.get_templates_as_dict().values())
 
 
