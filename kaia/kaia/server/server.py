@@ -1,6 +1,7 @@
 import json
 from typing import *
 import flask
+from flask_cors import CORS
 from pathlib import Path
 import base64
 import re
@@ -36,7 +37,10 @@ class KaiaServer:
     def __call__(self):
         self._bus = Bus(self.settings.db_path)
 
-        self.app = flask.Flask('Kaia', static_folder = None)
+        app = flask.Flask('Kaia', static_folder = None)
+        CORS(app)
+
+        self.app = app
         self.app.add_url_rule('/', view_func=self.index, methods=['GET'])
         self.app.add_url_rule('/command/<session_id>/<command_type>', view_func=self.command, methods=['POST'])
         self.app.add_url_rule('/updates/<session_id>/<last_update_id>', view_func=self.updates, methods=['GET'])
