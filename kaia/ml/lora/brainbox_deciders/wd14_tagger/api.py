@@ -1,6 +1,6 @@
-from ..arch.utils import FileLike
+from kaia.brainbox.deciders.arch.utils import FileLike
 import requests
-from ...core import IApiDecider
+from kaia.brainbox.core import IApiDecider
 
 class WD14Tagger(IApiDecider):
     def __init__(self, address):

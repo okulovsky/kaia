@@ -5,7 +5,8 @@ from pathlib import Path
 import os
 from .image_tools import ConvertImage
 from kaia.brainbox import BrainBoxApi, BrainBoxTask
-from kaia.brainbox.deciders import Collector, Automatic1111, WD14Tagger
+from kaia.brainbox.deciders import Collector, CollectorTaskBuilder, Upscale
+from kaia.ml.lora.brainbox_deciders.wd14_tagger import WD14Tagger
 from kaia.infra import FileIO
 
 
@@ -15,7 +16,7 @@ class OverviewController:
                  root_folder,
                  preview_size: int = 100,
                  target_upscale_size: int = 1024,
-                 upscale_model: str = 'R-ESRGAN 4x+ Anime6B',
+                 upscale_model: str = '4x-AnimeSharp.pth',
                  interrogation_threshold: float = 0.05
                  ):
         self.brainbox_api = brainbox_api
@@ -40,7 +41,7 @@ class OverviewController:
                 pass
 
     def build_ai_pack(self):
-        builder = Collector.PackBuilder()
+        builder = CollectorTaskBuilder()
         builder.append(BrainBoxTask.call(WD14Tagger).tags(), dict(type='tags'))
 
         for status in Status.gather_all(self.root_folder):
@@ -60,16 +61,13 @@ class OverviewController:
                     image_to_upscale = BrainBoxTask.safe_id()+'.png'
                     builder.uploads[image_to_upscale] = status.cropped_path
                     upscale_dependency = builder.append(
-                        BrainBoxTask.call(Automatic1111).upscale(
-                            image=image_to_upscale,
-                            scale=ratio,
-                            model=self.upscale_model).to_task(),
+                        Upscale(input_filename=image_to_upscale).as_brainbox_task(),
                         dict(type='upscale', target=status.build_upscaled_path())
                     )
 
             if status.interrogation_path is None:
                 if upscale_dependency is not None:
-                    argument = BrainBoxTask.Dependency(upscale_dependency)
+                    argument = upscale_dependency
                 else:
                     argument = BrainBoxTask.safe_id()+'.png'
                     builder.uploads[argument] = status.upscaled_path
@@ -81,24 +79,30 @@ class OverviewController:
 
         return builder.to_collector_pack('to_array')
 
-    def run_ai(self):
-        self._make_crops()
-        pack = self.build_ai_pack()
-        result = self.brainbox_api.execute(pack)
+    def apply_ai_pack(self, result):
         for item in result:
+            if item['result'] is None:
+                print(f"Job failed: {item}")
             if 'target' in item['tags']:
                 os.makedirs(item['tags']['target'].parent, exist_ok=True)
             if item['tags']['type'] == 'upscale':
                 try:
-                    self.brainbox_api.download(item['result'], item['tags']['target'])
-                except:
-                    pass
+                    self.brainbox_api.download(item['result'].name, item['tags']['target'])
+                except Exception as ex:
+                    print(ex)
             if item['tags']['type'] == 'interrogate':
                 FileIO.write_json(item['result'], item['tags']['target'])
             if item['tags']['type'] == 'tags':
                 settings = AnnotationSettings.load(self.root_folder)
                 settings.tags = [tag['name'] for tag in item['result']]
                 settings.save()
+
+    def run_ai(self):
+        self._make_crops()
+        pack = self.build_ai_pack()
+        result = self.brainbox_api.execute(pack)
+        self.apply_ai_pack(result)
+
 
     def run_croper(self):
         subprocess.call([

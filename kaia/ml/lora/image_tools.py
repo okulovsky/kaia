@@ -42,8 +42,8 @@ class ConvertImage:
     def to_base64(self) -> str:
         return base64.b64encode(self.to_bytes()).decode('utf-8')
 
-    def to_html_tag(self) -> str:
-        return f'<img src="data:image/png;base64, {self.to_base64()}"/>'
+    def to_html_tag(self, additional_attributes='') -> str:
+        return f'<img src="data:image/png;base64, {self.to_base64()}" {additional_attributes}/>'
 
     def to_pil(self):
         return self.image

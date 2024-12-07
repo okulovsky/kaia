@@ -1,11 +1,9 @@
 from pathlib import Path
 from .settings import WD14TaggerSettings
-from ..arch import LocalImageInstaller, DockerService, BrainBoxServiceRunner
-from ...deployment import SmallImageBuilder
+from kaia.brainbox.deciders.arch import LocalImageInstaller, DockerService, BrainBoxServiceRunner
+from kaia.brainbox.deployment import SmallImageBuilder
 from unittest import TestCase
-from kaia.brainbox.media_library import MediaLibrary
-from ...core import BrainBoxApi, BrainBoxTask, IntegrationTestResult, File, BrainBoxTaskPack
-from ..collector import Collector
+from kaia.brainbox.core import BrainBoxApi, BrainBoxTask, IntegrationTestResult, File, BrainBoxTaskPack
 from .api import WD14Tagger
 import json
 
