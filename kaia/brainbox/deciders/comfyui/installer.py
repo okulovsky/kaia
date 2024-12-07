@@ -25,7 +25,6 @@ class ComfyUIInstaller(LocalImageInstaller):
                     'custom_nodes': '/home/app/ComfyUI/custom_nodes'
                 },
                 gpu_required=BrainBoxServiceRunner.GpuRequirement.Mandatory,
-                dont_rm_debug_only=True,
             )
 
         service = DockerService(
@@ -84,7 +83,6 @@ class ComfyUIInstaller(LocalImageInstaller):
             f'{self.ip_address}:{self.settings.port}',
             self.resource_folder('input'),
             self.resource_folder('output'),
-            parameters
         )
 
     def create_api(self) -> ComfyUI:
@@ -96,9 +94,9 @@ class ComfyUIInstaller(LocalImageInstaller):
 
     def _brainbox_self_test_internal(self, api: BrainBoxApi, tc: TestCase):
         yield IntegrationTestResult(0, "Text to image")
-        prompt = "cute little cat playing with a woolball"
+        prompt = "cute little cat playing with a woolball, solo, no humans, animal, cat"
         yield IntegrationTestResult(1, "Prompt", prompt)
-        negative_prompt = "bad quality, dull colors, monochrome, boy, girl, people"
+        negative_prompt = "bad quality, dull colors, monochrome, boy, girl, people, nsfw, nudity"
         yield IntegrationTestResult(1, "Negative prompt", negative_prompt)
 
         model_name = 'meinamix_meinaV9.safetensors'
@@ -107,7 +105,9 @@ class ComfyUIInstaller(LocalImageInstaller):
             prompt=prompt,
             negative_prompt=negative_prompt,
             batch_size=2,
-            model = model_name
+            model = model_name,
+            seed=42
+
         ).as_brainbox_task()
 
         results = api.execute(task)
@@ -120,7 +120,7 @@ class ComfyUIInstaller(LocalImageInstaller):
             prompt=prompt,
             negative_prompt=negative_prompt,
             batch_size=2,
-            lora_name='cat_lora.safetensors',
+            lora_01='cat_lora.safetensors',
             model=model_name
         ).as_brainbox_task()
 
@@ -137,7 +137,7 @@ class ComfyUIInstaller(LocalImageInstaller):
 
         api.upload(input_name, source_image)
         upscaled = api.execute(Upscale(input_name).as_brainbox_task())
-        yield IntegrationTestResult(1, "Upscaled image", api.pull_content(upscaled[0]))
+        yield IntegrationTestResult(1, "Upscaled image", api.pull_content(upscaled))
 
         yield IntegrationTestResult(0, "WD14 Interrogate")
         yield IntegrationTestResult(1, "Source image", File.read(source_image))

@@ -15,6 +15,7 @@ class TemplateWorkflow(IWorkflow):
             maps_to_job_id: bool = False,
             is_input_file: bool = False,
             is_model_with_priority: None|int = None,
+            skip_auto_substitution: bool = False,
     ):
         return dict(
             field_name=field_name,
@@ -22,6 +23,7 @@ class TemplateWorkflow(IWorkflow):
             maps_to_job_id = maps_to_job_id,
             is_input_file = is_input_file,
             is_model_with_priority = is_model_with_priority,
+            skip_auto_substitution = skip_auto_substitution
         )
 
     def find_id_by_title(self, js: dict, title: str) -> list[str]:
@@ -85,15 +87,15 @@ class TemplateWorkflow(IWorkflow):
     def preprocess_value(self, field_name, value):
         return value
 
-    def create_workflow_json(self, job_id: str, decider_parameters: str|None):
+    def create_workflow_json(self, job_id: str):
         js = self.read_json()
 
         for field in get_dataclass_fields(type(self)):
+            if field.metadata.get('skip_auto_substitution'):
+                continue
             value = getattr(self, field.name)
             if field.metadata.get('maps_to_job_id', False):
                 value = job_id
-            if field.metadata.get('maps_to_decider_parameters', False) and decider_parameters is not None:
-                value = decider_parameters
             value = self.preprocess_value(field.name, value)
             if field.metadata.get('is_input_file', False):
                 value = FileLike.get_name(value, True)
@@ -112,7 +114,7 @@ class TemplateWorkflow(IWorkflow):
                 result.append(getattr(self, field.name))
         return result
 
-    def as_brainbox_task(self):
+    def as_brainbox_task(self, **arguments_kwargs):
         ordering_token_components = {}
         for field in get_dataclass_fields(type(self)):
             ordering = field.metadata.get('is_input_file', None)
@@ -122,8 +124,8 @@ class TemplateWorkflow(IWorkflow):
 
         return BrainBoxTask(
             decider='ComfyUI',
-            decider_method='run_workflow',
-            arguments=dict(workflow=self),
-            ordering_token=ordering_token
+            decider_method=None,
+            arguments=dict(workflow=self, **arguments_kwargs),
+            ordering_token=ordering_token,
         )
 

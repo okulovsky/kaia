@@ -63,6 +63,10 @@ class ComfyUISettings:
         ComfyUIExtension(
             'https://github.com/pythongosssss/ComfyUI-Custom-Scripts',
             'ae052b625fb4c0b2dfc1649ae4c2b789f4b2bece'
+        ),
+        ComfyUIExtension(
+            'https://github.com/rgthree/rgthree-comfy',
+            '8df5e33109bf4642bc0d720646e32ca2520c1d91'
         )
     )
 

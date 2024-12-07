@@ -1,3 +1,4 @@
+from kaia.brainbox.core import File
 from .template import TemplateWorkflow
 from dataclasses import dataclass, field
 from ...arch.utils import FileLike
@@ -9,6 +10,9 @@ class Upscale(TemplateWorkflow):
     width: int = field(default=1024, metadata=TemplateWorkflow.meta(node_title='Upscale Image'))
     height: int = field(default=1024, metadata=TemplateWorkflow.meta(node_title='Upscale Image'))
     filename_prefix: str = field(default='', metadata=TemplateWorkflow.meta(maps_to_job_id=True))
+
+    def postprocess(self, files: list[File]):
+        return files[0]
 
 
 

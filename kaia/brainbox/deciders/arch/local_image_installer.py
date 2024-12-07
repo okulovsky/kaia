@@ -1,8 +1,9 @@
-from .docker_installer import DockerInstaller, DockerService
+from .docker_web_service_installer import DockerWebServiceInstaller
+from .docker_service import DockerService
 from kaia.brainbox.deployment import SmallImageBuilder, LocalImageSource
 from pathlib import Path
 
-class LocalImageInstaller(DockerInstaller):
+class LocalImageInstaller(DockerWebServiceInstaller):
     def __init__(self,
                  name: str,
                  path_to_container_code: Path,

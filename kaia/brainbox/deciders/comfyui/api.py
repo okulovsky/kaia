@@ -7,12 +7,14 @@ from ..arch.utils import FileLike
 import requests
 import time
 from pathlib import Path
+from yo_fluq_ds import Query
 from kaia.infra import FileIO
 from dataclasses import dataclass
 
+
 class IWorkflow:
     @abstractmethod
-    def create_workflow_json(self, job_id: str, decider_parameters: str|None):
+    def create_workflow_json(self, job_id: str):
         pass
 
 
@@ -30,14 +32,19 @@ class ComfyUI(IApiDecider):
                  address: str,
                  input_folder: Path,
                  output_folder: Path,
-                 decider_parameters: str|None = None
                  ):
         self.address = address
         self.input_folder = input_folder
         self.output_folder = output_folder
-        self.decider_parameters = decider_parameters
 
-    def run_workflow(self, workflow: IWorkflow):
+
+    def __call__(self, workflow: IWorkflow):
+        return self.run_workflow(workflow)
+
+    def run_workflow(self, workflow: IWorkflow, **kwargs):
+        for key, value in kwargs.items():
+            setattr(workflow, key, value)
+
         input_files = []
 
         for file in workflow.get_input_files():
@@ -46,8 +53,7 @@ class ComfyUI(IApiDecider):
             with FileLike(file, self.file_cache) as content:
                 FileIO.write_bytes(content.read(), input_file_name)
 
-
-        json = workflow.create_workflow_json(self.current_job_id, self.decider_parameters)
+        json = workflow.create_workflow_json(self.current_job_id)
 
         address = f'http://{self.address}/prompt'
         result = requests.post(address, json=dict(prompt=json))
@@ -75,6 +81,11 @@ class ComfyUI(IApiDecider):
             os.unlink(input_file_name)
 
         return workflow.postprocess(resulting_files)
+
+
+
+
+
 
 
 
