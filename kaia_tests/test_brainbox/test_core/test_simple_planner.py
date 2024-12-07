@@ -11,7 +11,7 @@ class _Gen:
     def __call__(self, decider, assigned=False):
         self.cnt += 1
         return BrainBoxJobForPlanner(str(self.cnt), decider, None, received_timestamp=datetime(2020, 1, 1 + self.cnt),
-                                     assigned=assigned)
+                                     assigned=assigned, ordering_token=None)
 
 
 T = _Gen()

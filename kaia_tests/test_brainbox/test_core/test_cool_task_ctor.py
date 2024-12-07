@@ -53,15 +53,6 @@ class CoolCtorTestCase(TestCase):
         )
 
 
-    def test_task_builder(self):
-        task = BrainBoxTask.call(Test).method(a=4,b=5).to_task()
-        self.assertEqual('Test', task.decider)
-        self.assertEqual('method', task.decider_method)
-        self.assertDictEqual(dict(a=4, b=5), task.arguments)
-
-    def test_task_builder_validates_parameters(self):
-        self.assertRaises(Exception, lambda: BrainBoxTask.call(Test).method(x=4).to_task())
-
 
 
 

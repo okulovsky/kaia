@@ -1,6 +1,6 @@
 import os
 from kaia.brainbox import deployment as d
-from kaia.infra import FileIO
+from kaia.infra import FileIO, Loc
 from pathlib import Path
 import uuid
 from unittest import TestCase
@@ -67,6 +67,10 @@ class SimpleImageBuilderTestCase(TestCase):
 
         fname = data_folder/'test/test.txt'
         self.assertEqual('outer: '+id, FileIO.read_text(fname))
+
+        if Loc.is_windows:
+            self.skipTest('Windows')
+
         res = executor.execute(['ls','-l', fname.parent], d.Command.Options(return_output=True))
         res = res.decode('ascii').split('\n')[1]
         print(res)

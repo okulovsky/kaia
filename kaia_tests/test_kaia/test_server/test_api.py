@@ -9,6 +9,6 @@ class KaiaApiTestCase(TestCase):
             api.add_image('test_image')
             api.add_sound('test_sound')
 
-            updates = api.get_updates()
+            updates = api.pull_updates()
             for u in updates:
                 print(u.payload, type(u.payload))
