@@ -46,7 +46,7 @@ def fix_decider_and_decider_method(decider:  Union[str,type,Callable], decider_m
     return fixed_decider, fixed_decider_method, _method_to_validate
 
 
-def fix_arguments_and_dependencies(arguments, dependencies) -> tuple[dict, dict]:
+def fix_arguments_and_dependencies(arguments, dependencies, fake_dependencies: Optional[List[Union[str,'BrainBoxTask']]]) -> tuple[dict, dict]:
     if arguments is None:
         arguments = {}
     if dependencies is None:
@@ -56,14 +56,33 @@ def fix_arguments_and_dependencies(arguments, dependencies) -> tuple[dict, dict]
         if key in dependencies:
             raise ValueError("Key {key} exist in both arguments and dependencies")
 
+    fixed_dependencies = {}
+    for key, value in dependencies.items():
+        if isinstance(value, BrainBoxTask):
+            fixed_dependencies[key] = value.id
+        elif isinstance(value, str):
+            fixed_dependencies[key] = value
+        else:
+            raise ValueError(f"Dependencies should be str or BrainBoxTask, but at key {key} was {value}")
+
     fixed_arguments = {}
     for key, value in arguments.items():
-        if isinstance(value, BrainBoxTask.Dependency):
-            dependencies[key] = value.id
+        if isinstance(value, BrainBoxTask):
+            fixed_dependencies[key] = value.id
         else:
             fixed_arguments[key] = value
 
-    return fixed_arguments, dependencies
+    if fake_dependencies is not None:
+        for index, fake_dependency in enumerate(fake_dependencies):
+            if isinstance(fake_dependency, BrainBoxTask):
+                fake_dependency = fake_dependency.id
+            elif isinstance(fake_dependency, str):
+                pass
+            else:
+                raise ValueError(f"Fake Dependency should be list of str or BrainBoxTask, but element #{index} was {fake_dependency}")
+            fixed_dependencies['*fake_dependency_'+str(index)] = fake_dependency
+
+    return fixed_arguments, fixed_dependencies
 
 
 def check_method(method_to_validate, arguments, dependencies):
@@ -76,23 +95,14 @@ def check_method(method_to_validate, arguments, dependencies):
 
 
 class BrainBoxTask:
-    class Dependency:
-        def __init__(self, task: Union[str,'BrainBoxTask']):
-            if isinstance(task, str):
-                self.id = task
-            elif isinstance(task, BrainBoxTask):
-                self.id = task.id
-            else:
-                raise ValueError(f"Task must be str (id) or BrainBoxTask, but was {task}")
-
-
     def __init__(self,
                  *,
                  decider: Union[str,type,Callable],
-                 arguments: None|dict = None,
+                 arguments: Optional[Dict[str,Any]] = None,
                  id: str | None = None,
-                 dependencies: dict|None = None,
-                 info:Any = None,
+                 dependencies: Optional[Dict[str,Union[str, 'BrainBoxTask']]] = None,
+                 fake_dependencies: Optional[List[Union[str,'BrainBoxTask']]] = None,
+                 info: Any = None,
                  batch: str|None = None,
                  decider_method: Union[None, str, Callable] = None,
                  decider_parameters: None|str = None,
@@ -105,7 +115,7 @@ class BrainBoxTask:
 
         self.decider, self.decider_method, _method_to_validate = fix_decider_and_decider_method(decider, decider_method)
 
-        self.arguments, self.dependencies = fix_arguments_and_dependencies(arguments, dependencies)
+        self.arguments, self.dependencies = fix_arguments_and_dependencies(arguments, dependencies, fake_dependencies)
         if _method_to_validate is not None:
             check_method(_method_to_validate, self.arguments, self.dependencies)
 

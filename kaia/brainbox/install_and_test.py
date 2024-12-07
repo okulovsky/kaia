@@ -43,22 +43,22 @@ class InstallAndTestCase(TestCase):
             result = installer.brainbox_self_test(self)
             FileIO.write_pickle(result, output/installer.python_name)
 
-    def test_automatic1111(self):
-        from kaia.brainbox.deciders.automatic1111 import Automatic1111Installer, Automatic1111Settings
-        self.run_test(Automatic1111Settings(), Automatic1111Installer)
-
     def test_comfyui(self):
-        from kaia.brainbox.deciders.compfyui import ComfyUIInstaller, ComfyUISettings
+        from kaia.brainbox.deciders.comfyui import ComfyUIInstaller, ComfyUISettings
         self.run_test(ComfyUISettings(), ComfyUIInstaller)
 
     def test_coqui_tts(self):
         from kaia.brainbox.deciders.coqui_tts import CoquiTTSSettings, CoquiTTSInstaller
         self.run_test(CoquiTTSSettings(), CoquiTTSInstaller)
 
+    def test_kohya_ss(self):
+        from kaia.ml.lora.brainbox_deciders.kohya_ss import KohyaSSSettings, KohyaSSInstaller
+        self.run_test(KohyaSSSettings(), KohyaSSInstaller)
 
-    def test_oobabooga(self):
-        from kaia.brainbox.deciders import OobaboogaSettings, OobaboogaInstaller
-        self.run_test(OobaboogaSettings(), OobaboogaInstaller, True)
+
+    def test_ollama(self):
+        from kaia.brainbox.deciders import OllamaSettings, OllamaInstaller
+        self.run_test(OllamaSettings(), OllamaInstaller)
 
     def test_open_tts(self):
         from kaia.brainbox.deciders import OpenTTSInstaller, OpenTTSSettings
@@ -68,10 +68,6 @@ class InstallAndTestCase(TestCase):
         from kaia.brainbox.deciders import ResemblyzerSettings, ResemblyzerInstaller
         self.run_test(ResemblyzerSettings(), ResemblyzerInstaller)
 
-
-    def test_rhasspy(self):
-        from kaia.brainbox.deciders import RhasspySettings, RhasspyInstaller
-        self.run_test(RhasspySettings(), RhasspyInstaller)
 
     def test_rhasspy_kaldi(self):
         from kaia.brainbox.deciders import RhasspyKaldiSettings, RhasspyKaldiInstaller
@@ -83,7 +79,7 @@ class InstallAndTestCase(TestCase):
 
 
     def test_wd14_tagger(self):
-        from kaia.brainbox.deciders import WD14TaggerSettings, WD14TaggerInstaller
+        from kaia.ml.lora.brainbox_deciders.wd14_tagger import WD14TaggerSettings, WD14TaggerInstaller
         self.run_test(WD14TaggerSettings(), WD14TaggerInstaller)
 
     def test_whisper(self):

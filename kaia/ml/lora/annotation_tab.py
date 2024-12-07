@@ -21,6 +21,10 @@ class AnnotationView:
     def banned_tags_change(self, tags):
         self.controller.annotation_settings.exclude_tags = tags
 
+    def global_tags_change(self, tags):
+        self.controller.annotation_settings.include_tags = tags
+
+
     def on_click(self, tag):
         new_status = self.controller.current.change_status(tag)
         return gr.update(visible=True, value=tag, elem_classes=f'button_{new_status}')
@@ -37,6 +41,10 @@ class AnnotationView:
                 choices=self.controller.annotation_settings.tags),
             self.banned_tags: gr.update(
                 value=self.controller.annotation_settings.exclude_tags,
+                choices=self.controller.annotation_settings.tags
+            ),
+            self.global_tags: gr.update(
+                value=self.controller.annotation_settings.include_tags,
                 choices=self.controller.annotation_settings.tags
             ),
             self.reviewed_control: self.controller.current.stored.reviewed,
@@ -59,6 +67,11 @@ class AnnotationView:
                 .then(self.load_buttons, outputs=self.tag_buttons)
                 )
 
+    def skipped_change(self, skipped):
+        if not isinstance(skipped, bool):
+            raise ValueError()
+        self.controller.current.stored.skipped = skipped
+
     def cm_save(self):
         self.controller.save()
 
@@ -77,10 +90,12 @@ class AnnotationView:
                 self.main_controls.append(self.reviewed_control)
                 self.skipped_control = gr.Checkbox(label='Skip', interactive=True)
                 self.main_controls.append(self.skipped_control)
-                self.new_tags = gr.Dropdown(multiselect=True, label='Manually entered tags')
+                self.new_tags = gr.Dropdown(multiselect=True, label='Manually entered tags', allow_custom_value=True)
                 self.main_controls.append(self.new_tags)
-                self.banned_tags = gr.Dropdown(multiselect=True, label='Globally banned tags')
+                self.banned_tags = gr.Dropdown(multiselect=True, label='Globally banned tags', allow_custom_value=True)
                 self.main_controls.append(self.banned_tags)
+                self.global_tags = gr.Dropdown(multiselect=True, label='Globally applied tags', allow_custom_value=True)
+                self.main_controls.append(self.global_tags)
                 with gr.Row():
                     self.prev_button = gr.Button(value='PREV')
                     self.save_button = gr.Button(value="SAVE")
@@ -95,9 +110,11 @@ class AnnotationView:
 
         self.new_tags.change(self.new_tags_change, inputs=[self.new_tags])
         self.banned_tags.change(self.banned_tags_change, inputs=[self.banned_tags]).feed(self.setup_load_main)
+        self.global_tags.change(self.global_tags_change, inputs=[self.global_tags]).feed(self.setup_load_main)
         self.prev_button.click(self.cm_save).then(self.cm_previous).feed(self.setup_load_main)
         self.save_button.click(self.cm_save).feed(self.setup_load_main)
         self.next_button.click(self.cm_save).then(self.cm_next).feed(self.setup_load_main)
+        self.skipped_control.change(self.skipped_change, inputs=[self.skipped_control])
 
     def create_css(self):
         status_to_color = {True: '#cfc', False: '#fcc'}

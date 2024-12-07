@@ -1,5 +1,5 @@
 from typing import Optional
-from ..core import BrainBoxService, BrainBoxWebServer, BrainBoxTestApi, BrainBoxApi
+from ..core import BrainBoxService, BrainBoxWebServer, BrainBoxTestApi, BrainBoxApi, BrainBoxTask
 from ...infra.comm import Sql
 from ...infra import Loc
 from ..core.planers import SimplePlanner
@@ -16,6 +16,8 @@ class BrainBoxSettings:
 
 
 class BrainBox:
+    Task = BrainBoxTask
+
     def __init__(self, settings: Optional[BrainBoxSettings] = None):
         self.settings = BrainBoxSettings() if settings is None else settings
 
@@ -25,14 +27,13 @@ class BrainBox:
         deciders_dict = {}
         deciders_dict['TortoiseTTS'] = deciders.TortoiseTTSInstaller(deciders.TortoiseTTSSettings())
         deciders_dict['OpenTTS'] = deciders.OpenTTSInstaller(deciders.OpenTTSSettings())
-        deciders_dict['ComfyUI'] = deciders.ComfyUIInstaller(deciders.ComfyUISettings())
+
+        comfy_installer = deciders.ComfyUIInstaller(deciders.ComfyUISettings())
+        deciders_dict['ComfyUI'] = comfy_installer
+        deciders_dict['ComfyUIUtils'] = deciders.ComfyUIUtils(comfy_installer)
         deciders_dict['CoquiTTS'] = deciders.CoquiTTSInstaller(deciders.CoquiTTSSettings())
         deciders_dict['Whisper'] = deciders.WhisperInstaller(deciders.WhisperSettings())
-        deciders_dict['Rhasspy'] = deciders.RhasspyInstaller(deciders.RhasspySettings())
-        deciders_dict['Oobabooga'] = deciders.OobaboogaInstaller(deciders.OobaboogaSettings())
         deciders_dict['RhasspyKaldi'] = deciders.RhasspyKaldiInstaller(deciders.RhasspyKaldiSettings())
-        deciders_dict['Automatic1111'] = deciders.Automatic1111Installer(deciders.Automatic1111Settings())
-        deciders_dict['WD14Tagger'] = deciders.WD14TaggerInstaller(deciders.WD14TaggerSettings())
 
         deciders_dict['Collector'] = deciders.Collector()
         deciders_dict['OutputTranslator'] = deciders.OutputTranslator()

@@ -3,7 +3,7 @@ from copy import copy
 from kaia.brainbox import MediaLibrary
 from uuid import uuid4
 from datetime import datetime
-from kaia.brainbox.deciders import Collector
+from kaia.brainbox.deciders import CollectorTaskBuilder
 
 class MediaLibraryBuilder:
     @staticmethod
@@ -32,7 +32,7 @@ class MediaLibraryBuilder:
 
     @staticmethod
     def filter_existing_tasks(
-            pack_builder: Collector.PackBuilder,
+            pack_builder: CollectorTaskBuilder,
             ml: MediaLibrary
     ):
         new_records = []
@@ -49,4 +49,4 @@ class MediaLibraryBuilder:
                     break
             if keep:
                 new_records.append(record)
-        return Collector.PackBuilder(new_records)
+        return CollectorTaskBuilder(new_records)

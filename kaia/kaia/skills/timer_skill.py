@@ -35,7 +35,7 @@ class TimerReplies(TemplatesCollection):
         'The timer is cancelled',
         'The {index} timer is cancelled',
         index = OrdinalDub(1, 10)
-    ).paraphrase.after(f'{World.user} asked {World.character} to monitor a timer, but then changed his mind and said not to monitor timer anymore. {World.character} responds with a confirmation.')
+    ).paraphrase.after(f'{World.user} asked {World.character} to monitor a timer, but then changed {World.user.pronoun.possessive} mind and said not to monitor timer anymore. {World.character} responds with a confirmation.')
 
     which_timer_error = Template(
         'You have {amount} timers, I do not know which one to cancel.',

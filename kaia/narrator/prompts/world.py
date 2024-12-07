@@ -1,7 +1,9 @@
-from .character import CharacterWorldField
+from .characters import CharacterBinding
 
 class World:
-    user = CharacterWorldField('user')
-    character = CharacterWorldField('character')
+    user = CharacterBinding('user')
+    character = CharacterBinding('character')
+
+
 
 

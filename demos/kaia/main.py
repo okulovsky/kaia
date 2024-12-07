@@ -25,7 +25,7 @@ def create_app(
         mic_samples_to_play: Optional[Iterable[Path]] = None,
         set_primary_service = True
     ):
-    _ = deciders.RhasspyInstaller(deciders.RhasspySettings()).run_in_any_case_and_create_api()
+    _ = deciders.RhasspyKaldiInstaller(deciders.RhasspyKaldiSettings()).run_in_any_case_and_create_api()
     whisper_api: deciders.WhisperExtendedAPI = deciders.WhisperInstaller(deciders.WhisperSettings()).run_in_any_case_and_create_api()
     whisper_api.load_model('base')
     _ = deciders.OpenTTSInstaller(deciders.OpenTTSSettings()).run_in_any_case_and_create_api()

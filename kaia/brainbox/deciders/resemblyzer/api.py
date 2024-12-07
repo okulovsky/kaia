@@ -27,7 +27,7 @@ class Resemblyzer(IApiDecider):
                     ('file', file),
                 )
             )
-            if reply.status_code == 500:
+            if reply.status_code != 200:
                 raise ValueError(f"Resemblyzer threw an error\n{reply.text}")
             return reply.json()['speaker']
 
@@ -49,10 +49,10 @@ class Resemblyzer(IApiDecider):
 
     def train(self):
         reply = requests.post(f'http://{self.address}/train/{self.model}')
-        try:
-            return reply.json()
-        except:
-            raise ValueError(f"Failed to parse JSON\n{reply.text}")
+        if reply.status_code != 200:
+            raise ValueError(f"Resemblyzer threw an error\n{reply.text}")
+        return reply.json()
+
 
     def train_on_media_library(self, media_library_path: Path, append_dataset: bool = False):
         media_library = MediaLibrary.read(media_library_path)

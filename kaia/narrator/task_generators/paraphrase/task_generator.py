@@ -2,7 +2,7 @@ import uuid
 from typing import *
 from ....dub.core import Template, PredefinedField, ParaphraseInfo
 from ...prompts import Character, World, Prompt
-from kaia.brainbox.deciders import Collector
+from kaia.brainbox.deciders import CollectorTaskBuilder
 from kaia.brainbox import BrainBoxTask
 from copy import deepcopy
 from ...prompts import Conventions
@@ -111,9 +111,11 @@ class TaskGenerator:
         for k, v in raw_tags.items():
             story_items[k] = self.tag_fields[k][v]
 
-        story_items[TaskGenerator.story_field.get_name()] = self.get_story(story_items, template,
-                                                                                     story_items[
-                                                                                         World.user.field_name])
+        story_items[TaskGenerator.story_field.get_name()] = self.get_story(
+            story_items,
+            template,
+            story_items[World.user.field_name]
+        )
         story_items[TaskGenerator.prompt_type_field.get_name()] = self.get_prompt_type(template)
         value = self.prompt.compute_last_value(story_items)
         return self.task_factory(value, tags), tags
@@ -129,7 +131,7 @@ class TaskGenerator:
         from yo_fluq_ds import Query, fluq
         templates, tag_grid = self._get_grid()
 
-        builder = Collector.PackBuilder()
+        builder = CollectorTaskBuilder()
 
         for template in Query.en(templates).feed(fluq.with_progress_bar()):
             for raw_tags in tag_grid:

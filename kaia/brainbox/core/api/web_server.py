@@ -16,6 +16,8 @@ from threading import Thread
 import logging
 from kaia.infra import MarshallingEndpoint
 from datetime import timedelta
+from .index_helper import build_report
+from .index_batch_helper import build_batch_report
 
 class BrainBoxEndpoints:
     add = MarshallingEndpoint('/add', 'POST')
@@ -52,6 +54,7 @@ class BrainBoxWebServer:
 
         self.app = flask.Flask('brainbox')
         self.app.add_url_rule('/', view_func=self.index, methods=['GET'])
+        self.app.add_url_rule('/batch_index/<batch>', view_func=self.batch_index, methods=['GET'])
         self.app.add_url_rule('/status', view_func=self.status, methods=['GET'])
         self.app.add_url_rule('/file/<fname>', view_func=self.file, methods=['GET'])
         self.app.add_url_rule('/cancel/<id>', view_func=self.cancel, methods=['GET'])
@@ -63,12 +66,16 @@ class BrainBoxWebServer:
 
         self.app.run('0.0.0.0',self.port)
 
+
     def index(self):
-        df = pd.DataFrame(self.summary(None))
-        if df.shape[0]!=0:
-            df = df.sort_values('received_timestamp', ascending=False)
-        df = df.reset_index(drop=True)
-        return df.to_html()
+        with Session(self.engine) as session:
+            return build_batch_report(session)
+
+
+    def batch_index(self, batch: str):
+        with Session(self.engine) as session:
+            return build_report(session, batch)
+
 
     def status(self):
         return 'OK'

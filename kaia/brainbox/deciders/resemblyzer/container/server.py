@@ -81,22 +81,7 @@ class ResemblyzerServer:
         except:
             return traceback.format_exc(), 500
 
-    def classify(self, model: str):
-        try:
-            path = Path('/data')/str(uuid.uuid4())
-            file = flask.request.files['file']
-            file.save(path)
-            embedding = self.wav_processor.get_encoding(path)
-            os.unlink(path)
-            if model not in self.models_cache:
-                with open(MODELS_FOLDER/model,'rb') as file:
-                    self.models_cache[model] = Model(**pickle.load(file))
-            winner = self.models_cache[model].compute_winner(embedding)
-            if winner is None:
-                raise ValueError("Undef winner")
-            return flask.jsonify(dict(speaker=winner))
-        except:
-            return traceback.format_exc(), 500
+
 
 
 
