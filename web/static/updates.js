@@ -34,8 +34,9 @@ function add_sound(payload) {
         return
     }
 
+    audio_is_playing = true
     const audio_control = new Audio(`${BASE_URL}/file/${payload['filename']}`)
-    audio_control.play().then(() => audio_is_playing = true)
+    audio_control.play()
     audio_control.addEventListener("ended", () => audio_is_playing = false)
 }
 
