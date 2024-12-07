@@ -1,5 +1,10 @@
-var session_id =  Math.floor(Math.random() * 1000000).toString()
-var last_message = 0
+const SESSION_ID = Math.floor(Math.random() * 1000000).toString()
+// Set your own BASE_URL
+// Setting empty string means all requests will be made to /
+const BASE_URL = 'http://localhost:8890'
+
+let audio_is_playing = false
+let last_message = 0
 
 function build_message_p(payload) {
     p = ''
@@ -9,7 +14,7 @@ function build_message_p(payload) {
     else p+='left'
     p+='" '
 
-    if (payload['avatar']) p+='style="background-image: url('+"'"+payload['avatar']+"'"+');" '
+    if (payload['avatar']) p+='style="background-image: url('+"'"+`${BASE_URL}${payload['avatar']}`+"'"+');" '
 
     p+=">"
     p+=payload['text']
@@ -25,13 +30,18 @@ function add_message(payload) {
 }
 
 function add_sound(payload) {
-    var audio_control = new Audio('/file/'+payload['filename'])
-    audio_control.play()
+    if (audio_is_playing) {
+        return
+    }
+
+    const audio_control = new Audio(`${BASE_URL}/file/${payload['filename']}`)
+    audio_control.play().then(() => audio_is_playing = true)
+    audio_control.addEventListener("ended", () => audio_is_playing = false)
 }
 
 function add_image(payload) {
     image_control = document.getElementById("main_image")
-    image_control.src = '/file/' + payload['filename']
+    image_control.src = `${BASE_URL}/file/${payload['filename']}`
 }
 
 function process_updates(data) {
@@ -57,10 +67,8 @@ function process_updates(data) {
 }
 
 
-
-
 function updates() {
-  fetch('/updates/'+session_id+"/"+last_message)
+  fetch(`${BASE_URL}/updates/${SESSION_ID}/${last_message}`)
   .then(response => response.json())
   .then(data => process_updates(data))
   .catch(err => console.warn('Something went wrong.', err))
@@ -70,8 +78,7 @@ function initialize() {
     control = document.getElementById("chat")
     control.innerHTML = ''
 
-
-    fetch("/command/"+session_id+"/command_initialize", {
+    fetch(`${BASE_URL}/command/${SESSION_ID}/command_initialize`, {
       method: "POST",
       body: JSON.stringify(''),
       headers: {
