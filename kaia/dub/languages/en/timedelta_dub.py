@@ -5,7 +5,6 @@ from .plural_agreement import PluralAgreement
 from datetime import timedelta, time
 import numpy as np
 
-from kaia.dub.core import PredefinedField
 
 
 def create_template(max_days, max_hours):

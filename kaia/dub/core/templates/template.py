@@ -6,7 +6,7 @@ from copy import copy, deepcopy
 from uuid import uuid4
 from .template_metadata import TemplateMetadata, DescriptionAsInput
 from .paraphrase import Paraphrase
-from .predefined_fields import PredefinedField
+from .inline_binding import IInlineBinding
 
 
 
@@ -26,7 +26,7 @@ class ParserCache:
 
 class Template:
     def __init__(self, *args: str, **kwargs: Union[Dub,IDubBinding]):
-        args, kwargs = PredefinedField.fix_template_arguments(args, kwargs)
+        args, kwargs = IInlineBinding.fix_template_arguments(args, kwargs)
         self._init_fields(args, kwargs)
         if len(args) == 1 and len(kwargs) == 0 and not isinstance(args[0], str):
             if not isinstance(args[0], Dub):
@@ -48,7 +48,7 @@ class Template:
     @staticmethod
     def free(s: str, **kwargs: Union[Dub,IDubBinding]):
         template = Template.__new__(Template)
-        args, kwargs = PredefinedField.fix_template_arguments([s], kwargs)
+        args, kwargs = IInlineBinding.fix_template_arguments([s], kwargs)
         sequences = UnionDub.create_sequences(args, kwargs, auto_create_dub_factory=ToStrDub)
         template._init_fields(args, kwargs)
         template.dub = UnionDub(sequences)

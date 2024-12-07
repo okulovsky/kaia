@@ -1,4 +1,5 @@
-from .predefined_fields import IPredefinedField, PredefinedField
+from .inline_binding import IInlineBinding
+from .field_binding import FieldBinding, Address
 from .template import Template
 from .utterance_sequence import UtterancesSequence
 from .utterance import Utterance
