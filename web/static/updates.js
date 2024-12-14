@@ -3,7 +3,6 @@ const SESSION_ID = Math.floor(Math.random() * 1000000).toString()
 // Setting empty string means all requests will be made to /
 const BASE_URL = 'http://localhost:8890'
 
-let audio_is_playing = false
 let last_message = 0
 
 function build_message_p(payload) {
@@ -30,14 +29,10 @@ function add_message(payload) {
 }
 
 function add_sound(payload) {
-    if (audio_is_playing) {
-        return
-    }
-
     audio_is_playing = true
     const audio_control = new Audio(`${BASE_URL}/file/${payload['filename']}`)
     audio_control.play()
-    audio_control.addEventListener("ended", () => audio_is_playing = false)
+    audio_control.addEventListener("ended", () => setTimeout(updates,1))
 }
 
 function add_image(payload) {
@@ -46,12 +41,13 @@ function add_image(payload) {
 }
 
 function process_updates(data) {
-    new_last_message_id = last_message
-    html_addition = ''
-    image = null
-    play_queue = []
-
     for (const element of data) {
+        if (element['id'] > last_message) {
+            last_message = element['id']
+        }
+        else {
+            continue
+        }
         if (element['type'] == 'reaction_message') {
             add_message(element['payload'])
         }
@@ -60,11 +56,11 @@ function process_updates(data) {
         }
         if (element['type'] == 'reaction_audio') {
             add_sound(element['payload'])
+            return
         }
-        if (element['id'] > new_last_message_id) {
-            last_message = element['id']
-        }
+
     }
+    setTimeout(updates,1000)
 }
 
 
@@ -86,7 +82,7 @@ function initialize() {
         "Content-type": "application/json; charset=UTF-8"
       }
     });
+    setTimeout(updates,1)
 }
 
 addEventListener("load", (event) => initialize());
-setInterval(updates, 1000)
