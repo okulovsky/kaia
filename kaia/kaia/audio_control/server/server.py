@@ -17,6 +17,7 @@ class AudioControlEndpoints:
     status = MarshallingEndpoint('/status')
     play_audio = MarshallingEndpoint('/play_audio')
     set_state = MarshallingEndpoint('/set_mode')
+    get_state = MarshallingEndpoint('/get_state')
     get_uploaded_filename = MarshallingEndpoint('/get_command', 'GET')
     wait_for_uploaded_filename = MarshallingEndpoint('/wait_for_command', 'GET')
     next_mic_sample = MarshallingEndpoint('/debug/next_mic_sample')
@@ -104,6 +105,9 @@ class AudioControlServer:
 
     def set_state(self, state: MicState):
         self.cycle.request_state(state)
+
+    def get_state(self):
+        return self.cycle.get_state()
 
 
     def get_uploaded_filename(self) -> str|None:

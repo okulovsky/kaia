@@ -7,7 +7,7 @@ class AudioCycleToKaiaServerBridge:
         self.session_id = session_id
 
     def __call__(self, filename):
-        address = f'http://{self.address}/command/{self.session_id}/audio_command'
+        address = f'http://{self.address}/command/{self.session_id}/command_audio'
         requests.post(address, json=dict(filename=filename))
 
 

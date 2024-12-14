@@ -1,9 +1,6 @@
-import json
-import os
-import subprocess
 import time
+import uuid
 
-from kaia.infra import MarshallingEndpoint
 from .bus import Bus, BusItem
 from datetime import datetime
 from dataclasses import dataclass
@@ -11,7 +8,11 @@ from enum import Enum
 from .server import KaiaServerSettings, KaiaServer
 from kaia.infra.app import KaiaApp
 import requests
-
+import webbrowser
+from kaia.eaglesong.core import primitives
+from pathlib import Path
+from kaia.infra import Loc, FileIO
+from ..core import KaiaMessage
 
 
 @dataclass
@@ -29,12 +30,22 @@ class Message:
 
 
 class KaiaApi:
-    def __init__(self, bus: Bus, session_id: str, last_message_id: int|None = None):
+    def __init__(self,
+                 bus: Bus,
+                 session_id: str,
+                 last_message_id: int|None = None,
+                 cache_folder: Path|None = None
+                 ):
         self.bus = bus
         self.session_id = session_id
         self.last_message_id: int|None = last_message_id
+        self.cache_folder = cache_folder if cache_folder is not None else Loc.temp_folder/'kaia_api_cache'
 
-    def add_image(self, image: str):
+    def add_image(self, image: str|primitives.Image):
+        if isinstance(image, primitives.Image):
+            FileIO.write_bytes(image.data, self.cache_folder/image.id)
+            image = image.id
+
         self.bus.add_message(BusItem(
             session_id = self.session_id,
             timestamp = datetime.now(),
@@ -42,7 +53,13 @@ class KaiaApi:
             payload = dict(filename=image)
         ))
 
-    def add_sound(self, sound: str):
+    def add_sound(self, sound: str|primitives.Audio):
+        if isinstance(sound, primitives.Audio):
+            if sound.id is None:
+                sound.id = str(uuid.uuid4())+'.wav'
+            FileIO.write_bytes(sound.data, self.cache_folder/sound.id)
+            sound = sound.id
+
         self.bus.add_message(BusItem(
             session_id = self.session_id,
             timestamp = datetime.now(),
@@ -50,7 +67,14 @@ class KaiaApi:
             payload = dict(filename=sound)
         ))
 
-    def add_message(self, message: Message):
+    def add_message(self, message: Message|KaiaMessage):
+        if isinstance(message, KaiaMessage):
+            message = Message(
+                Message.Type.Error if message.is_error else (Message.Type.ToUser if message.is_bot else Message.Type.FromUser),
+                message.text,
+                message.speaker,
+                message.avatar
+            )
         self.bus.add_message(BusItem(
             session_id = self.session_id,
             timestamp = datetime.now(),
@@ -72,11 +96,9 @@ class KaiaApi:
     class Test:
         def __init__(self,
                      settings: KaiaServerSettings,
-                     browser_command: str|None = 'firefox',
                      custom_session_id: str|None = None
                      ):
             self.settings = settings
-            self.browser_command = browser_command
             self.custom_session_id = custom_session_id
             self.app: KaiaApp|None = None
 
@@ -103,8 +125,7 @@ class KaiaApi:
             bus = Bus(self.settings.db_path)
             current_sessions = bus.get_sessions()
 
-            subprocess.Popen([self.browser_command, f'http://127.0.0.1:{self.settings.port}/'])
-
+            webbrowser.open(f'http://127.0.0.1:{self.settings.port}/')
             new_session = None
             for i in range(100):
                 new_sessions = bus.get_sessions()

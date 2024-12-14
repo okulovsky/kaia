@@ -28,6 +28,7 @@ class KaiaServerSettings:
     additional_static_folders: dict[str, Path] | None = None
     port: int = 8890
     web_folder: Path = Loc.root_folder/'web'
+    custom_session_id: str = None
 
 
 class KaiaServer:
@@ -60,7 +61,10 @@ class KaiaServer:
 
 
     def index(self):
-        return FileIO.read_text(self.settings.web_folder/'index.html')
+        text = FileIO.read_text(self.settings.web_folder/'index.html')
+        if self.settings.custom_session_id is not None:
+            text = text.replace('***SESSION_ID***', self.settings.custom_session_id)
+        return text
 
     def heartbit(self):
         return 'OK'

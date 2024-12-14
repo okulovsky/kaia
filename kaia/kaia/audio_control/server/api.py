@@ -19,6 +19,9 @@ class AudioControlAPI(MarshallingEndpoint.API):
     def set_state(self, state: MicState):
         return self.caller.call(AudioControlEndpoints.set_state, state)
 
+    def get_state(self):
+        return self.caller.call(AudioControlEndpoints.get_state)
+
     def get_uploaded_filename(self) -> str | None:
         return self.caller.call(AudioControlEndpoints.get_uploaded_filename)
 

@@ -34,7 +34,7 @@ def get_deployment():
     deployment = Deployment(
         source,
         None,
-        ssh_executor,
+        None,
         container,
         LocalExecutor()
     )

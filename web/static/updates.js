@@ -1,7 +1,7 @@
-const SESSION_ID = Math.floor(Math.random() * 1000000).toString()
+let SESSION_ID = ''
 // Set your own BASE_URL
 // Setting empty string means all requests will be made to /
-const BASE_URL = 'http://localhost:8890'
+const BASE_URL = ''
 
 let last_message = 0
 
@@ -32,7 +32,16 @@ function add_sound(payload) {
     audio_is_playing = true
     const audio_control = new Audio(`${BASE_URL}/file/${payload['filename']}`)
     audio_control.play()
-    audio_control.addEventListener("ended", () => setTimeout(updates,1))
+    audio_control.addEventListener("ended", () => {
+        fetch(`${BASE_URL}/command/${SESSION_ID}/confirmation_audio`, {
+            method: "POST",
+            body: JSON.stringify(payload['filename']),
+            headers: {
+                "Content-type": "application/json; charset=UTF-8"
+            }
+        })
+        setTimeout(updates,1)
+    })
 }
 
 function add_image(payload) {
@@ -74,6 +83,12 @@ function updates() {
 function initialize() {
     control = document.getElementById("chat")
     control.innerHTML = ''
+
+    session_control = document.getElementById("customSessionIdHolder")
+    SESSION_ID = session_control.innerText
+    if (SESSION_ID == '***SESSION_ID***') {
+        SESSION_ID = Math.floor(Math.random() * 1000000).toString()
+    }
 
     fetch(`${BASE_URL}/command/${SESSION_ID}/command_initialize`, {
       method: "POST",

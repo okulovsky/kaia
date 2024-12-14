@@ -1,10 +1,10 @@
 import shutil
 import time
-from kaia.kaia.server.bus import Bus
+from kaia.kaia.server_2.bus import Bus
 from kaia.kaia.audio_control.wav_streaming import WavStreamingTestApi, WavApiSettings, WavServerSettings
 from demos.kaia.audio_control import create_release_control_settings
 from kaia.infra.app import KaiaApp
-from kaia.kaia.server.api import KaiaApi, KaiaServerSettings, Message, KaiaServer
+from kaia.kaia.server_2.api import KaiaApi, KaiaServerSettings, Message, KaiaServer
 from kaia.infra import Loc
 from pathlib import Path
 
@@ -43,7 +43,7 @@ def run_test_3():
 
                     updates = api.pull_updates()
                     for update in updates:
-                        if update.type == 'audio_command':
+                        if update.type == 'command_audio':
                             api.add_message(Message(Message.Type.ToUser, 'Message received'))
                             api.add_sound(update.payload['filename'])
                             break

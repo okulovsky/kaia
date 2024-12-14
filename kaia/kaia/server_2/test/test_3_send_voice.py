@@ -18,7 +18,7 @@ if __name__ == '__main__':
     address = f'http://127.0.0.1:8890'
     session_id = str(uuid4())
     print(requests.post(f"{address}/command/{session_id}/command_initialize", json=''))
-    print(requests.post(f"{address}/command/{session_id}/audio_command", json=dict(filename=target_id)))
+    print(requests.post(f"{address}/command/{session_id}/command_audio", json=dict(filename=target_id)))
 
     time.sleep(1)
     updates = requests.get(f'{address}/updates/{session_id}/-1').json()
