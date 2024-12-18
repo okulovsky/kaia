@@ -55,6 +55,7 @@ class DockerService:
                 return
             else:
                 time.sleep(1)
+        logs = self.get_deployment().run()
         raise ValueError("Coulnd't wait for a service to start")
 
     def kill(self):

@@ -1,3 +1,9 @@
+3.4.1
+    - New architecture, compatible with sound processing in the browser, is introduced
+3.4.0
+    - ComfyUI, Ollama, KohyaSS, WD14Tagger are completed; Rhasspy, Oobabooga and Automatic1111 are moved to Legacy
+    - Free templates with PredefinedBindings are simplified; more logic is moved to objects instead of bindings.
+    - To generate Prompts, Ontologies can now be used that define grids of parameters and allow bulding prompts on top of that
 3.3.1.
     - Test server for the new protocol is now dockerized
 3.3.0.

@@ -1,13 +1,11 @@
-from .automatic1111 import Automatic1111Installer, Automatic1111Settings, Automatic1111
-from .compfyui import ComfyUIInstaller, ComfyUISettings, ComfyUI
+from .collector import Collector, CollectorTaskBuilder, FunctionalTaskBuilder
+from .comfyui import ComfyUIInstaller, ComfyUISettings, ComfyUI, TextToImage, WD14Interrogate, Upscale, ComfyUIUtils
 from .coqui_tts import CoquiTTS, CoquiTTSInstaller, CoquiTTSSettings
-from .oobabooga import Oobabooga, OobaboogaInstaller, OobaboogaSettings
+from .ollama import Ollama, OllamaInstaller, OllamaSettings
 from .open_tts import OpenTTS, OpenTTSInstaller, OpenTTSSettings
 from .resemblyzer import Resemblyzer, ResemblyzerSettings, ResemblyzerInstaller
-from .rhasspy import Rhasspy, RhasspySettings, RhasspyInstaller
 from .rhasspy_kaldi import RhasspyKaldiInstaller, RhasspyKaldi, RhasspyKaldiSettings
 from .tortoise_tts import TortoiseTTS, TortoiseTTSSettings, TortoiseTTSInstaller
-from .wd14_tagger import WD14Tagger, WD14TaggerInstaller, WD14TaggerSettings
 from .whisper import Whisper, WhisperInstaller, WhisperSettings, WhisperExtendedAPI
 
 from .collector import Collector

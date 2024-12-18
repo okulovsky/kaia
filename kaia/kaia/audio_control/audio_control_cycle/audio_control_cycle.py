@@ -133,6 +133,9 @@ class AudioControlCycle:
         self._mic_helper.reset()
         self._mic_state = MicState.Open
 
+    def get_state(self):
+        return self._mic_state
+
 
     def _on_recording(self):
         filename = BrainBoxTask.safe_id()+".wav"

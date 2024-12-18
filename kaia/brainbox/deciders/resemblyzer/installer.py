@@ -6,7 +6,7 @@ from .api import Resemblyzer
 from unittest import TestCase
 from kaia.brainbox.media_library import MediaLibrary
 from ...core import BrainBoxApi, BrainBoxTask, IntegrationTestResult, File, BrainBoxTaskPack
-from ..collector import Collector
+from ..collector import Collector, CollectorTaskBuilder
 
 class ResemblyzerInstaller(LocalImageInstaller):
     def __init__(self, settings: ResemblyzerSettings):
@@ -39,7 +39,7 @@ class ResemblyzerInstaller(LocalImageInstaller):
         api.execute(BrainBoxTask.call(Resemblyzer).train_on_media_library(media_library_path=media_library_path))
 
         ml = MediaLibrary.read(media_library_path)
-        builder = Collector.PackBuilder()
+        builder = CollectorTaskBuilder()
         contents = {}
         speakers = []
         for record in ml.records:

@@ -32,3 +32,18 @@ class FFmpegTools:
     def make_video_from_audio_and_image(image_path, audio_file, output):
         subprocess.call(f'ffmpeg -y -loop 1 -i {image_path} -i {audio_file} -c:v libx264 -c:a mp3 -shortest {output} -y')
 
+
+    @staticmethod
+    def create_silence_audio(output_path, duration_in_seconds, sample_rate=22000):
+        subprocess.call([
+            'ffmpeg',
+            '-f',
+            'lavfi',
+            '-i',
+            f'anullsrc=r={sample_rate}:cl=mono',
+            '-t',
+            str(duration_in_seconds),
+            str(output_path)
+        ])
+        return output_path
+

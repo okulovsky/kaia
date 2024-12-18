@@ -5,14 +5,12 @@ body {
     padding: 0px;
     margin: 0px;
     background: rgba(20, 20, 20, 1);
-
 }
 
 #content {
     width: 100%;
     min-width: 1024px;
 
-   
     /* border: 2px solid black; */
     margin: 0px auto 0px auto;
 
@@ -34,11 +32,9 @@ body {
 
 #image img{
     width: inherit;
-   
 }
 
 #under_chat {
-
     height: 100%;
     /* border: 1px solid red;  */
     width: 20px;
@@ -109,7 +105,6 @@ body {
     text-align:justify;
 }
 
-
 #loader{
     /* min-height: 18px; */
     min-width: 140px;
@@ -121,7 +116,6 @@ body {
     opacity:0.5;
     background-image: url(bar.gif);
     background-position: bottom;
-    
 }
 
 #buttons{
@@ -138,13 +132,10 @@ body {
     grid-gap: 1.3vw;
     text-align: center;
     width:9vw;
-    
-    
 }
 
 #buttons tr{
     padding:0px;
-
 }
 
 #buttons td{

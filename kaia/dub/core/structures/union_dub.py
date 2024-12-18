@@ -54,7 +54,7 @@ class UnionDub(Dub):
     ) -> List[SequenceDub]:
         result = []
         for s in strings:
-            parts = re.split('({[A-Za-z0-9_]+})', s)
+            parts = re.split('({[A-Za-z0-9_/]+})', s)
             arguments = []
             for part in parts:
                 if len(part) == 0:
@@ -63,7 +63,7 @@ class UnionDub(Dub):
                     key = part.replace('{', '').replace('}', '')
                     if key not in dubs:
                         if auto_create_dub_factory is None:
-                            raise ValueError(f"The string contains key {key} that is not in the variables list {' '.join(dubs)}. The string\n{s}")
+                            raise ValueError(f"The string contains key `{key}` that is not in the variables list {' '.join(dubs)}. The string\n{s}")
                         else:
                             dubs[key] = auto_create_dub_factory()
                     if isinstance(dubs[key], Dub):

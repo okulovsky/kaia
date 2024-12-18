@@ -24,28 +24,13 @@ class TestInstaller(IInstaller):
     def is_installed(self):
         return True
 
-    def self_test(self, tc: None|TestCase):
-        pass
-
-    def run(self):
-        pass
-
-    def kill(self):
-        pass
-
-    def is_running(self) -> bool:
-        return True
-
-    def wait_for_running(self):
-        pass
-
     def warmup(self, parameters: str):
         self.parameters = parameters
 
     def cooldown(self, parameters: str):
         self.parameters = None
 
-    def create_api(self) -> IApiDecider:
+    def create_brainbox_decider_api(self, parameters: str|None) -> IApiDecider:
         return Test(self.parameters)
 
     def _brainbox_self_test_internal(self, api, tc: TestCase) -> Iterable[IntegrationTestResult]:

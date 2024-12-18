@@ -7,6 +7,7 @@ class ArgumentsValidator:
     mandatory: set[str]
     optional: set[str]
     open: bool
+    arguments_sequence: tuple[str,...]
     mandatory_seen: set[str] = field(default_factory=set)
     seen: set[str] = field(default_factory=set)
 
@@ -37,13 +38,16 @@ class ArgumentsValidator:
         mandatory = set()
         optional = set()
         open = False
+        sequence = []
         for i,(p,v) in enumerate(signature.parameters.items()):
-            if i == 0:
+            if i == 0 and v.name=='self':
                 continue
             if v.kind == inspect.Parameter.VAR_KEYWORD:
                 open = True
-            elif v.default == inspect._empty:
-                mandatory.add(v.name)
             else:
-                optional.add(v.name)
-        return ArgumentsValidator(mandatory, optional, open)
+                sequence.append(v.name)
+                if v.default == inspect._empty:
+                    mandatory.add(v.name)
+                else:
+                    optional.add(v.name)
+        return ArgumentsValidator(mandatory, optional, open, tuple(sequence))

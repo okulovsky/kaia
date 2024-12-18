@@ -66,11 +66,9 @@ class IApiDecider:
 
 
 class IDecider(ABC, IApiDecider):
-    @abstractmethod
     def warmup(self, parameters: str):
         pass
 
-    @abstractmethod
     def cooldown(self, parameters: str):
         pass
 
