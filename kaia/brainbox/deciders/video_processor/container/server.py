@@ -39,7 +39,6 @@ class VideoProcessorApp:
         return f"{type(self).__name__} is running"
 
     def processing_video(self, file_name: str):
-        logger.info("Другой образ не?")
         local_path_to_video = f"./{self.data_directory}/{file_name}"
         cap = cv2.VideoCapture(local_path_to_video)
 
@@ -61,11 +60,6 @@ class VideoProcessorApp:
                 continue
 
             self.processed_frames.append(frame)
-
-            if len(self.processed_frames) == 3:
-                break
-
-        logger.info(len(self.processed_frames))
 
         cap.release()
 
