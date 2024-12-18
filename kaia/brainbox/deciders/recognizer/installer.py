@@ -1,18 +1,16 @@
 from pathlib import Path
 from unittest import TestCase
 
-import requests
 from loguru import logger
 
 from kaia.brainbox import BrainBoxApi, BrainBoxTask
-from kaia.brainbox.core.small_classes.warmuper import OneModelWarmuper
 from kaia.brainbox.deciders.arch import LocalImageInstaller, DockerService, BrainBoxServiceRunner
-from kaia.infra import FileIO
-from .api import FacesRecognizerExtendedAPI, FacesRecognizer
+from .api import RecognizerExtendedAPI, Recognizer
 from kaia.brainbox.deployment import SmallImageBuilder
+from ...core import IntegrationTestResult
 
 
-class FacesRecognizerInstaller(LocalImageInstaller):
+class RecognizerInstaller(LocalImageInstaller):
     def __init__(self, settings):
         self.settings = settings
 
@@ -33,34 +31,37 @@ class FacesRecognizerInstaller(LocalImageInstaller):
         )
 
         self.notebook_service = service.as_notebook_service()
-        self.warmuper = OneModelWarmuper()
 
     def create_api(self):
-        return FacesRecognizerExtendedAPI(f'{self.ip_address}:{self.settings.port}')
-
-    def post_install(self):
-        api = self.run_in_any_case_and_create_api()
-        api.load_model("Fuyucchi/yolov8_animeface", "yolov8x6_animeface.pt")
+        return RecognizerExtendedAPI(f'{self.ip_address}:{self.settings.port}')
 
     def _brainbox_self_test_internal(self, api: BrainBoxApi, tc: TestCase):
-        logger.info(Path(__file__))
-
         task1 = BrainBoxTask(
-                    decider=FacesRecognizer,
-                    decider_method="recognize_faces_from_image",
-                    arguments={
-                        "path_to_file": Path(__file__).parent / "container/data/test_anime_img.png"
-                    }
-                )
-
+            decider=Recognizer,
+            decider_method="post_image",
+            arguments={
+                "path_to_file": Path(__file__).parent / "container/data/test_anime_img.png"
+            }
+        )
         result = api.execute(task1)
+        tc.assertEqual("OK", result)
+
+        task2 = BrainBoxTask(
+                    decider=Recognizer,
+                    decider_method="recognize_faces"
+                )
+        result = api.execute(task2)
+        yield IntegrationTestResult(0, "Coords", result)
+
+
+
 
 
 DOCKERFILE = f"""
 FROM ubuntu:20.04
 
 RUN apt-get update
-
+    
 RUN apt-get install software-properties-common -y && \
     add-apt-repository ppa:deadsnakes/ppa -y && apt-get update && \
     apt-get install python3.12 -y && apt-get -y install python3-pip
@@ -88,6 +89,6 @@ DEPENDENCIES = """
     loguru==0.7.2
     ultralytics==8.3.15
     opencv-contrib-python-headless==4.10.0.82
-    sentence-transformers==3.2.0
     huggingface-hub==0.25.1
+    python-multipart==0.0.17
 """

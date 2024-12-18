@@ -1,33 +1,32 @@
+import base64
 from pathlib import Path
 import requests
 from kaia.brainbox.core import IApiDecider
 from kaia.brainbox.deciders.arch.utils import FileLike
 
 
-class FacesRecognizer(IApiDecider):
+class Recognizer(IApiDecider):
     def __init__(self, address: str):
         self.address = address
 
-    def recognize_faces_from_image(self, path_to_file: Path|str):
+    def post_image(self, path_to_file: Path|str):
         with FileLike(path_to_file, self.file_cache) as stream:
-            data = stream.read()
-            response = requests.get(f"http://{self.address}/from_image", data={"image_base64": data})
+            data = base64.b64encode(stream.read()).decode("utf-8")
+            response = requests.post(f"http://{self.address}/post_image", data={"image_base64": data})
 
         if response.status_code != 200:
             raise ValueError(response.text)
 
         return response.json()
 
-    def recognize_faces_from_video(self, path_to_file: Path|str):
-        video_name = path_to_file.split('/')[-1]
-        response = requests.get(f"http://{self.address}/from_video", params={"video_name": video_name})
-
+    def recognize_faces(self):
+        response = requests.get(f"http://{self.address}/get_coordinates_faces")
         if response.status_code != 200:
             raise ValueError(response.text)
 
         return response.json()
 
-class FacesRecognizerExtendedAPI(FacesRecognizer):
+class RecognizerExtendedAPI(Recognizer):
     def __init__(self, address: str):
         super().__init__(address)
 
