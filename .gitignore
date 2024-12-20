@@ -135,7 +135,7 @@ dmypy.json
 environment.env
 temp/
 externals/
-data/
+/data/
 
 
 .dockerignore

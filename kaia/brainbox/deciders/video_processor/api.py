@@ -2,7 +2,7 @@ import base64
 from pathlib import Path
 import requests
 from kaia.brainbox.core import IApiDecider, File
-from loguru import logger
+
 
 
 class VideoProcessor(IApiDecider):

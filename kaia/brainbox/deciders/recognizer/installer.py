@@ -1,7 +1,8 @@
+import json
 from pathlib import Path
 from unittest import TestCase
 
-from loguru import logger
+
 
 from kaia.brainbox import BrainBoxApi, BrainBoxTask
 from kaia.brainbox.deciders.arch import LocalImageInstaller, DockerService, BrainBoxServiceRunner
@@ -51,7 +52,7 @@ class RecognizerInstaller(LocalImageInstaller):
                     decider_method="recognize_faces"
                 )
         result = api.execute(task2)
-        yield IntegrationTestResult(0, "Coords", result)
+        yield IntegrationTestResult(0, "Coords", json.dumps(result, indent=3))
 
 
 DOCKERFILE = f"""

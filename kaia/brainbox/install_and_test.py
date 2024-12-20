@@ -86,6 +86,12 @@ class InstallAndTestCase(TestCase):
         from kaia.brainbox.deciders import WhisperSettings, WhisperInstaller
         self.run_test(WhisperSettings(), WhisperInstaller)
 
+    def test_image_recognition(self):
+        from kaia.brainbox.deciders.recognizer import RecognizerSettings, RecognizerInstaller
+        self.run_test(RecognizerSettings(), RecognizerInstaller)
 
+    def test_video_processor(self):
+        from kaia.brainbox.deciders.video_processor import VideoProcessorSettings, VideoProcessorInstaller
+        self.run_test(VideoProcessorSettings(), VideoProcessorInstaller)
 
 
