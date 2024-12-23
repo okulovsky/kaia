@@ -35,16 +35,19 @@ class CoquiTTS(IApiDecider):
             if voice is None and self.model_info['speakers'] is not None:
                 voice = self.model_info['speakers'][0]
             args = dict(text=text, speaker=voice, language=language)
+            print('CALL', self.model_info['name'], 'run_model', args)
             return self._run_request('run_model', args)
         else:
             if voice is None and self.model_info['speakers'] is not None:
                 voice = self.model_info['speakers'][0]
             args = dict(text = text, speaker_name = voice)
+            print('CALL', self.model_info['name'], 'run_synthesizer', args)
             return self._run_request('run_synthesizer', args)
 
     def voice_clone(self, text, voice, language = None):
         language = self._get_language(self.model_info, language)
         args = dict(text=text, speaker_wav=f'/data/voices/{voice}.wav', language=language)
+        print('CALL', self.model_info['name'], 'run_model', args)
         return self._run_request('run_model', args)
 
 
