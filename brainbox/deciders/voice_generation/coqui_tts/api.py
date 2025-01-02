@@ -1,10 +1,10 @@
 import requests
-from ....framework import BrainBoxApi, DockerWebServiceApi, File
+from ....framework import ResourcePrerequisite, DockerWebServiceApi, File, CombinedPrerequisite, ISingleLoadableModelApi
 from .controller import CoquiTTSController
 from .settings import CoquiTTSSettings
 from pathlib import Path
 
-class CoquiTTS(DockerWebServiceApi[CoquiTTSSettings, CoquiTTSController]):
+class CoquiTTS(DockerWebServiceApi[CoquiTTSSettings, CoquiTTSController], ISingleLoadableModelApi):
     def __init__(self, address: str|None = None):
         super().__init__(address)
 
@@ -16,6 +16,20 @@ class CoquiTTS(DockerWebServiceApi[CoquiTTSSettings, CoquiTTSController]):
         if result.status_code != 200:
             raise ValueError(f"Error when calling `load_model`\n{result.text}")
         return result.json()
+
+    def get_loaded_model(self):
+        result =requests.get(
+            self.endpoint('/get_loaded_model')
+        )
+        if result.status_code!=200:
+            raise ValueError(f'Error when calling `get_loaded_model`\n{result.text}')
+        return result.json()
+
+    def get_loaded_model_name(self) -> str|None:
+        model = self.get_loaded_model()
+        if model is None:
+            return None
+        return model['name']
 
     def dub(self, text: str, model: str|None = None, voice: str|None = None, language: str|None = None):
         reply = requests.post(
@@ -37,38 +51,32 @@ class CoquiTTS(DockerWebServiceApi[CoquiTTSSettings, CoquiTTSController]):
 
 
     @staticmethod
-    def export_model_from_training(
-            api: BrainBoxApi,
-            source_model_file_path: Path,
-            model_name: str):
+    def export_model_from_training(source_model_file_path: Path, model_name: str) -> CombinedPrerequisite:
         target_path = f'custom/{model_name}.pth'
-        api.controller_api.upload_resource(
+        command = []
+        command.append(ResourcePrerequisite(
             CoquiTTS,
             target_path,
             source_model_file_path
-        )
-        api.controller_api.upload_resource(
+        ))
+        command.append(ResourcePrerequisite(
             CoquiTTS,
             target_path+'.json',
             source_model_file_path.parent/'config.json'
-        )
-        api.controller_api.upload_resource(
+        ))
+        command.append(ResourcePrerequisite(
             CoquiTTS,
             target_path+'.speakers.pth',
             source_model_file_path.parent.parent.parent / 'data/speakers.pth'
-        )
+        ))
+        return CombinedPrerequisite(command)
 
-        return f'custom_models/{model_name}.pth'
 
     @staticmethod
-    def upload_voice(
-            api: BrainBoxApi,
-            file: Path,
-            custom_name: str|None = None
-    ):
+    def upload_voice(file: Path, custom_name: str|None = None) -> ResourcePrerequisite:
         if custom_name is None:
             custom_name = file.name
-        api.controller_api.upload_resource(
+        return ResourcePrerequisite(
             CoquiTTS,
             f'voices/{custom_name}',
             file

@@ -51,7 +51,7 @@ class ControllerOverDecider(IController):
     def find_api(self, instance_id: str):
         return self.decider
 
-    def _self_test_internal(self, tc: TestCase) -> Iterable[TestReport.Item]:
+    def _self_test_internal(self, tc: TestCase) -> Iterable:
         pass
 
 

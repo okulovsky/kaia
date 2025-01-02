@@ -14,41 +14,38 @@ class Test:
         self.tc = tc
 
     def test_dub(self):
-        yield TestReport.H3("Voiceover")
-        yield TestReport.text("Input")
-        yield TestReport.code(VOICEOVER_TEXT)
-        yield TestReport.text("Result")
-        file = self.api.download(self.api.execute(
+        file = self.api.open_file(self.api.execute(
             BrainBox.Task.call(CoquiTTS).dub(text=VOICEOVER_TEXT)
         ))
+        yield TestReport.last_call(self.api).result_is_file(File.Kind.Audio).with_comment("Voiceover")
         check_if_its_sound(file.content, self.tc)
-        yield TestReport.file(file)
+
 
 
     def test_voice_clone(self):
-        yield TestReport.H3("Voice clone")
-        yield TestReport.text("Input")
-        yield TestReport.code(VOICEOVER_TEXT)
-        yield TestReport.text("Source voice")
-        yield TestReport.file(File.read(TEST_VOICE_PATH))
-        file = self.api.download(self.api.execute(
+        file = self.api.open_file(self.api.execute(
             BrainBox.Task.call(CoquiTTS).voice_clone(VOICEOVER_TEXT, voice='test_voice')
         ))
+        yield (
+            TestReport
+            .last_call(self.api)
+            .result_is_file(File.Kind.Audio)
+            .with_uploaded_file('test_voice', File.read(TEST_VOICE_PATH))
+            .with_comment("Voice clone")
+        )
         check_if_its_sound(file.content, self.tc)
-        yield TestReport.text("Result")
-        yield TestReport.file(file)
 
     def load_model_and_repr_description(self, model_name: str):
-        yield TestReport.H2(f"Model {model_name}")
-        model_description = self.api.execute(BrainBox.Task.call(CoquiTTS).load_model(model_name))
-        if model_description['speakers'] is not None and len(model_description['speakers']) > 5:
-            model_description['speakers'] = model_description['speakers'][:5] + ['...']
-        yield TestReport.json(model_description)
+        yield TestReport.section(f"Model {model_name}")
+        self.api.execute(BrainBox.Task.call(CoquiTTS).load_model(model_name))
+        yield TestReport.last_call(self.api).with_comment("Loading model (will be used if no `model` provided in decider's call)")
+
+
 
 
     def test_all(self, settings: CoquiTTSSettings):
-        CoquiTTS.upload_voice(self.api, TEST_VOICE_PATH)
-        yield TestReport.H1("Built-in models")
+        CoquiTTS.upload_voice(TEST_VOICE_PATH).execute(self.api)
+
         for model in settings.builtin_models_to_download:
             yield from self.load_model_and_repr_description(model.model_name)
             if model.test_dub:
@@ -63,8 +60,7 @@ class Test:
             for c in custom_models_files
             if c.endswith('.pth') and not c.endswith('.speakers.pth')
         ]
-        if len(custom_models) != 0:
-            yield TestReport.H1("Custom models")
+
         for custom_model in custom_models:
             yield from self.load_model_and_repr_description('custom/'+custom_model)
             yield from self.test_dub()

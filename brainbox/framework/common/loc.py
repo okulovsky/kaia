@@ -40,7 +40,7 @@ class TempFolder:
             shutil.rmtree(self.path, ignore_errors=True)
 
 
-class LocHolder:
+class Locator:
     def __init__(self, root_path: Path|None = None):
         if root_path is None:
             root_path = Path(__file__).parent.parent.parent.parent
@@ -102,4 +102,4 @@ class LocHolder:
 
 
 
-Loc = LocHolder()
+Loc = Locator()

@@ -74,7 +74,7 @@ class BrainBoxTaskBuilder:
 
 
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, **kwargs) -> BrainBoxTaskBuilderResult:
         method = self._method
         if method is None:
             method = '__call__'
@@ -90,7 +90,7 @@ class BrainBoxTaskBuilder:
         )
 
 
-    def __getattr__(self, method):
+    def __getattr__(self, method) -> 'BrainBoxTaskBuilder':
         if not hasattr(self._type, method) or not callable(getattr(self._type, method)):
             raise ValueError(f"Type {self._type} doesn't contain method {method}")
         return BrainBoxTaskBuilder(self._type, method, self._decider_parameter)

@@ -1,5 +1,5 @@
 from typing import *
-from yo_fluq_ds import Queryable
+from yo_fluq import Queryable
 from .task_builder import TaskBuilder, IBrainBoxTask
 
 class FunctionalTaskBuilder:

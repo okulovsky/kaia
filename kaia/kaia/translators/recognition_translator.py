@@ -1,9 +1,8 @@
 from typing import *
-from kaia.kaia.audio_control import AudioControlCommand, MicState
-from kaia.eaglesong.core import Translator, Listen
-from kaia.eaglesong.amenities.partial_listen_translator import PartialListenTranslator
+from ..driver import AudioCommand
+from .partial_listen_translator import PartialListenTranslator
 from kaia.avatar import AvatarApi, RecognitionSettings
-from kaia.kaia.audio_control import AudioControlAPI
+
 
 class RecognitionTranslator(PartialListenTranslator):
     def __init__(self,
@@ -18,12 +17,12 @@ class RecognitionTranslator(PartialListenTranslator):
         )
 
     def captures_input(self, input):
-        return isinstance(input, AudioControlCommand)
+        return isinstance(input, AudioCommand)
 
     def on_translate_input(self, payload: Optional[RecognitionSettings], input: Any):
         if payload is None:
             payload = RecognitionSettings(RecognitionSettings.NLU.Rhasspy)
-        return self.avatar_api.recognition_transcribe(input.filename, payload)
+        return self.avatar_api.recognition_transcribe(input.id, payload)
 
 
 

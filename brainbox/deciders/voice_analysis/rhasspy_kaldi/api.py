@@ -2,6 +2,7 @@ import requests
 from ....framework import DockerWebServiceApi, FileLike
 from .controller import RhasspyKaldiController
 from .settings import RhasspyKaldiSettings
+from .model import RhasspyKaldiModel
 
 class RhasspyKaldi(DockerWebServiceApi[RhasspyKaldiSettings, RhasspyKaldiController]):
     def __init__(self, address: str | None = None):
@@ -34,6 +35,7 @@ class RhasspyKaldi(DockerWebServiceApi[RhasspyKaldiSettings, RhasspyKaldiControl
 
     Controller = RhasspyKaldiController
     Settings = RhasspyKaldiSettings
+    Model = RhasspyKaldiModel
 
     @classmethod
     def get_ordering_arguments_sequence(cls) -> tuple[str,...]|None:

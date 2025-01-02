@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from .controller_context import MountingPrefix, ControllerContext
+from .controller_context import ControllerContext
 from .resource_folder import ResourceFolder
 from ...common import Loc
 from ...deployment import DockerArgumentsHelper
@@ -27,21 +27,21 @@ class RunConfiguration:
     interactive: bool = True
 
 
-    def _mounts(self, resource_folder: ResourceFolder, prefix: MountingPrefix):
+    def _mounts(self, resource_folder: ResourceFolder):
         if self.mount_resource_folders is not None:
             mount_folders = {
-                prefix.remove_from(resource_folder(host_folder)) : container_folder
+                resource_folder(host_folder) : container_folder
                 for host_folder, container_folder in self.mount_resource_folders.items()
             }
         else:
             mount_folders = {}
         if self.mount_top_resource_folder:
-            mount_folders[prefix.remove_from(resource_folder())] = '/resources'
+            mount_folders[resource_folder()] = '/resources'
         if self.mount_root_folder:
-            mount_folders[prefix.remove_from(Loc.root_folder)] = '/repo'
+            mount_folders[Loc.root_folder] = '/repo'
         if self.mount_custom_folders is not None:
             for key, value in self.mount_custom_folders.items():
-                mount_folders[prefix.remove_from(key)] = value
+                mount_folders[key] = value
         return mount_folders
 
     def generate_command(self,
@@ -52,7 +52,7 @@ class RunConfiguration:
         arguments = ['docker', 'run']
         if self.publish_ports is not None:
             arguments += DockerArgumentsHelper.arg_publish_ports(self.publish_ports)
-        arguments += DockerArgumentsHelper.arg_mount_folders(self._mounts(context.resource_folder, context.mounting_prefix))
+        arguments += DockerArgumentsHelper.arg_mount_folders(self._mounts(context.resource_folder))
         arguments += DockerArgumentsHelper.arg_propagate_env_variables(self.propagate_env_variables)
         arguments += DockerArgumentsHelper.arg_set_env_variables(self.set_env_variables)
         arguments += ['--gpus', 'all']

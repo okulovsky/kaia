@@ -20,5 +20,6 @@ class ResourcesUploadsAndDownloadsTestCase(TestCase):
                 {'resource': 'Boilerplate resource', 'new/file': 'Test'},
                 api.execute(BrainBoxTask.call(Boilerplate,'').resources())
             )
-
+            lst = api.controller_api.list_resources(Boilerplate,'/')
+            self.assertEqual(['resource','new/file'], lst)
 

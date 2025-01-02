@@ -14,13 +14,21 @@ class MarhsallingTestCase(TestCase):
             self.assertEqual('custom_url test', api.custom_url('test'))
 
 
-            reply = requests.get(f'http://{api.address}/hello', json=dict(s='Test'))
+            reply = requests.get(f'http://{api.address}/hello', json=dict(arguments=dict(s='Test')))
+            if reply.json()['error'] is not None:
+                print(reply.json()['error'])
+                self.fail()
+
             self.assertEqual(
                 'Hello, Test',
                 reply.json()['result']
             )
 
-            reply = requests.post(f'http://{api.address}/my/custom/url', json=dict(s='Test'))
+            reply = requests.post(f'http://{api.address}/my/custom/url', json=dict(arguments=dict(s='Test')))
+            if reply.json()['error'] is not None:
+                print(reply.json()['error'])
+                self.fail()
+
             self.assertEqual(
                 'custom_url Test',
                 reply.json()['result']

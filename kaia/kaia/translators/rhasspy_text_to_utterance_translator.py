@@ -1,7 +1,7 @@
 from typing import *
-from kaia.eaglesong.core import Translator, TranslatorInputPackage
+from eaglesong.core import Translator, TranslatorInputPackage
 from kaia.dub import Template, IntentsPack
-from kaia.dub.rhasspy_utils import RhasspyHandler
+from kaia.avatar.state import RhasspyHandler
 
 
 class RhasspyTextToUtteranceTranslator(Translator):

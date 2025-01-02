@@ -4,7 +4,7 @@ import os
 from brainbox.framework import MediaLibrary, Loc
 from unittest import TestCase
 from uuid import uuid4
-from yo_fluq_ds import FileIO, Query
+from yo_fluq import FileIO, Query
 from datetime import datetime
 
 def create_library(folder):

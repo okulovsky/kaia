@@ -1,6 +1,6 @@
 from typing import *
-from kaia.eaglesong.core import Translator, Audio, TranslatorInputPackage, TranslatorOutputPackage
-from kaia.avatar import AvatarApi, TextLike, DubbingServiceOutput
+from eaglesong.core import Translator, TranslatorOutputPackage
+from kaia.avatar import AvatarApi, TextLike
 from kaia.dub import Utterance, UtterancesSequence
 
 
@@ -28,14 +28,10 @@ class VoiceoverTranslator(Translator):
                 yield str(s)
         else:
             result = self.avatar_api.dub(s)
-            if isinstance(result, Audio):
-                yield result
-            elif isinstance(result, DubbingServiceOutput):
-                yield result.full_text
-                for job in result.jobs:
-                    yield self.avatar_api.dub_get_result(job)
-            else:
-                raise ValueError(f"Expected Audio or DubbingServiceOutput, but was\n{result}")
+            yield result.full_text
+            for job in result.jobs:
+                yield self.avatar_api.dub_get_result(job)
+
 
 
     def translate_outgoing(self, o: TranslatorOutputPackage):

@@ -1,5 +1,5 @@
-from kaia.eaglesong.amenities.partial_listen_translator import PartialListenTranslator
-from kaia.eaglesong import Return
+from .partial_listen_translator import PartialListenTranslator
+from eaglesong import Return
 from kaia.dub import Template, Utterance
 
 class ImmediateStopListenPayload:

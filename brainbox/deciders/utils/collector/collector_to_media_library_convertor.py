@@ -57,8 +57,9 @@ class CollectorToMediaLibraryConvertor:
                 self.errors.append(f'Id {id} not in the list of jobs')
                 continue
             results = self._parse_result(id)
-            for index, record in enumerate(results):
-                self._process_one_record(id, index, record)
+            if results is not None:
+                for index, record in enumerate(results):
+                    self._process_one_record(id, index, record)
 
         library = MediaLibrary(tuple(self.records), tuple(self.errors))
         fname = f'{self.current_job_id}.output.zip'

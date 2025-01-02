@@ -3,7 +3,7 @@ from copy import deepcopy
 from .memory_item import MemoryItem
 from yo_fluq import Queryable
 from kaia.dub import IntentsPack, Template
-from kaia.dub.rhasspy_utils import RhasspyHandler
+from .rhasspy_utils import RhasspyHandler
 
 class State:
     def __init__(self, initial_state: dict[str, str]):

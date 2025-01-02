@@ -16,7 +16,7 @@ class FileIO:
             return pickle.load(file)
 
     @staticmethod
-    def read_json(filename, as_obj = False):
+    def read_json(filename):
         with open(filename,'r', encoding='utf-8') as file:
             result = json.load(file)
             return result

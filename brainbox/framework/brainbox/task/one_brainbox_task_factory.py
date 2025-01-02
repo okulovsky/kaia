@@ -17,4 +17,4 @@ class IOneBrainBoxTaskFactory(IBrainBoxTask, ABC):
         return self.to_task().before_add(api)
 
     def postprocess_result(self, result, api):
-        return self.to_task().postprocess_result(result)
+        return self.to_task().postprocess_result(result, api)

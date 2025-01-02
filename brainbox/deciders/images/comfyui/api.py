@@ -1,12 +1,12 @@
 import os
 from ....framework import DockerWebServiceApi, File, FileLike, BrainBoxApi
-from .workflows import IWorkflow
+from .workflows import IWorkflow, TextToImage, Upscale, WD14Interrogate
 from .settings import ComfyUISettings
 from .controller import ComfyUIController
 import requests
 import time
 from pathlib import Path
-from kaia.infra import FileIO
+from yo_fluq import FileIO
 
 
 class ComfyUI(DockerWebServiceApi[ComfyUISettings, ComfyUIController]):
@@ -14,8 +14,8 @@ class ComfyUI(DockerWebServiceApi[ComfyUISettings, ComfyUIController]):
         super().__init__(address)
 
 
-    def run_on_dictionary(self, _tp, **kwargs):
-        workflow = _tp(**kwargs)
+    def run_on_dictionary(self, workflow_type, **kwargs):
+        workflow = workflow_type(**kwargs)
         return self.run_workflow(workflow)
 
     def __call__(self, workflow: IWorkflow):
@@ -71,6 +71,11 @@ class ComfyUI(DockerWebServiceApi[ComfyUISettings, ComfyUIController]):
 
     Controller = ComfyUIController
     Settings = ComfyUISettings
+
+    class Workflows:
+        Upscale = Upscale
+        TextToImage = TextToImage
+        WD14Interrogate = WD14Interrogate
 
 
 

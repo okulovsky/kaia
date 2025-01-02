@@ -5,7 +5,7 @@ import numpy as np
 from ....job_processing import Job
 from sqlalchemy.orm import Session
 from sqlalchemy import select, case, func
-from yo_fluq_ds import *
+from yo_fluq import *
 
 def _calculate_julian_date(dt: datetime):
     julian_date = dt.toordinal() + 1721425.5

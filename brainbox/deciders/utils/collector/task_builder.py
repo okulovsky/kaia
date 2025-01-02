@@ -1,5 +1,5 @@
 from typing import *
-from ....framework import BrainBoxTask, BrainBoxTaskPack, IBrainBoxTask
+from ....framework import BrainBoxTask, BrainBoxCombinedTask, IBrainBoxTask, BrainBoxExtendedTask, CombinedPrerequisite, CacheUploadPrerequisite
 from pathlib import Path
 import dataclasses
 
@@ -47,13 +47,15 @@ class TaskBuilder:
             arguments=dict(tags=tags)
         )
 
-        for task in tasks:
-            task.batch = resulting_task.id
-        resulting_task.batch = resulting_task.id
+        result = BrainBoxCombinedTask(resulting_task, tuple(tasks))
+        if len(self.uploads) > 0:
+            result = BrainBoxExtendedTask(
+                result,
+                CombinedPrerequisite([
+                    CacheUploadPrerequisite(path,filename) for filename, path in self.uploads.items()
+                ])
+            )
+        return result
 
-        return BrainBoxTaskPack(
-            resulting_task,
-            tuple(tasks),
-            uploads=self.uploads
-        )
+
 

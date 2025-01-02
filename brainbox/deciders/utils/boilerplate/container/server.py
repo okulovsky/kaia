@@ -34,12 +34,18 @@ class BoilerplateApp:
             return traceback.format_exc(), 500
 
     def resources(self):
-        folder_contents = {}
-        path = '/resources'
-        for root, _, files in os.walk(path):
-            for file_name in files:
-                file_path = os.path.join(root, file_name)
-                relative_path = os.path.relpath(file_path, path)
-                with open(file_path, 'r', encoding='utf-8') as file:
-                    folder_contents[relative_path] = file.read()
-        return folder_contents
+        try:
+            folder_contents = {}
+            path = '/resources'
+            for root, _, files in os.walk(path):
+                for file_name in files:
+                    file_path = os.path.join(root, file_name)
+                    relative_path = os.path.relpath(file_path, path)
+                    try:
+                        with open(file_path, 'r', encoding='utf-8') as file:
+                            folder_contents[relative_path] = file.read()
+                    except:
+                        folder_contents[relative_path] = None
+            return folder_contents
+        except:
+            return traceback.format_exc(), 500

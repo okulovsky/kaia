@@ -18,8 +18,8 @@ class ServerBinding:
             return self.meta.name
         return self.custom_method_name
 
-    def _get_arguments(self, kwargs, arguments):
-        arguments = Format.decode(arguments)
+    def _get_arguments(self, kwargs, data):
+        arguments = Format.decode(data['arguments'])
         for key, value in kwargs.items():
             if key in arguments:
                 raise ValueError(f"{key} is provided via address and via json")
@@ -34,11 +34,13 @@ class ServerBinding:
         return result
 
     def __call__(self, **kwargs):
-        arguments = flask.request.json
+        data = flask.request.json
         try:
-            return flask.jsonify(self._process(kwargs, arguments))
+            return flask.jsonify(self._process(kwargs, data))
         except:
-            return flask.jsonify(dict(result=None, error=traceback.format_exc())), 500
+            tb = traceback.format_exc()
+            print(tb)
+            return flask.jsonify(dict(result=None, error=tb)), 500
 
 
 

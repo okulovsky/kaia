@@ -1,10 +1,10 @@
 from typing import Any
 from enum import Enum
-from kaia.brainbox import BrainBoxApi, BrainBoxTask, BrainBoxTaskPack
-from kaia.brainbox.deciders import RhasspyKaldi, Whisper, Resemblyzer, Collector
+from brainbox import BrainBoxApi, BrainBoxTask, BrainBoxCombinedTask
+from brainbox.deciders import RhasspyKaldi, Whisper, Resemblyzer, Collector
 from ..state import State, MemoryItem
 from dataclasses import dataclass
-from ...narrator import World
+from ..world import World
 
 class RecognitionSettings:
     class NLU(Enum):
@@ -40,14 +40,12 @@ class RecognitionData(MemoryItem):
         if self.resemblyzer_model_name is not None:
             resemblyzer_task = (
                 BrainBoxTask
-                .call(Resemblyzer)(file=filename)
-                .to_task(
-                    decider_parameters=self.resemblyzer_model_name,
-                    id = filename.split('.')[0]+'.resemblyzer'
-                ))
+                .call(Resemblyzer)(file=filename, model=self.resemblyzer_model_name)
+                .to_task(id = filename.split('.')[0]+'.resemblyzer')
+            )
             base_tasks.append(resemblyzer_task)
             dependencies['resemblyzer'] = resemblyzer_task.id
-        return BrainBoxTaskPack(
+        return BrainBoxCombinedTask(
             BrainBoxTask(decider=Collector.to_dict, dependencies=dependencies),
             tuple(base_tasks)
         )
@@ -57,10 +55,11 @@ class RecognitionData(MemoryItem):
         self.used_rhasspy_model = self.settings.rhasspy_model
         if self.used_rhasspy_model is None:
             self.used_rhasspy_model = state.intents_packs[0].name
-        task = BrainBoxTask.call(RhasspyKaldi).transcribe(file=self.file_id).to_task(
-            id=self.file_id.split('.')[0] + '.rhasspy',
-            decider_parameters=self.used_rhasspy_model
-        )
+        task = (BrainBoxTask
+                    .call(RhasspyKaldi)
+                    .transcribe(file=self.file_id, model=self.used_rhasspy_model)
+                    .to_task(id=self.file_id.split('.')[0] + '.rhasspy')
+                )
         pack = self._create_pack('rhasspy', task, self.file_id)
         self.full_recognition = brainbox_api.execute(pack)
         fsticuffs = self.full_recognition['rhasspy']['fsticuffs']
@@ -76,11 +75,8 @@ class RecognitionData(MemoryItem):
         task = (
             BrainBoxTask
             .call(Whisper)
-            .transcribe(file=self.file_id, initial_prompt=self.settings.whisper_prompt)
-            .to_task(
-                id=self.file_id.split('.')[0] + '.whisper',
-                decider_parameters=self.whisper_model
-            )
+            .transcribe(file=self.file_id, initial_prompt=self.settings.whisper_prompt, model=self.whisper_model)
+            .to_task(id=self.file_id.split('.')[0] + '.whisper')
         )
         pack = self._create_pack('whisper', task, self.file_id)
         self.full_recognition = brainbox_api.execute(pack)

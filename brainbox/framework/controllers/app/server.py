@@ -66,7 +66,7 @@ class ControllerServer(Server):
 
 
     def _controllers_self_test_report(self, decider: str):
-        with open(Loc.self_test_path/decider, 'rb') as file:
+        with open(self.settings.registry.locator.self_test_path/decider, 'rb') as file:
             report = pickle.load(file)
         return create_self_test_report_page(report)
 

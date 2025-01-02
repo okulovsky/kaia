@@ -53,7 +53,7 @@ end = '''
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(jsonParameters)
+                body: JSON.stringify({"arguments":jsonParameters})
             })
             .then(response => {
                 //buttons.forEach(button => button.disabled = false);

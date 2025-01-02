@@ -3,12 +3,14 @@ import shutil
 import traceback
 from dataclasses import dataclass
 from threading import Thread
-from ...common import Loc, IDecider, FileIO
+
+from ...common import Loc, FileIO
 from ...common.marshalling import endpoint
-from ..controller import TestReport, DockerWebServiceApi, ControllerRegistry, IController
-from .interface import IControllerService, ControllerServicesStatus, ControllerStatus, ControllerInstanceStatus, InstallationReport
+from ..controller import TestReport, DockerWebServiceApi, ControllerRegistry, IController, IModelDownloadingController
+from .interface import IControllerService, ControllerServiceStatus, InstallationReport, ControllersSetup
+
 from .logging import Log, LoggingLocalExecutor, LogLogger
-from yo_fluq_ds import Query
+from yo_fluq import Query
 
 @dataclass
 class RunningInstallation:
@@ -110,7 +112,7 @@ class ControllerService(IControllerService):
         containers = []
         for name, installation_status in installation_statuses.items():
             if not installation_status.installed or installation_status.dockerless_controller:
-                containers.append(ControllerStatus(name, installation_status))
+                containers.append(ControllerServiceStatus.Controller(name, installation_status))
                 continue
 
             container = self.get_controller(name)
@@ -120,13 +122,13 @@ class ControllerService(IControllerService):
                 api = container.find_api(instance_id)
                 if isinstance(api, DockerWebServiceApi):
                     address = api.address
-                instances.append(ControllerInstanceStatus(
+                instances.append(ControllerServiceStatus.Instance(
                     instance_id,
                     parameter,
                     address
                 ))
 
-            report_path = (Loc.self_test_path / name)
+            report_path = (self.settings.registry.locator.self_test_path / name)
             has_report =  report_path.is_file()
             has_errors = False
             if has_errors:
@@ -134,7 +136,7 @@ class ControllerService(IControllerService):
                 if report.error is not None:
                     has_errors = True
 
-            containers.append(ControllerStatus(
+            containers.append(ControllerServiceStatus.Controller(
                 name,
                 installation_status,
                 has_report,
@@ -146,7 +148,7 @@ class ControllerService(IControllerService):
         if self.running_installation is not None and not self.running_installation.exited():
             installation = self.running_installation.report.name
 
-        return ControllerServicesStatus(
+        return ControllerServiceStatus(
             containers,
             installation
         )
@@ -154,7 +156,7 @@ class ControllerService(IControllerService):
     @endpoint(url='/controllers/self_test')
     def self_test(self, decider: str|type) -> TestReport:
         controller = self.get_controller(decider)
-        return controller.self_test()
+        return controller.self_test(output_folder=self.settings.registry.locator.self_test_path)
 
 
     @endpoint(url='/controllers/delete_self_test')
@@ -165,23 +167,29 @@ class ControllerService(IControllerService):
             os.unlink(path)
 
 
-    def _inner_path(self, decider: str|type, path: str):
+    def _inner_path(self, controller, path: str):
         while path.startswith('/'):
             path = path[1:]
-        controller = self.get_controller(decider)
         path = controller.context.resource_folder()/path
         path.relative_to(controller.context.resource_folder_root)
         return path
 
     @endpoint(url='/resources/list')
-    def list_resources(self, decider: str|type, path: str):
-        path = self._inner_path(decider, path)
-        return Query.folder(path,'**/*').where(lambda z: z.is_file()).select(lambda z: str(z.relative_to(path))).to_list()
+    def list_resources(self, decider: str|type, path: str) -> list[str]:
+        controller = self.get_controller(decider)
+        root_path = controller.resource_folder()
+        path = self._inner_path(controller, path)
+        return (Query
+                .folder(path,'**/*')
+                .where(lambda z: z.is_file())
+                .select(lambda z: str(z.relative_to(root_path)))
+                .to_list()
+                )
 
     @endpoint(url='/resources/delete')
     def delete_resource(self, decider: str|type, path: str, ignore_errors: bool = False):
-        path = self._inner_path(decider, path)
         controller = self.get_controller(decider)
+        path = self._inner_path(controller, path)
         if path.is_file():
             os.unlink(path)
         elif path.is_dir():
@@ -189,3 +197,19 @@ class ControllerService(IControllerService):
         else:
             if not ignore_errors:
                 raise ValueError(f"Cannot delete {path} of decider {controller.get_name()}: no such file/folder")
+
+    @endpoint(url="/resources/setup", method='POST')
+    def setup(self, setup: ControllersSetup):
+        from .setuper import Setuper
+        setuper = Setuper(setup, self)
+        setuper.make_all()
+
+    @endpoint(url='/resources/download_models', method='POST')
+    def download_models(self, decider: str|type, models: list):
+        controller = self.get_controller(decider)
+        if not isinstance(controller, IModelDownloadingController):
+            raise ValueError(f"Decider {decider} is not ModelDownloadingController")
+        controller.download_models(models)
+
+
+

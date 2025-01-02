@@ -1,41 +1,10 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from ..controller import InstallationStatus, IController
-from .logging import Log
-import traceback
-
-@dataclass
-class ControllerInstanceStatus:
-    instance_id: str
-    parameter: str|None
-    address: str|None
-
-@dataclass
-class ControllerStatus:
-    name: str
-    installation_status: InstallationStatus
-    has_self_test_report: bool = False
-    has_errors_in_self_test_report: bool = False
-    instances: tuple[ControllerInstanceStatus,...] = ()
-
-
-@dataclass
-class ControllerServicesStatus:
-    containers: list[ControllerStatus]
-    currently_installing_container: str|None
-
-
-@dataclass
-class InstallationReport:
-    name: str
-    log: Log
-    error: str|None = None
-
+from .dto import *
 
 
 class IControllerService(ABC):
     @abstractmethod
-    def status(self) -> ControllerServicesStatus:
+    def status(self) -> ControllerServiceStatus:
         pass
 
     @abstractmethod
@@ -72,12 +41,17 @@ class IControllerService(ABC):
         pass
 
     @abstractmethod
-    def list_resources(self, decider: str|type, path: str):
+    def list_resources(self, decider: str|type, path: str) -> list[str]:
         pass
 
     @abstractmethod
     def delete_resource(self, decider: str|type, path: str, ignore_errors: bool = False):
         pass
 
+    @abstractmethod
+    def setup(self, setup: ControllersSetup):
+        pass
 
-
+    @abstractmethod
+    def download_models(self, decider: str|type, models: list):
+        pass

@@ -1,5 +1,6 @@
 import requests
 from ....framework import DockerWebServiceApi
+from .model import OllamaModel
 from .settings import OllamaSettings
 from .controller import OllamaController
 
@@ -46,3 +47,4 @@ class Ollama(DockerWebServiceApi[OllamaSettings, OllamaController]):
 
     Controller = OllamaController
     Settings = OllamaSettings
+    Model = OllamaModel

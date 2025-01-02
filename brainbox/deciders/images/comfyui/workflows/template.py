@@ -1,10 +1,9 @@
 from dataclasses import fields as get_dataclass_fields, Field
 import inspect
 from pathlib import Path
-from kaia.infra import FileIO
 from .workflow import IWorkflow
 from .....framework import FileLike, BrainBoxTask, IOneBrainBoxTaskFactory
-
+from yo_fluq import FileIO
 
 
 class TemplateWorkflow(IWorkflow, IOneBrainBoxTaskFactory):
@@ -122,7 +121,7 @@ class TemplateWorkflow(IWorkflow, IOneBrainBoxTaskFactory):
                 ordering_token_components[ordering] = str(getattr(self, field.name))
         ordering_token ='/'.join(ordering_token_components[k] for k in sorted(ordering_token_components))
         arguments = self.__dict__
-        arguments['_tp'] = type(self)
+        arguments['workflow_type'] = type(self)
 
         return BrainBoxTask(
             decider='ComfyUI',

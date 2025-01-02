@@ -3,7 +3,7 @@ import os
 import flask
 import subprocess
 from pathlib import Path
-from kaia.infra import Loc
+from kaia.common import Loc
 from uuid import uuid4
 
 class PlayServer:

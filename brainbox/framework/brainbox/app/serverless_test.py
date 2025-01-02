@@ -2,7 +2,7 @@ from typing import *
 from ...common import IDecider
 from .service import BrainBoxService, BrainBoxServiceSettings
 from ...controllers import ControllerRegistry, IController
-from ...common import LocHolder, Loc
+from ...common import Locator, Loc
 
 
 class ServerlessTest:
@@ -19,7 +19,7 @@ class ServerlessTest:
 
     def __enter__(self) -> BrainBoxService:
         self.folder.__enter__()
-        locator = LocHolder(self.folder.path)
+        locator = Locator(self.folder.path)
         self._service = BrainBoxService(BrainBoxServiceSettings(
             ControllerRegistry(self.services),
             locator=locator

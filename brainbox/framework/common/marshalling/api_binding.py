@@ -5,20 +5,22 @@ import requests
 class ApiBinding:
     def __init__(self,
                  address: str,
-                 metadata: MarshallingMetadata
+                 metadata: MarshallingMetadata,
                  ):
         self.metadata = metadata
         self.address = address
 
     def __call__(self, *args, **kwargs):
         address = f'http://{self.address}{self.metadata.get_endpoint_address()}'
-        data = self.metadata.signature.to_kwargs_only(*args, **kwargs)
-
+        arguments = self.metadata.signature.to_kwargs_only(*args, **kwargs)
+        data = dict(
+            arguments = Format.encode(arguments),
+        )
 
         reply = requests.request(
             self.metadata.endpoint.method,
             address,
-            json = Format.encode(data),
+            json = data,
         )
         if reply.status_code == 200:
             result = Format.decode(reply.json())

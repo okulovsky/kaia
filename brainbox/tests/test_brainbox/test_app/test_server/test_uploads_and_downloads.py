@@ -14,19 +14,19 @@ class UploadsDownloadsTestCase(TestCase):
 
         api.upload('test.txt', b'Hello')
 
-        path = api.custom_download('test.txt')
+        path = api.download('test.txt')
 
         if custom_api_folder is not None:
             self.assertEqual(custom_api_folder, path.parent)
         self.assertEqual(b'Hello', FileIO.read_bytes(path))
 
-        file = api.download('test.txt')
+        file = api.open_file('test.txt')
         self.assertEqual(b'Hello', file.content)
 
         result = api.execute(BrainBoxTask.call(FileDecider).process('test.txt'))
         self.assertEqual('test-1.txt', result)
 
-        self.assertEqual(b'Hello!', api.download('test-1.txt').content)
+        self.assertEqual(b'Hello!', api.open_file('test-1.txt').content)
 
 
     def test_upload_and_download_in_different_folders(self):

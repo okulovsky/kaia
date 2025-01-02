@@ -12,6 +12,8 @@ class _ArrayPostprocessor:
         self.postprocessor = postprocessor
 
     def __call__(self, array):
+        if self.index is None:
+            return None
         result = array[self.index]
         if self.postprocessor is not None:
             result = self.postprocessor(result, self.api)
@@ -20,7 +22,7 @@ class _ArrayPostprocessor:
 
 class IBrainboxService(ABC):
     @abstractmethod
-    def base_add(self, jobs: list[Job]):
+    def base_add(self, jobs: list[dict]):
         pass
 
     @abstractmethod
@@ -65,33 +67,52 @@ class IBrainboxService(ABC):
                     raise ValueError(f"Expected task at position #{index}, but was {t}")
                 t.before_add(self)
 
-        jobs = IBrainBoxTask.to_all_jobs(task)
-        self.base_add(jobs)
+        job_dicts = []
+        for t in task:
+            jobs = t.create_jobs()
+            batch_id = t.get_resulting_id()
+            for j in jobs:
+                j.batch = batch_id
+                d = j.__dict__
+                del d['_sa_instance_state']
+                job_dicts.append(d)
+
+        self.base_add(job_dicts)
 
     def join(self, task: Union[IBrainBoxTask, str, Iterable[Union[IBrainBoxTask, str]]]):
         if isinstance(task, str) or isinstance(task, IBrainBoxTask):
             task = [task]
+            not_list = True
         else:
             try:
                 task = list(task)
             except:
                 raise ValueError(f"Task is expected to be str (job id), IBrainBoxTask or Iterable, but was {task}")
+            not_list = False
 
         ids = []
         postprocessors = []
-        for i, t in enumerate(task):
+        index = 0
+        for true_index, t in enumerate(task):
             if isinstance(t, str):
                 ids.append(t)
-                postprocessors.append(_ArrayPostprocessor(i, self))
+                postprocessors.append(_ArrayPostprocessor(index, self))
+                index += 1
+
             elif isinstance(t, IBrainBoxTask):
-                ids.append(t.get_resulting_id())
-                postprocessors.append(_ArrayPostprocessor(i, t.postprocess_result))
+                id = t.get_resulting_id()
+                if id is None:
+                    postprocessors.append(_ArrayPostprocessor(None, self))
+                else:
+                    ids.append(t.get_resulting_id())
+                    postprocessors.append(_ArrayPostprocessor(index, self, t.postprocess_result))
+                    index+=1
             else:
-                raise ValueError(f"Error at index {i}: expected str (job id) or IBrainBoxTask, but was {t}")
+                raise ValueError(f"Error at index {true_index}: expected str (job id) or IBrainBoxTask, but was {t}")
 
         result = self.base_join(ids)
         result = [postproc(result) for postproc in postprocessors]
-        if len(result) == 1:
+        if not_list:
             return result[0]
         return result
 

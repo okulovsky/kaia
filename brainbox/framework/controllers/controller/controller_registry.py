@@ -1,5 +1,5 @@
 from typing import Iterable, Union, Type
-from ...common import IDecider, Loc, LocHolder
+from ...common import IDecider, Loc, Locator
 from ..controller import IController, ControllerOverDecider
 from ...deployment import Command, LocalExecutor
 import json
@@ -19,7 +19,7 @@ class InstallationStatus:
 class ControllerRegistry:
     def __init__(self,
                  controllers: Iterable[Union[IController, IDecider, Type[IController], Type[IDecider]]],
-                 locator: LocHolder = Loc
+                 locator: Locator = Loc
                  ):
         updated_controllers = []
         for i, c in enumerate(controllers):
@@ -71,9 +71,6 @@ class ControllerRegistry:
     def get_deciders_names(self) -> list[str]:
         return list(self._name_to_controller)
 
-    def set_resource_folder(self, folder: Path):
-        for controller in self._name_to_controller.values():
-            controller.context._resource_folder_root = folder
 
     def get_installation_statuses(self) -> dict[str, InstallationStatus]:
         executor = LocalExecutor()

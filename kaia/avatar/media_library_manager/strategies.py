@@ -2,8 +2,8 @@ from  dataclasses import dataclass
 
 import numpy as np
 from abc import ABC, abstractmethod
-from kaia.brainbox import MediaLibrary
-import pandas as pd
+from brainbox import MediaLibrary
+
 
 
 def get_random_weighed_element(elements) -> int:

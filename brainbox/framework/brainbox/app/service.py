@@ -4,7 +4,7 @@ from ...controllers import ControllerRegistry
 from ...job_processing import IPlanner, MainLoop, Core, Job, SimplePlanner, OperatorLogItem, FailedJobArgument
 from dataclasses import dataclass, field
 from pathlib import Path
-from ...common import Loc, LocHolder
+from ...common import Loc, Locator
 from sqlalchemy import create_engine, select, Engine
 from sqlalchemy.orm import Session
 from threading import Thread
@@ -16,10 +16,10 @@ import time
 class BrainBoxServiceSettings:
     registry: ControllerRegistry
     planner: IPlanner = field(default_factory=SimplePlanner)
-    port: int = 8090
+    port: int = 18090
     debug_output: bool = False
-    locator: LocHolder = Loc
-    run_controllers_in_default_environment: bool = True
+    locator: Locator = Loc
+    stop_controllers_at_termination: bool = True
 
 
 
@@ -33,15 +33,16 @@ class BrainBoxService(IBrainboxService):
         self.engine = create_engine('sqlite:///'+str(self.settings.locator.db_path))
         BrainBoxBase.metadata.create_all(self.engine)
         core = Core(self.engine, self.settings.registry, self.settings.locator, self.settings.debug_output)
-        self.loop = MainLoop(core, self.settings.planner)
+        self.loop = MainLoop(core, self.settings.planner, self.settings.stop_controllers_at_termination)
         self.loop_thread = Thread(target=self.loop.run)
         self.loop_thread.start()
 
     @endpoint(url='/jobs/add', method='POST')
-    def base_add(self, jobs:list[Job]):
+    def base_add(self, jobs:list[dict]):
         now = datetime.now()
         with Session(self.engine) as session:
-            for i, job in enumerate(jobs):
+            for i, job_dict in enumerate(jobs):
+                job = Job(**job_dict)
                 job = job.set_defaults(now + timedelta(microseconds=i))
                 session.add(job)
             session.commit()
@@ -91,9 +92,8 @@ class BrainBoxService(IBrainboxService):
             result = list(session.scalars(select(Job.result).where(Job.finished.and_(Job.id == id))))
             if len(result)==0:
                 return None
-            job = result[0]
-            session.expunge(job)
-            return job
+            return result[0]
+
 
     @endpoint(url='/jobs/summary', method='GET')
     def summary(self, ids: list[str]|None = None, batch_id: str|None = None) -> list[dict]:

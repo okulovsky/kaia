@@ -1,7 +1,6 @@
 from typing import *
 from ...common import Logger, Loc
 from .resource_folder import ResourceFolder
-from .mounting_prefix import MountingPrefix
 from ...deployment import Machine, LocalExecutor, IExecutor
 from pathlib import Path
 
@@ -15,7 +14,6 @@ class ControllerContext(Generic[TSettings]):
         self.settings = settings
         self._resource_folder_root : Path | None = None
         self._logger: Logger | None = None
-        self._mounting_prefix: MountingPrefix | None = None
         self._machine: Machine|None = None
         self._executor: IExecutor | None = None
 
@@ -35,11 +33,6 @@ class ControllerContext(Generic[TSettings]):
             return Logger()
         return self._logger
 
-    @property
-    def mounting_prefix(self) -> MountingPrefix:
-        if self._mounting_prefix is None:
-            return MountingPrefix()
-        return self._mounting_prefix
 
     @property
     def machine(self) -> Machine:

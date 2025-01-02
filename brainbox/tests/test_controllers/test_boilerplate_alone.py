@@ -29,5 +29,5 @@ class BoilerplateAloneTestCase(TestCase):
 
         controller.stop_all()
         self.assertFalse(controller.is_reachable())
-        self.assertEquals(0, len(controller.get_running_instances_id_to_parameter()))
+        self.assertEqual(0, len(controller.get_running_instances_id_to_parameter()))
 

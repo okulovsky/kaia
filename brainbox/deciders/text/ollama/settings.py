@@ -1,18 +1,6 @@
 from dataclasses import dataclass
 from ....framework import ConnectionSettings
-
-class OllamaModel:
-    def __init__(self, name: str, location: str|None = None):
-        self.name = name
-        if location is None:
-            location = name
-            if '/' not in location:
-                location='library/'+location
-            if ':' in location:
-                location = location.replace(':','/')
-            else:
-                location = location+'/latest'
-        self.location = location
+from .model import OllamaModel
 
 @dataclass
 class OllamaSettings:
