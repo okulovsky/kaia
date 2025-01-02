@@ -1,7 +1,5 @@
-from typing import *
 from kaia.dub.languages.en import *
-from ..core import SingleLineKaiaSkill
-from datetime import datetime
+from .kaia_skill import SingleLineKaiaSkill
 
 class ExceptionInSkillReplies(TemplatesCollection):
     answer = Template(

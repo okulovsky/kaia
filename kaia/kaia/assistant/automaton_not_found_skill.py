@@ -1,6 +1,6 @@
 from typing import *
 from kaia.dub.languages.en import *
-from ..core import SingleLineKaiaSkill
+from .kaia_skill import SingleLineKaiaSkill
 from datetime import datetime
 
 class AutomatonNotFoundReplies(TemplatesCollection):

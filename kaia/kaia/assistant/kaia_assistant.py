@@ -1,8 +1,8 @@
 from typing import *
 from .kaia_skill import IKaiaSkill
-from ...eaglesong.core import Automaton, ContextRequest, AutomatonExit, Listen
+from eaglesong.core import Automaton, ContextRequest, AutomatonExit, Listen
 from kaia.dub.core import Template, IntentsPack
-from ..gui import KaiaMessage
+from ..server import Message
 from dataclasses import dataclass, field
 import traceback
 from datetime import datetime
@@ -153,7 +153,7 @@ class KaiaAssistant:
             if self.raise_exceptions:
                 raise
             ex = traceback.format_exc()
-            yield KaiaMessage(True, ex, True)
+            yield Message(Message.Type.Error, ex)
             if self.exception_in_skill is not None:
                 yield from self.exception_in_skill.get_runner()()
 
