@@ -31,7 +31,6 @@ class AudioControlSettings:
     silence_margin_in_seconds: float = 1
     max_length_in_seconds: float = 10
     max_leading_length_in_seconds: Optional[float] = 10
-    load_mic_samples: Optional[Iterable[Path]] = None
     pause_between_iterations_in_seconds: float = 0
     confirmed_recording: Recording|None = None
     open_recording: Recording|None = None
@@ -60,7 +59,7 @@ class AudioControlSettings:
 
     def create_drivers(self):
         if self.environment == AudioControlSettings.Environments.Test:
-            input = FakeInput(mic_inputs=self.load_mic_samples)
+            input = FakeInput()
             output = FakeOutput()
         elif self.environment == AudioControlSettings.Environments.PyAudio:
             input = PyAudioInput(self.mic_device_index, chunk = self.frame_length)

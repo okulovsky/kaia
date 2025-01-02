@@ -4,17 +4,19 @@ from io import BytesIO
 import wave
 import numpy
 from pathlib import Path
-from kaia.infra import FileIO
+from yo_fluq import FileIO
 
 
 class FakeInput(IAudioInput):
     def __init__(self,
-                 mic_inputs: Iterable[Path],
                  frame_size: int = 512,
                  ):
         self.frame_size = frame_size
-        self.buffers = [self._content_to_array(FileIO.read_bytes(filename)) for filename in mic_inputs]
-        self.current_buffer = -1
+        self.current_buffer: None|numpy.ndarray = None
+        self.current_buffer_position = 0
+
+    def set_sample(self, path: Path):
+        self.current_buffer = self._content_to_array(FileIO.read_bytes(path))
         self.current_buffer_position = 0
 
     def _content_to_array(self, wav_file_content: bytes):
@@ -32,16 +34,14 @@ class FakeInput(IAudioInput):
         pass
 
     def is_buffer_empty(self):
-        return self.current_buffer_position>=len(self.buffers[self.current_buffer])
-
-    def next_buffer(self):
-        self.current_buffer+=1
-        self.current_buffer_position = 0
+        if self.current_buffer is None:
+            return True
+        return self.current_buffer_position>=len(self.current_buffer)
 
     def read(self) -> list[int]:
-        if self.current_buffer==-1 or self.current_buffer>=len(self.buffers) or self.is_buffer_empty():
+        if self.is_buffer_empty():
             return [0 for _ in range(self.frame_size)]
-        chunk = list(self.buffers[self.current_buffer][self.current_buffer_position:self.current_buffer_position+self.frame_size])
+        chunk = list(self.current_buffer[self.current_buffer_position:self.current_buffer_position+self.frame_size])
         while len(chunk) < self.frame_size:
             chunk.append(0)
         self.current_buffer_position+=len(chunk)

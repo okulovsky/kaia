@@ -1,9 +1,9 @@
-from kaia.infra.marshalling_api import MarshallingEndpoint
+from brainbox.framework.common.api_utils import ApiUtils
 import requests
 
 class PlayApi:
     def __init__(self, address: str):
-        MarshallingEndpoint.check_address(address)
+        ApiUtils.check_address(address)
         self.address = address
 
     def ping(self):
