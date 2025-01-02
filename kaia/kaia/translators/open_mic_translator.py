@@ -1,13 +1,13 @@
 from dataclasses import dataclass
-from kaia.eaglesong.amenities.partial_listen_translator import PartialListenTranslator
-from kaia.kaia.audio_control import AudioControlAPI, MicState
+from .partial_listen_translator import PartialListenTranslator
+from kaia.kaia.audio_control import AudioControlApi, MicState
 
 @dataclass
 class OpenMic:
     open_mic: bool = True
 
 class OpenMicTranslator(PartialListenTranslator):
-    def __init__(self, inner_function, audio_control_api: AudioControlAPI):
+    def __init__(self, inner_function, audio_control_api: AudioControlApi):
         self.audio_control_api = audio_control_api
         super().__init__(
             inner_function,

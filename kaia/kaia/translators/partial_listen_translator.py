@@ -1,5 +1,5 @@
 from typing import *
-from ..core import Translator, Listen
+from eaglesong.core import Translator, Listen
 from abc import ABC, abstractmethod
 
 class PartialListenTranslator(Translator, ABC):

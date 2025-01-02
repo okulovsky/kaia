@@ -1,14 +1,13 @@
-from kaia.eaglesong.core import Translator, Listen
-from kaia.eaglesong.core.primitives import Audio
-from kaia.kaia.audio_control import AudioControlAPI, MicState
+from eaglesong.core import Translator, Listen
+from kaia.kaia.audio_control import AudioControlApi, MicState
 from kaia.kaia.translators import OpenMic
-from .dto import AudioPlayConfirmation
+from brainbox import File
 
 
 class AudioControlSwitcherTranslator(Translator):
     def __init__(self,
                  inner_function,
-                 api: AudioControlAPI,
+                 api: AudioControlApi,
 
                  ):
         self.api = api
@@ -23,13 +22,14 @@ class AudioControlSwitcherTranslator(Translator):
         if name in self.sounds_to_play:
             self.sounds_to_play.remove(name)
             if len(self.sounds_to_play) == 0:
-                if self.target_state is None:
-                    self.api.set_state(MicState.Standby)
-                else:
-                    self.api.set_state(self.target_state)
+                target_state = self.target_state
+                if target_state is None:
+                    target_state = MicState.Standby
+                self.api.set_state(target_state)
                 self.target_state = None
 
     def _translate_input(self, input:Translator.InputPackage):
+        from ..driver import AudioPlayConfirmation
         if not isinstance(input.outer_input, AudioPlayConfirmation):
             return input.outer_input
         else:
@@ -37,14 +37,15 @@ class AudioControlSwitcherTranslator(Translator):
             return Translator.NoInput
 
     def _translate_output(self, output: Translator.OutputPackage):
-        if isinstance(output.inner_output, Audio):
+        if isinstance(output.inner_output, File) and output.inner_output.kind == File.Kind.Audio:
             if len(self.sounds_to_play) == 0:
                 current_state = self.api.get_state()
                 if current_state == MicState.Recording:
                     current_state = MicState.Standby
                 self.api.set_state(MicState.Disabled)
                 self.target_state = current_state
-            self.sounds_to_play.add(output.inner_output.id)
+
+            self.sounds_to_play.add(output.inner_output.name)
             return output.inner_output
         if isinstance(output.inner_output, Listen):
             if OpenMic in output.inner_output:
