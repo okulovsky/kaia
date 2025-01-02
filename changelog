@@ -1,3 +1,8 @@
+3.5.0
+    - Big update
+    - brainbox and eaglesong are separated into stand-alone folders and will at some point become standalone projects
+    - kaia is switched to the new communication architecture completely, tests are improved, the coverage increased
+    - old projects, `zoo`, `kaia.bro` and `kaia.ml` are removed to focus on things that are the essence of the project. Some will be restored.
 3.4.1
     - New architecture, compatible with sound processing in the browser, is introduced
 3.4.0
