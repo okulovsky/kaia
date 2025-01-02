@@ -1,5 +1,6 @@
 from brainbox.framework import BrainBoxTask, IBrainBoxTask, IDecider
 from unittest import TestCase
+from typing import cast
 
 class Test(IDecider):
     def method(self, required_1, required_2, optional_1 = None, optional_2 = 'b', **kwargs):

@@ -26,11 +26,17 @@ class CoquiInferenceWebApp:
         app.add_url_rule('/load_model', view_func=self.load_model, methods=['POST'])
         app.add_url_rule('/dub', view_func=self.dub, methods=['POST'])
         app.add_url_rule('/voice_clone', view_func=self.voice_clone, methods=['POST'])
+        app.add_url_rule('/get_loaded_model', view_func=self.get_loaded_model, methods=['GET'])
 
         return app
 
     def index(self):
         return f"{type(self).__name__} is running"
+
+    def get_loaded_model(self):
+        if self.model is None:
+            return flask.jsonify(self.model)
+        return flask.jsonify(self.model.__dict__)
 
     def _load_model_internal(self, model_name):
         if model_name is None:

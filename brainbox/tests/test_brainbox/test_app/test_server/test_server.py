@@ -1,5 +1,5 @@
 from unittest import TestCase
-from brainbox.framework import IDecider, BrainBoxTask, BrainBoxApi, BrainBoxTaskPack
+from brainbox.framework import IDecider, BrainBoxTask, BrainBoxApi, BrainBoxCombinedTask
 from pprint import pprint
 
 
@@ -57,7 +57,7 @@ class BrainBoxWebServerEmptyTestCase(TestCase):
             r = api.execute(BrainBoxTask.call(TestDecider).run_simple("4"))
             self.assertEqual("OK-4", r)
 
-            pack = BrainBoxTaskPack(
+            pack = BrainBoxCombinedTask(
                 BrainBoxTask.call(TestDecider).run_simple('10'),
                 (
                     BrainBoxTask.call(TestDecider).run_simple('11'),

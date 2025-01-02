@@ -3,7 +3,7 @@ import pandas as pd
 from ....job_processing import Job
 from .batch_page import _select, _pretty_sec
 from sqlalchemy import select, case, func
-from yo_fluq_ds import *
+from yo_fluq import *
 import numpy as np
 
 def _get_frames(session):

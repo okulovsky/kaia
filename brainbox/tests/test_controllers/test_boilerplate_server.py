@@ -1,28 +1,31 @@
-from brainbox.framework.controllers import ControllerApi
+from brainbox.framework.controllers import ControllerApi, ControllerServiceStatus
 from brainbox.deciders.utils.boilerplate import Boilerplate
 from unittest import TestCase
+from yo_fluq import Query
+
+
+def _bps(status: ControllerServiceStatus):
+    return Query.en(status.containers).where(lambda z: z.name == 'Boilerplate').single()
+
 
 def test_api(self: TestCase, api: ControllerApi):
     api.uninstall(Boilerplate)
     status = api.status()
     self.assertIsNone(status.currently_installing_container)
-    self.assertEqual(1, len(status.containers))
-    self.assertFalse(status.containers[0].installation_status.installed)
+    self.assertFalse(_bps(status).installation_status.installed)
 
     self.assertRaises(Exception, lambda: api.run(Boilerplate, 'must_fail'))
 
     api.install(Boilerplate, False)
     status = api.status()
-    self.assertFalse(status.containers[0].installation_status.installed)
+    self.assertFalse(_bps(status).installation_status.installed)
     self.assertEqual('Boilerplate', status.currently_installing_container)
     api.join_installation()
 
     status = api.status()
-    self.assertTrue(status.containers[0].installation_status.installed)
-    self.assertEqual(0, len(status.containers[0].instances))
+    self.assertTrue(_bps(status).installation_status.installed)
+    self.assertEqual(0, len(_bps(status).instances))
     self.assertIsNone(status.currently_installing_container)
-
-    self.assertRaises(Exception, lambda: api.run(Boilerplate))
 
     instance_id = api.run(Boilerplate, 'test')
 
@@ -35,11 +38,11 @@ def test_api(self: TestCase, api: ControllerApi):
     )
 
     status = api.status()
-    self.assertEqual(instance_id, status.containers[0].instances[0].instance_id)
+    self.assertEqual(instance_id, _bps(status).instances[0].instance_id)
 
     api.stop(Boilerplate, instance_id)
     status = api.status()
-    self.assertEquals(0, len(status.containers[0].instances))
+    self.assertEqual(0, len(_bps(status).instances))
 
 
 class BoilerplateWebServerTestCase(TestCase):

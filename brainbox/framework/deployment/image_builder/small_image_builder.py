@@ -1,4 +1,5 @@
 import os
+import shutil
 import uuid
 from typing import *
 from pathlib import Path
@@ -19,12 +20,14 @@ class SmallImageBuilder(IImageBuilder):
                  code_path: Path,
                  docker_template: str,
                  dependencies: Optional[Iterable[str]|Iterable[Iterable[str]]],
-                 add_current_user: bool = True
+                 add_current_user: bool = True,
+                 copy_to_code_path: dict[Path, str]|None = None
     ):
         self.code_path = code_path
         self.docker_template = docker_template
         self.dependencies = self._make_dependencies(dependencies)
         self.add_current_user = add_current_user
+        self.copy_to_code_path = copy_to_code_path
 
     ADD_USER_PLACEHOLDER = 'add_user'
 
@@ -65,6 +68,26 @@ class SmallImageBuilder(IImageBuilder):
         os.makedirs(self.code_path, exist_ok=True)
         with open(self.code_path / 'Dockerfile', 'w') as file:
             file.write(dockerfile)
+
+        if self.copy_to_code_path is not None:
+            for source_path, target_str_path in self.copy_to_code_path.items():
+                target = target_str_path
+                while target.startswith('/'):
+                    target = target[1:]
+                target = self.code_path / target
+                target.relative_to(self.code_path)
+                if target.is_file():
+                    os.unlink(target)
+                if target.is_dir():
+                    shutil.rmtree(target, ignore_errors=True)
+                if source_path.is_file():
+                    os.makedirs(target.parent, exist_ok=True)
+                    shutil.copy(source_path, target)
+                elif source_path.is_dir():
+                    shutil.copytree(source_path, target)
+                else:
+                    raise ValueError(f"{source_path} is neither file nor directory")
+
 
     def build_image(self, image_name: str, executor: IExecutor) -> None:
         self._prepare_container_folder(executor)

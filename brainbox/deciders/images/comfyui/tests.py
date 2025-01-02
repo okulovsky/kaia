@@ -10,59 +10,60 @@ class Test:
         self.tc = tc
 
     def test_generation(self):
-        yield TestReport.H1("Text to image")
         prompt = "cute little cat playing with a woolball, solo, no humans, animal, cat"
-        yield TestReport.text("Prompt")
-        yield TestReport.code(prompt)
         negative_prompt = "bad quality, dull colors, monochrome, boy, girl, people, nsfw, nudity"
-        yield TestReport.text("Negative prompt")
-        yield TestReport.code(negative_prompt)
-
-        model_name = 'meinamix_meinaV9.safetensors'
-        yield TestReport.H2(f"Model {model_name}")
-        results = self.api.execute(TextToImage(
+        model = 'meinamix_meinaV9.safetensors'
+        self.api.execute(TextToImage(
             prompt=prompt,
             negative_prompt=negative_prompt,
             batch_size=2,
-            model=model_name,
+            model=model,
             seed=42
 
         ))
-        for result in results:
-            yield TestReport.file(self.api.download(result))
+        yield (TestReport
+               .last_call(self.api)
+               .result_is_array_of_files(File.Kind.Image)
+               )
 
-        yield TestReport.H2(f"With LoRA")
-        results = self.api.execute(TextToImage(
+        self.api.execute(TextToImage(
             prompt=prompt,
             negative_prompt=negative_prompt,
             batch_size=2,
             lora_01='cat_lora.safetensors',
-            model=model_name
+            model=model
         ))
 
-        for result in results:
-            yield TestReport.file(self.api.download(result))
+        yield (TestReport
+               .last_call(self.api)
+               .result_is_array_of_files(File.Kind.Image)
+               .with_comment("Test to image workflow, with LoRA")
+               )
+
 
     def test_upscale_and_interrogate(self):
-        yield TestReport.H1("Upscale")
-        source_image = Path(__file__).parent / 'image.png'
-        yield TestReport.text("Source image")
-        yield TestReport.file(File.read(source_image))
+        source_image = File.read(Path(__file__).parent / 'image.png')
         input_name = BrainBox.Task.safe_id() + '.png'
         self.api.upload(input_name, source_image)
-        upscaled = self.api.execute(Upscale(input_name))
-        yield TestReport.text("Upscaled image")
-        yield TestReport.file(self.api.download(upscaled))
+        self.api.execute(Upscale(input_name))
+        yield (TestReport
+               .last_call(self.api)
+               .result_is_file(File.Kind.Image)
+               .with_uploaded_file(input_name, source_image)
+               .with_comment("Upscaling workflow")
+               )
 
-        yield TestReport.H1("WD14 Interrogate")
-        yield TestReport.text("Source image")
-        yield TestReport.file(File.read(source_image))
 
-        interrogation = self.api.execute(WD14Interrogate(input_name))
-        yield TestReport.json(interrogation)
+        self.api.execute(WD14Interrogate(input_name))
+        yield (TestReport
+               .last_call(self.api)
+               .with_uploaded_file(input_name, source_image)
+               .with_comment("Interrogation with WD14")
+               )
 
 
 
     def test_all(self):
+        yield TestReport.main_section_content("All ComfyUI functionality is accessible via the same endpoint. The workflow is actvated depending on `workflow_type` parameter")
         yield from self.test_generation()
         yield from self.test_upscale_and_interrogate()

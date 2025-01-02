@@ -2,7 +2,7 @@ from typing import Iterable
 from unittest import TestCase
 from ....framework import (
     RunConfiguration, TestReport, SmallImageBuilder, IImageBuilder, DockerWebServiceController,
-    BrainBoxApi, BrainBoxTask, INotebookableController, MediaLibrary
+    BrainBoxApi, BrainBoxTask, INotebookableController, BrainBoxExtendedTask, MediaLibrary
 )
 from .settings import ResemblyzerSettings
 from pathlib import Path
@@ -35,26 +35,36 @@ class ResemblyzerController(DockerWebServiceController[ResemblyzerSettings], INo
         return Resemblyzer()
 
 
-    def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable[TestReport.Item]:
+    def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable:
         from .api import Resemblyzer
 
         model_name = 'test'
-        media_library = MediaLibrary.read(Path(__file__).parent / 'test_media_library.zip')
-        Resemblyzer.delete_dataset(api, model_name)
-        for record in media_library.records:
-            Resemblyzer.upload_dataset_file(api, model_name, record.tags['split'], record.tags['voice'], record.get_file())
+        media_library_path = Path(__file__).parent / 'test_media_library.zip'
+        prerequisites = Resemblyzer.upload_dataset(model_name, media_library_path, False)
 
-        response = api.execute(BrainBoxTask.call(Resemblyzer).train(model_name))
-        yield TestReport.text("Training response")
-        yield TestReport.json(response)
 
-        yield TestReport.H1("Testing")
+        api.execute(BrainBoxExtendedTask(
+            BrainBoxTask.call(Resemblyzer).train(model_name),
+            prerequisite=prerequisites
+        ))
+
+        yield (TestReport
+               .last_call(api)
+               .with_resources(Resemblyzer,f'datasets/{model_name}')
+               .with_comment("Training the model with pre-uploaded resources")
+               )
+
+        media_library = MediaLibrary.read(media_library_path)
+
+        first_time = True
         for record in media_library.records:
             if record.tags['split'] == 'test':
                 file = record.get_file()
-                yield TestReport.file(file)
                 result = api.execute(BrainBoxTask.call(Resemblyzer).classify(file, model_name))
-                yield TestReport.text(f"True: {record.tags['voice']}, Predicted: {result}")
+                if first_time:
+                    yield TestReport.last_call(api).with_comment("Running inference with trained model")
+                first_time = False
+                tc.assertEqual(record.tags['speaker'], result)
 
 
 

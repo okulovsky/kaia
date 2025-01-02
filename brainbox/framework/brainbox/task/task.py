@@ -42,6 +42,7 @@ class BrainBoxTask(IBrainBoxTask):
         self.batch = batch
         self.decider_parameter = decider_parameter
         self.ordering_token = ordering_token
+        
 
 
     def __repr__(self):

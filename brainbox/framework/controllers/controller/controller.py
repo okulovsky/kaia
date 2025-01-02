@@ -9,7 +9,8 @@ from .resource_folder import ResourceFolder
 from .controller_context import ControllerContext
 from dataclasses import dataclass
 import re
-from .self_test_report_page import create_self_test_report_page
+from .test_report import create_self_test_report_page, TestReport
+from pathlib import Path
 
 
 TSettings = TypeVar("TSettings")
@@ -57,7 +58,7 @@ class IController(ABC, Generic[TSettings]):
         pass
 
     @abstractmethod
-    def _self_test_internal(self, api, tc: TestCase) -> Iterable[TestReport.Item]:
+    def _self_test_internal(self, api, tc: TestCase) -> Iterable:
         pass
 
 
@@ -122,13 +123,15 @@ class IController(ABC, Generic[TSettings]):
         for instance_id in self.get_running_instances_id_to_parameter():
             self.stop(instance_id)
 
-    def self_test(self, tc: None|TestCase = None) -> TestReport:
+    def self_test(self, tc: None|TestCase = None, output_folder: Path|None = None) -> TestReport:
         if tc is None:
             tc = TestCase()
-        html_path = Loc.self_test_path / (self.get_name()+'.html')
+        if output_folder is None:
+            output_folder = Loc.self_test_path
+        html_path = output_folder / (self.get_name()+'.html')
 
         from brainbox.framework import BrainBoxApi
-        with BrainBoxApi.Test() as api:
+        with BrainBoxApi.Test(port=18091) as api:
             items = []
             error = None
             try:
@@ -140,7 +143,7 @@ class IController(ABC, Generic[TSettings]):
             finally:
                 self.stop_all()
                 report = TestReport(self.get_name(), items, error)
-                with open(Loc.self_test_path / self.get_name(), 'wb') as file:
+                with open(output_folder / self.get_name(), 'wb') as file:
                     pickle.dump(report, file)
                 with open(html_path, 'w') as file:
                     file.write(create_self_test_report_page(report))
@@ -148,5 +151,6 @@ class IController(ABC, Generic[TSettings]):
             if error is None:
                 print(f"SELF-TEST EXITED SUCCESSFULLY. Report file://{html_path}")
             return report
+
 
     # endregion

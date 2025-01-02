@@ -1,11 +1,11 @@
 import json
 
-from ..interface import ControllerServicesStatus
+from ..interface import ControllerServiceStatus
 from .page import page, button
 
 
 
-def create_status_page(status: ControllerServicesStatus):
+def create_status_page(status: ControllerServiceStatus):
     html = []
     if status.currently_installing_container is not None:
         html.append(f'<a href="/html/controllers/installation_report">Installing {status.currently_installing_container}</a>')

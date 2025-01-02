@@ -2,7 +2,7 @@ from ..core import OperatorMessage, OperatorState
 import traceback
 from datetime import datetime
 from .decider_log import DeciderLogger
-from ...common import IDecider, DeciderContext, File, LocHolder
+from ...common import IDecider, DeciderContext, File, Locator
 from .file_postprocessor import file_postprocess
 import time
 

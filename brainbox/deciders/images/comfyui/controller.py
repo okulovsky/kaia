@@ -1,7 +1,7 @@
 from typing import Iterable
 from unittest import TestCase
 from ....framework import (
-    RunConfiguration, TestReport, SmallImageBuilder, IImageBuilder, DockerWebServiceController,
+    RunConfiguration, SmallImageBuilder, IImageBuilder, DockerWebServiceController,
     BrainBoxApi
 )
 from ...common import download_file
@@ -72,7 +72,7 @@ class ComfyUIController(DockerWebServiceController[ComfyUISettings]):
             self.download_file(model)
 
 
-    def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable[TestReport.Item]:
+    def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable:
         from .tests import Test
         yield from Test(api, tc).test_all()
 

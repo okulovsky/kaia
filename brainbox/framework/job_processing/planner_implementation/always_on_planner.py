@@ -1,12 +1,15 @@
 from ..planner import IPlanner, PlannerArguments, StartCommand, AssignAction, IPlannerAction
-
+from typing import Union
 
 class AlwaysOnPlanner(IPlanner):
-    def __init__(self, find_instead_of_starting: bool = True):
-        self.find_instead_of_starting = find_instead_of_starting
+    Mode = StartCommand.Mode
+    def __init__(self, mode: Union['AlwaysOnPlanner.Mode',None] = None):
+        if mode is None:
+            mode = AlwaysOnPlanner.Mode.FindThenStart
+        self.mode = mode
 
     def plan(self, arguments: PlannerArguments) -> list[IPlannerAction]:
-        available = {op.key:op for op in arguments.deciders if op.up}
+        available = {op.key:op for op in arguments.deciders}
         result = []
         for job in arguments.non_finished_tasks:
             if job.assigned:
@@ -16,6 +19,6 @@ class AlwaysOnPlanner(IPlanner):
                 result.append(AssignAction(job.id, available[key].instance_id, key))
                 continue
             else:
-                result.append(StartCommand(key, self.find_instead_of_starting))
+                result.append(StartCommand(key, self.mode))
         return result
 

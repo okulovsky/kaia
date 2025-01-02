@@ -1,14 +1,14 @@
-from ....framework import DockerWebServiceApi, FileLike
+from ....framework import DockerWebServiceApi, FileLike, ISingleLoadableModelApi
 from .settings import WhisperSettings
+from .model import WhisperModel
 from .controller import WhisperController
 import requests
-from pathlib import Path
 from io import BytesIO
 import json
 
 
 
-class Whisper(DockerWebServiceApi[WhisperSettings, WhisperController]):
+class Whisper(DockerWebServiceApi[WhisperSettings, WhisperController], ISingleLoadableModelApi):
     def __init__(self, address: str = None):
         super().__init__(address)
 
@@ -56,12 +56,16 @@ class Whisper(DockerWebServiceApi[WhisperSettings, WhisperController]):
         if reply.status_code != 200:
             raise ValueError(reply.text)
 
+    def get_loaded_model_name(self) -> str|None:
+        return requests.get(self.endpoint('/get_loaded_model')).json()
+
     def get_loaded_model(self):
         reply = requests.get(f'http://{self.address}/get_loaded_model')
         return reply.json()
 
     Controller = WhisperController
     Settings = WhisperSettings
+    Model = WhisperModel
 
     @classmethod
     def get_ordering_arguments_sequence(cls) -> tuple[str,...]|None:

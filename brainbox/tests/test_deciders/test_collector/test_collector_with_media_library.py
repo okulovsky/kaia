@@ -3,8 +3,9 @@ import zipfile
 from brainbox.framework import BrainBoxApi, BrainBoxTask, MediaLibrary
 from brainbox.deciders import FakeFile, Collector, FakeText
 from unittest import TestCase
-from yo_fluq_ds import Query
+from yo_fluq import Query
 import pickle
+import json
 
 class CollectorWithMediaLibraryTestCase(TestCase):
     def test_to_list(self):
@@ -35,13 +36,15 @@ class CollectorWithMediaLibraryTestCase(TestCase):
                 .en(range(5))
                 .select(lambda z: dict(prefix=z))
                 .feed(Collector.FunctionalTaskBuilder(
-                    lambda z: BrainBoxTask.call(FakeFile)(f'prefix{z["prefix"]}'),
+                    lambda z: BrainBoxTask.call(FakeFile)(z),
                 )))
             result = api.execute(tasks)
             ml = MediaLibrary.read(api.cache_folder/result)
             self.assertEqual(5, len(ml.records))
             for rec in ml.records:
-                self.assertEqual(f'prefix{rec.tags["prefix"]}'.encode('utf-8'), rec.get_content())
+                js = json.loads(rec.get_content())
+                self.assertDictEqual(dict(prefix=rec.tags['prefix']), js)
+
 
     def test_media_library_several_files_returned(self):
         with BrainBoxApi.ServerlessTest([FakeFile(), Collector()]) as api:
@@ -50,7 +53,7 @@ class CollectorWithMediaLibraryTestCase(TestCase):
                 .en(range(2))
                 .select(lambda z: dict(prefix=z))
                 .feed(Collector.FunctionalTaskBuilder(
-                    lambda z: BrainBoxTask.call(FakeFile)(f'prefix{z["prefix"]}', array_length=3)
+                    lambda z: BrainBoxTask.call(FakeFile)(z, array_length=3)
                 )))
             result = api.execute(tasks)
             ml = MediaLibrary.read(api.cache_folder/result)
@@ -69,6 +72,7 @@ class CollectorWithMediaLibraryTestCase(TestCase):
                 )))
             result = api.execute(tasks)
             ml = MediaLibrary.read(api.cache_folder/result)
+            self.assertEqual(2, len(ml.records))
             for rec in ml.records:
                 self.assertTrue(rec.inline_content.startswith(f'prefix{rec.tags["prefix"]}'))
 
@@ -79,10 +83,25 @@ class CollectorWithMediaLibraryTestCase(TestCase):
                 .en(range(5))
                 .select(lambda z: dict(prefix=z))
                 .feed(Collector.FunctionalTaskBuilder(
-                    lambda z: BrainBoxTask.call(FakeFile)(f'prefix{z["prefix"]}'),
+                    lambda z: BrainBoxTask.call(FakeFile)(dict(prefix=z["prefix"])),
                 )))
             result = api.execute(tasks)
             with zipfile.ZipFile(api.cache_folder/result,'r') as zip:
                 records = pickle.loads(zip.read('description.pkl'))
+                self.assertEqual(5, len(records))
                 for value in records.values():
                     self.assertIsInstance(value, dict)
+
+    def test_medialibrary_correct_batches_assigned(self):
+        with BrainBoxApi.ServerlessTest([FakeFile(), Collector()]) as api:
+            tasks = (
+                Query
+                .en(range(5))
+                .select(lambda z: dict(prefix=z))
+                .feed(Collector.FunctionalTaskBuilder(
+                    lambda z: BrainBoxTask.call(FakeFile)(dict(prefix=z["prefix"])),
+                )))
+            api.execute(tasks)
+            result = api.summary()
+            batches = [r['batch'] for r in result]
+            self.assertEqual(1, len(set(batches)))

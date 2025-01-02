@@ -8,19 +8,18 @@ import traceback
 from abc import ABC, abstractmethod
 from .trackable_session_factory import TrackableSessionFactory
 from .job_for_planner import JobForPlanner
-from ...common import LocHolder, Loc
+from ...common import Locator, Loc
 
 class Core:
     def __init__(self,
                  engine: Engine,
                  registry: ControllerRegistry,
-                 locator: LocHolder = Loc,
+                 locator: Locator = Loc,
                  debug_output: bool = False,
                  ):
         self._engine = engine
         self.new_session = TrackableSessionFactory(self._engine, Core.job_to_id)
         self.registry = registry
-        self.registry.set_resource_folder(locator.resources_folder)
         self.locator = locator
         self.operator_states: dict[str, OperatorState] = dict()
         self.operator_log: OperatorLog = OperatorLog(debug_output)

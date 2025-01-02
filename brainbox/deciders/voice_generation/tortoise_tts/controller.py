@@ -2,7 +2,7 @@ from typing import Iterable
 from unittest import TestCase
 from ....framework import (
     RunConfiguration, TestReport, SmallImageBuilder, IImageBuilder, DockerWebServiceController,
-    BrainBoxApi, BrainBoxTask, FileIO, INotebookableController, LocalExecutor
+    BrainBoxApi, BrainBoxTask, File, INotebookableController
 )
 from ...common import VOICEOVER_TEXT, check_if_its_sound
 from .settings import TortoiseTTSSettings
@@ -57,18 +57,17 @@ class TortoiseTTSController(DockerWebServiceController[TortoiseTTSSettings], INo
             self.run_auxiliary_configuration(self.get_service_run_configuration(None).as_service_worker('--install'))
 
 
-    def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable[TestReport.Item]:
+    def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable:
         from .api import TortoiseTTS
 
-        TortoiseTTS.export_voice(api, 'test_voice', [Path(__file__).parent/'test_voice.wav'])
+        TortoiseTTS.export_voice('test_voice', [Path(__file__).parent/'test_voice.wav']).execute(api)
         text = VOICEOVER_TEXT
-        yield TestReport.text("Text:")
-        yield TestReport.code(text)
         files = api.execute(BrainBoxTask.call(TortoiseTTS).dub(text=text, voice='test_voice'))
+        yield TestReport.last_call(api).result_is_array_of_files(File.Kind.Audio).with_comment("Voiceover")
         for i, fname in enumerate(files):
-            file = api.download(fname)
+            file = api.open_file(fname)
             check_if_its_sound(file.content, tc)
-            yield TestReport.file(file)
+
 
 
 DOCKERFILE = f'''

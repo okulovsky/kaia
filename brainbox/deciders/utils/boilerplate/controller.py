@@ -2,13 +2,18 @@ from typing import Iterable
 from unittest import TestCase
 from ....framework import (
     RunConfiguration, TestReport, SmallImageBuilder, IImageBuilder, DockerWebServiceController,
-    BrainBoxApi, BrainBoxTask, FileIO, INotebookableController, LocalExecutor
+    BrainBoxApi, BrainBoxTask, FileIO, INotebookableController, IModelDownloadingController, DownloadableModel
 )
 from .settings import BoilerplateSettings
+from .model import BoilerplateModel
 from pathlib import Path
 
 
-class BoilerplateController(DockerWebServiceController[BoilerplateSettings], INotebookableController):
+class BoilerplateController(
+    DockerWebServiceController[BoilerplateSettings],
+    INotebookableController,
+    IModelDownloadingController
+):
     def get_image_builder(self) -> IImageBuilder|None:
         return SmallImageBuilder(
             Path(__file__).parent/'container',
@@ -16,9 +21,12 @@ class BoilerplateController(DockerWebServiceController[BoilerplateSettings], INo
             DEPENDENCIES.split('\n'),
         )
 
+    def get_downloadable_model_type(self) -> type[DownloadableModel]:
+        return BoilerplateModel
+
     def get_service_run_configuration(self, parameter: str|None) -> RunConfiguration:
         if parameter is None:
-            raise ValueError(f"`parameter` cannot be None for {self.get_name()}")
+            parameter = 'no_parameter'
         return RunConfiguration(
             parameter,
             publish_ports={self.connection_settings.port:8080},
@@ -40,23 +48,17 @@ class BoilerplateController(DockerWebServiceController[BoilerplateSettings], INo
         FileIO.write_text("Boilerplate nested resource", self.resource_folder('nested') / 'resource')
 
 
-    def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable[TestReport.Item]:
+    def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable:
         from .api import Boilerplate
 
-        yield TestReport.H1("Json")
-        yield TestReport.text("Endpoint `json` returns a json as a string. It is stored in the database.")
-        json_result = api.execute(BrainBoxTask.call(Boilerplate, 'test_parameter').json('test_argument_json'))
-        yield TestReport.json(json_result)
+        api.execute(BrainBoxTask.call(Boilerplate, 'test_parameter').json('test_argument_json'))
+        yield TestReport.last_call(api).with_comment("Returns JSON as a string. This string is stored in the database")
 
-        yield TestReport.H1("File")
-        yield TestReport.text("Endpoint `file` returns a json as a file. It's content is not stored in the database, but in the file cache")
-        file_name = api.execute(BrainBoxTask.call(Boilerplate, 'test_parameter').file('test_argument_file'))
-        file = api.download(file_name)
-        yield TestReport.file(file)
+        api.execute(BrainBoxTask.call(Boilerplate, 'test_parameter').file('test_argument_file'))
+        yield TestReport.last_call(api).result_is_file().with_comment("Returns a json as a file. It's content is not stored in the database, but in the file cache")
 
-        yield TestReport.H1("Resources")
-        yield TestReport.text("Boilerplate reports the resource files shared with it.")
-        yield TestReport.json(api.execute(BrainBoxTask.call(Boilerplate, 'test_parameter').resources()))
+        api.execute(BrainBoxTask.call(Boilerplate, 'test_parameter').resources())
+        yield TestReport.last_call(api).with_comment("Returns a json with the list of resources: files that are stored at the server outside of the cache, and are shared with the container")
 
 
 

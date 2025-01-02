@@ -5,7 +5,7 @@ import shutil
 from .runner import BrainBoxRunner
 from .run_configuration import RunConfiguration
 import re
-
+import os
 
 class DockerController(IController[TSettings]):
     # region Abstract methods
@@ -65,6 +65,12 @@ class DockerController(IController[TSettings]):
         for image in images:
             self.get_executor().execute(['docker', 'rmi', image])
         if purge:
+            for filename in os.listdir(self.resource_folder()):
+                file_path = self.resource_folder()/filename
+                if file_path.is_file():
+                    os.unlink(file_path)  # Remove file or symlink
+                if file_path.is_dir():
+                    shutil.rmtree(file_path)  # Remove directory and its contents
             shutil.rmtree(self.resource_folder())
 
     def run_with_configuration(self, configuration: RunConfiguration) -> str:

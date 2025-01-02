@@ -9,7 +9,7 @@ class IBrainBoxTask(ABC):
         pass
 
     @abstractmethod
-    def get_resulting_id(self) -> str:
+    def get_resulting_id(self) -> str|None:
         pass
 
     def postprocess_result(self, result, api):

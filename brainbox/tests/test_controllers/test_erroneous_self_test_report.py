@@ -10,8 +10,8 @@ from unittest import TestCase
 
 class ErroneousBoilerplateController(Boilerplate.Controller):
     def _self_test_internal(self, api, tc: None|TestCase = None) -> TestReport:
-        yield TestReport.text("Everything is great")
-        yield TestReport.text("Everything is still great")
+        yield TestReport.main_section_content("content")
+        yield TestReport.section("Some section")
         raise ValueError("Something has happened")
 
 class ErroneousSelfTestReport(TestCase):
@@ -26,6 +26,6 @@ class ErroneousSelfTestReport(TestCase):
             pass
         self.assertTrue(path.is_file())
         report = FileIO.read_pickle(path)
-        self.assertEqual(2, len(report.items))
+        self.assertEqual(2, len(report.sections))
         self.assertEqual('ErroneousBoilerplate', report.name)
         self.assertIsNotNone(report.error)

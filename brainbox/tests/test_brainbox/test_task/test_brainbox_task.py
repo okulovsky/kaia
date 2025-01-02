@@ -1,4 +1,4 @@
-from brainbox.framework import BrainBoxTask, BrainBoxTaskPack, IDecider
+from brainbox.framework import BrainBoxTask, BrainBoxCombinedTask, IDecider
 from unittest import TestCase
 
 
@@ -52,7 +52,7 @@ class CoolCtorTestCase(TestCase):
         task_2 = BrainBoxTask(decider=Test.method, arguments=dict(a=task, b=4), id='test_2')
         self.assertEqual('test', task_2.dependencies['a'])
 
-        pack = BrainBoxTaskPack(task, ())
+        pack = BrainBoxCombinedTask(task, ())
         task_3 = BrainBoxTask(decider=Test.method, arguments=dict(a=task_2, b=pack))
         self.assertEqual('test', task_3.dependencies['b'])
         self.assertEqual('test_2', task_3.dependencies['a'])

@@ -117,7 +117,8 @@ class ServiceTestCase(TestCase):
                     ))
             api.execute(tasks)
             log = api.get_operator_log()
-            is_warm_up = [l for l in log if l.event=='Starting']
+            is_warm_up = [l for l in log if 'Setting up' in l.event]
+            print(log)
             self.assertEqual(3, len(is_warm_up))
 
 
@@ -164,3 +165,8 @@ class ServiceTestCase(TestCase):
                 self.assertFalse(task.success)
                 self.assertIsNotNone(task.error)
 
+    def test_result_endpoint(self):
+        with BrainBoxApi.ServerlessTest(services) as api:
+            task = BrainBoxTask(id=f'test', decider = 'a', arguments = {})
+            self.assertEqual('OK', api.execute(task))
+            self.assertEqual('OK', api.result(task.id))

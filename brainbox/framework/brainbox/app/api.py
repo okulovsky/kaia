@@ -1,22 +1,22 @@
-import uuid
 from typing import Iterable, Union
 from ...common.marshalling import Api, bind_to_api, TestApi
-from ...common import File, Loc, FileLike, IDecider, LocHolder
+from ...common import File, Loc, FileLike, IDecider, Locator
 from .interface import IBrainboxService
 from .service import BrainBoxService
-from .task import IBrainBoxTask
 from ...controllers import IController, ControllerRegistry, ControllerApi
 import os
 import requests
 from .server import BrainBoxServer, BrainBoxServiceSettings
 from pathlib import Path
 from .serverless_test import ServerlessTest
+from ...job_processing import AlwaysOnPlanner
+from functools import partial
 
 
 @bind_to_api(BrainBoxService)
 class BrainBoxApi(Api, IBrainboxService):
     def __init__(self,
-                 address: str = '127.0.0.1:8090',
+                 address: str = '127.0.0.1:18090',
                  cache_folder: Path|None = None
                  ):
         super().__init__(address)
@@ -54,7 +54,7 @@ class BrainBoxApi(Api, IBrainboxService):
         return content
 
 
-    def download(self, fname: str|File) -> File:
+    def open_file(self, fname: str|File) -> File:
         should_download, fname, path = self._process_download_arguments(fname)
         if should_download:
             content = self._download_and_cache(fname, path)
@@ -62,7 +62,7 @@ class BrainBoxApi(Api, IBrainboxService):
         else:
             return File.read(path)
 
-    def custom_download(self, fname: str|File, custom_file_path: Path|None = None, replace: bool = False) -> Path:
+    def download(self, fname: str|File, custom_file_path: Path|None = None, replace: bool = False) -> Path:
         should_download, fname, path = self._process_download_arguments(fname, custom_file_path, replace)
         if should_download:
             self._download_and_cache(fname, path)
@@ -84,14 +84,27 @@ class BrainBoxApi(Api, IBrainboxService):
         def __init__(self,
                      services: Iterable[Union[IDecider, IController]]|None = None,
                      run_controllers_in_default_environment: bool = True,
+                     always_on_planner: bool = False,
+                     stop_containers_at_termination: bool = True,
+                     keep_folder: bool = False,
+                     port: int = 18090
                      ):
             self.test_folder = Loc.create_test_folder('brainbox_test_runs')
-            locator = LocHolder(self.test_folder.path)
+            self.keep_folder = keep_folder
+            locator = Locator(self.test_folder.path)
             registry = ControllerRegistry.discover_or_create(services)
             if not run_controllers_in_default_environment:
                 registry.locator = locator
-            settings = BrainBoxServiceSettings(registry, locator = locator, debug_output=True)
-            super().__init__(BrainBoxApi, BrainBoxServer(settings))
+            settings = BrainBoxServiceSettings(
+                registry,
+                locator = locator,
+                debug_output=True,
+                stop_controllers_at_termination=stop_containers_at_termination,
+                port=port
+            )
+            if always_on_planner:
+                settings.planner = AlwaysOnPlanner(AlwaysOnPlanner.Mode.FindThenStart)
+            super().__init__(partial(BrainBoxApi, cache_folder=locator.cache_folder), BrainBoxServer(settings))
 
         def __enter__(self):
             self.test_folder.__enter__()

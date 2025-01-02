@@ -6,7 +6,7 @@ from datetime import datetime
 
 class SimplePlanner(IPlanner):
     def __init__(self,
-                 cooldown_delay_in_seconds: int|None = 60,
+                 cooldown_delay_in_seconds: int|None = 60*30,
                  datetime_factory: Optional[Callable[[], datetime]] = datetime.now
                  ):
         self.cooldown_delay_in_seconds = cooldown_delay_in_seconds
@@ -36,7 +36,7 @@ class SimplePlanner(IPlanner):
             return []
         else:
             args.log_handler.event(f"No active services, starting {service_to_activate[0]}")
-            return [StartCommand(service_to_activate[0])]
+            return [StartCommand(service_to_activate[0], StartCommand.Mode.StartOnly)]
 
     def _get_tasks_for_service(self, args: PlannerArguments, active_service: OperatorStateForPlanner):
         return (

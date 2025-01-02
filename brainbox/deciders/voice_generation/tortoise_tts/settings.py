@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from kaia.infra import Loc
 from ....framework import ConnectionSettings
 
 @dataclass

@@ -38,7 +38,7 @@ class WhisperApp:
             return traceback.format_exc(), 500
 
     def get_loaded_model(self):
-        return flask.jsonify(dict(name=self.model_name))
+        return flask.jsonify(self.model_name)
 
 
     def transcribe(self):

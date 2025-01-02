@@ -1,7 +1,6 @@
-
 import requests
 from pathlib import Path
-from ....framework import DockerWebServiceApi, FileLike, BrainBoxApi
+from ....framework import DockerWebServiceApi, FileLike, BrainBoxApi, MediaLibrary, ResourcePrerequisite, CombinedPrerequisite
 from .settings import ResemblyzerSettings
 from .controller import ResemblyzerController
 
@@ -33,22 +32,38 @@ class Resemblyzer(DockerWebServiceApi[ResemblyzerSettings, ResemblyzerController
         return reply.json()
 
     @staticmethod
-    def upload_dataset_file(api: BrainBoxApi, model: str, split: str, speaker: str, file: FileLike.Type|None = None):
-        with FileLike(file, api.cache_folder) as stream:
-            fname = FileLike.get_name(file, True)
-            api.controller_api.upload_resource(
-                Resemblyzer,
-                f'datasets/{model}/{split}/{speaker}/{fname}',
-                stream.getvalue()
-            )
+    def upload_dataset_file(model: str, split: str, speaker: str, file: FileLike.Type) -> ResourcePrerequisite:
+        fname = FileLike.get_name(file, True)
+        return ResourcePrerequisite(
+            Resemblyzer,
+            f'datasets/{model}/{split}/{speaker}/{fname}',
+            file
+        )
+
 
     @staticmethod
-    def delete_dataset(api: BrainBoxApi, model: str):
-        api.controller_api.delete_resource(
+    def delete_dataset(model: str) -> ResourcePrerequisite:
+        return ResourcePrerequisite(
             Resemblyzer,
             f'datasets/{model}',
-            True
+            None
         )
+
+    @staticmethod
+    def upload_dataset(model: str, media_library_path: Path, append_dataset: bool = False) -> CombinedPrerequisite:
+        command = []
+        media_library = MediaLibrary.read(media_library_path)
+        if not append_dataset:
+            command.append(Resemblyzer.delete_dataset(model))
+        for record in media_library:
+            command.append(Resemblyzer.upload_dataset_file(
+                model,
+                record.tags['split'],
+                record.tags['speaker'],
+                record.get_file()
+            ))
+        return CombinedPrerequisite(command)
+
 
     Controller = ResemblyzerController
     Settings = ResemblyzerSettings

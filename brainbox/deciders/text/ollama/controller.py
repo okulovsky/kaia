@@ -2,13 +2,16 @@ from typing import Iterable
 from unittest import TestCase
 from ....framework import (
     RunConfiguration, TestReport, SmallImageBuilder, IImageBuilder, DockerWebServiceController,
-    BrainBoxApi, BrainBoxTask, FileIO, INotebookableController, LocalExecutor
+    BrainBoxApi, BrainBoxTask, IModelDownloadingController, DownloadableModel
 )
-from .settings import OllamaSettings
+from .settings import OllamaSettings, OllamaModel
 from pathlib import Path
 
 
-class OllamaController(DockerWebServiceController[OllamaSettings]):
+class OllamaController(DockerWebServiceController[OllamaSettings], IModelDownloadingController):
+    def get_downloadable_model_type(self) -> type[DownloadableModel]:
+        return OllamaModel
+
     def get_image_builder(self) -> IImageBuilder|None:
         return SmallImageBuilder(
             Path(__file__).parent/'container',
@@ -36,49 +39,24 @@ class OllamaController(DockerWebServiceController[OllamaSettings]):
         return Ollama()
 
     def post_install(self):
-        for model in self.settings.models_to_install:
-            path_to_model_manifest = (
-                    self.resource_folder('main') /
-                    'models/manifests/registry.ollama.ai/library' /
-                    model.location
-            )
-            if not path_to_model_manifest.is_file():
-                self.run_auxiliary_configuration(self.get_service_run_configuration('').as_service_worker('pull', model.name))
+        self.download_models(self.settings.models_to_install)
 
-    def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable[TestReport.Item]:
+    def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable:
         from .api import Ollama
-        for model in self.settings.models_to_install:
-            yield TestReport.H1("Model " + model.name)
+        model = self.settings.models_to_install[0]
+        prompt = "The recipe for the borsch is as follows:"
+        api.execute(BrainBoxTask.call(Ollama, model.name).completions_json(prompt=prompt))
+        yield TestReport.last_call(api).with_comment("Returns json for completions with detailed reply")
 
-            yield TestReport.H1('Completions')
+        api.execute(BrainBoxTask.call(Ollama, model.name).completions(prompt=prompt))
+        yield TestReport.last_call(api).with_comment("Returns only the text result")
 
-            prompt = "The recipe for the borsch is as follows:"
-            yield TestReport.text("Prompt")
-            yield TestReport.text(prompt)
+        prompt = "Give me the recipe of the borsch."
+        api.execute(BrainBoxTask.call(Ollama, model.name).question_json(prompt=prompt))
+        yield TestReport.last_call(api).with_comment("Returns json for question mode with detailed reply")
 
-            result = api.execute(BrainBoxTask.call(Ollama, model.name).completions_json(prompt=prompt))
-            yield TestReport.text("Json result:")
-            yield TestReport.json(result)
-
-            result = api.execute(BrainBoxTask.call(Ollama, model.name).completions(prompt=prompt))
-            yield TestReport.text("Text result:")
-            tc.assertIsInstance(result, str)
-            yield TestReport.text(result)
-
-            yield TestReport.H2('Questions')
-
-            prompt = "Give me the recipe of the borsch."
-            yield TestReport.text("Prompt")
-            yield TestReport.text(prompt)
-
-            result = api.execute(BrainBoxTask.call(Ollama, model.name).question_json(prompt=prompt))
-            yield TestReport.text("Json result:")
-            yield TestReport.json(result)
-
-            result = api.execute(BrainBoxTask.call(Ollama, model.name).question(prompt=prompt))
-            yield TestReport.text("Text result:")
-            tc.assertIsInstance(result, str)
-            yield TestReport.text(result)
+        api.execute(BrainBoxTask.call(Ollama, model.name).question(prompt=prompt))
+        yield TestReport.last_call(api).with_comment("Returns only the text result")
 
 
 

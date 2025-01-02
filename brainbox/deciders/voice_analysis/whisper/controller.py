@@ -4,19 +4,22 @@ from unittest import TestCase
 
 from ....framework import (
     File, RunConfiguration, TestReport, SmallImageBuilder, IImageBuilder,
-    DockerWebServiceController, BrainBoxApi, BrainBoxTask
+    DockerWebServiceController, BrainBoxApi, BrainBoxTask, IModelDownloadingController, DownloadableModel
 )
-from .settings import WhisperSettings
+from .settings import WhisperSettings, WhisperModel
 from pathlib import Path
 
 
-class WhisperController(DockerWebServiceController[WhisperSettings]):
+class WhisperController(DockerWebServiceController[WhisperSettings], IModelDownloadingController):
     def get_image_builder(self) -> IImageBuilder|None:
         return SmallImageBuilder(
             Path(__file__).parent/'container',
             DOCKERFILE,
             DEPENDENCIES.split('\n'),
         )
+
+    def get_downloadable_model_type(self) -> type[DownloadableModel]:
+        return WhisperModel
 
     def get_service_run_configuration(self, parameter: str|None) -> RunConfiguration:
         if parameter is not None:
@@ -40,41 +43,24 @@ class WhisperController(DockerWebServiceController[WhisperSettings]):
         self.run_with_configuration(self.get_service_run_configuration(None).as_notebook_service())
 
     def post_install(self):
-        if len(self.settings.models_to_download)>0:
-            self.context.logger.log("Checking required models models")
-            instance_id = self.run(None)
-            api = self.find_api(instance_id)
-            for model in self.settings.models_to_download:
-                if (self.resource_folder()/(model+'.pt')).is_file():
-                    self.context.logger.log(f"Skipping model {model} because it's already downloaded")
-                    continue
-                self.context.logger.log(f"Downloading model {model}")
-                api.load_model(model)
-                self.context.logger.log(f'Done')
-            self.stop(instance_id)
+        self.download_models(self.settings.models_to_download)
 
 
-    def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable[TestReport.Item]:
+    def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable:
         from .api import Whisper
 
         file = File.read(Path(__file__).parent / 'files/test_voice.wav')
-        yield TestReport.text("Input audio:")
-        yield TestReport.file(file)
 
         for model in self.settings.models_to_download:
-            yield TestReport.H1("Model " + model)
-            result = api.execute(BrainBoxTask.call(Whisper).transcribe_json(file, model))
-
-            yield TestReport.text("Full transcription")
-            yield TestReport.json(result)
+            result = api.execute(BrainBoxTask.call(Whisper).transcribe_json(file, model.name))
+            yield TestReport.last_call(api).with_comment("Speech recognition with Whisper, full output")
             tc.assertEqual(
                 'One little spark and before you know it, the whole world is burning.',
                 result['text'].strip()
             )
 
-            result = api.execute(BrainBoxTask.call(Whisper).transcribe(file, model))
-            yield TestReport.text("Text-only transcription")
-            yield TestReport.code(result)
+            result = api.execute(BrainBoxTask.call(Whisper).transcribe(file, model.name))
+            yield TestReport.last_call(api).with_comment("Speech recognition with Whisper, text-only output")
             tc.assertEqual(
                 'One little spark and before you know it, the whole world is burning.',
                 result

@@ -1,6 +1,6 @@
 from typing import *
 from brainbox.framework.common.marshalling import Api, bind_to_api, TestApi
-from brainbox.framework import Loc, LocHolder
+from brainbox.framework import Loc, Locator
 from .interface import IControllerService
 from .service import ControllerService, ControllerServerSettings
 from .server import ControllerServer
@@ -49,7 +49,7 @@ class ControllerApi(Api, IControllerService):
                      custom_folder: Path|None = None
                      ):
             if custom_folder is not None:
-                loc = LocHolder(custom_folder)
+                loc = Locator(custom_folder)
             else:
                 loc = Loc
             registry = ControllerRegistry.discover_or_create(services)

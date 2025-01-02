@@ -47,7 +47,7 @@ class CoquiTTSController(DockerWebServiceController[CoquiTTSSettings], INotebook
                 )
                 self.run_auxiliary_configuration(cfg)
 
-    def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable[TestReport.Item]:
+    def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable:
         from .tests import Test
         yield from Test(api, tc).test_all(self.settings)
 

@@ -13,11 +13,13 @@ from ...job_processing.planner.stop_action import StopCommand
 class MainLoop:
     def __init__(self,
                  core: Core,
-                 planner: IPlanner
+                 planner: IPlanner,
+                 stop_containers_at_termination: bool = True
                  ):
         self.core = core
         self.planner = planner
         self._terminate_request: bool = False
+        self.stop_containers_at_termination = stop_containers_at_termination
 
     def run(self):
         while True:
@@ -30,11 +32,12 @@ class MainLoop:
                 self.core.operator_log.core().error(traceback.format_exc())
                 print(message)
             time.sleep(0.1)
-        for state in list(self.core.operator_states.values()):
-            try:
-                StopCommand(state.controller_run_instance_id).apply(self.core)
-            except:
-                pass
+        if self.stop_containers_at_termination:
+            for state in list(self.core.operator_states.values()):
+                try:
+                    StopCommand(state.controller_run_instance_id).apply(self.core)
+                except:
+                    pass
 
 
 

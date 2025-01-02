@@ -8,5 +8,4 @@ class ImageFormat(BaseModel):
     image_base64: str
 
 class LoadModelRequest(BaseModel):
-    repo_id: str
-    model_filename: str
+    model_id: str

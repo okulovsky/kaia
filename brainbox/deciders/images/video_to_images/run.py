@@ -1,6 +1,10 @@
-from kaia.brainbox.deciders.video_processor.installer import VideoProcessorInstaller
-from kaia.brainbox.deciders.video_processor.settings import VideoProcessorSettings
+from brainbox.deciders.images.video_to_images.controller import VideoToImagesController
 
 if __name__ == '__main__':
-    installer = VideoProcessorInstaller(VideoProcessorSettings)
-    installer.run_in_any_case_and_create_api()
+    controller = VideoToImagesController()
+    controller.install()
+    controller.self_test()
+
+
+
+
