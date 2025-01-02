@@ -1,6 +1,6 @@
 from typing import *
 from .template import Template
-from kaia.eaglesong.core.testing.scenario import IAsserter
+from eaglesong.core.testing.scenario import IAsserter
 from unittest import TestCase
 
 class Utterance(IAsserter):

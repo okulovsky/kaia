@@ -20,7 +20,7 @@ class Address:
         return obj
 
     def desc(self):
-        return '.'.join(self.address)
+        return '/'.join(self.address)
 
     def append(self, value: str):
         new_address = self.address+(value,)
