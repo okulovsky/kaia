@@ -1,4 +1,4 @@
-from .characters import CharacterBinding
+from .character_binding import CharacterBinding
 
 class World:
     user = CharacterBinding('user')

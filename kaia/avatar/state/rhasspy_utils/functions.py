@@ -1,5 +1,5 @@
 from . import rhasspy_nlu
-from ..core.algorithms.to_ini import IniRuleRecord, IniRule
+from ....dub.core.algorithms.to_ini import IniRuleRecord, IniRule
 from yo_fluq import Query
 
 def _content_to_ini(rec: IniRuleRecord):

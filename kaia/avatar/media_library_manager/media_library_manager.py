@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from .strategies import IContentStrategy
 from .feedback_provider import FeedbackProvider
 from pathlib import Path
-from kaia.brainbox import MediaLibrary
+from brainbox import MediaLibrary
 from .tag_matcher import ITagMatcherFactory, ExactTagMatcher
 
 class MediaLibraryManager:
@@ -11,6 +11,7 @@ class MediaLibraryManager:
     class Record:
         file_id: str
         content: Any
+        original_record: MediaLibrary.Record
 
     def __init__(self,
                  strategy: IContentStrategy,
@@ -32,7 +33,7 @@ class MediaLibraryManager:
         choosen_id = self.strategy.choose_filename(ml)
         if choosen_id is None:
             return None
-        return MediaLibraryManager.Record(choosen_id, ml.mapping[choosen_id].get_content())
+        return MediaLibraryManager.Record(choosen_id, ml.mapping[choosen_id].get_content(), ml.mapping[choosen_id])
 
 
     def get_content(self, state: dict[str,str], additional_required_tags: None|dict[str, str] = None) -> 'MediaLibraryManager.Record':
@@ -40,6 +41,10 @@ class MediaLibraryManager:
         if content is None:
             raise ValueError("No content can be found")
         return content
+
+    def get_content_by_id(self, file_id) -> 'MediaLibraryManager.Record':
+        record = self.media_library[file_id]
+        return MediaLibraryManager.Record(record.filename, record.get_content(), record)
 
 
     def feedback(self, last_file_id: str, feedback: str) -> None:

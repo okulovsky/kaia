@@ -1,6 +1,6 @@
 from typing import *
-from ..core.algorithms import ToIni, IniRule
-from ..core.templates import Template, Utterance
+from kaia.dub.core.algorithms import ToIni, IniRule
+from kaia.dub.core.templates import Template, Utterance
 from . import rhasspy_nlu
 from .functions import rule_to_section, rule_to_sample_str
 
