@@ -1,7 +1,6 @@
 from typing import *
-from kaia.dub import *
 from kaia.dub.languages.en import *
-from kaia.kaia.core import SingleLineKaiaSkill
+from kaia.kaia import SingleLineKaiaSkill
 from kaia.avatar import AvatarApi
 
 class RecognitionFeedbackIntents(TemplatesCollection):

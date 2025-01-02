@@ -1,10 +1,9 @@
 from typing import *
-from ..core import IKaiaSkill, KaiaAssistant, AssistantHistoryItem
-from kaia.infra import ScheduledTime
+from ..kaia import IKaiaSkill, KaiaAssistant, AssistantHistoryItem, TimerTick
+from .scheduled_time import ScheduledTime
 from dataclasses import dataclass
 from kaia.dub.core import Template, Utterance
 from datetime import datetime, timedelta
-from ...eaglesong.core import TimerTick
 from abc import ABC, abstractmethod
 
 

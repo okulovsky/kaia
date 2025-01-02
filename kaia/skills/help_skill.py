@@ -1,5 +1,5 @@
 from typing import *
-from kaia.kaia.core import KaiaAssistant, SingleLineKaiaSkill, KaiaMessage
+from kaia.kaia import KaiaAssistant, SingleLineKaiaSkill, Message
 from kaia.dub.languages.en import *
 
 class HelpIntents(TemplatesCollection):
@@ -21,7 +21,7 @@ class HelpSkill(SingleLineKaiaSkill):
             commands = ', '.join(template for intent in skill.get_intents() for template in intent.string_templates)
             reply.append(f'{skill.get_name()}: {commands}')
             reply.append('')
-        yield KaiaMessage(True, '\n'.join(reply))
+        yield Message(Message.Type.ToUser, '\n'.join(reply))
         yield HelpReplies.help.utter()
 
 

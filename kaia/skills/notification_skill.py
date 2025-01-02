@@ -1,9 +1,9 @@
 from typing import *
-from kaia.kaia.core import IKaiaSkill
+from kaia.kaia import IKaiaSkill, TimerTick
 from kaia.kaia.translators import VolumeCommand
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from kaia.eaglesong.core import TimerTick, Return, Listen
+from eaglesong.core import Return, Listen
 
 @dataclass
 class NotificationInfo:

@@ -1,5 +1,4 @@
-from kaia.kaia.core import KaiaContext, SingleLineKaiaSkill, KaiaLog
-from kaia.eaglesong.core import ContextRequest
+from kaia.kaia import SingleLineKaiaSkill, KaiaLog
 from kaia.dub.languages.en import *
 
 class LogFeedbackIntents(TemplatesCollection):

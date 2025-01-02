@@ -1,9 +1,9 @@
 import random
 from typing import *
 from kaia.dub.languages.en import *
-from kaia.kaia.core import SingleLineKaiaSkill
-from kaia.avatar import AvatarApi
-from kaia.narrator import World
+from kaia.kaia import SingleLineKaiaSkill
+from kaia.avatar import AvatarApi, World
+
 
 class ChangeCharacterReplies(TemplatesCollection):
     hello = (
@@ -40,6 +40,18 @@ class ChangeCharacterSkill(SingleLineKaiaSkill):
         self.intents: Type[ChangeCharacterIntents] = ChangeCharacterIntents.substitute(substitution)
         super().__init__(self.intents, ChangeCharacterReplies)
 
+    def switch_to_character(self, character_name: str|None = None):
+        if character_name is None:
+            current_state = self.avatar_api.state_get()
+            current_character = current_state[World.character.field_name]
+            other_characters = [c for c in self.characters_list if c != current_character and c not in self.dont_randomly_switch_to]
+            if len(other_characters) == 0:
+                return
+            character_name = other_characters[random.randint(0, len(other_characters) - 1)]
+        self.avatar_api.state_change({World.character.field_name: character_name})
+        yield self.avatar_api.image_get_new()
+        yield ChangeCharacterReplies.hello.utter()
+
     def run(self):
         input: Utterance = yield
         if input.template.name == ChangeCharacterIntents.all_characters.name:
@@ -47,17 +59,10 @@ class ChangeCharacterSkill(SingleLineKaiaSkill):
             yield ChangeCharacterReplies.all_characters.utter(character_list=lst)
         if input.template.name == ChangeCharacterIntents.change_character.name:
             value = input.value.get('character', None)
-            if value is None:
-                current_state = self.avatar_api.state_get()
-                current_character = current_state[World.character.field_name]
-                other_characters = [c for c in self.characters_list if c != current_character and c not in self.dont_randomly_switch_to]
-                if len(other_characters) == 0:
-                    return
-                value = other_characters[random.randint(0, len(other_characters)-1)]
+            yield from self.switch_to_character(value)
 
-            self.avatar_api.state_change({World.character.field_name:value})
-            yield self.avatar_api.image_get()
-            yield ChangeCharacterReplies.hello.utter()
+
+
 
 
 

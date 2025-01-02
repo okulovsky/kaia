@@ -1,8 +1,8 @@
 from typing import *
 from kaia.dub.languages.en import *
-from ..core import SingleLineKaiaSkill
+from kaia.kaia import SingleLineKaiaSkill
 from datetime import datetime
-from kaia.narrator import World
+from kaia.avatar import World
 
 class TimeIntents(TemplatesCollection):
     question = Template(

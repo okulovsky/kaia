@@ -1,10 +1,10 @@
-from kaia.eaglesong.core import Return
+from eaglesong.core import Return
 from typing import *
 from kaia.dub.languages.en import *
-from kaia.kaia.core import SingleLineKaiaSkill
+from kaia.kaia import SingleLineKaiaSkill
 from datetime import datetime
-from kaia.kaia.skills.notification_skill import NotificationRegister, NotificationInfo
-from kaia.narrator import World
+from .notification_skill import NotificationRegister, NotificationInfo
+from kaia.avatar import World
 
 class TimerIntents(TemplatesCollection):
     set_the_timer = Template(

@@ -2,7 +2,6 @@ from typing import *
 from dataclasses import dataclass
 from enum import Enum
 from datetime import time, datetime, timedelta, date
-from yo_fluq import Query
 from abc import ABC, abstractmethod
 
 

@@ -1,10 +1,9 @@
 from typing import *
-from ..core import IKaiaSkill
+from ..kaia import IKaiaSkill, OpenMic
 from kaia.dub.core import Template, Utterance, TemplatesCollection
-from kaia.eaglesong import Listen
-from ..translators import OpenMic
-from kaia.avatar import RecognitionSettings
-from kaia.narrator import World
+from eaglesong import Listen
+from kaia.avatar import RecognitionSettings, World
+
 
 class EchoIntents(TemplatesCollection):
     echo = Template("Repeat after me!")

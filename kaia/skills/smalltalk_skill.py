@@ -1,5 +1,5 @@
 from typing import *
-from kaia.kaia.core import SingleLineKaiaSkill
+from kaia.kaia import SingleLineKaiaSkill
 from kaia.dub.core import TemplatesCollection, Utterance, Template
 
 

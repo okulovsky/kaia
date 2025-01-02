@@ -1,5 +1,5 @@
 from kaia.dub.languages.en import *
-from kaia.kaia.core import SingleLineKaiaSkill
+from kaia.kaia import SingleLineKaiaSkill
 from kaia.kaia.translators import VolumeCommand
 
 class VolumeIntents(TemplatesCollection):

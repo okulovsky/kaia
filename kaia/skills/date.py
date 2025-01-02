@@ -1,10 +1,10 @@
 from typing import *
-from kaia.eaglesong.core import Return
-from ..core import SingleLineKaiaSkill
+from eaglesong.core import Return
+from kaia.kaia import SingleLineKaiaSkill
 from kaia.dub.languages.en import *
 from datetime import date, timedelta, datetime
 from enum import Enum
-from kaia.narrator import World
+from kaia.avatar import World
 
 class RelativeDay(Enum):
     Today = 0
