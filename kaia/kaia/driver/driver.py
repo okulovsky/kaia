@@ -1,26 +1,21 @@
 import time
 from typing import *
 from datetime import datetime
-from kaia.eaglesong.core import primitives as prim, IAutomaton
+from eaglesong.core import IAutomaton
+from .primitives import TimerTick, Start, AudioCommand, AudioPlayConfirmation
 from .interpreter import KaiaInterpreter
 from queue import Queue
-from ..server_2 import KaiaApi, Message, BusItem
+from ..server import KaiaApi, Message, BusItem
 import traceback
 from pathlib import Path
 from dataclasses import dataclass
-from ..core.kaia_log import KaiaLog
-from . import dto
+from .kaia_log import KaiaLog
 
-
-@dataclass
-class Start:
-    first_time: bool
 
 
 @dataclass
 class KaiaContext:
     driver: 'KaiaDriver'
-
 
 
 class KaiaDriver:
@@ -62,9 +57,9 @@ class KaiaDriver:
 
     def update_to_internal_dto(self, update: BusItem):
         if update.type == 'command_audio':
-            return dto.AudioControlCommand(update.payload)
+            return AudioCommand(update.payload)
         if update.type == 'confirmation_audio':
-            return dto.AudioPlayConfirmation(update.payload)
+            return AudioPlayConfirmation(update.payload)
         return None
 
 
@@ -78,7 +73,7 @@ class KaiaDriver:
                     delta = (now - self.last_time_tick).total_seconds()
                     if delta <= self.time_tick_frequency_in_seconds:
                         self.last_time_tick = now
-                        self._process(prim.TimerTick())
+                        self._process(TimerTick())
 
             updates = self.kaia_api.pull_updates()
             for update in updates:
