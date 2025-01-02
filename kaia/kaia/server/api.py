@@ -6,13 +6,14 @@ from datetime import datetime
 from dataclasses import dataclass
 from enum import Enum
 from .server import KaiaServerSettings, KaiaServer
-from kaia.infra.app import KaiaApp
 import requests
 import webbrowser
-from kaia.eaglesong.core import primitives
+from eaglesong.core import primitives
 from pathlib import Path
-from kaia.infra import Loc, FileIO
-from ..core import KaiaMessage
+from kaia.common import Loc
+from yo_fluq import FileIO
+from brainbox import File
+from brainbox.framework.common import Fork
 
 
 @dataclass
@@ -29,6 +30,8 @@ class Message:
     avatar: str|None = None
 
 
+
+
 class KaiaApi:
     def __init__(self,
                  bus: Bus,
@@ -38,43 +41,48 @@ class KaiaApi:
                  ):
         self.bus = bus
         self.session_id = session_id
+        if self.session_id is None:
+            raise ValueError("Session Id cannot be None")
         self.last_message_id: int|None = last_message_id
         self.cache_folder = cache_folder if cache_folder is not None else Loc.temp_folder/'kaia_api_cache'
 
-    def add_image(self, image: str|primitives.Image):
-        if isinstance(image, primitives.Image):
-            FileIO.write_bytes(image.data, self.cache_folder/image.id)
-            image = image.id
+    def add_image(self, image: str|File):
+        metadata = None
+        if isinstance(image, File):
+            FileIO.write_bytes(image.content, self.cache_folder/image.name)
+            if image.has_metadata():
+                metadata = image.metadata.__dict__
+            image = image.name
+
+        if not isinstance(image, str):
+            raise ValueError(f"Image is {type(image)}")
 
         self.bus.add_message(BusItem(
             session_id = self.session_id,
             timestamp = datetime.now(),
             type = "reaction_image",
-            payload = dict(filename=image)
+            payload = dict(filename=image, metadata=metadata)
         ))
 
-    def add_sound(self, sound: str|primitives.Audio):
-        if isinstance(sound, primitives.Audio):
-            if sound.id is None:
-                sound.id = str(uuid.uuid4())+'.wav'
-            FileIO.write_bytes(sound.data, self.cache_folder/sound.id)
-            sound = sound.id
+    def add_sound(self, sound: str|File):
+        metadata = None
+
+        if isinstance(sound, File):
+            if sound.name is None:
+                sound.name = str(uuid.uuid4())+'.wav'
+            FileIO.write_bytes(sound.content, self.cache_folder/sound.name)
+            if sound.has_metadata():
+                metadata = sound.metadata.__dict__
+            sound = sound.name
 
         self.bus.add_message(BusItem(
             session_id = self.session_id,
             timestamp = datetime.now(),
             type = "reaction_audio",
-            payload = dict(filename=sound)
+            payload = dict(filename=sound, metadata=metadata)
         ))
 
-    def add_message(self, message: Message|KaiaMessage):
-        if isinstance(message, KaiaMessage):
-            message = Message(
-                Message.Type.Error if message.is_error else (Message.Type.ToUser if message.is_bot else Message.Type.FromUser),
-                message.text,
-                message.speaker,
-                message.avatar
-            )
+    def add_message(self, message: Message):
         self.bus.add_message(BusItem(
             session_id = self.session_id,
             timestamp = datetime.now(),
@@ -85,6 +93,13 @@ class KaiaApi:
                 sender = message.sender,
                 avatar = message.avatar
             )))
+
+    def set_volume(self, volume: float):
+        self.bus.add_message(BusItem(
+            session_id = self.session_id,
+            timestamp = datetime.now(),
+            type = 'reaction_set_volumn',
+            payload = volume))
 
     def pull_updates(self):
         updates = self.bus.get_messages(self.session_id, self.last_message_id)
@@ -100,13 +115,11 @@ class KaiaApi:
                      ):
             self.settings = settings
             self.custom_session_id = custom_session_id
-            self.app: KaiaApp|None = None
+
 
         def __enter__(self):
-            self.app = KaiaApp()
-            service = KaiaServer(self.settings)
-            self.app.add_subproc_service(service)
-            self.app.run_services_only()
+            server = KaiaServer(self.settings)
+            self._fork = Fork(server).start()
 
             ok = False
             for i in range(100):
@@ -142,7 +155,7 @@ class KaiaApi:
             return api
 
         def __exit__(self, exc_type, exc_val, exc_tb):
-            self.app.exit()
+            self._fork.terminate()
 
 
 

@@ -15,11 +15,23 @@ class BusItem(Base):
     type: Mapped[str] = mapped_column()
     payload = Column('payload', JSON)
 
+    def __str__(self):
+        return f'BusItem(id={self.id}, session_id="{self.session_id}", type="{self.type}", payload="{self.payload}")'
+
+    def __repr__(self):
+        return self.__str__()
 
 class Bus:
     def __init__(self, db_path):
-        self.engine = create_engine('sqlite:///' + str(db_path))
-        Base.metadata.create_all(self.engine)
+        self.db_path = db_path
+        self._engine = None
+
+    @property
+    def engine(self):
+        if self._engine is None:
+            self._engine = create_engine('sqlite:///' + str(self.db_path))
+            Base.metadata.create_all(self.engine)
+        return self._engine
 
     def add_message(self, item: BusItem):
         with Session(self.engine) as session:

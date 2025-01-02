@@ -7,9 +7,10 @@ import base64
 import re
 import os
 from datetime import datetime
-from kaia.infra import Loc, FileIO
+from kaia.common import Loc
 from .bus import Bus, BusItem
 from dataclasses import dataclass, field
+from yo_fluq import FileIO
 
 
 

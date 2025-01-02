@@ -1,7 +1,7 @@
 from kaia.brainbox.deployment import *
 import time
 import os
-from yo_fluq_ds import *
+from yo_fluq import *
 from pathlib import Path
 from kaia.kaia.server.test.run_test_3 import run_test_3 as entry_point
 from kaia.infra import Loc
