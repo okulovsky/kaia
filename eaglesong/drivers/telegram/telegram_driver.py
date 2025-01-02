@@ -2,7 +2,7 @@ import sys
 
 import telegram
 
-from kaia.eaglesong.core import IAutomaton
+from eaglesong.core import IAutomaton
 from .telegram_interpreters import TelegramInterpreter
 from .primitives import TgChannel, TgUpdatePackage, TgContext
 
@@ -10,7 +10,6 @@ from .primitives import TgChannel, TgUpdatePackage, TgContext
 from typing import *
 import telegram.ext as tge
 import telegram as tg
-from enum import Enum
 import logging
 
 import traceback

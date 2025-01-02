@@ -1,5 +1,5 @@
 from typing import *
-from kaia.eaglesong.core import Interpreter, Return, Terminate, Listen, IAutomaton
+from eaglesong.core import Interpreter, Return, Terminate, Listen, IAutomaton
 from .primitives import TgCommand, TgUpdatePackage, TgChannel, TgFunction
 import telegram as tg
 

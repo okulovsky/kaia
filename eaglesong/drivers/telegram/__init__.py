@@ -1,4 +1,4 @@
-from .primitives import TgCommand, TgUpdatePackage, TgContext, TgFunction
+from .primitives import *
 from .telegram_driver import TelegramDriver
 from .telegram_translator import TelegramTranslator
 from .testing.scenario import TelegramScenario

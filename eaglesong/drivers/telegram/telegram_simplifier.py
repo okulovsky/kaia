@@ -6,7 +6,7 @@ def _simplify_input(input: TranslatorInputPackage):
     if isinstance(input.outer_input, TgUpdatePackage):
         return input.outer_input.update
     else:
-        return input
+        return input.outer_input
 
 
 class TelegramSimplifier(Translator):

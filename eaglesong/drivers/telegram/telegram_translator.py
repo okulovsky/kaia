@@ -1,16 +1,40 @@
-import os
 import uuid
-from typing import *
-from kaia.eaglesong.core import BotContext, primitives as prim, Translator, TranslatorInputPackage, TranslatorOutputPackage
+
+from eaglesong.core import Translator, TranslatorInputPackage, TranslatorOutputPackage
+from eaglesong.drivers.telegram import primitives as prim
 from .primitives import TgContext, TgCommand, TgUpdatePackage, TgChannel, TgFunction
 import telegram as tg
-from kaia.infra import Loc
+import tempfile
+from pathlib import Path
+import os
+import traceback
 
 
 BUTTON_PREFIX = 'button_'
 
 def _translate_context(context: TgContext):
-    return BotContext(context.chat_id)
+    return prim.BotContext(context.chat_id)
+
+
+class TempFile:
+    def __init__(self, path: Path, dont_delete: bool = False):
+        self.path = path
+        self.dont_delete = dont_delete
+
+    def __enter__(self):
+        os.makedirs(self.path.parent, exist_ok=True)
+        if self.path.is_file():
+            os.unlink(self.path)
+        return self.path
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if not self.dont_delete:
+            if self.path.is_file():
+                try:
+                    os.unlink(self.path)
+                except:
+                    print("Cannot delete test file:\n"+traceback.format_exc())
+
 
 def _translate_input(input_pack: TranslatorInputPackage):
     inner_message = input_pack.outer_input
@@ -77,12 +101,12 @@ def _translate_output(output_pack: TranslatorOutputPackage):
         buttons = _get_keyboard(message.options)
         return TgCommand.mock().send_message(chat_id = outer_context.chat_id, **content_arg, reply_markup=buttons)
     if isinstance(message, prim.Audio):
-        with Loc.create_temp_file('telegram_files', 'wav') as path:
+        with TempFile(Path(tempfile.gettempdir())/(str(uuid.uuid4())+'.wav')) as path:
             with open(path, 'wb') as stream:
                 stream.write(message.data)
             return TgCommand.mock().send_voice(chat_id=outer_context.chat_id, voice=path)
     elif isinstance(message, prim.Image):
-        with Loc.create_temp_file('telegram_files', 'png') as path:
+        with TempFile(Path(tempfile.gettempdir())/(str(uuid.uuid4())+'.png')) as path:
             with open(path, 'wb') as stream:
                 stream.write(message.data)
             return TgCommand.mock().send_photo(chat_id=outer_context.chat_id, photo=open(path,'rb'))

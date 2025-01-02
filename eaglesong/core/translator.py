@@ -1,5 +1,6 @@
 from typing import *
-from .automaton import Automaton, ContextRequest, AutomatonExit
+from .automaton import Automaton, ContextRequest
+from .primitives import Listen
 from dataclasses import dataclass
 
 @dataclass
@@ -57,6 +58,7 @@ class Translator:
                 inner_input = outer_input
 
             if inner_input is Translator.NoInput:
+                outer_input = yield Listen()
                 continue
 
             inner_output = automaton.process_and_rethrow_exit(inner_input)

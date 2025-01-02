@@ -1,5 +1,5 @@
 from ..primitives import TgCommand
-from .....infra import Obj
+from yo_fluq import Obj
 
 class TelegramReplayGenerator:
     def __init__(self):
