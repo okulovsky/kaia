@@ -8,22 +8,30 @@ import dotenv
 import os
 import sys
 from uuid import uuid4
+import traceback
 
-class _TempFile:
+
+class TempFile:
     def __init__(self, path: Path, dont_delete: bool):
         self.path = path
         self.dont_delete = dont_delete
 
     def __enter__(self):
+        os.makedirs(self.path.parent, exist_ok=True)
+        if self.path.is_file():
+            os.unlink(self.path)
         return self.path
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if not self.dont_delete:
             if self.path.is_file():
-                os.unlink(self.path)
+                try:
+                    os.unlink(self.path)
+                except:
+                    print("Cannot delete test file:\n"+traceback.format_exc())
 
 
-class _TempFolder:
+class TempFolder:
     def __init__(self, path: Path, dont_delete: bool = False):
         self.path = path
         self.dont_delete = dont_delete
@@ -82,25 +90,21 @@ class _Loc:
     def test_location(self, name):
         return self.test_folder/name/str(uuid.uuid4())
 
-    def create_temp_file(self, subfolder: str, extension_without_leading_dot: str, dont_delete: bool = False) -> _TempFile:
-        path = self.temp_folder/subfolder/f'{uuid4()}.{extension_without_leading_dot}'
-        os.makedirs(path.parent, exist_ok=True)
-        return _TempFile(path, dont_delete)
+    def create_test_file(self, extension_without_leading_dot: str|None = None, subfolder: str|None = None, dont_delete: bool = False) -> TempFile:
+        path = self.test_folder
+        if subfolder is not None:
+            path /= subfolder
+        name = str(uuid4())
+        if extension_without_leading_dot is not None:
+            name+= '.'+extension_without_leading_dot
+        path/=name
+        return TempFile(path, dont_delete)
 
-    def create_temp_folder(self, subfolder: str, dont_delete: bool = False) -> _TempFolder:
-        return _TempFolder(self.temp_folder/subfolder, dont_delete)
-
-    def wsl_translate(self, path: Union[str, Path]):
-        if self.is_windows:
-            import win32com.client as com
-            parent_folder = str(path.parent)
-            fso = com.Dispatch("Scripting.FileSystemObject")
-            folder = fso.GetFolder(parent_folder)
-            result = folder.path
-            result = result.replace('\\','/')
-            result = result+'/'+path.name
-            result = '/mnt/'+result[0].lower()+'/'+result[3:]
-            return result
-        raise ValueError("Only makes sense under Windows")
+    def create_test_folder(self, subfolder: str|None = None, dont_delete: bool = False) -> TempFolder:
+        path = self.test_folder
+        if subfolder is not None:
+            path /= subfolder
+        path /= str(uuid4())
+        return TempFolder(path, dont_delete)
 
 Loc = _Loc()
