@@ -33,10 +33,11 @@ class Bus:
             Base.metadata.create_all(self.engine)
         return self._engine
 
-    def add_message(self, item: BusItem):
+    def add_message(self, item: BusItem) -> int:
         with Session(self.engine) as session:
             session.add(item)
             session.commit()
+            return item.id
 
 
     def get_messages(self, session_id: str|None, last_message_id: int|None):

@@ -1,7 +1,7 @@
 from typing import *
 from kaia.dub.languages.en import *
-from kaia.kaia import SingleLineKaiaSkill
-from kaia.avatar import AvatarApi
+from kaia.kaia import SingleLineKaiaSkill, KaiaContext
+from eaglesong import ContextRequest
 
 class RecognitionFeedbackIntents(TemplatesCollection):
     misrecognition = Template("I'm actually {user}", user=ToStrDub())
@@ -12,8 +12,7 @@ class RecognitionFeedbackAnswers(TemplatesCollection):
     sorry = Template("Sorry I misrecognized you")
 
 class RecognitionFeedbackSkill(SingleLineKaiaSkill):
-    def __init__(self, users: list[str], avatar_api: AvatarApi):
-        self.avatar_api = avatar_api
+    def __init__(self, users: list[str]):
         substitution = dict(user=StringSetDub(users))
         self.intents: Type[RecognitionFeedbackIntents] = RecognitionFeedbackIntents.substitute(substitution)
         super().__init__(self.intents, RecognitionFeedbackAnswers)
@@ -21,7 +20,9 @@ class RecognitionFeedbackSkill(SingleLineKaiaSkill):
     def run(self):
         input: Utterance = yield
         actual_speaker = input.get_field()
-        was_fixed = self.avatar_api.recognition_speaker_fix(actual_speaker)
+        context: KaiaContext = yield ContextRequest()
+        avatar_api = context.avatar_api
+        was_fixed = avatar_api.recognition_speaker_fix(actual_speaker)
         if was_fixed:
             yield RecognitionFeedbackAnswers.sorry()
         else:

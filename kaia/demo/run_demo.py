@@ -14,8 +14,8 @@ if __name__ == '__main__':
     set_brainbox_service_and_api(app)
     set_streaming_service_and_api_address(app)
     set_avatar_service_and_api(app)
-    set_web_service_and_api(app, 'console')
-    set_audio_control_service_and_api(app, 'console', mic_settings)
+    set_web_service_and_api(app)
+    set_audio_control_service_and_api(app, mic_settings)
     set_core_service(app)
 
     fork_app = app.get_fork_app(False)

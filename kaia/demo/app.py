@@ -44,25 +44,31 @@ class KaiaApp:
 
     brainbox_cache_folder: Path|None = None
 
+    _MISSING = object()
 
-    def get_fork_app(self, main_as_background: bool = False):
-        services = []
-        if self.brainbox_server is not None:
-            services.append(self.brainbox_server)
-        if self.avatar_server is not None:
-            services.append(self.avatar_server)
-        if self.kaia_server is not None:
-            services.append(self.kaia_server)
-        if self.audio_control_server is not None:
-            services.append(self.audio_control_server)
-        if self.wav_streaming_server is not None:
-            services.append(self.wav_streaming_server)
+    def get_fork_app(self, custom_main_service = _MISSING):
+        if custom_main_service is KaiaApp._MISSING:
+            custom_main_service = self.kaia_core
+
+        candidates = [
+            self.brainbox_server,
+            self.avatar_server,
+            self.kaia_server,
+            self.audio_control_server,
+            self.wav_streaming_server,
+            self.kaia_core
+            ]
+
         main = None
-        if self.kaia_core is not None:
-            if main_as_background:
-                services.append(self.kaia_core)
+        services = []
+        for c in candidates:
+            if c is None:
+                continue
+            if c == custom_main_service:
+                main = c
             else:
-                main = self.kaia_core
+                services.append(services)
+
         return ForkApp(main, tuple(services))
 
 

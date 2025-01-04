@@ -1,3 +1,7 @@
+3.5.1
+    - BrainBox polished: containerized version now works with local user, unsuccessful installation raises
+    - Restarts of kaia client and servers are correctly processed
+    - AvatarAPI put to kaia context to simplify access
 3.5.0
     - Big update
     - brainbox and eaglesong are separated into stand-alone folders and will at some point become standalone projects

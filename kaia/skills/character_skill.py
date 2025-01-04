@@ -1,8 +1,9 @@
 import random
 from typing import *
 from kaia.dub.languages.en import *
-from kaia.kaia import SingleLineKaiaSkill
-from kaia.avatar import AvatarApi, World
+from kaia.kaia import SingleLineKaiaSkill, KaiaContext
+from kaia.avatar import World
+from eaglesong import ContextRequest
 
 
 class ChangeCharacterReplies(TemplatesCollection):
@@ -30,10 +31,8 @@ class ChangeCharacterIntents(TemplatesCollection):
 class ChangeCharacterSkill(SingleLineKaiaSkill):
     def __init__(self,
                  characters_list: Iterable[str],
-                 avatar_api: AvatarApi,
                  dont_randomly_switch_to: Optional[Iterable[str]] = None
                  ):
-        self.avatar_api = avatar_api
         self.characters_list = tuple(characters_list)
         self.dont_randomly_switch_to = list(dont_randomly_switch_to) if dont_randomly_switch_to is not None else []
         substitution = dict(character = StringSetDub(self.characters_list))
@@ -41,15 +40,18 @@ class ChangeCharacterSkill(SingleLineKaiaSkill):
         super().__init__(self.intents, ChangeCharacterReplies)
 
     def switch_to_character(self, character_name: str|None = None):
+        context: KaiaContext = yield ContextRequest()
+        avatar_api = context.avatar_api
+
         if character_name is None:
-            current_state = self.avatar_api.state_get()
+            current_state = avatar_api.state_get()
             current_character = current_state[World.character.field_name]
             other_characters = [c for c in self.characters_list if c != current_character and c not in self.dont_randomly_switch_to]
             if len(other_characters) == 0:
                 return
             character_name = other_characters[random.randint(0, len(other_characters) - 1)]
-        self.avatar_api.state_change({World.character.field_name: character_name})
-        yield self.avatar_api.image_get_new()
+        avatar_api.state_change({World.character.field_name: character_name})
+        yield avatar_api.image_get_new()
         yield ChangeCharacterReplies.hello.utter()
 
     def run(self):

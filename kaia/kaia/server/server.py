@@ -71,13 +71,13 @@ class KaiaServer:
         return 'OK'
 
     def command(self, session_id: str, command_type: str):
-        self._bus.add_message(BusItem(
+        id = self._bus.add_message(BusItem(
             session_id = session_id,
             timestamp = datetime.now(),
             type = command_type,
             payload = flask.request.json
         ))
-        return "OK"
+        return flask.jsonify(dict(id=id))
 
     def updates(self, session_id: str, last_update_id: str):
         last_update_id = int(last_update_id)

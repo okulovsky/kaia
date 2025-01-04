@@ -12,7 +12,7 @@ from .by_the_way_skill import ByTheWaySkill, ByTheWayNotification, ByTheWayInten
 from .echo_skill import EchoSkill
 from .ping import PingSkill
 from .recognition_feedback import RecognitionFeedbackSkill
-from .scheduled_time import ScheduledTime
+from .scheduled_time import ScheduledTime, Weekdays, WeekdayRepetition
 from .initialization_skill import InitializationSkill
 from .joke import JokeSkill
 

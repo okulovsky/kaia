@@ -26,6 +26,8 @@ class BusItemWrapper:
         if sender is not None:
             self.tc.assertEqual(sender, self.item.payload['sender'])
 
+
+
     def is_system_message(self, subs: str|None = None):
         self._validate_message('System', subs, None)
 
@@ -95,10 +97,10 @@ class KaiaAppTester:
         self.app.audio_control_api.playback_mic_sample(path)
 
     def send_initial_package(self):
-        requests.post(
+        return requests.post(
             self.endpoint(f'/command/{self.app.session_id}/command_initialize'),
             json=''
-        )
+        ).json()
 
     def send_sound_confirmation(self, update: 'BusItemWrapper'):
         requests.post(
@@ -112,6 +114,22 @@ class KaiaAppTester:
         while True:
             for c in self.app.kaia_api.pull_updates():
                 result.append(BusItemWrapper(c, self.tc))
+            if count is not None:
+                if len(result) == count:
+                    return result
+                if len(result) > count:
+                    pprint(result)
+                    self.tc.fail(f"Expected {count} updates, but was {len(result)}")
+            if (datetime.now() - start).total_seconds() > time_limit_in_seconds:
+                pprint(result)
+                raise ValueError(f"Time limit exceeded. {len(result)} updates were collected")
+            time.sleep(0.1)
+
+    def pull_updates_via_html(self, last_message_id: int, count: int|None = None, time_limit_in_seconds: int = 10) -> list:
+        start = datetime.now()
+        while True:
+            updates = requests.get(self.endpoint(f'/updates/{self.app.session_id}/{last_message_id}')).json()
+            result = [BusItemWrapper(BusItem(**u), self.tc) for u in updates]
             if count is not None:
                 if len(result) == count:
                     return result

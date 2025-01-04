@@ -28,7 +28,7 @@ class WithAudioTestCase(TestCase):
             with KaiaAppTester(app, self) as tester:
 
                 tester.send_initial_package()
-                updates = tester.pull_updates(7)
+                updates = tester.pull_updates(8)
                 updates[-1].is_bot_audio()
                 updates[-2].is_bot_audio()
 

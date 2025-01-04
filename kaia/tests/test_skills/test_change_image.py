@@ -3,7 +3,7 @@ from unittest import TestCase
 from eaglesong.core import Automaton, Scenario
 from brainbox import File, MediaLibrary
 from kaia.skills.change_image_skill import ChangeImageIntents, ChangeImageSkill
-from kaia.kaia import KaiaAssistant
+from kaia.kaia import KaiaAssistant, KaiaContext
 from kaia.avatar import AvatarApi, AvatarSettings, NewContentStrategy, MediaLibraryManager
 from kaia.common import Loc
 
@@ -24,7 +24,7 @@ class ChangeImageTestCase(TestCase):
                 manager = MediaLibraryManager(NewContentStrategy(False), media_library, stats_file)
                 with AvatarApi.Test(AvatarSettings(image_media_library_manager=manager)) as api:
                     (
-                        Scenario(lambda: Automaton(KaiaAssistant([ChangeImageSkill(api)], raise_exception=False), None))
+                        Scenario(lambda: Automaton(KaiaAssistant([ChangeImageSkill()], raise_exception=False), KaiaContext(avatar_api=api)))
                         .send(ChangeImageIntents.change_image.utter())
                         .check(check_image(0))
                         .send(ChangeImageIntents.change_image.utter())

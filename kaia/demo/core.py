@@ -38,11 +38,11 @@ class DemoCoreService(KaiaCoreService):
         skills_list.append(skills.TimerSkill(timer_register))
         skills_list.append(skills.NotificationSkill([timer_register], pause_between_alarms_in_seconds=10, volume_delta=0.2))
 
-        skills_list.append(skills.ChangeImageSkill(self.settings.avatar_api))
+        skills_list.append(skills.ChangeImageSkill())
         skills_list.append(skills.VolumeSkill(0.2))
         skills_list.append(help:=skills.HelpSkill())
         skills_list.append(skills.LogFeedbackSkill())
-        skills_list.append(character_skill:=skills.ChangeCharacterSkill(characters, self.settings.avatar_api))
+        skills_list.append(character_skill:=skills.ChangeCharacterSkill(characters))
         skills_list.append(skills.InitializationSkill(character_skill))
 
         assistant = KaiaAssistant(skills_list)

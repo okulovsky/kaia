@@ -8,16 +8,8 @@ class AudioPlayConfirmation:
 class AudioCommand:
     id: str
 
-class Start:
+class InitializationCommand:
     pass
 
 class TimerTick:
     pass
-
-
-@dataclass
-class Start:
-    first_time: bool
-
-
-

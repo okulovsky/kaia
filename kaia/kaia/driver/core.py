@@ -59,7 +59,8 @@ class KaiaCoreService(ABC):
             self.create_automaton,
             self.settings.kaia_api,
             time_tick_frequency_in_seconds=1,
-            log_file=self.settings.log_file
+            log_file=self.settings.log_file,
+            avatar_api=self.settings.avatar_api
         )
 
     def pre_run_setup(self):
@@ -84,5 +85,6 @@ class KaiaCoreService(ABC):
     def __call__(self):
         self.pre_run_setup()
         driver = self.create_driver()
+        self.settings.kaia_api.driver_starts(id(driver))
         self._ready = True
         driver.run()

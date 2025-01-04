@@ -98,8 +98,16 @@ class KaiaApi:
         self.bus.add_message(BusItem(
             session_id = self.session_id,
             timestamp = datetime.now(),
-            type = 'reaction_set_volumn',
+            type = 'reaction_set_volume',
             payload = volume))
+
+    def driver_starts(self, driver_pid):
+        self.bus.add_message(BusItem(
+            session_id = self.session_id,
+            timestamp = datetime.now(),
+            type = 'notification_driver_start',
+            payload = driver_pid
+        ))
 
     def pull_updates(self):
         updates = self.bus.get_messages(self.session_id, self.last_message_id)

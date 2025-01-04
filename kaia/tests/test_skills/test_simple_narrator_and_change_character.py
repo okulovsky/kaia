@@ -1,13 +1,11 @@
 import json
 
-from kaia.avatar import AvatarApi, DubbingService, ImageService, AvatarSettings, NewContentStrategy, TestTaskGenerator, MediaLibraryManager
+from kaia.avatar import AvatarApi, AvatarSettings, NewContentStrategy, TestTaskGenerator, MediaLibraryManager
 from unittest import TestCase
-from brainbox import BrainBoxTask, BrainBoxExtendedTask, BrainBoxCombinedTask, MediaLibrary, DownloadingPostprocessor, BrainBoxApi
+from brainbox import MediaLibrary, BrainBoxApi
 from brainbox.deciders import FakeFile
-from uuid import uuid4
 from kaia.common import Loc
-from yo_fluq import FileIO
-from kaia.kaia import KaiaAssistant
+from kaia.kaia import KaiaAssistant, KaiaContext
 from kaia.skills.character_skill import ChangeCharacterIntents, ChangeCharacterSkill
 from kaia.skills.change_image_skill import ChangeImageSkill, ChangeImageIntents
 from kaia.skills.time import TimeSkill, TimeIntents
@@ -38,15 +36,15 @@ class SimpleNarratorCharacterTestCase(TestCase):
                         image_media_library_manager=MediaLibraryManager(NewContentStrategy(), media_library, stats_file)
                     )
                     with AvatarApi.Test(settings) as avatar_api:
-                        char_skill = ChangeCharacterSkill(['character_0','character_1','character_2'], avatar_api)
+                        char_skill = ChangeCharacterSkill(['character_0','character_1','character_2'])
                         assistant = KaiaAssistant([
                             TimeSkill(),
-                            ChangeImageSkill(avatar_api),
+                            ChangeImageSkill(),
                             char_skill
                             ])
                         aut = VoiceoverTranslator(assistant, avatar_api)
                         log = (
-                            Scenario(lambda: Automaton(aut, None))
+                            Scenario(lambda: Automaton(aut, KaiaContext(avatar_api=avatar_api)))
                             .send(TimeIntents.question.utter())
                             .send(ChangeImageIntents.change_image.utter())
                             .send(char_skill.intents.change_character.utter(character='character_1'))

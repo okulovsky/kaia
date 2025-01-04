@@ -18,8 +18,8 @@ class NotificationInfo:
 
 @dataclass
 class NotificationRegister:
-    audio: Any
-    audio_stop: Optional[Any] = None
+    notification_signals: Tuple[Any,...]
+    exit_signals: Optional[Tuple[Any,...]] = None
     instances: Dict[str, NotificationInfo] = field(default_factory=lambda: {})
 
 
@@ -82,7 +82,8 @@ class NotificationSkill(IKaiaSkill):
                     or last_time_audio_sent is None
                     or (self.current_time_factory()-last_time_audio_sent).total_seconds() >= self.pause_between_alarms_in_seconds
                 ):
-                    yield active_notification.register.audio
+                    for item in active_notification.register.notification_signals:
+                        yield item
                     last_time_audio_sent = self.current_time_factory()
                     if self.volume_delta is not None:
                         stash_to = 'before_notification' if first_notification else None
@@ -90,8 +91,9 @@ class NotificationSkill(IKaiaSkill):
                     first_notification = False
                 yield Listen()
             else:
-                if active_notification.register.audio_stop is not None:
-                    yield active_notification.register.audio_stop
+                if active_notification.register.exit_signals is not None:
+                    for item in active_notification.register.exit_signals:
+                        yield item
                 del active_notification.register.instances[active_notification.name]
                 if self.volume_delta is not None and not first_notification:
                     yield VolumeCommand(restore_from='before_notification')

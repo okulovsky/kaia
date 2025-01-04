@@ -1,9 +1,9 @@
 from typing import *
 from kaia.dub.languages.en import *
-from kaia.kaia import SingleLineKaiaSkill
-from kaia.avatar import AvatarApi
+from kaia.kaia import SingleLineKaiaSkill, KaiaContext
 from kaia.avatar import World
 from brainbox import File
+from eaglesong import ContextRequest
 
 class ChangeImageIntents(TemplatesCollection):
     change_image = Template("Change image")
@@ -17,29 +17,26 @@ class ChangeImageReplies(TemplatesCollection):
         .paraphrase(f'{World.user} sees {World.character} and says that {World.character} looks good')
     )
 
-
-
-
-
 class ChangeImageSkill(SingleLineKaiaSkill):
-    def __init__(self, avatar_api: AvatarApi):
+    def __init__(self):
         super().__init__(ChangeImageIntents, ChangeImageReplies)
-        self.avatar_api = avatar_api
         self.last_image: Optional[File] = None
 
 
 
     def run(self):
         input: Utterance = yield
+        context: KaiaContext = yield ContextRequest()
+        avatar_api = context.avatar_api
         if input.template.name == ChangeImageIntents.change_image.name:
-            yield self.avatar_api.image_get_new()
+            yield avatar_api.image_get_new()
         elif input.template.name == ChangeImageIntents.bad_image.name:
-            self.avatar_api.image_report('bad')
-            yield self.avatar_api.image_get_new()
+            avatar_api.image_report('bad')
+            yield avatar_api.image_get_new()
         elif input.template.name == ChangeImageIntents.hide_image.name:
-            yield self.avatar_api.image_get_empty()
+            yield avatar_api.image_get_empty()
         if input.template.name == ChangeImageIntents.good_image.name:
-            self.avatar_api.image_report('good')
+            avatar_api.image_report('good')
             yield ChangeImageReplies.thanks.utter()
 
 

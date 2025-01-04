@@ -1,5 +1,6 @@
-from ..kaia import IKaiaSkill, Start
+from ..kaia import IKaiaSkill, InitializationCommand
 from .character_skill import ChangeCharacterSkill
+
 
 class InitializationSkill(IKaiaSkill):
     def __init__(self,
@@ -11,7 +12,7 @@ class InitializationSkill(IKaiaSkill):
         return type(self).__name__
 
     def should_start(self, input) -> bool:
-        return isinstance(input, Start)
+        return isinstance(input, InitializationCommand)
 
     def get_type(self) -> 'IKaiaSkill.Type':
         return IKaiaSkill.Type.SingleLine
@@ -24,6 +25,12 @@ class InitializationSkill(IKaiaSkill):
 
     def run(self):
         yield from self.character_skill.switch_to_character()
+
+
+
+
+
+
 
 
 

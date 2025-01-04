@@ -21,13 +21,12 @@ class ApiCallback:
             json=filename
         )
 
-
-def set_audio_control_service_and_api(
-        app: KaiaApp,
-        mic_settings: MicSettings|None = None,
+def create_settings(
+        wav_streaming_address: str,
+        mic_settings: MicSettings|None = None
 ):
     settings = ac.AudioControlSettings(
-        wav_streaming_address = app.wav_streaming_api.settings.address,
+        wav_streaming_address = wav_streaming_address,
         mic_device_index=-1,
         sample_rate=16000,
         frame_length=512,
@@ -39,6 +38,18 @@ def set_audio_control_service_and_api(
         settings.mic_device_index = mic_settings.mic_device_index
         settings.sample_rate = mic_settings.sample_rate
         settings.silence_level = mic_settings.silence_level
+
+    return settings
+
+
+def set_audio_control_service_and_api(
+        app: KaiaApp,
+        mic_settings: MicSettings|None = None,
+):
+    settings = create_settings(
+        app.wav_streaming_api.settings.address,
+        mic_settings
+    )
 
     settings.api_call_on_produced_file = ApiCallback(f'127.0.0.1:{app.kaia_server.settings.port}', app.session_id)
 
