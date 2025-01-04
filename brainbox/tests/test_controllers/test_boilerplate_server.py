@@ -8,8 +8,23 @@ def _bps(status: ControllerServiceStatus):
     return Query.en(status.containers).where(lambda z: z.name == 'Boilerplate').single()
 
 
+def _first_install_to_check_if_installable(self: TestCase, api:ControllerApi):
+    api.uninstall(Boilerplate, True)
+    status = api.status()
+    self.assertIsNone(status.currently_installing_container)
+    self.assertFalse(_bps(status).installation_status.installed)
+
+    api.install(Boilerplate, True)
+
+    status = api.status()
+    self.assertTrue(_bps(status).installation_status.installed)
+    self.assertEqual(0, len(_bps(status).instances))
+    self.assertIsNone(status.currently_installing_container)
+
 def test_api(self: TestCase, api: ControllerApi):
-    api.uninstall(Boilerplate)
+    _first_install_to_check_if_installable(self, api)
+
+    api.uninstall(Boilerplate, True)
     status = api.status()
     self.assertIsNone(status.currently_installing_container)
     self.assertFalse(_bps(status).installation_status.installed)

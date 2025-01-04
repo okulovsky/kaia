@@ -82,9 +82,14 @@ def self_test(test_case: TestCase, api: BrainBox.Api):
     with open(test_case_test_path, 'w') as file:
         file.write(self_test_report)
 
-    # webbrowser.open('file://'+str(test_case_test_path))
-
     """
+    
+    and then:
+    
+    ```python
+    webbrowser.open('file://'+str(test_case_test_path))
+    ```
+    
     While self-test reports provide some understanding of the endpoints,
     I recommend reading the self-tests code: all the endpoints are called 
     in the same way you will call them from your Python code.

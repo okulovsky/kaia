@@ -2,6 +2,8 @@ from yo_fluq import Query, FileIO
 from pathlib import Path
 from dataclasses import dataclass, field
 import re
+import md_toc
+from brainbox.framework import Loc
 
 @dataclass
 class CodeSection:
@@ -55,7 +57,23 @@ def write_docu(sections: list[CodeSection]):
             result.append('```\n\n')
     docu = '\n'.join(result)
     docu = re.sub(r'\n{3,}', '\n\n', docu)
+
     return docu
+
+
+def create_toc(content: str):
+    toc = []
+    for line in content.split('\n'):
+        if not line.startswith('#'):
+            continue
+        cnt = 0
+        while line.startswith('#'*cnt):
+            cnt+=1
+        title = line[cnt:].strip()
+        link = title.lower().replace(' ','-')
+        toc.append('  '*(cnt-2)+f'* [{title}](#{link})')
+    return "\n".join(toc)
+
 
 
 
@@ -67,11 +85,14 @@ def create_documentation():
         text = FileIO.read_text(file)
         sections.extend(parse_code(text))
 
-    docu = write_docu(sections)
+
     template = FileIO.read_text(Path(__file__).parent/'readme_template.md')
-    template = template.replace('<<<FROM_TESTS>>>', docu)
-    FileIO.write_text(template, Path(__file__).parent.parent/'README.md')
-    return template
+    docu = write_docu(sections)
+    docu = template.replace('<<<FROM_TESTS>>>', docu)
+    docu = "# Table of contents\n\n"+create_toc(docu) +'\n\n'+docu
+
+    FileIO.write_text(docu, Path(__file__).parent.parent/'README.md')
+    return docu
 
 
 

@@ -59,7 +59,7 @@ class RunConfiguration:
         arguments += ['--interactive', '--tty'] if self.interactive else []
         arguments += ['--detach'] if self.detach else []
         arguments += ['--rm'] if not self.dont_rm else []
-        arguments += ['--user',f'{context.machine.user_id}:{context.machine.user_id}'] if not self.run_as_root else []
+        arguments += ['--user',f'{context.machine.user_id}:{context.machine.group_id}'] if not self.run_as_root else []
         arguments += ['--restart', 'unless-stopped'] if self.restart_unless_stopped else []
         arguments += list(self.custom_flags)
         arguments += ['--name', container_name]

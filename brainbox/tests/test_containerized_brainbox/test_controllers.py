@@ -1,4 +1,4 @@
-from brainbox.tools.deployment import BrainBoxRunner
+from brainbox.framework.containerized_brainbox import BrainBoxRunner
 from unittest import TestCase, skipIf
 from brainbox.tests.test_controllers.test_boilerplate_server import test_api
 from brainbox.framework import ControllerApi, Loc
@@ -16,6 +16,7 @@ class ControllersInContainerTestCase(TestCase):
         try:
             ApiUtils.wait_for_reply('http://127.0.0.1:18090', 5)
             api = ControllerApi('127.0.0.1:18090')
+            api.wait(20)
             test_api(self, api)
         finally:
             runner.get_deployment().stop().remove()

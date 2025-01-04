@@ -5,6 +5,7 @@ from typing import *
 from pathlib import Path
 from .image_builder import IImageBuilder
 from ..executor import IExecutor, Command
+from yo_fluq import FileIO
 
 
 user_add_template = '''
@@ -21,13 +22,17 @@ class SmallImageBuilder(IImageBuilder):
                  docker_template: str,
                  dependencies: Optional[Iterable[str]|Iterable[Iterable[str]]],
                  add_current_user: bool = True,
-                 copy_to_code_path: dict[Path, str]|None = None
+                 copy_to_code_path: dict[Path, str]|None = None,
+                 write_to_code_path: dict[str, str]|None = None,
+                 reset_code_folder: bool = False
     ):
         self.code_path = code_path
         self.docker_template = docker_template
         self.dependencies = self._make_dependencies(dependencies)
         self.add_current_user = add_current_user
         self.copy_to_code_path = copy_to_code_path
+        self.reset_code_folder = reset_code_folder
+        self.write_to_code_path = write_to_code_path
 
     ADD_USER_PLACEHOLDER = 'add_user'
 
@@ -56,6 +61,17 @@ class SmallImageBuilder(IImageBuilder):
             result.append(template.format(DEPS=' '.join(line)))
         return '\n\n'.join(result)
 
+    def _create_target_file(self, target_str_path: str):
+        target = target_str_path
+        while target.startswith('/'):
+            target = target[1:]
+        target = self.code_path / target
+        target.relative_to(self.code_path)
+        if target.is_file():
+            os.unlink(target)
+        if target.is_dir():
+            shutil.rmtree(target, ignore_errors=True)
+        return target
 
     def _prepare_container_folder(self, executor: IExecutor):
         format_kwargs = {}
@@ -65,21 +81,15 @@ class SmallImageBuilder(IImageBuilder):
             format_kwargs[SmallImageBuilder.ADD_USER_PLACEHOLDER] = user_add_template.format(user_id=executor.get_machine().user_id, group_id=executor.get_machine().group_id)
 
         dockerfile = self.docker_template.format(**format_kwargs)
+        if self.reset_code_folder:
+            shutil.rmtree(self.code_path, ignore_errors=True)
         os.makedirs(self.code_path, exist_ok=True)
         with open(self.code_path / 'Dockerfile', 'w') as file:
             file.write(dockerfile)
 
         if self.copy_to_code_path is not None:
             for source_path, target_str_path in self.copy_to_code_path.items():
-                target = target_str_path
-                while target.startswith('/'):
-                    target = target[1:]
-                target = self.code_path / target
-                target.relative_to(self.code_path)
-                if target.is_file():
-                    os.unlink(target)
-                if target.is_dir():
-                    shutil.rmtree(target, ignore_errors=True)
+                target = self._create_target_file(target_str_path)
                 if source_path.is_file():
                     os.makedirs(target.parent, exist_ok=True)
                     shutil.copy(source_path, target)
@@ -87,6 +97,12 @@ class SmallImageBuilder(IImageBuilder):
                     shutil.copytree(source_path, target)
                 else:
                     raise ValueError(f"{source_path} is neither file nor directory")
+
+        if self.write_to_code_path is not None:
+            for target_str_path, content in self.write_to_code_path.items():
+                target = self._create_target_file(target_str_path)
+                FileIO.write_text(content, target)
+
 
 
     def build_image(self, image_name: str, executor: IExecutor) -> None:

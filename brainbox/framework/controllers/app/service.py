@@ -86,15 +86,15 @@ class ControllerService(IControllerService):
     def join_installation(self) -> InstallationReport:
         if self.running_installation is None:
             raise ValueError("No installation is in progress")
-        if self.running_installation.exited():
-            result = self.running_installation
-            self.running_installation = None
-            return result.report
-        self.running_installation.thread.join()
+        if not self.running_installation.exited():
+            self.running_installation.thread.join()
+
         result = self.running_installation
-        result.thread = None
         self.running_installation = None
+        if result.report.error is not None:
+            raise ValueError(f"Installation threw an exception\n{result.report.error}")
         return result.report
+
 
 
 

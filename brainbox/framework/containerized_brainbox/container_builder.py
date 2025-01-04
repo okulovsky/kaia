@@ -6,8 +6,8 @@ from brainbox.framework.deployment import SmallImageBuilder, LocalExecutor
 from pathlib import Path
 
 
-def create_builder():
-    bb_folder = Path(__file__).parent.parent
+def create_brainbox_builder():
+    bb_folder = Path(__file__).parent.parent.parent
     build_folder = Loc.temp_folder/'brain_box_container'
     if build_folder.is_dir():
         shutil.rmtree(build_folder)
@@ -16,18 +16,18 @@ def create_builder():
         build_folder,
         TEMPLATE,
         [d for d in DEPENDENCIES.split('\n') if d.strip()!=''],
-        True,
-        {
+        add_current_user=True,
+        copy_to_code_path={
             bb_folder/'framework' : '/brainbox/framework',
             bb_folder/'deciders': '/brainbox/deciders',
             bb_folder/'run.py': '/brainbox/run.py',
-            Path(__file__).parent/'pyproject.toml': '/pyproject.toml',
+            },
+        write_to_code_path={
+            '/pyproject.toml': TOML
         }
     )
 
-TEMPLATE = f'''
-FROM python:3.11
-
+DOCKER_INSTALL = '''
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
        ca-certificates \
@@ -39,20 +39,31 @@ RUN apt-get update \
     && apt-get update \
     && apt-get install -y docker-ce-cli \
     && rm -rf /var/lib/apt/lists/*
-    
-{{{SmallImageBuilder.PIP_INSTALL_PLACEHOLDER}}}
+'''
 
-COPY . /home/app
+
+TEMPLATE = f'''
+FROM python:3.11
+
+{DOCKER_INSTALL}
+
+{{{SmallImageBuilder.ADD_USER_PLACEHOLDER}}}
+
+{{{SmallImageBuilder.PIP_INSTALL_PLACEHOLDER}}}
 
 WORKDIR /home/app
 
-RUN ls /home/app
+COPY --chown=app:app . /home/app
 
 RUN pip install --user -e .
 
-RUN pip freeze
-
 ENTRYPOINT ["python", "-m", "brainbox.run"]
+'''
+
+TOML = '''
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
 '''
 
 DEPENDENCIES = """

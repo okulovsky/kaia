@@ -1,3 +1,31 @@
+# Table of contents
+
+* [Introduction](#introduction)
+  * [Included deciders](#included-deciders)
+* [Installation](#installation)
+  * [Docker](#docker)
+  * [Python environment](#python-environment)
+  * [BrainBox](#brainbox)
+  * [Troubleshooting](#troubleshooting)
+* [Python's API](#python's-api)
+  * [Basic techniques](#basic-techniques)
+    * [Create an API object](#create-an-api-object)
+    * [Install the decider](#install-the-decider)
+    * [Run a self-test](#run-a-self-test)
+    * [Call an endpoint](#call-an-endpoint)
+    * [Call an enpoint with a parameter](#call-an-enpoint-with-a-parameter)
+    * [Download files, produced by deciders](#download-files,-produced-by-deciders)
+    * [Upload files, required by deciders](#upload-files,-required-by-deciders)
+  * [Advanced techniques](#advanced-techniques)
+    * [Browse the resources](#browse-the-resources)
+    * [Download a custom model](#download-a-custom-model)
+    * [Build a workflow from tasks](#build-a-workflow-from-tasks)
+    * [Collect the outputs of many tasks](#collect-the-outputs-of-many-tasks)
+    * [Collect the files from many tasks](#collect-the-files-from-many-tasks)
+* [Use it without Python](#use-it-without-python)
+  * [Manage the controllers](#manage-the-controllers)
+  * [Run the tasks](#run-the-tasks)
+
 # Introduction
 
 BrainBox provides easy HTTP access to a set of curated Docker containers 
@@ -10,7 +38,7 @@ media processing (translation, covering images), etc.
 BrainBox is open-source and self-hosted, so no external APIs are needed; 
 GPU is recommended for some, but not all, models.
 
-BrainBox is not a production-ready solution. **Do not use it** in production environment,
+BrainBox is not a production-ready solution. **Do not use it in production environment**,
 since it doesn't have any security features, isn't really compatible with high and even 
 moderate load, and at the same time may have a big impact on the system's resources. 
 The suggested use of BrainBox is your own home machine, 
@@ -203,8 +231,12 @@ test_case_test_path = Path(tempfile.gettempdir()) / 'test_report.html'
 with open(test_case_test_path, 'w') as file:
     file.write(self_test_report)
 
-# webbrowser.open('file://'+str(test_case_test_path))
+```
 
+and then:
+
+```python
+webbrowser.open('file://'+str(test_case_test_path))
 ```
 
 While self-test reports provide some understanding of the endpoints,

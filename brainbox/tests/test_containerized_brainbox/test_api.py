@@ -1,4 +1,4 @@
-from brainbox.tools.deployment import BrainBoxRunner
+from brainbox.framework.containerized_brainbox import BrainBoxRunner
 from unittest import TestCase, skipIf
 from brainbox.framework import Loc, ApiUtils, BrainBoxApi, BrainBoxTask
 from yo_fluq import Query
@@ -16,6 +16,7 @@ class ControllersInContainerTestCase(TestCase):
         try:
             ApiUtils.wait_for_reply('http://127.0.0.1:18090', 5)
             api = BrainBoxApi('127.0.0.1:18090')
+            api.wait(10)
             status = api.controller_api.status()
             if not Query.en(status.containers).where(lambda z: z.name=='Boilerplate').single().installation_status.installed:
                 api.controller_api.install(Boilerplate)

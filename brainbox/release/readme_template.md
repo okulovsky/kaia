@@ -10,7 +10,7 @@ media processing (translation, covering images), etc.
 BrainBox is open-source and self-hosted, so no external APIs are needed; 
 GPU is recommended for some, but not all, models.
 
-BrainBox is not a production-ready solution. **Do not use it** in production environment,
+BrainBox is not a production-ready solution. **Do not use it in production environment**,
 since it doesn't have any security features, isn't really compatible with high and even 
 moderate load, and at the same time may have a big impact on the system's resources. 
 The suggested use of BrainBox is your own home machine, 
