@@ -2,7 +2,7 @@ from brainbox.framework.containerized_brainbox import BrainBoxRunner
 from unittest import TestCase, skipIf
 from brainbox.framework import Loc, ApiUtils, BrainBoxApi, BrainBoxTask
 from yo_fluq import Query
-from brainbox.deciders import Boilerplate
+from brainbox.deciders import HelloBrainBox
 import os
 
 class ControllersInContainerTestCase(TestCase):
@@ -18,9 +18,9 @@ class ControllersInContainerTestCase(TestCase):
             api = BrainBoxApi('127.0.0.1:18090')
             api.wait(10)
             status = api.controller_api.status()
-            if not Query.en(status.containers).where(lambda z: z.name=='Boilerplate').single().installation_status.installed:
-                api.controller_api.install(Boilerplate)
-            result = api.execute(BrainBoxTask.call(Boilerplate, 'TestParameter').json('TestArgument'))
+            if not Query.en(status.containers).where(lambda z: z.name=='HelloBrainBox').single().installation_status.installed:
+                api.controller_api.install(HelloBrainBox)
+            result = api.execute(BrainBoxTask.call(HelloBrainBox, 'TestParameter').json('TestArgument'))
             self.assertIsInstance(result, dict)
         finally:
             runner.get_deployment().stop().remove()

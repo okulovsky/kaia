@@ -1,5 +1,5 @@
 import subprocess
-from server import BoilerplateApp
+from server import HelloBrainBoxApp
 import argparse
 import sys
 
@@ -17,4 +17,4 @@ if __name__ == '__main__':
         exit(0)
 
 
-    BoilerplateApp(args.setting, args.parameter).create_app().run('0.0.0.0',8080)
+    HelloBrainBoxApp(args.setting, args.parameter).create_app().run('0.0.0.0',8080)

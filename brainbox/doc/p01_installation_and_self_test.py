@@ -1,5 +1,5 @@
 from brainbox import BrainBox
-from brainbox.deciders import Boilerplate
+from brainbox.deciders import HelloBrainBox
 from unittest import TestCase
 
 
@@ -35,12 +35,14 @@ def install(test_case: TestCase, api: BrainBox.Api):
 
     ### Install the decider
 
-    We have a `Boilerplate` decider, that doesn't do anything useful,
+    We have a `HelloBrainBox` decider, that doesn't do anything useful,
     but accumulates all the features BrainBox has for deciders.
     Let's install the decider:
     """
 
-    report = api.controller_api.install(Boilerplate)
+    from brainbox.deciders import HelloBrainBox
+
+    report = api.controller_api.install(HelloBrainBox)
     test_case.assertIsNotNone(report)
 
     """
@@ -74,8 +76,8 @@ def self_test(test_case: TestCase, api: BrainBox.Api):
     import requests, webbrowser, tempfile
     from pathlib import Path
 
-    api.controller_api.self_test(Boilerplate)
-    self_test_report = requests.get(f'http://{api.address}/html/controllers/self_test_report/Boilerplate').text
+    api.controller_api.self_test(HelloBrainBox)
+    self_test_report = requests.get(f'http://{api.address}/html/controllers/self_test_report/HelloBrainBox').text
     test_case.assertIsInstance(self_test_report, str)
 
     test_case_test_path = Path(tempfile.gettempdir()) / 'test_report.html'
@@ -95,5 +97,5 @@ def self_test(test_case: TestCase, api: BrainBox.Api):
     in the same way you will call them from your Python code.
     Self-tests, building containers and other container-related things
     are performed by `Controller` classes. They are usually located
-    within deciders classes, e.g. `Boilerplate.Controller`
+    within deciders classes, e.g. `HelloBrainBox.Controller`
     """

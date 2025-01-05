@@ -10,13 +10,13 @@ def run_all(api: BrainBox.Api, test_case: TestCase|None = None):
     if test_case is None:
         test_case = TestCase()
 
-    print('Uninstalling Boilerplate')
-    api.controller_api.uninstall(Boilerplate, True)
+    print('Uninstalling HelloBrainBox')
+    api.controller_api.uninstall(HelloBrainBox, True)
 
-    print('Installing Boilerplate')
+    print('Installing HelloBrainBox')
     install(test_case, api)
 
-    print("Self-testing Boilerplate")
+    print("Self-testing HelloBrainBox")
     self_test(test_case, api)
 
     print("Running decider without parameter")

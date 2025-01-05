@@ -30,4 +30,4 @@ def make(exclude=(), include=(), start_with: str|None = None, install: bool = Tr
 
 
 if __name__ == '__main__':
-    make(start_with='Whisper')
+    make()

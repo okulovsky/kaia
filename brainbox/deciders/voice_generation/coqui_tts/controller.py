@@ -2,7 +2,7 @@ from typing import Iterable
 from unittest import TestCase
 from ....framework import (
     RunConfiguration, TestReport, SmallImageBuilder, IImageBuilder, DockerWebServiceController,
-    BrainBoxApi, BrainBoxTask, FileIO, INotebookableController, LocalExecutor, File
+    BrainBoxApi, INotebookableController
 )
 from ...common import VOICEOVER_TEXT, check_if_its_sound
 from .settings import CoquiTTSSettings
@@ -49,6 +49,7 @@ class CoquiTTSController(DockerWebServiceController[CoquiTTSSettings], INotebook
 
     def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable:
         from .tests import Test
+        yield TestReport.attach_source_file(Test)
         yield from Test(api, tc).test_all(self.settings)
 
 

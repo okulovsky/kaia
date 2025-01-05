@@ -1,12 +1,12 @@
 from ....framework import DockerWebServiceApi, File, FileLike, CacheUploadPrerequisite
 import requests
-from .settings import BoilerplateSettings
-from .controller import BoilerplateController
-from .model import BoilerplateModel
+from .settings import HelloBrainBoxSettings
+from .controller import HelloBrainBoxController
+from .model import HelloBrainBoxModel
 import json
 
 
-class Boilerplate(DockerWebServiceApi[BoilerplateSettings, BoilerplateController]):
+class HelloBrainBox(DockerWebServiceApi[HelloBrainBoxSettings, HelloBrainBoxController]):
     def __init__(self, address: str|None = None):
         super().__init__(address)
 
@@ -42,6 +42,6 @@ class Boilerplate(DockerWebServiceApi[BoilerplateSettings, BoilerplateController
         return CacheUploadPrerequisite(file.content, file.name)
 
 
-    Settings = BoilerplateSettings
-    Controller = BoilerplateController
-    Model = BoilerplateModel
+    Settings = HelloBrainBoxSettings
+    Controller = HelloBrainBoxController
+    Model = HelloBrainBoxModel

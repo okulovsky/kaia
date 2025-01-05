@@ -3,8 +3,11 @@ from enum import Enum
 from .controller_context import ControllerContext
 from .resource_folder import ResourceFolder
 from ...common import Loc
-from ...deployment import DockerArgumentsHelper
+from ...deployment import DockerArgumentsHelper, LocalExecutor, Command
 from copy import deepcopy
+from .gpu_registry import GpuRegistry
+
+
 
 
 @dataclass
@@ -25,7 +28,6 @@ class RunConfiguration:
 
     detach: bool = True
     interactive: bool = True
-
 
     def _mounts(self, resource_folder: ResourceFolder):
         if self.mount_resource_folders is not None:
@@ -55,7 +57,8 @@ class RunConfiguration:
         arguments += DockerArgumentsHelper.arg_mount_folders(self._mounts(context.resource_folder))
         arguments += DockerArgumentsHelper.arg_propagate_env_variables(self.propagate_env_variables)
         arguments += DockerArgumentsHelper.arg_set_env_variables(self.set_env_variables)
-        arguments += ['--gpus', 'all']
+        if GpuRegistry.are_present():
+            arguments += ['--gpus', 'all']
         arguments += ['--interactive', '--tty'] if self.interactive else []
         arguments += ['--detach'] if self.detach else []
         arguments += ['--rm'] if not self.dont_rm else []

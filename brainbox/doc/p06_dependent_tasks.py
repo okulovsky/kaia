@@ -1,5 +1,5 @@
 from brainbox import BrainBox
-from brainbox.deciders import Boilerplate
+from brainbox.deciders import HelloBrainBox
 from unittest import TestCase
 
 def dependent_tasks(test_case: TestCase, api: BrainBox.Api):
@@ -8,8 +8,8 @@ def dependent_tasks(test_case: TestCase, api: BrainBox.Api):
 
     The output of the tasks can serve as an input to other tasks:
     """
-    task1 = BrainBox.Task.call(Boilerplate).json("Hello")
-    task2 = BrainBox.Task.call(Boilerplate).json(task1)
+    task1 = BrainBox.Task.call(HelloBrainBox).json("Hello")
+    task2 = BrainBox.Task.call(HelloBrainBox).json(task1)
     result = api.execute([task1, task2])
     test_case.assertDictEqual(result[0], result[1]['argument'])
 
@@ -35,8 +35,8 @@ def collector(test_case: TestCase, api: BrainBox.Api):
 
     id1 = BrainBox.Task.safe_id()
     id2 = BrainBox.Task.safe_id()
-    task1 = BrainBox.Task.call(Boilerplate).json(0).to_task(id=id1)
-    task2 = BrainBox.Task.call(Boilerplate).json(1).to_task(id=id2)
+    task1 = BrainBox.Task.call(HelloBrainBox).json(0).to_task(id=id1)
+    task2 = BrainBox.Task.call(HelloBrainBox).json(1).to_task(id=id2)
     collector = BrainBox.Task.call(Collector).to_array(
         tags = {id1: dict(index=0), id2: dict(index=1)},
         ** {
@@ -63,7 +63,7 @@ def collector(test_case: TestCase, api: BrainBox.Api):
 
     builder = Collector.TaskBuilder()
     for i in range(10):
-        builder.append(task=BrainBox.Task.call(Boilerplate).json(i), tags=dict(index=i))
+        builder.append(task=BrainBox.Task.call(HelloBrainBox).json(i), tags=dict(index=i))
     pack = builder.to_collector_pack('to_array')
     array = api.execute(pack)
     for item in array:
@@ -86,7 +86,7 @@ def media_library(test_case:TestCase, api:BrainBox.Api):
 
     builder = Collector.TaskBuilder()
     for i in range(10):
-        builder.append(task=BrainBox.Task.call(Boilerplate).file(i), tags=dict(index=i))
+        builder.append(task=BrainBox.Task.call(HelloBrainBox).file(i), tags=dict(index=i))
     pack = builder.to_collector_pack('to_media_library')
     path = api.download(api.execute(pack))
     ml = MediaLibrary.read(path)

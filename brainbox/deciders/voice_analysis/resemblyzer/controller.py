@@ -50,6 +50,7 @@ class ResemblyzerController(DockerWebServiceController[ResemblyzerSettings], INo
 
         yield (TestReport
                .last_call(api)
+               .href('train')
                .with_resources(Resemblyzer,f'datasets/{model_name}')
                .with_comment("Training the model with pre-uploaded resources")
                )
@@ -62,7 +63,7 @@ class ResemblyzerController(DockerWebServiceController[ResemblyzerSettings], INo
                 file = record.get_file()
                 result = api.execute(BrainBoxTask.call(Resemblyzer).classify(file, model_name))
                 if first_time:
-                    yield TestReport.last_call(api).with_comment("Running inference with trained model")
+                    yield TestReport.last_call(api).href('inference').with_comment("Running inference with trained model")
                 first_time = False
                 tc.assertEqual(record.tags['speaker'], result)
 

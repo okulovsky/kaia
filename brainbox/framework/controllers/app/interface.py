@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 from .dto import *
+from ..controller import ControllerRegistry
+from yo_fluq import Query
 
 
 class IControllerService(ABC):
@@ -55,3 +57,8 @@ class IControllerService(ABC):
     @abstractmethod
     def download_models(self, decider: str|type, models: list):
         pass
+
+    def controller_status(self, decider: str|type) -> ControllerServiceStatus.Controller:
+        status = self.status()
+        name = ControllerRegistry.to_controller_name(decider)
+        return Query.en(status.containers).where(lambda z: z.name == name).single()

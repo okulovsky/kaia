@@ -1,5 +1,5 @@
 from brainbox import BrainBox
-from brainbox.deciders import Boilerplate
+from brainbox.deciders import HelloBrainBox
 from unittest import TestCase
 
 def pure_http(test_case: TestCase, api: BrainBox.Api):
@@ -31,7 +31,7 @@ def pure_http(test_case: TestCase, api: BrainBox.Api):
     To run the deciders via BrainBox, we have two endpoints, `/jobs/add` and `/jobs/join`.
 
     `jobs/add` accepts a list of dictionaries, each describing one job.
-    What we did above with `BrainBox.Task.call(Boilerplate)` was actually a definition of the job with API.
+    What we did above with `BrainBox.Task.call(HelloBrainBox)` was actually a definition of the job with API.
     Job has the following fields:
 
     * `id`: a unique string id of the job
@@ -66,7 +66,7 @@ def pure_http(test_case: TestCase, api: BrainBox.Api):
             "jobs": [
                 {
                     "id": id,
-                    "decider": "Boilerplate",
+                    "decider": "HelloBrainBox",
                     "method": "json",
                     "decider_parameter": None,
                     "arguments": {

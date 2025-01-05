@@ -23,6 +23,7 @@ class Test:
         ))
         yield (TestReport
                .last_call(self.api)
+               .href('basic-generation')
                .result_is_array_of_files(File.Kind.Image)
                )
 
@@ -36,6 +37,7 @@ class Test:
 
         yield (TestReport
                .last_call(self.api)
+               .href('generation-with-lora')
                .result_is_array_of_files(File.Kind.Image)
                .with_comment("Test to image workflow, with LoRA")
                )
@@ -48,6 +50,7 @@ class Test:
         self.api.execute(Upscale(input_name))
         yield (TestReport
                .last_call(self.api)
+               .href('upscale')
                .result_is_file(File.Kind.Image)
                .with_uploaded_file(input_name, source_image)
                .with_comment("Upscaling workflow")
@@ -57,6 +60,7 @@ class Test:
         self.api.execute(WD14Interrogate(input_name))
         yield (TestReport
                .last_call(self.api)
+               .href('interrogation')
                .with_uploaded_file(input_name, source_image)
                .with_comment("Interrogation with WD14")
                )

@@ -51,6 +51,7 @@ class WhisperController(DockerWebServiceController[WhisperSettings], IModelDownl
 
         file = File.read(Path(__file__).parent / 'files/test_voice.wav')
 
+        first_time = True
         for model in self.settings.models_to_download:
             result = api.execute(BrainBoxTask.call(Whisper).transcribe_json(file, model.name))
             yield TestReport.last_call(api).with_comment("Speech recognition with Whisper, full output")
@@ -60,7 +61,8 @@ class WhisperController(DockerWebServiceController[WhisperSettings], IModelDownl
             )
 
             result = api.execute(BrainBoxTask.call(Whisper).transcribe(file, model.name))
-            yield TestReport.last_call(api).with_comment("Speech recognition with Whisper, text-only output")
+            if first_time:
+                yield TestReport.last_call(api).href('recognition').with_comment("Speech recognition with Whisper, text-only output")
             tc.assertEqual(
                 'One little spark and before you know it, the whole world is burning.',
                 result

@@ -46,17 +46,17 @@ class OllamaController(DockerWebServiceController[OllamaSettings], IModelDownloa
         model = self.settings.models_to_install[0]
         prompt = "The recipe for the borsch is as follows:"
         api.execute(BrainBoxTask.call(Ollama, model.name).completions_json(prompt=prompt))
-        yield TestReport.last_call(api).with_comment("Returns json for completions with detailed reply")
+        yield TestReport.last_call(api).href('completions-json').with_comment("Returns json for completions with detailed reply")
 
         api.execute(BrainBoxTask.call(Ollama, model.name).completions(prompt=prompt))
-        yield TestReport.last_call(api).with_comment("Returns only the text result")
+        yield TestReport.last_call(api).href('completions-txt').with_comment("Returns only the text result")
 
         prompt = "Give me the recipe of the borsch."
         api.execute(BrainBoxTask.call(Ollama, model.name).question_json(prompt=prompt))
-        yield TestReport.last_call(api).with_comment("Returns json for question mode with detailed reply")
+        yield TestReport.last_call(api).href('question-json').with_comment("Returns json for question mode with detailed reply")
 
         api.execute(BrainBoxTask.call(Ollama, model.name).question(prompt=prompt))
-        yield TestReport.last_call(api).with_comment("Returns only the text result")
+        yield TestReport.last_call(api).href('question-txt').with_comment("Returns only the text result")
 
 
 

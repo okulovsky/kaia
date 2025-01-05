@@ -10,11 +10,13 @@ class TestReportItem:
     parameter: str | None
     arguments: dict
     result: Any
+    href: str|None = None
     comment: str | None = None
     result_is_file: bool = False
     result_is_array_of_files: bool = False
     uploaded_files: dict[str, File] = field(default_factory=dict)
     used_resources: dict[str, File] = field(default_factory=dict)
+
 
 
 class TestReportItemHolder:
@@ -52,4 +54,8 @@ class TestReportItemHolder:
         lst = self.api.controller_api.list_resources(decider, path)
         for file in lst:
             self.item.used_resources[file] = self.api.controller_api.download_resource(decider, file)
+        return self
+
+    def href(self, href: str):
+        self.item.href = href
         return self

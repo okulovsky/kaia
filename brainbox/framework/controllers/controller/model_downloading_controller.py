@@ -69,7 +69,8 @@ class IModelDownloadingController:
                 continue
             models_to_download.append(model)
         if len(models_to_download) > 0:
-            self.get_downloadable_model_type().download(models_to_download, self)
+            _type = self.get_downloadable_model_type()
+            _type.download(models_to_download, self)
 
 
 

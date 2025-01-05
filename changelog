@@ -1,3 +1,9 @@
+3.5.2
+    - Fixed bug with BrainBox not working on the machine without GPU
+    - Fixed bud with downloadable models which didn't work
+    - Self-test now contains the source code of the test
+    - Fixed bug with some deciders unable to download models
+
 3.5.1
     - BrainBox polished: containerized version now works with local user, unsuccessful installation raises
     - Restarts of kaia client and servers are correctly processed

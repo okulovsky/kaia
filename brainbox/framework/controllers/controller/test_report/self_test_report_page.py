@@ -1,7 +1,9 @@
 import json
+import re
+
 from .test_report import TestReport
 from .test_report_item import TestReportItem
-from ....common import File
+from ....common import File, HTML
 import base64
 
 
@@ -9,16 +11,16 @@ class Builder:
     def __init__(self):
         self.html = []
 
+    def replace_code(self, code):
+        return HTML.escape_code(code)
+
+
     def add_code(self, code, style=''):
-        code = (
-            code
-            .replace(" ", "&nbsp")
-            .replace("\n", "<br>")
-        )
-        self.html.append(f'<p><tt {style}>{code}</tt></p>')
+        code = self.replace_code(code)
+        self.html.append(f'<p style="font-family: monospace; {style}">{code}</p>')
 
     def error_color_style(self):
-        return 'style = "color: #dd0000;"'
+        return 'color: #dd0000;'
 
     def add_file(self, file_content: File):
         if not isinstance(file_content, File):
@@ -50,7 +52,11 @@ class Builder:
                 self.add_file(value)
 
     def process_item(self, item: TestReportItem):
-        self.html.append('<h2>')
+        self.html.append('<h2')
+        if item.href is not None:
+            self.html.append(f' id="{item.href}"')
+        self.html.append('>')
+
         self.html.append(item.decider)
         if item.method is not None:
             self.html.append(f"::{item.method}")
@@ -88,7 +94,26 @@ class Builder:
         else:
             self.add_code(str(item.result))
 
+    def process_source_code(self, code: str):
+        pattern = r"\.href\((['\"])(.*?)\1\)"
+        self.html.append('<p style="font-family: monospace;">')
+        for line in code.split('\n'):
+            line = self.replace_code(line)
+            self.html.append(line)
+            match = re.search(pattern, line)
+            if match is not None:
+                self.html.append(f'<a href="#{match.group(2)}">[→]</a>')
+            self.html.append("<br>")
+
+
     def build(self, report: TestReport):
+        self.html.append(f'<h1>Test source code</h1>')
+        for index, code in enumerate(report.source_codes):
+            if code is None:
+                raise ValueError(f"Code is none at index {index}")
+            self.process_source_code(code)
+
+
         for section in report.sections:
             self.html.append(f'<h1>{section.caption}</h1>')
             if section.comment is not None:

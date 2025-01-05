@@ -1,9 +1,9 @@
-from brainbox.deciders.utils.boilerplate import Boilerplate
+from brainbox.deciders.utils.hello_world import HelloBrainBox
 from unittest import TestCase
 
-class BoilerplateAloneTestCase(TestCase):
+class HelloBrainBoxAloneTestCase(TestCase):
     def test_installation(self):
-        controller = Boilerplate.Controller()
+        controller = HelloBrainBox.Controller()
         controller.uninstall()
 
         self.assertFalse(controller.is_installed())

@@ -4,6 +4,7 @@ from ...deployment import LocalExecutor, IExecutor, Command, IFileSystem, Machin
 from ...common import Logger
 from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
 
 
 
@@ -11,9 +12,7 @@ class Log:
     @dataclass
     class Item:
         timestamp: datetime
-        comment: str
-        command: Command|None
-        result: str|None
+        data: str
 
     def __init__(self):
         self.items: list['Log.Item'] = []
@@ -30,8 +29,6 @@ class LogLogger(Logger):
         self._log.items.append(Log.Item(
             datetime.now(),
             s,
-            None,
-            None
         ))
 
 
@@ -43,20 +40,21 @@ class LoggingLocalExecutor(IExecutor):
         self.base_executor = LocalExecutor()
         self.log = log
 
+    def add_item(self, s):
+        print(s)
+        self.log.items.append(Log.Item(datetime.now(), '< ' + str(s)))
+
     def execute_command(self, command: Command):
-        log_item = Log.Item(
+        self.log.items.append(Log.Item(
             datetime.now(),
-            None,
-            command,
-            None
-        )
+            '> ' + ' '.join(command.command)
+        ))
         command = copy.deepcopy(command)
         if command.options is None:
             command.options = Command.Options()
-        command.options.return_output = True
+        command.options.monitor_output = self.add_item
+
         result = self.base_executor.execute_command(command)
-        log_item.result = result
-        self.log.items.append(log_item)
         return result
 
     def get_fs(self) -> IFileSystem:

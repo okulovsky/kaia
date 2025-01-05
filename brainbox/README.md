@@ -184,13 +184,15 @@ for 1 second, and raises if unsuccessful.
 
 ### Install the decider
 
-We have a `Boilerplate` decider, that doesn't do anything useful,
+We have a `HelloBrainBox` decider, that doesn't do anything useful,
 but accumulates all the features BrainBox has for deciders.
 Let's install the decider:
 
 ```python
 
-report = api.controller_api.install(Boilerplate)
+from brainbox.deciders import HelloBrainBox
+
+report = api.controller_api.install(HelloBrainBox)
 test_case.assertIsNotNone(report)
 
 ```
@@ -223,8 +225,8 @@ This will run a self-test and opens the result in the web-browser.
 import requests, webbrowser, tempfile
 from pathlib import Path
 
-api.controller_api.self_test(Boilerplate)
-self_test_report = requests.get(f'http://{api.address}/html/controllers/self_test_report/Boilerplate').text
+api.controller_api.self_test(HelloBrainBox)
+self_test_report = requests.get(f'http://{api.address}/html/controllers/self_test_report/HelloBrainBox').text
 test_case.assertIsInstance(self_test_report, str)
 
 test_case_test_path = Path(tempfile.gettempdir()) / 'test_report.html'
@@ -244,15 +246,15 @@ I recommend reading the self-tests code: all the endpoints are called
 in the same way you will call them from your Python code.
 Self-tests, building containers and other container-related things
 are performed by `Controller` classes. They are usually located
-within deciders classes, e.g. `Boilerplate.Controller`
+within deciders classes, e.g. `HelloBrainBox.Controller`
 
 ### Call an endpoint
 
-This will execute the method Boilerplate::json on the server side.
+This will execute the method HelloBrainBox::json on the server side.
 
 ```python
 
-result = api.execute(BrainBox.Task.call(Boilerplate).json("Hello"))
+result = api.execute(BrainBox.Task.call(HelloBrainBox).json("Hello"))
 test_case.assertDictEqual(
     {
         'argument': 'Hello',
@@ -264,8 +266,8 @@ test_case.assertDictEqual(
 
 ```
 
-The BrainBox will run the container for the Boilerplate decider.
-This container has a web-server inside, and Boilerplate::json 
+The BrainBox will run the container for the HelloBrainBox decider.
+This container has a web-server inside, and HelloBrainBox::json 
 connects to this web-server and performs the required operation.
 The result (in this case, `dict`) is then returned to the caller.
 As you see, `argument` equals to the argument the code provides.
@@ -287,7 +289,7 @@ To pass the parameter, simply add it to `call` function:
 
 ```python
 
-result = api.execute(BrainBox.Task.call(Boilerplate, "parameter").json("Hello"))
+result = api.execute(BrainBox.Task.call(HelloBrainBox, "parameter").json("Hello"))
 test_case.assertDictEqual(
     {
         'argument': 'Hello',
@@ -320,7 +322,7 @@ and only files' names are returned.
 
 ```python
 
-filename = api.execute(BrainBox.Task.call(Boilerplate).file("Hello, file!"))
+filename = api.execute(BrainBox.Task.call(HelloBrainBox).file("Hello, file!"))
 test_case.assertIsInstance(filename, str)
 
 ```
@@ -382,7 +384,7 @@ file = File('hello.txt', "Hello, world!")
 test_case.assertEqual(file.name, 'hello.txt')
 test_case.assertEqual(file.content, b'Hello, world!')
 
-length = api.execute(BrainBox.Task.call(Boilerplate).file_length(file))
+length = api.execute(BrainBox.Task.call(HelloBrainBox).file_length(file))
 test_case.assertEqual(length, 13)
 
 ```
@@ -401,7 +403,7 @@ from pathlib import Path
 path = file.write(tempfile.gettempdir())
 test_case.assertIsInstance(path, Path)
 
-length = api.execute(BrainBox.Task.call(Boilerplate).file_length(path))
+length = api.execute(BrainBox.Task.call(HelloBrainBox).file_length(path))
 test_case.assertEqual(length, 13)
 
 ```
@@ -415,7 +417,7 @@ cache folder instead:
 ```python
 
 api.upload(file.name, file)
-length = api.execute(BrainBox.Task.call(Boilerplate).file_length(file.name))
+length = api.execute(BrainBox.Task.call(HelloBrainBox).file_length(file.name))
 test_case.assertEqual(length, 13)
 
 ```
@@ -425,9 +427,9 @@ recoding. In these cases, deciders usually have static methods
 that incapsulate these procedures in Prerequisites:
 
 ```python
-upload_prerequisite = Boilerplate.file_upload(file)
+upload_prerequisite = HelloBrainBox.file_upload(file)
 upload_prerequisite.execute(api)
-length = api.execute(BrainBox.Task.call(Boilerplate).file_length(file.name))
+length = api.execute(BrainBox.Task.call(HelloBrainBox).file_length(file.name))
 test_case.assertEqual(length, 13)
 
 ```
@@ -444,14 +446,14 @@ Aside from models, the training data may be stored in resources instead of file 
 are easier to organize with folder structure and predictable filenames.
 
 This endpoint demonstrates that the server indeed has an access to the resources:
-Boilerplate reads them and returns the dictionary of keys set to filenames,
+HelloBrainBox reads them and returns the dictionary of keys set to filenames,
 and values set to file content.
-These resources are created by Boilerplate controller as a part of installation procedure.
+These resources are created by HelloBrainBox controller as a part of installation procedure.
 
 ```python
-resources = api.execute(BrainBox.Task.call(Boilerplate).resources())
+resources = api.execute(BrainBox.Task.call(HelloBrainBox).resources())
 test_case.assertDictEqual(
-    {'nested/resource': 'Boilerplate nested resource', 'resource': 'Boilerplate resource'},
+    {'nested/resource': 'HelloBrainBox nested resource', 'resource': 'HelloBrainBox resource'},
     resources
 )
 
@@ -461,7 +463,7 @@ However, a uniform access to all the resources is provided by API, e.g. to list 
 
 ```python
 
-resources = api.controller_api.list_resources(Boilerplate, '/')
+resources = api.controller_api.list_resources(HelloBrainBox, '/')
 test_case.assertListEqual(
     ['resource', 'nested/resource'],
     resources
@@ -482,8 +484,8 @@ This action can be triggered via `api`:
 
 ```python
 
-api.controller_api.download_models(Boilerplate, [Boilerplate.Model('google', 'http://www.google.com')])
-resources = api.controller_api.list_resources(Boilerplate, '/models')
+api.controller_api.download_models(HelloBrainBox, [HelloBrainBox.Model('google', 'http://www.google.com')])
+resources = api.controller_api.list_resources(HelloBrainBox, '/models')
 test_case.assertListEqual(['models/google'], resources)
 
 ```
@@ -493,8 +495,8 @@ test_case.assertListEqual(['models/google'], resources)
 The output of the tasks can serve as an input to other tasks:
 
 ```python
-task1 = BrainBox.Task.call(Boilerplate).json("Hello")
-task2 = BrainBox.Task.call(Boilerplate).json(task1)
+task1 = BrainBox.Task.call(HelloBrainBox).json("Hello")
+task2 = BrainBox.Task.call(HelloBrainBox).json(task1)
 result = api.execute([task1, task2])
 test_case.assertDictEqual(result[0], result[1]['argument'])
 
@@ -519,8 +521,8 @@ from brainbox import BrainBoxCombinedTask
 
 id1 = BrainBox.Task.safe_id()
 id2 = BrainBox.Task.safe_id()
-task1 = BrainBox.Task.call(Boilerplate).json(0).to_task(id=id1)
-task2 = BrainBox.Task.call(Boilerplate).json(1).to_task(id=id2)
+task1 = BrainBox.Task.call(HelloBrainBox).json(0).to_task(id=id1)
+task2 = BrainBox.Task.call(HelloBrainBox).json(1).to_task(id=id2)
 collector = BrainBox.Task.call(Collector).to_array(
     tags = {id1: dict(index=0), id2: dict(index=1)},
     ** {
@@ -547,7 +549,7 @@ We can shorten this significantly with `Collector.TaskBuilder`:
 
 builder = Collector.TaskBuilder()
 for i in range(10):
-    builder.append(task=BrainBox.Task.call(Boilerplate).json(i), tags=dict(index=i))
+    builder.append(task=BrainBox.Task.call(HelloBrainBox).json(i), tags=dict(index=i))
 pack = builder.to_collector_pack('to_array')
 array = api.execute(pack)
 for item in array:
@@ -569,7 +571,7 @@ import json
 
 builder = Collector.TaskBuilder()
 for i in range(10):
-    builder.append(task=BrainBox.Task.call(Boilerplate).file(i), tags=dict(index=i))
+    builder.append(task=BrainBox.Task.call(HelloBrainBox).file(i), tags=dict(index=i))
 pack = builder.to_collector_pack('to_media_library')
 path = api.download(api.execute(pack))
 ml = MediaLibrary.read(path)
@@ -607,7 +609,7 @@ since BrainBox implements the calls itself.
 To run the deciders via BrainBox, we have two endpoints, `/jobs/add` and `/jobs/join`.
 
 `jobs/add` accepts a list of dictionaries, each describing one job.
-What we did above with `BrainBox.Task.call(Boilerplate)` was actually a definition of the job with API.
+What we did above with `BrainBox.Task.call(HelloBrainBox)` was actually a definition of the job with API.
 Job has the following fields:
 
 * `id`: a unique string id of the job
@@ -642,7 +644,7 @@ reply = requests.post(f'http://{address}/jobs/add', json=
         "jobs": [
             {
                 "id": id,
-                "decider": "Boilerplate",
+                "decider": "HelloBrainBox",
                 "method": "json",
                 "decider_parameter": None,
                 "arguments": {

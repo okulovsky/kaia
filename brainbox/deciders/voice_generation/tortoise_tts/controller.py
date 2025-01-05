@@ -63,7 +63,7 @@ class TortoiseTTSController(DockerWebServiceController[TortoiseTTSSettings], INo
         TortoiseTTS.export_voice('test_voice', [Path(__file__).parent/'test_voice.wav']).execute(api)
         text = VOICEOVER_TEXT
         files = api.execute(BrainBoxTask.call(TortoiseTTS).dub(text=text, voice='test_voice'))
-        yield TestReport.last_call(api).result_is_array_of_files(File.Kind.Audio).with_comment("Voiceover")
+        yield TestReport.last_call(api).href('voiceover').result_is_array_of_files(File.Kind.Audio).with_comment("Voiceover")
         for i, fname in enumerate(files):
             file = api.open_file(fname)
             check_if_its_sound(file.content, tc)

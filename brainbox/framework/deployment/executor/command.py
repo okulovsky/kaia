@@ -9,6 +9,8 @@ class Command:
         workdir: str | Path | None = None
         return_output: bool = False
         ignore_exit_code: bool = False
+        monitor_output: Optional[Callable[[str], None]] = None
+
 
     command: tuple[str,...]
     options: Optional['Command.Options'] = None

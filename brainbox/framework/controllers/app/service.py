@@ -27,7 +27,7 @@ class RunningInstallation:
 
     def exited(self):
         is_alive = self.thread.is_alive()
-        return not self.thread.is_alive()
+        return not is_alive
 
 
 @dataclass

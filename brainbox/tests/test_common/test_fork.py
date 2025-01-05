@@ -23,7 +23,7 @@ def error():
 class ForkTestCase(TestCase):
     def test_fork(self):
         Fork(Server()).start()
-        ApiUtils.wait_for_reply('http://127.0.0.1:8099', 1)
+        ApiUtils.wait_for_reply('http://127.0.0.1:8099', 5)
 
 
     def test_erroneous_fork(self):

@@ -1,5 +1,5 @@
 from brainbox import BrainBox
-from brainbox.deciders import Boilerplate
+from brainbox.deciders import HelloBrainBox
 from unittest import TestCase
 
 def downloads(test_case: TestCase, api: BrainBox.Api):
@@ -12,7 +12,7 @@ def downloads(test_case: TestCase, api: BrainBox.Api):
     and only files' names are returned.
     """
 
-    filename = api.execute(BrainBox.Task.call(Boilerplate).file("Hello, file!"))
+    filename = api.execute(BrainBox.Task.call(HelloBrainBox).file("Hello, file!"))
     test_case.assertIsInstance(filename, str)
 
     """

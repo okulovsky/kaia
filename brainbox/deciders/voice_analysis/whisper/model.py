@@ -10,6 +10,7 @@ class WhisperModel(DownloadableModel):
     def get_local_location(self, controller: IController) -> Path:
         return controller.resource_folder() / (self.name + '.pt')
 
+    @classmethod
     def download(cls, models: list['DownloadableModel'], controller: IController):
         from .controller import WhisperController
         controller = cast(WhisperController, controller)

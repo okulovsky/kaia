@@ -1,5 +1,5 @@
 from brainbox import BrainBox
-from brainbox.deciders import Boilerplate
+from brainbox.deciders import HelloBrainBox
 from unittest import TestCase
 from brainbox.doc import run_all
 

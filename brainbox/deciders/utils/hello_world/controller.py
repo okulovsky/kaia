@@ -4,13 +4,13 @@ from ....framework import (
     RunConfiguration, TestReport, SmallImageBuilder, IImageBuilder, DockerWebServiceController,
     BrainBoxApi, BrainBoxTask, FileIO, INotebookableController, IModelDownloadingController, DownloadableModel
 )
-from .settings import BoilerplateSettings
-from .model import BoilerplateModel
+from .settings import HelloBrainBoxSettings
+from .model import HelloBrainBoxModel
 from pathlib import Path
 
 
-class BoilerplateController(
-    DockerWebServiceController[BoilerplateSettings],
+class HelloBrainBoxController(
+    DockerWebServiceController[HelloBrainBoxSettings],
     INotebookableController,
     IModelDownloadingController
 ):
@@ -22,7 +22,7 @@ class BoilerplateController(
         )
 
     def get_downloadable_model_type(self) -> type[DownloadableModel]:
-        return BoilerplateModel
+        return HelloBrainBoxModel
 
     def get_service_run_configuration(self, parameter: str|None) -> RunConfiguration:
         if parameter is None:
@@ -37,28 +37,47 @@ class BoilerplateController(
         return self.get_service_run_configuration('').as_notebook_service()
 
     def get_default_settings(self):
-        return BoilerplateSettings()
+        return HelloBrainBoxSettings()
 
     def create_api(self):
-        from .api import Boilerplate
-        return Boilerplate()
+        from .api import HelloBrainBox
+        return HelloBrainBox()
 
     def post_install(self):
-        FileIO.write_text("Boilerplate resource", self.resource_folder()/'resource')
-        FileIO.write_text("Boilerplate nested resource", self.resource_folder('nested') / 'resource')
+        FileIO.write_text("HelloBrainBox resource", self.resource_folder()/'resource')
+        FileIO.write_text("HelloBrainBox nested resource", self.resource_folder('nested') / 'resource')
 
 
     def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable:
-        from .api import Boilerplate
+        from .api import HelloBrainBox
 
-        api.execute(BrainBoxTask.call(Boilerplate, 'test_parameter').json('test_argument_json'))
-        yield TestReport.last_call(api).with_comment("Returns JSON as a string. This string is stored in the database")
+        api.execute(BrainBoxTask.call(HelloBrainBox, 'test_parameter').json('test_argument_json'))
 
-        api.execute(BrainBoxTask.call(Boilerplate, 'test_parameter').file('test_argument_file'))
-        yield TestReport.last_call(api).result_is_file().with_comment("Returns a json as a file. It's content is not stored in the database, but in the file cache")
 
-        api.execute(BrainBoxTask.call(Boilerplate, 'test_parameter').resources())
-        yield TestReport.last_call(api).with_comment("Returns a json with the list of resources: files that are stored at the server outside of the cache, and are shared with the container")
+        yield (
+            TestReport
+            .last_call(api)
+            .href('json')
+            .with_comment("Returns JSON as a string. This string is stored in the database")
+        )
+
+        api.execute(BrainBoxTask.call(HelloBrainBox, 'test_parameter').file('test_argument_file'))
+        yield (
+            TestReport
+            .last_call(api)
+            .href('file')
+            .result_is_file()
+            .with_comment("Returns a json as a file. It's content is not stored in the database, but in the file cache")
+        )
+
+        api.execute(BrainBoxTask.call(HelloBrainBox, 'test_parameter').resources())
+        yield (
+            TestReport
+            .last_call(api)
+            .href('resources')
+            .with_comment("Returns a json with the list of resources: files that are stored at the server outside of the cache, and are shared with the container")
+        )
+
 
 
 

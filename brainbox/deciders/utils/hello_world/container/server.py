@@ -2,7 +2,7 @@ import traceback
 import flask
 import os
 
-class BoilerplateApp:
+class HelloBrainBoxApp:
     def __init__(self, setting: str, model: str):
         self.setting = setting
         self.model = model

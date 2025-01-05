@@ -1,5 +1,5 @@
 from brainbox import BrainBox
-from brainbox.deciders import Boilerplate
+from brainbox.deciders import HelloBrainBox
 from unittest import TestCase
 
 def uploads(test_case: TestCase, api: BrainBox.Api):
@@ -15,7 +15,7 @@ def uploads(test_case: TestCase, api: BrainBox.Api):
     test_case.assertEqual(file.name, 'hello.txt')
     test_case.assertEqual(file.content, b'Hello, world!')
 
-    length = api.execute(BrainBox.Task.call(Boilerplate).file_length(file))
+    length = api.execute(BrainBox.Task.call(HelloBrainBox).file_length(file))
     test_case.assertEqual(length, 13)
 
     """
@@ -32,7 +32,7 @@ def uploads(test_case: TestCase, api: BrainBox.Api):
     path = file.write(tempfile.gettempdir())
     test_case.assertIsInstance(path, Path)
 
-    length = api.execute(BrainBox.Task.call(Boilerplate).file_length(path))
+    length = api.execute(BrainBox.Task.call(HelloBrainBox).file_length(path))
     test_case.assertEqual(length, 13)
 
     """
@@ -44,7 +44,7 @@ def uploads(test_case: TestCase, api: BrainBox.Api):
     """
 
     api.upload(file.name, file)
-    length = api.execute(BrainBox.Task.call(Boilerplate).file_length(file.name))
+    length = api.execute(BrainBox.Task.call(HelloBrainBox).file_length(file.name))
     test_case.assertEqual(length, 13)
 
     """
@@ -52,7 +52,7 @@ def uploads(test_case: TestCase, api: BrainBox.Api):
     recoding. In these cases, deciders usually have static methods
     that incapsulate these procedures in Prerequisites:
     """
-    upload_prerequisite = Boilerplate.file_upload(file)
+    upload_prerequisite = HelloBrainBox.file_upload(file)
     upload_prerequisite.execute(api)
-    length = api.execute(BrainBox.Task.call(Boilerplate).file_length(file.name))
+    length = api.execute(BrainBox.Task.call(HelloBrainBox).file_length(file.name))
     test_case.assertEqual(length, 13)

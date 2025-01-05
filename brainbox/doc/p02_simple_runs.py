@@ -1,15 +1,15 @@
 from brainbox import BrainBox
-from brainbox.deciders import Boilerplate
+from brainbox.deciders import HelloBrainBox
 from unittest import TestCase
 
 def run_without_parameters(test_case:TestCase, api: BrainBox.Api):
     """
     ### Call an endpoint
 
-    This will execute the method Boilerplate::json on the server side.
+    This will execute the method HelloBrainBox::json on the server side.
     """
 
-    result = api.execute(BrainBox.Task.call(Boilerplate).json("Hello"))
+    result = api.execute(BrainBox.Task.call(HelloBrainBox).json("Hello"))
     test_case.assertDictEqual(
         {
             'argument': 'Hello',
@@ -20,8 +20,8 @@ def run_without_parameters(test_case:TestCase, api: BrainBox.Api):
     )
 
     """
-    The BrainBox will run the container for the Boilerplate decider.
-    This container has a web-server inside, and Boilerplate::json 
+    The BrainBox will run the container for the HelloBrainBox decider.
+    This container has a web-server inside, and HelloBrainBox::json 
     connects to this web-server and performs the required operation.
     The result (in this case, `dict`) is then returned to the caller.
     As you see, `argument` equals to the argument the code provides.
@@ -45,7 +45,7 @@ def run_with_parameter(test_case: TestCase, api: BrainBox.Api):
     To pass the parameter, simply add it to `call` function:
     """
 
-    result = api.execute(BrainBox.Task.call(Boilerplate, "parameter").json("Hello"))
+    result = api.execute(BrainBox.Task.call(HelloBrainBox, "parameter").json("Hello"))
     test_case.assertDictEqual(
         {
             'argument': 'Hello',

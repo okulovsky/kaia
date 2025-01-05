@@ -39,7 +39,7 @@ class OpenTTSController(DockerWebServiceController[OpenTTSSettings]):
         from .api import OpenTTS
 
         result = api.execute(BrainBoxTask.call(OpenTTS).voiceover(VOICEOVER_TEXT))
-        yield TestReport.last_call(api).with_comment("Voiceover").result_is_file(File.Kind.Audio)
+        yield TestReport.last_call(api).href('voiceover').with_comment("Voiceover").result_is_file(File.Kind.Audio)
         result = api.open_file(result)
         check_if_its_sound(result.content, tc)
 

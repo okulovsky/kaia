@@ -1,5 +1,5 @@
 from brainbox import BrainBox
-from brainbox.deciders import Boilerplate
+from brainbox.deciders import HelloBrainBox
 from unittest import TestCase
 
 def resources(test_case: TestCase, api: BrainBox.Api):
@@ -16,13 +16,13 @@ def resources(test_case: TestCase, api: BrainBox.Api):
     are easier to organize with folder structure and predictable filenames.
 
     This endpoint demonstrates that the server indeed has an access to the resources:
-    Boilerplate reads them and returns the dictionary of keys set to filenames,
+    HelloBrainBox reads them and returns the dictionary of keys set to filenames,
     and values set to file content.
-    These resources are created by Boilerplate controller as a part of installation procedure.
+    These resources are created by HelloBrainBox controller as a part of installation procedure.
     """
-    resources = api.execute(BrainBox.Task.call(Boilerplate).resources())
+    resources = api.execute(BrainBox.Task.call(HelloBrainBox).resources())
     test_case.assertDictEqual(
-        {'nested/resource': 'Boilerplate nested resource', 'resource': 'Boilerplate resource'},
+        {'nested/resource': 'HelloBrainBox nested resource', 'resource': 'HelloBrainBox resource'},
         resources
     )
 
@@ -30,7 +30,7 @@ def resources(test_case: TestCase, api: BrainBox.Api):
     However, a uniform access to all the resources is provided by API, e.g. to list all the resources:
     """
 
-    resources = api.controller_api.list_resources(Boilerplate, '/')
+    resources = api.controller_api.list_resources(HelloBrainBox, '/')
     test_case.assertListEqual(
         ['resource', 'nested/resource'],
         resources
@@ -51,8 +51,8 @@ def model_installation(test_case: TestCase, api: BrainBox.Api):
     This action can be triggered via `api`:
     """
 
-    api.controller_api.download_models(Boilerplate, [Boilerplate.Model('google', 'http://www.google.com')])
-    resources = api.controller_api.list_resources(Boilerplate, '/models')
+    api.controller_api.download_models(HelloBrainBox, [HelloBrainBox.Model('google', 'http://www.google.com')])
+    resources = api.controller_api.list_resources(HelloBrainBox, '/models')
     test_case.assertListEqual(['models/google'], resources)
 
 

@@ -7,3 +7,4 @@ from .loc import Loc, Locator
 from .logger import Logger
 from .signature_processor import SignatureProcessor
 from .file_io import FileIO
+from .HTML import HTML

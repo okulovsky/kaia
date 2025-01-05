@@ -5,6 +5,8 @@ from .logging import Log
 
 @dataclass
 class ControllerServiceStatus:
+    InstallationStatus = InstallationStatus
+
     @dataclass
     class Instance:
         instance_id: str

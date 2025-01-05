@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "kaia-brainbox"
 description = "Web-server and API to access the curated set of AI-deciders, packaged as containers"
-version = "0.0.8"
+version = "0.0.9"
 readme = 'README.md'
 requires-python = ">=3.10, <4.0"
 

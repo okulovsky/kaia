@@ -48,7 +48,7 @@ class YoloController(DockerWebServiceController[YoloSettings], IModelDownloading
             "Fuyucchi/yolov8_animeface:yolov8x6_animeface.pt"
         ))
 
-        yield TestReport.last_call(api)
+        yield TestReport.last_call(api).href('run')
 
 
 

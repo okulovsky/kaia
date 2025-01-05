@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import requests
 
 @dataclass
-class BoilerplateModel(DownloadableModel):
+class HelloBrainBoxModel(DownloadableModel):
     name: str
     url: str
 
@@ -15,6 +15,6 @@ class BoilerplateModel(DownloadableModel):
     @classmethod
     def download(cls, models: list['DownloadableModel'], controller: IController):
         for model in models:
-            model = cast(BoilerplateModel, model)
+            model = cast(HelloBrainBoxModel, model)
             reply = requests.get(model.url)
             FileIO.write_bytes(reply.content, model.get_local_location(controller))

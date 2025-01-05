@@ -142,7 +142,7 @@ class IController(ABC, Generic[TSettings]):
                 raise ValueError(f"Exception has occured during self-test. View the report file://{html_path}") from ex
             finally:
                 self.stop_all()
-                report = TestReport(self.get_name(), items, error)
+                report = TestReport(self.get_name(), items, error, type(self))
                 with open(output_folder / self.get_name(), 'wb') as file:
                     pickle.dump(report, file)
                 with open(html_path, 'w') as file:

@@ -2,7 +2,8 @@ from typing import Iterable
 from unittest import TestCase
 from ....framework import (
     RunConfiguration, SmallImageBuilder,
-    IImageBuilder, DockerWebServiceController, BrainBoxApi, IModelDownloadingController, DownloadableModel
+    IImageBuilder, DockerWebServiceController, BrainBoxApi, IModelDownloadingController, DownloadableModel,
+    TestReport
 )
 from .settings import RhasspyKaldiSettings
 from .model import RhasspyKaldiModel
@@ -49,6 +50,7 @@ class RhasspyKaldiController(DockerWebServiceController[RhasspyKaldiSettings], I
 
     def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable:
         from .tests import english, german, english_custom
+        yield TestReport.attach_source_file(english)
         yield from english(api, tc)
         yield from german(api, tc)
         yield from english_custom(api, tc)

@@ -48,7 +48,7 @@ class VideoToImagesController(OnDemandDockerController[VideoToImagesSettings]):
 
         VideoToImages.upload_video(Path(__file__).parent/'sample.mp4').execute(api)
         api.execute(BrainBoxTask.call(VideoToImages).process('sample.mp4', cap_result_count=5))
-        yield TestReport.last_call(api).result_is_array_of_files(File.Kind.Image)
+        yield TestReport.last_call(api).href('run').result_is_array_of_files(File.Kind.Image)
 
 
 

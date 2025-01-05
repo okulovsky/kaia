@@ -19,6 +19,7 @@ class OllamaModel(DownloadableModel):
     def get_local_location(self, controller: IController) -> Path:
         return controller.resource_folder('main') / 'models/manifests/registry.ollama.ai/library' / self.location
 
+    @classmethod
     def download(cls, models: list['DownloadableModel'], controller: IController):
         from .controller import OllamaController
         controller = cast(OllamaController, controller)
