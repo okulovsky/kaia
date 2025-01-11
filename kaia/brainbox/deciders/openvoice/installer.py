@@ -7,6 +7,7 @@ from unittest import TestCase
 from pathlib import Path
 import requests
 import json
+from kaia.infra import FileIO
 
 from .api import OpenVoice
 
@@ -77,8 +78,8 @@ class OpenVoiceInstaller(LocalImageInstaller):
         return OpenVoice(f"{self.ip_address}:{self.settings.port}")
 
     def _brainbox_self_test_internal(self, api: BrainBoxApi, tc: TestCase):
-        source_speaker = "kaia/brainbox/deciders/openvoice/nikita.wav" 
-        reference_speaker = "kaia/brainbox/deciders/openvoice/lina.wav"
+        source_speaker = Path(__file__).parent/ "nikita.wav"
+        reference_speaker = Path(__file__).parent/"lina.wav"
         task = BrainBoxTask.call(OpenVoice).generate(source_speaker, reference_speaker)
         result_file = api.execute(task)
 
@@ -86,3 +87,4 @@ class OpenVoiceInstaller(LocalImageInstaller):
         result_file = api.pull_content(result_file)
         check_if_its_sound(result_file, tc)
         yield IntegrationTestResult(0, None, result_file)
+        FileIO.write_bytes(result_file.content, Path(__file__).parent/'result.wav')
