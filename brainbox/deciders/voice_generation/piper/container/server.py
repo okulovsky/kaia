@@ -20,6 +20,9 @@ class ModelDownloadRequest(BaseModel):
     config_url: str        
     url: str    
 
+@app.get("/")
+async def read_root():
+    return "OK"
 
 @app.post("/download_model")
 async def download_model(request: ModelDownloadRequest):
