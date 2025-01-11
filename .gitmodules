@@ -1,3 +1,3 @@
-[submodule "zoo/group_chatbot/externals/kittenbot"]
-	path = zoo/group_chatbot/externals/kittenbot
+[submodule "hraz/externals/kittenbot"]
+	path = hraz/externals/kittenbot
 	url = https://github.com/GioTheGreat/kittenbot.git

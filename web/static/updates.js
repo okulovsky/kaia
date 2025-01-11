@@ -50,6 +50,8 @@ function add_image(payload) {
 }
 
 function process_updates(data) {
+    initialize_next = false
+
     for (const element of data) {
         if (element['id'] > last_message) {
             last_message = element['id']
@@ -67,9 +69,18 @@ function process_updates(data) {
             add_sound(element['payload'])
             return
         }
+        if (element['type'] == 'notification_driver_start') {
+            initialize_next = true
+        }
 
     }
-    setTimeout(updates,1000)
+
+    if (initialize_next) {
+        set_Timeout(initialize,1)
+    }
+    else {
+        setTimeout(updates,1000)
+    }
 }
 
 
@@ -77,7 +88,16 @@ function updates() {
   fetch(`${BASE_URL}/updates/${SESSION_ID}/${last_message}`)
   .then(response => response.json())
   .then(data => process_updates(data))
-  .catch(err => console.warn('Something went wrong.', err))
+  .catch(err => {
+        msg = "Error in updates:\n"+err
+        console.warn(msg, err)
+        add_message({
+            type: "Error",
+            message: msg,
+            sender: null,
+            avatar: null
+        })
+  })
 }
 
 function initialize() {
@@ -96,8 +116,23 @@ function initialize() {
       headers: {
         "Content-type": "application/json; charset=UTF-8"
       }
-    });
-    setTimeout(updates,1)
+    })
+    .then(response => response.json())
+    .then(data=> {
+            last_message=data
+            setTimeout(updates,1)
+    })
+    .catch(err => {
+        msg = "Error in initialization:\n"+err
+        console.warn(msg, err)
+        add_message({
+            type: "Error",
+            message: msg,
+            sender: null,
+            avatar: null
+        })
+    })
+
 }
 
 addEventListener("load", (event) => initialize());

@@ -1,7 +1,7 @@
 from typing import *
 from dataclasses import dataclass
-from kaia.eaglesong.core import Translator, TranslatorOutputPackage
-from kaia.kaia.core import KaiaMessage
+from eaglesong.core import Translator, TranslatorOutputPackage
+from ..server import KaiaApi, Message
 
 @dataclass
 class VolumeCommand:
@@ -43,7 +43,7 @@ class VolumeTranslator(Translator):
         if new_value is not None:
             self.current_value = new_value
             self.volume_callback(new_value)
-            yield KaiaMessage(is_bot=True, text = f"Volume set to {new_value}")
+            yield Message(Message.Type.System, f"Volume set to {new_value}")
 
 
 

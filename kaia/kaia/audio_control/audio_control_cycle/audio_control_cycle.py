@@ -5,7 +5,7 @@ from queue import Queue
 from .dto import MicState, IterationResult, AudioControlLog, LevelsLog
 from datetime import datetime
 from .mic_helper import MicDataHelper
-from kaia.brainbox import BrainBoxTask
+from brainbox import BrainBoxTask
 import traceback
 import time
 
@@ -91,6 +91,9 @@ class AudioControlCycle:
             result.mic_state_now = self._mic_state
             return result
 
+        self._process_mic_state()
+        result.mic_state_now = self._mic_state
+
         if self._mic_state == MicState.Disabled:
             return result
 
@@ -154,8 +157,7 @@ class AudioControlCycle:
         self._play_internal_recording(self._settings.confirmed_recording)
         return fname
 
-
-    def _process_mic(self, data, level):
+    def _process_mic_state(self):
         if self._requested_state is not None:
             self._mic_state = self._requested_state
             if self._mic_state == MicState.Open:
@@ -163,6 +165,8 @@ class AudioControlCycle:
             self._requested_state = None
             return
 
+
+    def _process_mic(self, data, level):
         if self._mic_state == MicState.Standby:
             if self._drivers.wakeword.detect(data):
                 self._on_open()

@@ -1,4 +1,4 @@
-from kaia.infra.marshalling_api import MarshallingEndpoint
+from brainbox.framework.common import ApiUtils
 from queue import Queue
 import requests
 import struct
@@ -19,7 +19,7 @@ class RequestedException(Exception):
 class WavStreamingRequest:
     def __init__(self, address: None|str, file_name: str, sample_rate: int, frame_length, initial_buffer: list[list[int]]):
         if address is not None:
-            MarshallingEndpoint.check_address(address)
+            ApiUtils.check_address(address)
         self.address = address
         self.file_name = file_name
         self.sample_rate = sample_rate

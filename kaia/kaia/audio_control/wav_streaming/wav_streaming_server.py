@@ -3,7 +3,7 @@ from pathlib import Path
 from dataclasses import dataclass
 import struct
 import wave
-from kaia.infra import Loc
+from kaia.common import Loc
 import os
 import io
 
@@ -37,10 +37,13 @@ class WavStreamingServer:
     def __call__(self):
         os.makedirs(self.settings.folder, exist_ok=True)
         app = flask.Flask(__name__)
+        app.add_url_rule('/', view_func=self.index, methods=['GET'])
         app.add_url_rule('/upload/<sample_rate>/<frame_length>/<file_name>', view_func=self.upload, methods=['POST'])
         app.add_url_rule('/download/<file_name>', view_func=self.download, methods=['GET'])
         app.run('0.0.0.0', self.settings.port)
 
+    def index(self):
+        return 'OK'
 
     def upload(self, sample_rate, frame_length, file_name):
         stream = flask.request.stream

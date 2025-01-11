@@ -1,7 +1,7 @@
 import os
 
 from ..wav_streaming import WavStreamingApi, WavStreamingServer, WavServerSettings, WavApiSettings
-from ..server import AudioControlAPI, MicState, AudioControlServer
+from ..server import AudioControlApi, MicState, AudioControlServer
 from ..audio_control_cycle import AudioControlSettings
 from kaia.infra import FileIO, Loc
 from kaia.infra.app import KaiaApp
@@ -10,7 +10,7 @@ from pathlib import Path
 class AudioControlTestTool:
     def __init__(self,
                  wav_streaming_api: WavStreamingApi|None = None,
-                 audio_control_api: AudioControlAPI|None = None,
+                 audio_control_api: AudioControlApi|None = None,
                  audio_settings: AudioControlSettings|None = None,
                  run_play_server: bool = False
                  ):
@@ -37,7 +37,7 @@ class AudioControlTestTool:
         if self.audio_control_api is None:
             audio_server = AudioControlServer(self.audio_settings.create_audio_control, self.audio_settings.port)
             app.add_multiproc_service(audio_server)
-            self.audio_control_api = AudioControlAPI(f'127.0.0.1:{self.audio_settings.port}')
+            self.audio_control_api = AudioControlApi(f'127.0.0.1:{self.audio_settings.port}')
 
         app.set_primary_service(self.echo_test)
         return app

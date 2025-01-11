@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
-from kaia.infra import FileIO
-from kaia.brainbox import MediaLibrary
+from yo_fluq import FileIO
+from brainbox import MediaLibrary
 
 
 class FeedbackProvider:

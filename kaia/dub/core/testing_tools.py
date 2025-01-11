@@ -5,10 +5,10 @@ from .templates import Template, Utterance
 from dataclasses import dataclass
 from copy import copy
 from yo_fluq import *
-from kaia.infra import Tools
+from ._tools import Tools
 import pandas as pd
 import jsonpickle
-from ..rhasspy_utils.rhasspy_handler import RhasspyHandler
+
 
 @dataclass
 class Sample:
@@ -97,25 +97,11 @@ class TestingTools:
             sample.set_matches()
         return samples
 
-    def parse_rhasspy(self, case: Optional[TestCase] = None):
-        samples = copy(self.samples)
-        handler = RhasspyHandler(self.intents)
-        for sample in samples:
-            print(f'[RHASSPY] {sample.s}')
-            sample.against_utterance(handler.parse_string(sample.s))
-            sample.recognition_obj = handler.recognitions_
-            if case is not None:
-                try:
-                    sample.make_assert(case)
-                except:
-                    print(sample.__dict__)
-                    raise
-        return samples
 
 
     def test_all_unit(self, case: TestCase):
         self.parse_text(case)
-        self.parse_rhasspy(case)
+        #self.parse_rhasspy(case)
 
     #def test_voice(self, dubber: Dict[int, MediaLibrary.Record], api: RhasspyAPI):
     #    samples = copy(self.samples)

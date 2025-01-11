@@ -1,3 +1,4 @@
-from .api import AudioControlAPI, MicState
-from .audio_control_command_source import AudioControlCommandSource, AudioControlCommand
+from .api import AudioControlApi
+from .interface import MicState
 from .server import AudioControlServer
+from .service import AudioControlService

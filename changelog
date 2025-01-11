@@ -1,3 +1,18 @@
+3.5.2
+    - Fixed bug with BrainBox not working on the machine without GPU
+    - Fixed bud with downloadable models which didn't work
+    - Self-test now contains the source code of the test
+    - Fixed bug with some deciders unable to download models
+
+3.5.1
+    - BrainBox polished: containerized version now works with local user, unsuccessful installation raises
+    - Restarts of kaia client and servers are correctly processed
+    - AvatarAPI put to kaia context to simplify access
+3.5.0
+    - Big update
+    - brainbox and eaglesong are separated into stand-alone folders and will at some point become standalone projects
+    - kaia is switched to the new communication architecture completely, tests are improved, the coverage increased
+    - old projects, `zoo`, `kaia.bro` and `kaia.ml` are removed to focus on things that are the essence of the project. Some will be restored.
 3.4.1
     - New architecture, compatible with sound processing in the browser, is introduced
 3.4.0

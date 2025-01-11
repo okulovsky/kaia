@@ -1,6 +1,7 @@
 from .walker_state import *
-from numpy.random import RandomState
 from ..structures import IRandomizableDub
+
+
 class Randomizer(WalkerState):
     def __init__(self,
                  method: Callable,

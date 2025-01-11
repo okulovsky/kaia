@@ -1,6 +1,6 @@
 from kaia.dub import Template, Utterance
 from dataclasses import dataclass
-from kaia.eaglesong.amenities.partial_listen_translator import PartialListenTranslator
+from .partial_listen_translator import PartialListenTranslator
 
 
 class ExpectedTemplatesListenPayload:
