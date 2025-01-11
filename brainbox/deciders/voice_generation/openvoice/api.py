@@ -10,13 +10,16 @@ class OpenVoice(IApiDecider):
                   source_speaker_path: str,
                   reference_speaker_path: str) -> File:
        
-        url = f"http://{self.address}/synthesize"
+        url = f"http://{self.address}/generate"
 
-        files = {
-            "source_speaker": open(source_speaker_path, "rb"),
-            "reference_speaker": open(reference_speaker_path, "rb"),
-        }
-        reply = requests.post(url, json=files, timeout=30)
+        with open(source_speaker_path, "rb") as source_file, \
+        open(reference_speaker_path, "rb") as reference_file:
+            files = {
+                "source_speaker": source_file,
+                "reference_speaker": reference_file,
+            }
+            reply = requests.post(url, files=files, timeout=30)
+
         if reply.status_code != 200:
             raise ValueError(f"{reply.status_code}\n{reply.text}")
         

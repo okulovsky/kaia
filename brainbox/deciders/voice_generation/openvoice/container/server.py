@@ -18,13 +18,19 @@ tone_color_converter = ToneColorConverter(
     f'{CKPT_CONVERTER}/config.json',
     device=DEVICE
 )
-tone_color_converter.load_ckpt(f'{CKPT_CONVERTER}/checkpoint.pth')  
+tone_color_converter.load_ckpt(f'{CKPT_CONVERTER}/checkpoint.pth')
+
+
+@app.get("/")
+async def read_root():
+    return "OK"
+
 
 @app.post("/generate")
 async def generate_tts(
     source_speaker: UploadFile = File(...),
     reference_speaker: UploadFile = File(...)
-):    
+):
     try:
         id = uuid.uuid4()
 
@@ -40,7 +46,6 @@ async def generate_tts(
             f.write(await source_speaker.read())
         with open(reference_path, "wb") as f:
             f.write(await reference_speaker.read())
-
 
         source_se, _ = se_extractor.get_se(
             source_path,
