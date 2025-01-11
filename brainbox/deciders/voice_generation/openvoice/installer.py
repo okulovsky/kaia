@@ -77,8 +77,8 @@ class OpenVoiceInstaller(LocalImageInstaller):
         return OpenVoice(f"{self.ip_address}:{self.settings.port}")
 
     def _brainbox_self_test_internal(self, api: BrainBoxApi, tc: TestCase):
-        source_speaker = ""
-        reference_speaker = ""
+        source_speaker = "kaia/brainbox/deciders/openvoice/nikita.wav" 
+        reference_speaker = "kaia/brainbox/deciders/openvoice/lina.wav"
         task = BrainBoxTask.call(OpenVoice).generate(source_speaker, reference_speaker)
         result_file = api.execute(task)
 
