@@ -1,6 +1,6 @@
 from typing import *
 from sqlalchemy.orm import declarative_base, Mapped, mapped_column, Session
-from sqlalchemy import create_engine, func, JSON, Column
+from sqlalchemy import create_engine, func, JSON, Column, select
 from datetime import datetime
 
 
@@ -53,4 +53,7 @@ class Bus:
         with Session(self.engine) as session:
             return [c[0] for c in session.query(func.distinct(BusItem.session_id))]
 
-
+    def get_max_message_id(self, session_id: str):
+        with Session(self.engine) as session:
+            query = select(func.max(BusItem.id)).where(BusItem.session_id == session_id)
+            return session.execute(query).scalar()

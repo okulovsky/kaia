@@ -68,6 +68,8 @@ class KaiaCoreService(ABC):
         if self.settings.brainbox_setup is not None:
             self.settings.brainbox_api.controller_api.setup(self.settings.brainbox_setup)
 
+        self.settings.avatar_api.wait()
+
         if self.settings.audio_api is not None:
             self.settings.audio_api.wait(self.settings.delay_for_ac_server)
 
@@ -83,6 +85,7 @@ class KaiaCoreService(ABC):
             self.settings.audio_api.set_volume(self.settings.initial_volume)
 
     def __call__(self):
+        self.settings.kaia_api.last_message_id = self.settings.kaia_api.bus.get_max_message_id(self.settings.kaia_api.session_id)
         self.pre_run_setup()
         driver = self.create_driver()
         self.settings.kaia_api.driver_starts(id(driver))

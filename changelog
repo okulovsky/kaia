@@ -1,3 +1,6 @@
+3.5.3
+    - Brainbox: WD14, Espeak deciders, piper, openvoice prototypes
+    - Small bug fixes in Brainbox + 1 big: BrainBox can now run inside container itself
 3.5.2
     - Fixed bug with BrainBox not working on the machine without GPU
     - Fixed bud with downloadable models which didn't work

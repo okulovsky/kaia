@@ -57,7 +57,7 @@ class KaiaApi:
         if not isinstance(image, str):
             raise ValueError(f"Image is {type(image)}")
 
-        self.bus.add_message(BusItem(
+        return self.bus.add_message(BusItem(
             session_id = self.session_id,
             timestamp = datetime.now(),
             type = "reaction_image",
@@ -75,7 +75,7 @@ class KaiaApi:
                 metadata = sound.metadata.__dict__
             sound = sound.name
 
-        self.bus.add_message(BusItem(
+        return self.bus.add_message(BusItem(
             session_id = self.session_id,
             timestamp = datetime.now(),
             type = "reaction_audio",
@@ -83,7 +83,7 @@ class KaiaApi:
         ))
 
     def add_message(self, message: Message):
-        self.bus.add_message(BusItem(
+        return self.bus.add_message(BusItem(
             session_id = self.session_id,
             timestamp = datetime.now(),
             type = 'reaction_message',
@@ -95,14 +95,14 @@ class KaiaApi:
             )))
 
     def set_volume(self, volume: float):
-        self.bus.add_message(BusItem(
+        return self.bus.add_message(BusItem(
             session_id = self.session_id,
             timestamp = datetime.now(),
             type = 'reaction_set_volume',
             payload = volume))
 
     def driver_starts(self, driver_pid):
-        self.bus.add_message(BusItem(
+        return self.bus.add_message(BusItem(
             session_id = self.session_id,
             timestamp = datetime.now(),
             type = 'notification_driver_start',

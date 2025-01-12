@@ -76,7 +76,7 @@ function process_updates(data) {
     }
 
     if (initialize_next) {
-        set_Timeout(initialize,1)
+        setTimeout(initialize,1)
     }
     else {
         setTimeout(updates,1000)
@@ -119,7 +119,7 @@ function initialize() {
     })
     .then(response => response.json())
     .then(data=> {
-            last_message=data
+            last_message=data.id
             setTimeout(updates,1)
     })
     .catch(err => {

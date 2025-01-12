@@ -6,11 +6,18 @@ import wave
 from kaia.common import Loc
 import os
 import io
+from datetime import datetime
 
 @dataclass
 class WavServerSettings:
     folder: Path = Loc.data_folder/'wav_streaming'
     port: int = 13000
+
+@dataclass
+class Upload:
+    timestamp: datetime
+    file_name: str
+
 
 
 class WavWriter:
@@ -33,6 +40,7 @@ class WavWriter:
 class WavStreamingServer:
     def __init__(self, settings: WavServerSettings):
         self.settings = settings
+        self.recent_uploads: list[Upload] = []
 
     def __call__(self):
         os.makedirs(self.settings.folder, exist_ok=True)
@@ -43,7 +51,11 @@ class WavStreamingServer:
         app.run('0.0.0.0', self.settings.port)
 
     def index(self):
-        return 'OK'
+        html=['<html><body><table>']
+        for item in reversed(self.recent_uploads):
+            html.append(f'<tr><td>{item.timestamp}</td><td>{item.file_name}</td></tr')
+        html.append("</table></body></html>")
+        return ''.join(html)
 
     def upload(self, sample_rate, frame_length, file_name):
         stream = flask.request.stream
@@ -58,6 +70,8 @@ class WavStreamingServer:
                 if len(buffer) == 0:
                     break
             writer.close()
+        self.recent_uploads.append(Upload(datetime.now(), file_name))
+        self.recent_uploads = self.recent_uploads[-50:]
 
         return "OK"
 

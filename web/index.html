@@ -89,7 +89,7 @@ $( "#loader" ).delay( 2000 ).animate( {height: '9px'}, 200).delay( 2000 ).animat
         <tr>
             <td class="button_13 active">&#x2B05;</td>
             <td class="button_14">14</td>
-            <td class="button_15">15</td>
+            <td class="button_15">&#x21BB</td>
             <td class="button_16 active">&#x2716;</td>
         </tr>
     </table>
@@ -99,6 +99,9 @@ $( "#loader" ).delay( 2000 ).animate( {height: '9px'}, 200).delay( 2000 ).animat
         });
         $(".button_16").on("click", function(){
             top.close();
+        });
+        $(".button_15").on("click", function(){
+            location.reload();
         });
         $("#main_image").on("click", function(){
             $( "#buttons" ).animate( {'margin-left': '0'}, 200).animate({'padding' : '0px 5px'}, 60).animate({'padding' : '0px 0px'}, 120);

@@ -118,6 +118,7 @@ class KaiaAssistant:
                 return self.active_skill.automaton, True
 
         for skill in self.skills:
+
             if not skill.should_start(input):
                 continue
             aut = Automaton(skill.get_runner(), context)
@@ -133,7 +134,6 @@ class KaiaAssistant:
         history_item = AssistantHistoryItem(self.datetime_factory(), input)
         self.history.append(history_item)
         self.history = self.history[-self.max_history_length:]
-
         aut, is_active_skill = self._get_automaton(input, context)
 
         try:

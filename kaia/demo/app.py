@@ -67,7 +67,7 @@ class KaiaApp:
             if c == custom_main_service:
                 main = c
             else:
-                services.append(services)
+                services.append(c)
 
         return ForkApp(main, tuple(services))
 
