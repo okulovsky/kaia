@@ -41,10 +41,13 @@ class KaiaDriver:
     def _process(self, item):
         KaiaLog.write(f"Processing item", str(item))
         if self.interpreter is None:
+            KaiaLog.write(f"Creating interpreter",'')
             context = KaiaContext(self, self.avatar_api)
             automaton = self.automaton_factory(context)
             self.interpreter = KaiaInterpreter(automaton, self.kaia_api)
+            KaiaLog.write(f"Created interpreter",'')
         try:
+            KaiaLog.write("Item to interpreter", str(item))
             self.interpreter.process(item)
         except:
             err = traceback.format_exc()

@@ -54,6 +54,8 @@ class Test:
                 yield from self.test_voice_clone()
 
         custom_models_files = self.api.controller_api.list_resources(CoquiTTS, 'custom')
+        if custom_models_files is None:
+            return
         print(custom_models_files)
         custom_models = [
             c.split('/')[-1]

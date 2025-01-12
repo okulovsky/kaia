@@ -4,7 +4,7 @@ from .model import RhasspyKaldiModel
 
 @dataclass
 class RhasspyKaldiSettings:
-    connection = ConnectionSettings(20101, 15)
+    connection = ConnectionSettings(20101)
     languages: tuple[str,...] = (
         RhasspyKaldiModel('en'),
         RhasspyKaldiModel('de'),

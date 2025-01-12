@@ -42,6 +42,8 @@ class NewContentStrategy(IContentStrategy):
 
     def choose_filename(self, ml: MediaLibrary) -> str|None:
         df = ml.to_df()
+        if df.shape[0] == 0:
+            return None
         self.ensure(df, 'feedback_bad', 'feedback_seen')
         df = df.loc[df.feedback_bad==0]
         if df.shape[0] == 0:
@@ -57,6 +59,8 @@ class NewContentStrategy(IContentStrategy):
 class GoodContentStrategy(IContentStrategy):
     def choose_filename(self, ml: MediaLibrary) -> str | None:
         df = ml.to_df()
+        if df.shape[0] == 0:
+            return None
         self.ensure(df, 'feedback_bad', 'feedback_seen', 'feedback_good')
         df = df.loc[df.feedback_bad==0]
         df = df.loc[df.feedback_seen>0]
@@ -70,6 +74,8 @@ class GoodContentStrategy(IContentStrategy):
 class AnyContentStrategy(IContentStrategy):
     def choose_filename(self, ml: MediaLibrary) -> str | None:
         df = ml.to_df()
+        if df.shape[0] == 0:
+            return None
         return df.sample(1).filename.iloc[0]
 
 

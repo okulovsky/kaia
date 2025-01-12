@@ -1,4 +1,4 @@
-from brainbox.deciders.utils.hello_world import HelloBrainBox
+from brainbox.deciders.utils.hello_brainbox import HelloBrainBox
 from unittest import TestCase
 
 class HelloBrainBoxAloneTestCase(TestCase):

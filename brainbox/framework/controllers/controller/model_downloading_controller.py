@@ -61,14 +61,21 @@ class IModelDownloadingController:
 
 
     def download_models(self, models: Any):
+        controller = cast(IController,self)
         models = self._normalize_model_array(models)
         models_to_download = []
         for model in models:
+            controller.context.logger.log(f"Checking model {model}")
             location = model.get_local_location(self)
             if location.is_dir() or location.is_file():
+                controller.context.logger.log("Model is already downloaded")
                 continue
+            controller.context.logger.log("Model needs to be downloaded")
             models_to_download.append(model)
-        if len(models_to_download) > 0:
+        if len(models_to_download) == 0:
+            controller.context.logger.log("All models are downloaded")
+        else:
+            controller.context.logger.log(f"Downloading {len(models_to_download)} models")
             _type = self.get_downloadable_model_type()
             _type.download(models_to_download, self)
 

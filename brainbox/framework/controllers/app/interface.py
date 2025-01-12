@@ -43,7 +43,7 @@ class IControllerService(ABC):
         pass
 
     @abstractmethod
-    def list_resources(self, decider: str|type, path: str) -> list[str]:
+    def list_resources(self, decider: str|type, path: str) -> list[str]|None:
         pass
 
     @abstractmethod

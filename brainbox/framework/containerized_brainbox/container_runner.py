@@ -11,6 +11,7 @@ class BrainBoxRunner(IContainerRunner):
     auto_restart: bool = False
     user_id: str|None = None
     docker_group_id: str|None = None
+    debug: bool = False
 
 
     def _get_user(self, executor: IExecutor):
@@ -27,7 +28,8 @@ class BrainBoxRunner(IContainerRunner):
 
 
     def run(self, image_name: str, container_name: str, executor: IExecutor):
-        restart = ['--restart', 'unless-stopped'] if self.auto_restart else []
+        restart = ['--restart', 'unless-stopped'] if self.auto_restart and not self.debug else []
+
 
         command = [
             'docker',
@@ -38,7 +40,7 @@ class BrainBoxRunner(IContainerRunner):
             DockerArgumentsHelper.arg_mount(self.folder, self.folder),
             '--network',
             'host',
-            '--detach',
+            *(['--detach'] if not self.debug else ['--rm']),
             '-v',
             '/var/run/docker.sock:/var/run/docker.sock',
             *self._get_user(executor),

@@ -24,7 +24,7 @@ class ComfyUIExtension:
 
 @dataclass
 class ComfyUISettings:
-    connection = ConnectionSettings(20301, 10)
+    connection = ConnectionSettings(20301)
 
     models_to_download = (
         ComfyUIFile(

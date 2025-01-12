@@ -87,11 +87,13 @@ class BrainBoxApi(Api, IBrainboxService):
                      always_on_planner: bool = False,
                      stop_containers_at_termination: bool = True,
                      keep_folder: bool = False,
-                     port: int = 18090
+                     port: int = 18090,
+                     locator: Locator|None = None
                      ):
             self.test_folder = Loc.create_test_folder('brainbox_test_runs')
             self.keep_folder = keep_folder
-            locator = Locator(self.test_folder.path)
+            if locator is None:
+                locator = Locator(self.test_folder.path)
             registry = ControllerRegistry.discover_or_create(services)
             if not run_controllers_in_default_environment:
                 registry.locator = locator

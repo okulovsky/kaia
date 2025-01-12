@@ -24,8 +24,8 @@ def uploads(test_case: TestCase, api: BrainBox.Api):
     
     If you run BrainBox server at the machine you're running `api`, 
     you may pass the path of the file:
-    """
 
+    ```python
     import tempfile
     from pathlib import Path
 
@@ -34,8 +34,8 @@ def uploads(test_case: TestCase, api: BrainBox.Api):
 
     length = api.execute(BrainBox.Task.call(HelloBrainBox).file_length(path))
     test_case.assertEqual(length, 13)
-
-    """
+    ```
+    
     This solution is dirty as it won't work with a remote BrainBox, 
     and would force you to rewrite your codebase in case of such change.
     

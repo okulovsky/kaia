@@ -3,4 +3,4 @@ from brainbox.framework import ConnectionSettings
 
 @dataclass
 class ResemblyzerSettings:
-    connection: ConnectionSettings = ConnectionSettings(20103, 15)
+    connection: ConnectionSettings = ConnectionSettings(20103)

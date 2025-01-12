@@ -62,22 +62,40 @@ class BusItemWrapper:
 
 
 class KaiaAppTester:
-    def __init__(self, app: KaiaApp, tc: TestCase):
+    def __init__(self,
+                 app: KaiaApp,
+                 tc: TestCase,
+                 custom_brainbox_api = None,
+                 custom_kaia_address = None,
+                 custom_session_id = None,
+                 ):
         self.app = app
-        self.test_speaker = TestSpeaker(self.app.brainbox_api)
         self.tc = tc
+
+        if custom_brainbox_api is None:
+            self.test_speaker = TestSpeaker(self.app.brainbox_api)
+        else:
+            self.test_speaker = TestSpeaker(custom_brainbox_api)
+        if custom_kaia_address is None:
+            self.address = f"127.0.0.1:{self.app.kaia_server.settings.port}"
+        else:
+            self.address = custom_kaia_address
+        if custom_session_id is None:
+            self.session_id = self.app.session_id
+        else:
+            self.session_id = custom_session_id
 
     def __enter__(self):
         self.fork_app = self.app.get_fork_app(True)
         self.fork_app.run()
-        ApiUtils.wait_for_reply(self.endpoint(), 5)
+        ApiUtils.wait_for_reply(self.endpoint(), 20)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.fork_app.terminate()
 
     def endpoint(self, endpoint: str|None = None):
-        result = f"http://127.0.0.1:{self.app.kaia_server.settings.port}"
+        result = 'http://'+self.address
         if endpoint is not None:
             result+=endpoint
         return result
@@ -88,7 +106,7 @@ class KaiaAppTester:
     def send_voice_command(self, text: str, speaker: int|str|None = None):
         file_id = self.test_speaker.speak(text, speaker)
         requests.post(
-            self.endpoint(f'/command/{self.app.session_id}/command_audio'),
+            self.endpoint(f'/command/{self.session_id}/command_audio'),
             json=file_id
         )
 
@@ -98,13 +116,13 @@ class KaiaAppTester:
 
     def send_initial_package(self):
         return requests.post(
-            self.endpoint(f'/command/{self.app.session_id}/command_initialize'),
+            self.endpoint(f'/command/{self.session_id}/command_initialize'),
             json=''
         ).json()
 
     def send_sound_confirmation(self, update: 'BusItemWrapper'):
         requests.post(
-            self.endpoint(f'/command/{self.app.session_id}/confirmation_audio'),
+            self.endpoint(f'/command/{self.session_id}/confirmation_audio'),
             json=update.item.payload['filename']
         )
 
@@ -125,10 +143,10 @@ class KaiaAppTester:
                 raise ValueError(f"Time limit exceeded. {len(result)} updates were collected")
             time.sleep(0.1)
 
-    def pull_updates_via_html(self, last_message_id: int, count: int|None = None, time_limit_in_seconds: int = 10) -> list:
+    def pull_updates_via_html(self, last_message_id: int, count: int|None = None, time_limit_in_seconds: int = 10) -> list[BusItemWrapper]:
         start = datetime.now()
         while True:
-            updates = requests.get(self.endpoint(f'/updates/{self.app.session_id}/{last_message_id}')).json()
+            updates = requests.get(self.endpoint(f'/updates/{self.session_id}/{last_message_id}')).json()
             result = [BusItemWrapper(BusItem(**u), self.tc) for u in updates]
             if count is not None:
                 if len(result) == count:
@@ -139,6 +157,11 @@ class KaiaAppTester:
                 pprint(result)
                 raise ValueError(f"Time limit exceeded. {len(result)} updates were collected")
             time.sleep(0.1)
+
+    def get_available_updates_via_html(self) -> list[BusItemWrapper]:
+        updates = requests.get(self.endpoint(f'/updates/{self.session_id}/0')).json()
+        result = [BusItemWrapper(BusItem(**u), self.tc) for u in updates]
+        return result
 
 
 

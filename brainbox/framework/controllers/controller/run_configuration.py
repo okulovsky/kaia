@@ -12,7 +12,7 @@ from .gpu_registry import GpuRegistry
 
 @dataclass
 class RunConfiguration:
-    parameter: str|None
+    parameter: str|None = None
     publish_ports: None | dict[int, int] = None
     mount_resource_folders: None | dict[str, str] = None
     mount_top_resource_folder: bool = True
