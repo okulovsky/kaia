@@ -4,7 +4,7 @@ from typing import *
 from abc import ABC, abstractmethod
 from unittest import TestCase
 from .test_report import TestReport
-from ...common import Loc
+from ...common import Locator, Loc
 from .resource_folder import ResourceFolder
 from .controller_context import ControllerContext
 from dataclasses import dataclass
@@ -123,34 +123,55 @@ class IController(ABC, Generic[TSettings]):
         for instance_id in self.get_running_instances_id_to_parameter():
             self.stop(instance_id)
 
-    def self_test(self, tc: None|TestCase = None, output_folder: Path|None = None) -> TestReport:
+    def _run_self_test(self, api, tc: TestCase, locator: Locator):
+        output_folder = locator.self_test_path
+        html_path = output_folder / (self.get_name() + '.html')
+
+        items = []
+        error = None
+        try:
+            for item in self._self_test_internal(api, tc):
+                items.append(item)
+        except Exception as ex:
+            error = traceback.format_exc()
+            raise ValueError(f"Exception has occured during self-test. View the report file://{html_path}") from ex
+        finally:
+            report = TestReport(self.get_name(), items, error, type(self))
+            with open(output_folder / self.get_name(), 'wb') as file:
+                pickle.dump(report, file)
+            with open(html_path, 'w') as file:
+                file.write(create_self_test_report_page(report))
+        if error is None:
+            print(f"SELF-TEST EXITED SUCCESSFULLY. Report file://{html_path}")
+        return report
+
+
+    def self_test(self,
+                  tc: None|TestCase = None,
+                  locator: Locator = Loc,
+                  api = None
+                  ) -> TestReport:
         if tc is None:
             tc = TestCase()
-        if output_folder is None:
-            output_folder = Loc.self_test_path
-        html_path = output_folder / (self.get_name()+'.html')
 
         from brainbox.framework import BrainBoxApi
-        with BrainBoxApi.Test(port=18091) as api:
-            items = []
-            error = None
+        if api is not None:
+            if not isinstance(api, BrainBoxApi):
+                raise ValueError("Api should be BrainBoxApi")
+            else:
+                return self._run_self_test(api, tc, locator)
+
+        with BrainBoxApi.Test(port=18091, locator=locator, run_controllers_in_default_environment=False) as api:
             try:
-                for item in self._self_test_internal(api, tc):
-                    items.append(item)
-            except Exception as ex:
-                error = traceback.format_exc()
-                raise ValueError(f"Exception has occured during self-test. View the report file://{html_path}") from ex
+                result = self._run_self_test(api, tc, locator)
+                return result
             finally:
                 self.stop_all()
-                report = TestReport(self.get_name(), items, error, type(self))
-                with open(output_folder / self.get_name(), 'wb') as file:
-                    pickle.dump(report, file)
-                with open(html_path, 'w') as file:
-                    file.write(create_self_test_report_page(report))
 
-            if error is None:
-                print(f"SELF-TEST EXITED SUCCESSFULLY. Report file://{html_path}")
-            return report
+
+
+
+
 
 
     # endregion

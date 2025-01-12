@@ -74,12 +74,17 @@ class DockerController(IController[TSettings]):
             shutil.rmtree(self.resource_folder())
 
     def run_with_configuration(self, configuration: RunConfiguration) -> str:
-        runner = BrainBoxRunner(self.context, configuration, True)
-        result = runner.run(self.get_image_source().get_image_name(), self.get_image_source().get_container_name(), self.get_executor())
+        command = configuration.generate_command(
+            self.get_image_source().get_container_name(),
+            self.get_image_source().get_image_name(),
+            self.context
+        )
+        print(" ".join(command))
+        result = self.get_executor().execute(command, Command.Options(monitor_output=print))
         return result[:12]
 
     def stop(self, instance_id: str):
-        self.get_executor().execute(['docker','stop',instance_id])
+        self.get_executor().execute(['docker','stop',instance_id], Command.Options(ignore_exit_code=True))
         self.get_executor().execute(['docker', 'rm', instance_id], Command.Options(ignore_exit_code=True))
 
 

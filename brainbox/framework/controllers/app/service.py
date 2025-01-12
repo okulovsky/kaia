@@ -1,3 +1,4 @@
+from typing import Any
 import os
 import shutil
 import traceback
@@ -34,6 +35,7 @@ class RunningInstallation:
 class ControllerServerSettings:
     registry: ControllerRegistry
     port: int = 8091
+    api: Any = None
 
 class ControllerService(IControllerService):
     def __init__(self, settings: ControllerServerSettings):
@@ -156,7 +158,7 @@ class ControllerService(IControllerService):
     @endpoint(url='/controllers/self_test')
     def self_test(self, decider: str|type) -> TestReport:
         controller = self.get_controller(decider)
-        return controller.self_test(output_folder=self.settings.registry.locator.self_test_path)
+        return controller.self_test(locator=self.settings.registry.locator, api=self.settings.api)
 
 
     @endpoint(url='/controllers/delete_self_test')
@@ -175,10 +177,12 @@ class ControllerService(IControllerService):
         return path
 
     @endpoint(url='/resources/list')
-    def list_resources(self, decider: str|type, path: str) -> list[str]:
+    def list_resources(self, decider: str|type, path: str) -> list[str]|None:
         controller = self.get_controller(decider)
         root_path = controller.resource_folder()
         path = self._inner_path(controller, path)
+        if not path.is_dir():
+            return None
         return (Query
                 .folder(path,'**/*')
                 .where(lambda z: z.is_file())

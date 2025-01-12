@@ -1,4 +1,4 @@
-from brainbox.tools.deployment import BrainBoxRunner
+from brainbox.framework.containerized_brainbox import BrainBoxRunner
 from brainbox.framework import Loc
 
 if __name__ == '__main__':

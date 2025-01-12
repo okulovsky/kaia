@@ -12,7 +12,8 @@ import io
 class BrainBoxServer(Server):
     def __init__(self, settings: BrainBoxServiceSettings):
         self.settings = settings
-        controller_settings = ControllerServerSettings(settings.registry, settings.port)
+        from .api import BrainBoxApi
+        controller_settings = ControllerServerSettings(settings.registry, settings.port, BrainBoxApi(f"127.0.0.1:{settings.port}"))
         self._controller_server = ControllerServer(controller_settings)
         self.service = BrainBoxService(settings)
         super().__init__(settings.port, self.service)

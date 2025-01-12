@@ -24,7 +24,8 @@ class SmallImageBuilder(IImageBuilder):
                  add_current_user: bool = True,
                  copy_to_code_path: dict[Path, str]|None = None,
                  write_to_code_path: dict[str, str]|None = None,
-                 reset_code_folder: bool = False
+                 reset_code_folder: bool = False,
+                 build_command: Optional[Iterable[str]] = None
     ):
         self.code_path = code_path
         self.docker_template = docker_template
@@ -33,6 +34,7 @@ class SmallImageBuilder(IImageBuilder):
         self.copy_to_code_path = copy_to_code_path
         self.reset_code_folder = reset_code_folder
         self.write_to_code_path = write_to_code_path
+        self.build_command = build_command
 
     ADD_USER_PLACEHOLDER = 'add_user'
 
@@ -108,8 +110,11 @@ class SmallImageBuilder(IImageBuilder):
     def build_image(self, image_name: str, executor: IExecutor) -> None:
         self._prepare_container_folder(executor)
         args = []
+        command = ['docker', 'build']
+        if self.build_command is not None:
+            command = ['docker'] + list(self.build_command)
         executor.execute(
-            ['docker','build','-t', image_name] + args + ['.'],
+            command + ['-t', image_name] + args + ['.'],
             Command.Options(workdir=self.code_path)
         )
 
