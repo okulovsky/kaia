@@ -3,7 +3,7 @@ from ....framework import ConnectionSettings
 
 @dataclass
 class TortoiseTTSSettings:
-    connection = ConnectionSettings(20203, 60)
+    connection = ConnectionSettings(20203)
 
 
 

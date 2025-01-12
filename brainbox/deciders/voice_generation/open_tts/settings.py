@@ -3,4 +3,4 @@ from ....framework import ConnectionSettings
 
 @dataclass
 class OpenTTSSettings:
-    connection = ConnectionSettings(20201, 30)
+    connection = ConnectionSettings(20201)

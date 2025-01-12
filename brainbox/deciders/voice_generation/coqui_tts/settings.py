@@ -16,7 +16,7 @@ class ModelInstallationSettings:
 
 @dataclass
 class CoquiTTSSettings:
-    connection = ConnectionSettings(20202, 20)
+    connection = ConnectionSettings(20202)
     builtin_models_to_download = (
         ModelInstallationSettings('tts_models/en/vctk/vits'),
         ModelInstallationSettings('tts_models/multilingual/multi-dataset/your_tts'),
