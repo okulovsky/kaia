@@ -1,7 +1,7 @@
 import json
 
 from ..interface import ControllerServiceStatus
-from .page import page, button
+from ....common import HTML
 
 
 
@@ -32,13 +32,13 @@ def create_status_page(status: ControllerServiceStatus):
         html.append(f'<td>')
         html.append('<table border="0"><tr>')
         html.append("<td>")
-        html.append(button('/controllers/install', "Install", dict(decider=row.name, join=False)))
+        html.append(HTML.button('/controllers/install', "Install", dict(decider=row.name, join=False)))
         html.append('</td><td>')
-        html.append(button('/controllers/uninstall', "Uninstall", dict(decider=row.name), active=row.installation_status.installed))
+        html.append(HTML.button('/controllers/uninstall', "Uninstall", dict(decider=row.name), active=row.installation_status.installed))
         html.append('</td><td>')
-        html.append(button('/controllers/uninstall', "Purge", dict(decider=row.name, purge=True), active=row.installation_status.installed))
+        html.append(HTML.button('/controllers/uninstall', "Purge", dict(decider=row.name, purge=True), active=row.installation_status.installed))
         html.append('</td><td>')
-        html.append(button('/controllers/self_test', "Self-test", dict(decider=row.name), active=row.installation_status.installed))
+        html.append(HTML.button('/controllers/self_test', "Self-test", dict(decider=row.name), active=row.installation_status.installed))
         html.append('</td>')
         html.append('</tr></table>')
         html.append('</td>')
@@ -53,14 +53,14 @@ def create_status_page(status: ControllerServiceStatus):
             else:
                 html.append('<td>&nbsp;</td>')
             html.append(f"<td>")
-            html.append(button("/controllers/stop", "Stop", dict(decider=row.name, instance_id=instance.instance_id)))
+            html.append(HTML.button("/controllers/stop", "Stop", dict(decider=row.name, instance_id=instance.instance_id)))
             html.append(f"</td></tr>")
         html.append("</table></td>")
 
         html.append("<td>")
         parameter_name = 'parameter_'+row.name
         html.append(f'<input type="text" id="{parameter_name}"/>')
-        html.append(button('/controllers/run', "Run", dict(decider=row.name), dict(parameter=parameter_name), active=row.installation_status.installed))
+        html.append(HTML.button('/controllers/run', "Run", dict(decider=row.name), dict(parameter=parameter_name), active=row.installation_status.installed))
         html.append("</td>")
 
         html.append("<td>")
@@ -68,7 +68,7 @@ def create_status_page(status: ControllerServiceStatus):
             html.append(f"<a href=/html/controllers/self_test_report/{row.name}>Self-test report</a>")
             if row.has_errors_in_self_test_report:
                 html.append(f'⚠')
-            html.append(button('/controllers/delete_self_test', "Delete", dict(decider=row.name)))
+            html.append(HTML.button('/controllers/delete_self_test', "Delete", dict(decider=row.name)))
         else:
             html.append("&nbsp;")
         html.append("</td>")
@@ -76,4 +76,4 @@ def create_status_page(status: ControllerServiceStatus):
         html.append("</tr>")
 
     html.append('</table>')
-    return page(html)
+    return HTML.page("Brainbox: Controllers", html)

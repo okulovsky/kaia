@@ -1,29 +1,52 @@
 import shutil
-from ....framework import OnDemandDockerApi, ResourcePrerequisite, FileLike
+from ....framework import OnDemandDockerApi, ResourcePrerequisite, FileLike, FileIO
+
 from .controller import VideoToImagesController
 from .settings import VideoToImagesSettings
 from yo_fluq import Query
-
+import json
+from .container.settings import AnalysisSettings
 
 class VideoToImages(OnDemandDockerApi[VideoToImagesSettings, VideoToImagesController]):
     def __init__(self):
         pass
 
-    def process(self, file_name: str, cap_result_count: int|None = None):
-        config = self.controller.get_run_configuration(['--file', file_name])
-        self.controller.get_deployment().stop().remove()
-        self.controller.run_with_configuration(config)
-        folder = self.controller.resource_folder('output')
-        result = {}
-        for file in Query.folder(folder):
-            name = int(file.name.split('.')[0])
-            fname = f'{self.current_job_id}.{name}.png'
-            shutil.copy(file, self.cache_folder/fname)
-            result[name] = fname
-        result = [result[key] for key in sorted(result)]
-        if cap_result_count is not None:
-            result = result[:cap_result_count]
-        return result
+    def _monitor(self, s):
+        try:
+            number = int(s.split('%')[0])
+            self.context.logger.report_progress(number/100)
+        except:
+            pass
+
+
+    def process(self, analysis_settings: AnalysisSettings|dict):
+        if isinstance(analysis_settings, dict):
+            analysis_settings = AnalysisSettings(**analysis_settings)
+
+        FileIO.write_json(analysis_settings.__dict__, self.controller.resource_folder()/'settings.json')
+        self.run_container(self.controller.get_run_configuration(), self._monitor)
+
+        folder = self.controller.resource_folder('output/images')
+
+        text = FileIO.read_text(self.controller.resource_folder('output')/'frames.jsonl')
+        lines = text.split('\n')
+        records = []
+
+        for line in lines:
+            if line.strip() == '':
+                continue
+            try:
+                record = json.loads(line)
+            except:
+                print(f"Error parsing line\n`{line}`")
+                continue
+
+            fname = self.current_job_id+'.'+record['filename']
+            shutil.move(folder/record['filename'], self.cache_folder / fname)
+            record['filename'] = fname
+            records.append(record)
+
+        return records
 
 
     @staticmethod
@@ -34,5 +57,14 @@ class VideoToImages(OnDemandDockerApi[VideoToImagesSettings, VideoToImagesContro
             file
         )
 
+    @staticmethod
+    def delete_video(filename: str):
+        return ResourcePrerequisite(
+            VideoToImages,
+            '/input/'+filename,
+            None
+        )
+
     Controller = VideoToImagesController
     Settings = VideoToImagesSettings
+    AnalysisSettings = AnalysisSettings

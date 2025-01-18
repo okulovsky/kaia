@@ -59,11 +59,13 @@ class TestReport:
         return TestReportItemHolder(
             api,
             TestReportItem(
-            job.decider,
-            job.method,
-            job.decider_parameter,
-            job.arguments,
-            job.result,
+                job.decider,
+                job.method,
+                job.decider_parameter,
+                job.arguments,
+                job.result,
+                job.accepted_timestamp,
+                job.finished_timestamp,
         ))
 
     @staticmethod

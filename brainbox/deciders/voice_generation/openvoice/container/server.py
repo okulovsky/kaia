@@ -1,4 +1,5 @@
 import os
+import traceback
 import uuid
 import torch
 from pydantic import BaseModel
@@ -7,10 +8,11 @@ from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 
 from openvoice import se_extractor
 from openvoice.api import ToneColorConverter
+import traceback
 
 CKPT_CONVERTER = 'checkpoints/converter'
 DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
-OUTPUT_DIR = 'outputs'
+OUTPUT_DIR = '/home/app/outputs'
 
 app = FastAPI()
 
@@ -42,6 +44,7 @@ async def generate_tts(
         source_path = f"{OUTPUT_DIR}/source_{id}{source_ext}"
         reference_path = f"{OUTPUT_DIR}/reference_{id}{ref_ext}"
 
+        os.makedirs(OUTPUT_DIR, exist_ok=True)
         with open(source_path, "wb") as f:
             f.write(await source_speaker.read())
         with open(reference_path, "wb") as f:
@@ -76,8 +79,8 @@ async def generate_tts(
             media_type="audio/wav",
             filename=os.path.basename(output_path)
         )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except:
+        raise HTTPException(status_code=500, detail=str(traceback.format_exc()))
     finally:
         for file_path in [source_path, reference_path]:
             if os.path.exists(file_path):

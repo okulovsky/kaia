@@ -49,7 +49,7 @@ class LoggingLocalExecutor(IExecutor):
             datetime.now(),
             '> ' + ' '.join(command.command)
         ))
-        command = copy.deepcopy(command)
+        command = copy.copy(command)
         if command.options is None:
             command.options = Command.Options()
         command.options.monitor_output = self.add_item

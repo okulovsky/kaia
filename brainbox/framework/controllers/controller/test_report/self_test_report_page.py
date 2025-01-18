@@ -63,6 +63,12 @@ class Builder:
         if item.parameter is not None:
             self.html.append(f' ({item.parameter})')
         self.html.append("</h2>")
+
+        if item.finished_timestamp is not None and item.accepted_timestamp is not None:
+            self.html.append("<p>")
+            self.html.append( str( (item.finished_timestamp - item.accepted_timestamp).total_seconds()) +" sec")
+            self.html.append("</p>")
+
         if item.comment is not None:
             self.html.append("<p>")
             self.html.append(item.comment)

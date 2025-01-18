@@ -87,28 +87,24 @@ class RecognizerApp:
         await self._save_img_base64_to_png(request)
         return "OK"
 
-    def get_coordinates_faces(self) -> CoordsFaceSquare:
+    def get_coordinates_faces(self) -> dict[str,list]:
         source = f"{self.data_directory}/{self.name_image_png}"
         results = self.model(source, stream=False)
         faces_coords = self._format_result(results)
 
-        return {"faces_coords": faces_coords}
+        return {"objects": faces_coords}
 
-    def _format_result(self, results) -> CoordsFaceSquare:
-        faces_coords = dict()
-        num_face = 0
+    def _format_result(self, results) -> list:
+        faces_coords = []
         for result in results:
-            result_faces_coords = dict()
             for box in result.boxes.xywh:
                 x_center, y_center, w, h = round(box[0].item()), round(box[1].item()), round(box[2].item()), round(box[3].item())
-                result_faces_coords[f"face_{num_face}"] = {
+                faces_coords.append({
                     "x_center": x_center,
                     "y_center": y_center,
                     "w": w,
                     "h": h,
-                }
-                num_face += 1
-            faces_coords.update(result_faces_coords)
+                })
         return faces_coords
 
     async def _save_img_base64_to_png(self, request: Request):

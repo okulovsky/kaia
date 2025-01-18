@@ -3,4 +3,4 @@ from ....framework import ConnectionSettings
 
 @dataclass
 class EspeakPhonemizerSettings:
-    connection = ConnectionSettings(20001)
+    connection = ConnectionSettings(20402)

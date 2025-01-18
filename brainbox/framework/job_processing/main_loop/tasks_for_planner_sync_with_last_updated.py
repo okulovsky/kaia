@@ -4,19 +4,20 @@ from datetime import datetime
 
 
 
-class TaskForPlannerSync(ICoreAction):
+class TaskForPlannerSyncWithLastUpdated(ICoreAction):
     def __init__(self):
         self.last_time_full_update: datetime|None = None
+        self.last_time_small_update_in_db_clock: datetime|None = None
 
 
     def should_do_full_update(self, core):
         if self.last_time_full_update is None:
             return True
+        if self.last_time_small_update_in_db_clock is None:
+            return True
         if core.jobs_for_planner is None:
             return True
         if (datetime.now() - self.last_time_full_update).total_seconds() > 5:
-            return True
-        if len(core.jobs_for_planner) < 100: #This is the optimization for really big loads. Doesn't make sense to do it for smaller
             return True
         return False
 
@@ -27,21 +28,20 @@ class TaskForPlannerSync(ICoreAction):
                 core.jobs_for_planner = self._get_tasks(session)
                 return
 
-            changed = set(core.new_session.changes.all)
+            updates = self._get_tasks(session, self.last_time_small_update_in_db_clock)
+            changed = set(u.id for u in updates)
             not_changed = tuple(
                 job
                 for job in core.jobs_for_planner
                 if job.id not in changed
             )
-            core.jobs_for_planner = not_changed + self._get_tasks(session, set(j.id for j in not_changed))
-            core.new_session.reset()
+            core.jobs_for_planner = not_changed + updates
 
 
-
-    def _get_tasks(self, session, skip_for_ids: None|set = None):
+    def _get_tasks(self, session, from_timestamp: datetime|None = None):
         condition = ~Job.finished & Job.ready
-        if skip_for_ids is not None:
-            condition &= Job.id.notin_(skip_for_ids)
+        if from_timestamp is not None:
+            condition &= Job.last_update_timestamp>=from_timestamp
         new_records = list(session.execute(
             select(
                 Job.id,
@@ -49,8 +49,14 @@ class TaskForPlannerSync(ICoreAction):
                 Job.decider_parameter,
                 Job.received_timestamp,
                 Job.assigned,
-                Job.ordering_token
+                Job.ordering_token,
+                Job.last_update_timestamp
             )
             .where(condition)
         ))
-        return tuple(JobForPlanner(*rec) for rec in new_records)
+        result = []
+        for rec in new_records:
+            if self.last_time_small_update_in_db_clock is None or rec[-1]>self.last_time_small_update_in_db_clock:
+                self.last_time_small_update_in_db_clock = rec[-1]
+            result.append(JobForPlanner(*rec[:-1]))
+        return tuple(result)

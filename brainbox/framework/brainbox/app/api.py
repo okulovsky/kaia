@@ -71,7 +71,7 @@ class BrainBoxApi(Api, IBrainboxService):
     def upload(self, filename: str, data: FileLike.Type):
         with FileLike(data, None) as stream:
             reply = requests.post(
-                f'http://{self.address}/cache/upload',
+                f'http://{self.address}/cache/upload/',
                 files=(
                     (filename, stream),
                 )

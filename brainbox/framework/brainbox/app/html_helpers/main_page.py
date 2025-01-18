@@ -5,6 +5,7 @@ from .batch_page import _select, _pretty_sec
 from sqlalchemy import select, case, func
 from yo_fluq import *
 import numpy as np
+from ....common import HTML
 
 def _get_frames(session):
     cte = _select().cte('processed_jobs')
@@ -103,8 +104,14 @@ def _to_html(df):
                 html.append('?')
         html.append("</td>")
 
+        html.append("<td>")
+        html.append(HTML.button("/jobs/cancel", "Cancel", dict(batch_id=row.batch)))
+        html.append("</td>")
 
-    return ''.join(html)
+
+
+
+    return '\n'.join(html)
 
 
 def create_main_page(session):
@@ -113,10 +120,10 @@ def create_main_page(session):
         html = ''
     else:
         html = _to_html(df)
-    return f'''
-<html><body>
+
+    html = '''
 [<a href="/html/jobs/operator_log">Operator log</a>]&nbsp;[<a href="/html/controllers/status">Controllers</a>]</br>
 <table border=1 cellspacing=0>
-{html}
-</table></body></html>'
-'''
+    ''' + html + "</table>"
+
+    return HTML.page("Brainbox: Batches", html)

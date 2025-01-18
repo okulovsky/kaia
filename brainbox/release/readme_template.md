@@ -7,8 +7,7 @@ self-tests and documentation, as well as unified access to all the models.
 The main use case is fast prototyping of small AI-driven products: 
 managing chats in messengers, self-hosted voice assistants, 
 media processing (translation, covering images), etc.
-BrainBox is open-source and self-hosted, so no external APIs are needed; 
-GPU is recommended for some, but not all, models.
+BrainBox is open-source and self-hosted, so no external APIs are needed.
 
 BrainBox is not a production-ready solution. **Do not use it in production environment**,
 since it doesn't have any security features, isn't really compatible with high and even 
@@ -21,30 +20,42 @@ and few won't even run.
 
 ## Included deciders
 
-They are many. 
-At some point, BrainBox will have a comprehensive documentation for each of them, but we're not there yet.
-Important deciders are:
-* For TTS, text-to-speech: 
-  * [OpenTTS](https://github.com/synesthesiam/opentts) provides a decent baseline for english language with VITS model
-  * [CoquiTTS](https://github.com/coqui-ai/TTS) is a framework supporting many different models.
-    That includes VITS as well as YourTTS, and, of course, their own XTTS, that can do a good voice cloning.
-  * [TortoiseTTS](https://github.com/neonbjb/tortoise-tts) is, in my opinion, still the best in terms of quality. 
-    It is very slow, but not as slow as it used to be. 
-* For STT, speech-to-text, and other voice analysis:
-  * [Whisper](https://github.com/WhisperSpeech/WhisperSpeech) is a de-facto standard.
-  * [Kaldi](https://kaldi-asr.org/), which we use via its implementation in [Rhasspy](https://rhasspy.readthedocs.io/en/latest/),
-    provides much faster and accurate result _over the closed grammar and vocabulary_. 
-    It is not really a general solution for STT, but is perfect for home assistants.
-  * [Resemblyzer](https://github.com/resemble-ai/Resemblyzer) does speaker identification.
-* For text processing:
-  * [Ollama](https://ollama.com/), a de-facto standard for LLM management, is supported.
-* For image generation and processing:
-  * [ComfyUI](https://github.com/comfyanonymous/ComfyUI), a standard for image generation, is supported
-  * [YOLO](https://docs.ultralytics.com/) is supported for object detection.
+There are many! Once you install BrainBox, you will have all these AIs privately and free of charge on your machine, 
+accessible via user-friendly Python API, or by simple HTTP requests.
 
-... And more are coming. 
-Once you install BrainBox, you will have all these AIs privately and free of charge on your machine, 
-accessible via user-friendly Python API, or by simple HTTP requests!    
+At some point, BrainBox will have a comprehensive documentation for each of them, but we're not there yet.
+So here is a short description.
+
+### Text-to-speech
+
+* [OpenTTS](https://github.com/synesthesiam/opentts) provides a decent baseline for English language with VITS model, other languages are supproted as well.
+* [CoquiTTS](https://github.com/coqui-ai/TTS) is a framework supporting many different models.
+  That includes VITS as well as YourTTS, and, of course, their own XTTS, that can do a good voice cloning.
+* [TortoiseTTS](https://github.com/neonbjb/tortoise-tts) is, in my opinion, still the best in terms of quality. 
+  It is very slow, but not as slow as it used to be. 
+
+### Speech-to-text and voice analysis
+ 
+* [Whisper](https://github.com/WhisperSpeech/WhisperSpeech) is a de-facto standard.
+* [Kaldi](https://kaldi-asr.org/), which we use via its implementation in [Rhasspy](https://rhasspy.readthedocs.io/en/latest/),
+  provides much faster and accurate result _over the closed grammar and vocabulary_. 
+  It is not really a general solution for STT, but is perfect for home assistants.
+* [Resemblyzer](https://github.com/resemble-ai/Resemblyzer) does speaker identification.
+
+### LLM and text processing 
+
+* [Ollama](https://ollama.com/), a de-facto standard for LLM management, is supported.
+* [EspeakPhonemizer](https://pypi.org/project/espeak-phonemizer/) converts text to phonemes for many languages. 
+Mainly here because of how troublesome it is to install it on Windows.
+
+### Image generation and processing
+* [ComfyUI](https://github.com/comfyanonymous/ComfyUI), a standard for image generation, is supported
+* [YOLO](https://docs.ultralytics.com/) is used for fast object detection with neural netowrks.
+* [WD14Tagger](https://github.com/corkborg/wd14-tagger-standalone) describes the images with the tags. 
+Also available in ComfyUI, but has some additional perks. 
+* VideoToImages converts video to a series on images, allowing to select most sharp frame and to skip similar frames. 
+
+
  
 # Installation
 

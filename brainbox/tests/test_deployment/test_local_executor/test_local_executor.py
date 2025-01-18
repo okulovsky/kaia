@@ -46,7 +46,8 @@ class LocalExecutorTestCase(TestCase):
 
     def check(self, output, *control):
         lines = output.split('\n')[:len(control)]
-        for expected, actual in zip(lines, control):
+        for expected, actual in zip(control, lines):
+            actual = actual.replace('\r', '')
             self.assertEqual(expected, actual)
 
     def test_return_output(self):

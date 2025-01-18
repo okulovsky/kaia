@@ -186,7 +186,7 @@ class ControllerService(IControllerService):
         return (Query
                 .folder(path,'**/*')
                 .where(lambda z: z.is_file())
-                .select(lambda z: str(z.relative_to(root_path)))
+                .select(lambda z: str(z.relative_to(root_path)).replace('\\','/'))
                 .to_list()
                 )
 

@@ -16,7 +16,7 @@ class TestDecider(IDecider):
 class BigLoadTestCase(TestCase):
     def dont_test_big_load(self):
         with BrainBoxApi.Test([TestDecider()]) as api:
-            tasks = [BrainBoxTask(id=str(i), decider='test', arguments=dict(arg=i)) for i in range(100000)]
+            tasks = [BrainBoxTask(id=str(i), decider='TestDecider', arguments=dict(arg=i)) for i in range(10000)]
             api.add(tasks)
             while True:
                 summary = api.summary()

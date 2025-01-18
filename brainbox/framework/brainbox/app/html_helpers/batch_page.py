@@ -6,6 +6,7 @@ from ....job_processing import Job
 from sqlalchemy.orm import Session
 from sqlalchemy import select, case, func
 from yo_fluq import *
+from ....common import HTML
 
 def _calculate_julian_date(dt: datetime):
     julian_date = dt.toordinal() + 1721425.5
@@ -103,18 +104,24 @@ def _to_html_lines(results):
                 if result['progress'] is not None:
                     html.append(f"<br> C: {int(100*result['progress'])}%")
             html.append("</td>")
+            html.append("<td>")
+            html.append(HTML.button('/jobs/cancel', "Cancel", dict(job_id=result['id'])))
+            html.append("<td>")
             html.append("</tr>")
 
+
+
             if result['error'] is not None:
-                html.append('<tr><td colspan=4><tt>')
+                html.append('<tr><td colspan=5><tt>')
                 html.append(result['error'].replace('\n','<br>'))
                 html.append('</tt></td></tr>')
 
-    return '\n'.join(html)
+    return "\n".join(html)
 
 
 def create_batch_page(session, batch):
     records = _query(session, batch)
     records = [r._asdict() for r in records]
     inner = _to_html_lines(records)
-    return f'<html><body><table border=1>{inner}</table></body></html>'
+    inner = "<table border=1>"+inner+"</table>"
+    return HTML.page("Brainbox: Jobs", inner)

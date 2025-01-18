@@ -1,48 +1,31 @@
+import os
 from pathlib import Path
 import requests
-from kaia.brainbox.core import IApiDecider
+from ....framework import DockerWebServiceApi, FileLike, File
+from .settings import ResembleEnhanceSettings
+from .controller import ResembleEnhanceController
+from uuid import uuid4
 
-class Denoiser(IApiDecider):
-    def __init__(self, address: str):
-        self.address = address
+class ResembleEnhance(DockerWebServiceApi[ResembleEnhanceSettings, ResembleEnhanceController]):
+    def __init__(self, address: str|None = None):
+        super().__init__(address)
 
-    def post_audio(self, path_to_file: Path | str):
-        """
-        Posts an audio file to the enhancement service.
-        :param path_to_file: Path or string path to the audio file.
-        :return: JSON response from the server.
-        """
-        with open(path_to_file, 'rb') as audio_file:
-            files = {'files[]': audio_file}
-            response = requests.post(f"http://{self.address}/enhance", files=files)
+    def process(self, file: FileLike.Type):
+        uploads = self.controller.resource_folder('uploads')
+        os.makedirs(uploads, exist_ok=True)
+        for old_file in os.listdir(uploads):
+            os.unlink(uploads/old_file)
+        fname = str(uuid4())+'.wav'
+        with FileLike(file, self.cache_folder) as stream:
+            data = stream.read()
+            with open(uploads/fname, 'wb') as out_stream:
+                out_stream.write(data)
+        reply = requests.post(f'http://{self.address}/enhance', json=dict(filename=fname))
+        if reply.status_code != 200:
+            raise ValueError(f"Decider returned code {reply.status_code}\n{reply.text}")
+        with open(self.controller.resource_folder('outputs')/fname, 'rb') as stream:
+            data = stream.read()
+            return File(self.current_job_id+'.wav', data, File.Kind.Audio)
 
-        if response.status_code != 200:
-            raise ValueError(response.text)
-
-        return response.json()
-
-    def get_processed_files(self):
-        """
-        Retrieves the list of processed files from the enhancement service.
-        :return: JSON response containing processed file details.
-        """
-        response = requests.get(f"http://{self.address}/processed_files")
-        if response.status_code != 200:
-            raise ValueError(response.text)
-
-        return response.json()
-
-    def download_file(self, filename: str, save_path: Path | str):
-        """
-        Downloads a processed file from the enhancement service.
-        :param filename: Name of the file to download.
-        :param save_path: Path to save the downloaded file.
-        :return: None
-        """
-        response = requests.get(f"http://{self.address}/downloads/{filename}", stream=True)
-        if response.status_code != 200:
-            raise ValueError(response.text)
-
-        # Save the file to the specified path
-        with open(save_path, 'wb') as out_file:
-            out_file.write(response.content)
+    Settings = ResembleEnhanceSettings
+    Controller = ResembleEnhanceController

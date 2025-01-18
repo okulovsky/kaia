@@ -8,7 +8,7 @@ from ....framework import (
 from .settings import WD14TaggerSettings
 from .model import WD14TaggerModel
 from pathlib import Path
-
+import os
 
 class WD14TaggerController(
     DockerWebServiceController[WD14TaggerSettings],
@@ -28,10 +28,14 @@ class WD14TaggerController(
     def get_service_run_configuration(self, parameter: str|None) -> RunConfiguration:
         if parameter is not None:
             raise ValueError(f"`parameter` must be None for {self.get_name()}")
-        return RunConfiguration(
+        config = RunConfiguration(
             publish_ports={self.settings.connection.port: 8084},
-            mount_resource_folders={'models': '/home/app/.cache/huggingface'}
+            mount_resource_folders={'models': '/home/app/.cache/huggingface'},
         )
+        if self.settings.cpu_share is not None:
+            cpu_count = os.cpu_count()
+            config.custom_flags=[f'--cpus={self.settings.cpu_share*cpu_count}']
+        return config
 
     def get_notebook_configuration(self) -> RunConfiguration|None:
         return self.get_service_run_configuration(None).as_notebook_service()

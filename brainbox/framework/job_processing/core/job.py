@@ -1,6 +1,6 @@
 from typing import *
 from sqlalchemy.orm import declarative_base, Mapped, mapped_column
-from sqlalchemy import JSON, PickleType
+from sqlalchemy import JSON, PickleType, func
 from datetime import datetime
 from .decider_instance_key import DeciderInstanceKey
 
@@ -39,6 +39,11 @@ class Job(BrainBoxBase):
     success: Mapped[bool] = mapped_column(default=False)
     result: Mapped[Any] = mapped_column(type_ = PickleType, nullable=True, default=None)
     error: Mapped[str] = mapped_column(nullable=True, default=None)
+
+    last_update_timestamp: Mapped[datetime] = mapped_column(
+        default=func.strftime('%Y-%m-%d %H:%M:%f', 'now'),
+        onupdate=func.strftime('%Y-%m-%d %H:%M:%f', 'now')
+    )
 
 
     def get_this_and_dependency_ids(self):

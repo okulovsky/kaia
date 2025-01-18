@@ -1,9 +1,12 @@
 from ...framework import IDecider, File
 import json
 from copy import copy
+import time
 
 class FakeFile(IDecider):
-    def __call__(self, tags: dict=None, extension_with_dot='', array_length: int|None = None):
+    def __call__(self, tags: dict=None, extension_with_dot='', array_length: int|None = None, time_to_sleep: float|None = None):
+        if time_to_sleep is not None:
+            time.sleep(time_to_sleep)
         if tags is None:
             tags = {}
         if array_length is None:

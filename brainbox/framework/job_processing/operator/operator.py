@@ -50,8 +50,6 @@ class DeciderOperator:
             decider.context._current_job_id = self.current_id
             decider.context._logger = DeciderLogger(self.current_id, self.state.results_queue)
 
-
-
             if method is not None:
                 method_instance = getattr(decider, method)
             elif callable(decider):

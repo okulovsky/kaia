@@ -81,7 +81,7 @@ def self_test(test_case: TestCase, api: BrainBox.Api):
     test_case.assertIsInstance(self_test_report, str)
 
     test_case_test_path = Path(tempfile.gettempdir()) / 'test_report.html'
-    with open(test_case_test_path, 'w') as file:
+    with open(test_case_test_path, 'w', encoding='utf-8') as file:
         file.write(self_test_report)
 
     """

@@ -3,14 +3,11 @@ import traceback
 from typing import *
 from abc import ABC, abstractmethod
 from unittest import TestCase
-from .test_report import TestReport
 from ...common import Locator, Loc
 from .resource_folder import ResourceFolder
 from .controller_context import ControllerContext
-from dataclasses import dataclass
-import re
 from .test_report import create_self_test_report_page, TestReport
-from pathlib import Path
+from yo_fluq import FileIO
 
 
 TSettings = TypeVar("TSettings")
@@ -126,7 +123,10 @@ class IController(ABC, Generic[TSettings]):
     def _run_self_test(self, api, tc: TestCase, locator: Locator):
         output_folder = locator.self_test_path
         html_path = output_folder / (self.get_name() + '.html')
-
+        if str(html_path).startswith('/'):
+            html_link = f'file://{html_path}'
+        else:
+            html_link = f'file:///{html_path}'.replace('\\','/')
         items = []
         error = None
         try:
@@ -134,15 +134,13 @@ class IController(ABC, Generic[TSettings]):
                 items.append(item)
         except Exception as ex:
             error = traceback.format_exc()
-            raise ValueError(f"Exception has occured during self-test. View the report file://{html_path}") from ex
+            raise ValueError(f"Exception has occured during self-test. View the report {html_link}") from ex
         finally:
             report = TestReport(self.get_name(), items, error, type(self))
-            with open(output_folder / self.get_name(), 'wb') as file:
-                pickle.dump(report, file)
-            with open(html_path, 'w') as file:
-                file.write(create_self_test_report_page(report))
+            FileIO.write_pickle(report, output_folder/self.get_name())
+            FileIO.write_text(create_self_test_report_page(report), html_path)
         if error is None:
-            print(f"SELF-TEST EXITED SUCCESSFULLY. Report file://{html_path}")
+            print(f"SELF-TEST EXITED SUCCESSFULLY. Report {html_link}")
         return report
 
 

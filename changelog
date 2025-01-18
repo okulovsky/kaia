@@ -1,3 +1,10 @@
+3.5.4
+    - BrainBox:
+        - Windows compatibility
+        - Small bugfixes
+        - Cancel buttons now work
+        - OpenVoice, Piper works (suboptimally), Resemble-Enhance is still in progress
+
 3.5.3
     - Brainbox: WD14, Espeak deciders, piper, openvoice prototypes
     - Small bug fixes in Brainbox + 1 big: BrainBox can now run inside container itself

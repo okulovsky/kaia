@@ -1,10 +1,10 @@
-from server import VideoProcessorApp
+
+from algorithm import VideoProcessorApp
 import argparse
-from model import get_comparator
+from layer_comparator import get_comparator
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--file', '-f')
     parser.add_argument('--install', '-i', action='store_true')
     args = parser.parse_args()
 
@@ -14,5 +14,5 @@ if __name__ == '__main__':
 
 
     app = VideoProcessorApp()
-    app.run(args.file)
+    app.run()
 

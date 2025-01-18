@@ -30,7 +30,9 @@ class VideoToImagesController(OnDemandDockerController[VideoToImagesSettings]):
         from .api import VideoToImages
         return VideoToImages()
 
-    def get_run_configuration(self, arguments: list[str]):
+    def get_run_configuration(self, arguments: list[str] | None = None):
+        if arguments is None:
+            arguments = []
         return RunConfiguration(
             None,
             command_line_arguments=arguments,
@@ -47,14 +49,30 @@ class VideoToImagesController(OnDemandDockerController[VideoToImagesSettings]):
         from .api import VideoToImages
 
         VideoToImages.upload_video(Path(__file__).parent/'sample.mp4').execute(api)
-        api.execute(BrainBoxTask.call(VideoToImages).process('sample.mp4', cap_result_count=5))
-        yield TestReport.last_call(api).href('run').result_is_array_of_files(File.Kind.Image)
+        result = api.execute(BrainBoxTask.call(VideoToImages).process(VideoToImages.AnalysisSettings(
+            'sample.mp4',
+            max_produced_frames=5,
+        )))
+        tc.assertEqual(5, len(result))
+        yield TestReport.last_call(api).href('run')
 
 
+        result = api.execute(BrainBoxTask.call(VideoToImages).process(VideoToImages.AnalysisSettings(
+            'sample.mp4',
+            max_produced_frames=5,
+            add_comparator=True,
+        )))
+        tc.assertEqual(5, len(result))
+        yield TestReport.last_call(api).href('run-comparator')
 
 
-
-
+        result = api.execute(BrainBoxTask.call(VideoToImages).process(VideoToImages.AnalysisSettings(
+            'sample.mp4',
+            max_produced_frames=5,
+            buffer_by_laplacian_in_ms=500,
+        )))
+        tc.assertEqual(5, len(result))
+        yield TestReport.last_call(api).href('run_bufferer')
 
 
 DOCKERFILE = f"""

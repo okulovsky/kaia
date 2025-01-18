@@ -19,7 +19,6 @@ class TasksStatusUpdater(ICoreAction):
                 self._apply_update(core, update, id_to_job[update.id])
             session.commit()
 
-        changes = core.new_session.changes.all
 
 
     def _apply_update(self, core, update: OperatorMessage, job: Job):

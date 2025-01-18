@@ -73,19 +73,21 @@ class DockerController(IController[TSettings]):
                     shutil.rmtree(file_path)  # Remove directory and its contents
             shutil.rmtree(self.resource_folder())
 
-    def run_with_configuration(self, configuration: RunConfiguration) -> str:
+    def run_with_configuration(self, configuration: RunConfiguration, monitor_function = print) -> str:
         command = configuration.generate_command(
             self.get_image_source().get_container_name(),
             self.get_image_source().get_image_name(),
             self.context
         )
         print(" ".join(command))
-        result = self.get_executor().execute(command, Command.Options(monitor_output=print))
+        result = self.get_executor().execute(command, Command.Options(monitor_output=monitor_function))
         return result[:12]
 
     def stop(self, instance_id: str):
         self.get_executor().execute(['docker','stop',instance_id], Command.Options(ignore_exit_code=True))
         self.get_executor().execute(['docker', 'rm', instance_id], Command.Options(ignore_exit_code=True))
+
+
 
 
     def instance_id_to_parameter(self, instance_id):

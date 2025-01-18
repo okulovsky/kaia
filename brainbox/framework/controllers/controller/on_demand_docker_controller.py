@@ -14,6 +14,11 @@ class OnDemandDockerController(DockerController[TSettings]):
         return api
 
     def run(self, parameter: str|None):
-        pass
+        return 'no-instance'
+
+    def stop(self, instance_id: str):
+        self.get_deployment().stop(True)
+
+
 
 

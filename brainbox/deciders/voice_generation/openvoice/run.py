@@ -1,8 +1,6 @@
-from .installer import OpenVoiceInstaller
-from .settings import OpenVoiceSettings
+from brainbox.deciders import OpenVoice
 
 if __name__ == "__main__":
-    settings = OpenVoiceSettings()
-    installer = OpenVoiceInstaller(settings)
-    installer.install()
-    installer.run()
+    controller = OpenVoice.Controller()
+    controller.install()
+    controller.self_test()

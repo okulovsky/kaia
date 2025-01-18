@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import Dict, List, Any
 
 class CoordsFaceSquare(BaseModel):
-    faces_coords: Dict[str, Dict[str, int]]
+    objects: List[Dict]
 
 class ImageFormat(BaseModel):
     image_base64: str

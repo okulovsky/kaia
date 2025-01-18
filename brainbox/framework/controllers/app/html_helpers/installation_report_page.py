@@ -1,4 +1,3 @@
-from .page import page
 from ..interface import InstallationReport
 from ....common import HTML
 

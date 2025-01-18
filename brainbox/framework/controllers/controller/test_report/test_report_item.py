@@ -2,6 +2,7 @@ import os.path
 from typing import *
 from dataclasses import dataclass, field
 from ....common import File
+from datetime import datetime
 
 @dataclass
 class TestReportItem:
@@ -10,6 +11,9 @@ class TestReportItem:
     parameter: str | None
     arguments: dict
     result: Any
+    accepted_timestamp: datetime
+    finished_timestamp: datetime
+
     href: str|None = None
     comment: str | None = None
     result_is_file: bool = False

@@ -18,6 +18,3 @@ if __name__ == '__main__':
     )
     server = BrainBoxServer(settings)
     server()
-
-
-

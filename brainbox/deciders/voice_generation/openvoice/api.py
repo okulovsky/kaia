@@ -1,14 +1,16 @@
 import requests
-from ...core import IApiDecider, File
+from ....framework import DockerWebServiceApi, File
+from .controller import OpenVoiceController
+from .settings import OpenVoiceSettings
 
 
-class OpenVoice(IApiDecider):  
-    def __init__(self, address: str):
-        self.address = address
+class OpenVoice(DockerWebServiceApi[OpenVoiceSettings, OpenVoiceController]):
+    def __init__(self, address: str|None = None):
+        super().__init__(address)
 
-    def generate(self,
-                  source_speaker_path: str,
-                  reference_speaker_path: str) -> File:
+    #TODO: inefficient. Should upload & train reference speaker as a separate endpoing, alike to Resemblyzer.
+    #Also, should allow to upload several files, and glue them together inside the container
+    def generate(self, source_speaker_path: str, reference_speaker_path: str) -> File:
        
         url = f"http://{self.address}/generate"
 
@@ -25,6 +27,7 @@ class OpenVoice(IApiDecider):
         
         return File("cloned_output.wav", reply.content, File.Kind.Audio)
 
-    
+    Settings = OpenVoiceSettings
+    Controller = OpenVoiceController
 
     

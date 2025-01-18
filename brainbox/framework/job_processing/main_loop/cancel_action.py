@@ -18,5 +18,5 @@ class CancelAction(ICoreAction):
         with core.new_session() as session:
             jobs = list(session.scalars(select(Job).where(condition)))
             for job in jobs:
-                core.close_job(session, job.id, 'Cancelled')
+                core.close_job(session, job, 'Cancelled')
             session.commit()

@@ -8,3 +8,4 @@ class WD14TaggerSettings:
     models_to_download: tuple[WD14TaggerModel,...] = (
         WD14TaggerModel('wd14-vit.v2', 'models--SmilingWolf--wd-v1-4-vit-tagger-v2'),
     )
+    cpu_share:float = 0.25

@@ -10,6 +10,14 @@ from .trackable_session_factory import TrackableSessionFactory
 from .job_for_planner import JobForPlanner
 from ...common import Locator, Loc
 
+class SessionFactory:
+    def __init__(self, engine):
+        self._engine = engine
+
+    def __call__(self):
+        return Session(self._engine)
+
+
 class Core:
     def __init__(self,
                  engine: Engine,
@@ -18,7 +26,7 @@ class Core:
                  debug_output: bool = False,
                  ):
         self._engine = engine
-        self.new_session = TrackableSessionFactory(self._engine, Core.job_to_id)
+        self.new_session = SessionFactory(self._engine)# TrackableSessionFactory(self._engine, Core.job_to_id)
         self.registry = registry
         self.locator = locator
         self.operator_states: dict[str, OperatorState] = dict()

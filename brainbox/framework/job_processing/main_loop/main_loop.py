@@ -4,11 +4,13 @@ import traceback
 from ..core import Core, OperatorStateForPlanner
 from .check_ready_action import CheckReadyAction
 from .remove_incorrect_action import RemoveIncorrectJobsAction
-from .tasks_for_planner_sync import TaskForPlannerSync
+#from .tasks_for_planner_sync_with_tracking import TaskForPlannerSyncWithTracking
+from .tasks_for_planner_sync_with_last_updated import TaskForPlannerSyncWithLastUpdated
 from .task_status_updater import TasksStatusUpdater
 from .cancel_action import CancelAction
 from ..planner import IPlanner, PlannerArguments
 from ...job_processing.planner.stop_action import StopCommand
+from .dirty_exit_fix import DirtyExitFix
 
 class MainLoop:
     def __init__(self,
@@ -21,7 +23,9 @@ class MainLoop:
         self._terminate_request: bool = False
         self.stop_containers_at_termination = stop_containers_at_termination
 
+        
     def run(self):
+        DirtyExitFix().apply(self.core)
         while True:
             if self._terminate_request:
                 break
@@ -54,7 +58,7 @@ class MainLoop:
         RemoveIncorrectJobsAction().apply(self.core)
         TasksStatusUpdater().apply(self.core)
         CheckReadyAction().apply(self.core)
-        TaskForPlannerSync().apply(self.core)
+        TaskForPlannerSyncWithLastUpdated().apply(self.core)
 
         for action in self._run_planner():
             action.apply(self.core)

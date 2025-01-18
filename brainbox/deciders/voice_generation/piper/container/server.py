@@ -1,3 +1,5 @@
+import traceback
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import os 
@@ -8,12 +10,12 @@ from fastapi.responses import FileResponse
 
 app = FastAPI()
 
-AUDIO_OUTPUT_DIR = "/audio_files"  
-MODEL_DIR = "../config"              
+AUDIO_OUTPUT_DIR = '/cache'
+MODEL_DIR = "/models"
 
 class TTSRequest(BaseModel):
     text: str
-    model_path: str 
+    model: str
 
 class ModelDownloadRequest(BaseModel):
     name: str
@@ -24,63 +26,21 @@ class ModelDownloadRequest(BaseModel):
 async def read_root():
     return "OK"
 
-@app.post("/download_model")
-async def download_model(request: ModelDownloadRequest):
-    model_path = os.path.join(MODEL_DIR, f"{request.name}.onnx")
-    config_path = os.path.join(MODEL_DIR, f"{request.name}.onnx.json")
-    
-    download_model_cmd = f'wget -O {model_path} "{request.url}"'
-    download_config_cmd = f'wget -O {config_path} "{request.config_url}"'
 
-    try:
-        subprocess.run(
-            ["sh", "-c", download_model_cmd],
-            check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
-
-        subprocess.run(
-            ["sh", "-c", download_config_cmd],
-            check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
-
-        return {"message": f"model '{request.name}' downloaded"}
-    
-    except subprocess.CalledProcessError as e:
-        error_msg = e.stderr.decode().strip() if e.stderr else "undefined"
-        raise HTTPException(status_code=500, detail=error_msg) from e
-    
-@app.get("/list_models")
-async def list_models():
-    command = f'find {MODEL_DIR} -maxdepth 1 -type f -name "*.onnx"'
-
-    try:
-        result = subprocess.run(
-            ["sh", "-c", command],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        models = result.stdout.strip().split('\n')
-        
-        models = [model for model in models if model]
-        
-        return {"models": models}
-    
-    except subprocess.CalledProcessError as e:
-        raise HTTPException(status_code=500, detail="error with getting message") from e
-    
 @app.post("/synthesize")
 async def synthesize_text(request: TTSRequest):
-    audio_filename = f"{uuid.uuid4()}.wav"
-    container_audio_path = f"{AUDIO_OUTPUT_DIR}/{audio_filename}"
-
-    command = f'echo "{request.text}" | /usr/share/piper/piper --model {request.model_path} --output_file {container_audio_path}'
-    
     try:
+        audio_filename = f"{uuid.uuid4()}.wav"
+        os.makedirs(AUDIO_OUTPUT_DIR, exist_ok=True)
+        container_audio_path = f"{AUDIO_OUTPUT_DIR}/{audio_filename}"
+
+        model_path = os.path.join(MODEL_DIR, request.model + ".onnx")
+
+        #TODO:
+        #It works and it works fast enough, but how? Does it keep the model in memory for the next calls?
+        #If not, can we somehow preload this model to make it even faster?
+        command = f'echo "{request.text}" | /usr/share/piper/piper --model {model_path} --output_file {container_audio_path}'
+
         subprocess.run(
             ["sh", "-c", command],
             check=True,
@@ -91,5 +51,5 @@ async def synthesize_text(request: TTSRequest):
             media_type="audio/wav",
             filename=audio_filename
         )
-    except subprocess.CalledProcessError as e:
-        raise HTTPException(status_code=500, detail="error with generating") from e
+    except:
+        raise HTTPException(status_code=500, detail=traceback.format_exc())
