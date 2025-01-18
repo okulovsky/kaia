@@ -1,8 +1,6 @@
-from typing import *
 from eaglesong.core import IAutomaton, Interpreter, primitives as prim
 from ..server import Message, KaiaApi
 from brainbox import File
-from .kaia_log import KaiaLog
 
 
 class Confirmation:

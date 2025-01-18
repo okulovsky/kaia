@@ -34,7 +34,10 @@ class DemoCoreService(KaiaCoreService):
 
         timer_audio = File.read(Path(__file__).parent/'files/sounds/alarm.wav')
         timer_audio.text = '*alarm ringing*'
-        timer_register = skills.NotificationRegister(timer_audio, Message(Message.Type.System, '*alarm stopped*'))
+        timer_register = skills.NotificationRegister(
+            (timer_audio, Message(Message.Type.System, "*alarm ringing*")),
+            (Message(Message.Type.System, '*alarm stopped*'), )
+        )
         skills_list.append(skills.TimerSkill(timer_register))
         skills_list.append(skills.NotificationSkill([timer_register], pause_between_alarms_in_seconds=10, volume_delta=0.2))
 

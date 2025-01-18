@@ -7,7 +7,10 @@ from kaia.kaia import DateTimeTestFactory, KaiaAssistant, TimerTick
 
 
 def _factory(dtf, beautification):
-    register = NotificationRegister('Alarm', 'Alarm cancelled' if beautification else None)
+    register = NotificationRegister(
+        ('Alarm',),
+        ('Alarm cancelled',) if beautification else None
+    )
     notification = NotificationSkill([register], dtf, 10 if beautification else None)
     timer = TimerSkill(register, dtf)
     return Automaton(KaiaAssistant([timer, notification]), None)

@@ -43,7 +43,7 @@ class VolumeTranslator(Translator):
         if new_value is not None:
             self.current_value = new_value
             self.volume_callback(new_value)
-            yield Message(Message.Type.System, f"Volume set to {new_value}")
+            yield Message(Message.Type.System, f"Volume set to {int(100*new_value)}%")
 
 
 

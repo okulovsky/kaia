@@ -71,19 +71,23 @@ class KaiaDriver:
     def run(self):
         KaiaLog.write('init', 'Entering driver')
         while True:
-            now = datetime.now()
-            if self.time_tick_frequency_in_seconds is not None:
-                if self.last_time_tick is not None:
-                    delta = (now - self.last_time_tick).total_seconds()
-                    if delta <= self.time_tick_frequency_in_seconds:
-                        self.last_time_tick = now
-                        self._process(TimerTick())
-
             updates = self.kaia_api.pull_updates()
             for update in updates:
                 command = self.update_to_internal_dto(update)
                 if command is not None:
                     self._process(command)
+
+            now = datetime.now()
+            if self.time_tick_frequency_in_seconds is not None:
+                if self.last_time_tick is not None:
+                    delta = (now - self.last_time_tick).total_seconds()
+                else:
+                    delta = None
+                if delta is None or delta > self.time_tick_frequency_in_seconds:
+                    self.last_time_tick = now
+                    self._process(TimerTick())
+
+
             time.sleep(0.1)
 
 

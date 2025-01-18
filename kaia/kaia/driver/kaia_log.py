@@ -16,7 +16,7 @@ class KaiaLog:
         KaiaLog._log_file = log_file
 
     @staticmethod
-    def write(type: str, content: str):
+    def write(type: str, content = None):
         dt = datetime.now()
         print(f'{dt} [{type}] {content}')
         sys.stdout.flush()

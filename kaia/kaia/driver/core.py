@@ -11,6 +11,7 @@ from pathlib import Path
 from eaglesong.core import Automaton
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
+from .kaia_log import KaiaLog
 
 
 
@@ -39,13 +40,20 @@ class KaiaCoreService(ABC):
         pass
 
 
+    def _volume_callback_stub(self, value):
+        KaiaLog.write('Volume callback stub', value)
+
     def create_automaton(self, context):
         assistant = self.create_assistant()
 
         assistant = kaia_translators.VoiceoverTranslator(assistant, self.settings.avatar_api)
         assistant = kaia_translators.KaiaMessageTranslator(assistant, self.settings.kaia_api, self.settings.avatar_api, self.settings.name_to_avatar_image)
         if self.settings.audio_api is not None:
-            assistant = kaia_translators.VolumeTranslator(assistant, self.settings.audio_api.set_volume, self.settings.initial_volume)
+            volume_callback = self.settings.audio_api.set_volume
+        else:
+            volume_callback = self._volume_callback_stub
+
+        assistant = kaia_translators.VolumeTranslator(assistant, volume_callback, self.settings.initial_volume)
         assistant = kaia_translators.RecognitionTranslator(assistant, self.settings.avatar_api)
 
         if self.settings.audio_api is not None:

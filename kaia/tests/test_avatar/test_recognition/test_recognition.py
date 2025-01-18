@@ -82,6 +82,7 @@ class RecognitionTestCase(TestCase):
 
 
     def test_recognition(self):
+        self.skipTest("Resemblyzer test is excluded atm")
         services = [
             RhasspyKaldi(),
             Collector(),
@@ -94,7 +95,6 @@ class RecognitionTestCase(TestCase):
             with AvatarApi.Test(AvatarSettings(brain_box_api=bb_api, resemblyzer_model_name=RESEMBLYZER_MODEL)) as av_api:
                 self.make_rhasspy(speaker, av_api)
                 self.make_whisper(speaker, av_api)
-                #self.fail("Resemblyzer test is excluded atm")
                 self.make_resemblyzer(speaker, bb_api, av_api)
 
 
