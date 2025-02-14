@@ -3,6 +3,13 @@
 Kaia (Kitchen AI-Assistant) is an open-source home assistant with AI-generated voice, face and personality. 
 It employes state-of-the-art free models to generate content and personalize home assistant. 
 
+**The project is currently underconstruction**. 
+There is a stable part of the project, `BrainBox`, that is located in `/brainbox` 
+and has its own documentation and even Pypi-release.
+The voice assistant itself currently runs either on a normal computer or on a custom RaspberryPi device. 
+We are taking the steps to enable Kaia's frontent running on Android- and IOS-devices. 
+Once that happens, you will be able to enjoy the project at your home!  
+
 
 # Quick start
 
@@ -41,24 +48,42 @@ If something went wrong during the installation or afterwards, reinstall the env
 
 * repeat steps to create the environment
 
-## Running a demo
+## Installing deciders
+
+Run `python kaia/demo/install.py`.
+
+This will build three AI systems that are required for the demo: 
+text-to-speech (OpenTTS) and two speech-to-text (Kaldi and Whisper),
+and also will download all the base models required.
+
+It takes a lot of time and traffic, so be patient.
+
+The script will also self-test these containers. 
+The HTML-reports about the self-testing will be located `data/brainbox_self_test/`
+
+## Running Kaia
 
 Run `python demos/kaia/run_demo.py`. No GPU is required for this.
 
-For the first time, it will take __a lot__ of time, as 3 containers will need to be downloaded/built.
+If everything is fine, you will see several warnings
+"WARNING: This is a development server. Do not use it in a production deployment.".
+Then, messages of shape "[Processing item] TimerTick(current_time=datetime.datetime(...))"
+will start appearing continuously.
 
-If everything works, you will see several warnings
-"WARNING: This is a development server. Do not use it in a production deployment."
-After this, "Hello, nice to see you" is probably going to be said. 
+After that, you may open at this point, you may open `localhost:8890` in your web-browser.
+There should be a nice AI-generated image, and the text "Hello, nice to see you" in the chat control on the right.
+This sentence should also be said.
 
-At this point, you may open `localhost:8890` in your web-browser. 
 To talk with Kaia, say wake word `computer`, wait for confirmation sound, 
-and utter the command, e.g. "What can you do?"
+and utter the command, e.g. "What can you do?". After this, another confirmation sound
+should be emitted. 
+
+You may use the command "Computer! What can you do?" to get the list of available commands.
 
 ### Troubleshooting
 
 If you hear "Hello, nice to see you", but the system doesn't hear you, you would need to adjust your input settings.
-They are located in `demos/kaia/audio_control.py`, method `create_release_control_settings`.
+They are located in `kaia/demo/run_demo.py`.
 
 If you say "computer" and then __do not__ hear a confirmation sound:
 check `mic_device_index`, by default it is set -1, which is default mic.
@@ -78,20 +103,3 @@ Then get the file `121.0.0.1:8090/file/<ID>.input.wav` and listen to this.
 If you hear too high/too low pitch, wrong `sample_rate` is the reason. 
 Find out which sample rate your OS runs the mic, update the settings and restart the app.
  
-
-## Browsing the documentation
-
-My experience with research project shows that the best way to provide a documentation for the research project
-is with Jupyter notebooks. These notebooks explain different subsystems of `Kaia`, and also you can play with
-them around, if you're curious how this and that functionality works. I try to update the notebooks along with
-the releases, but it might be imperfect.
-
-To view the notebooks:
-
-* execute `jupyter lab` in console with activated `kaia` environment
-
-* do not close the console.
-
-A browser will open and you will see the contents of the root of the repostiory. 
-Open `demos` folder, then `Part 00 - Intro.ipynb`. Follow the instructions in this file.
-
