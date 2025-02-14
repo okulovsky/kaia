@@ -1,87 +1,88 @@
 import os
 import traceback
 import uuid
-import torch
-from pydantic import BaseModel
-from fastapi.responses import FileResponse
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form
-
-from openvoice import se_extractor
-from openvoice.api import ToneColorConverter
+from converter import Converter
 import traceback
+from pathlib import Path
+import pickle
+from pydantic import BaseModel
+import flask
 
-CKPT_CONVERTER = 'checkpoints/converter'
-DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
+
 OUTPUT_DIR = '/home/app/outputs'
 
-app = FastAPI()
 
-tone_color_converter = ToneColorConverter(
-    f'{CKPT_CONVERTER}/config.json',
-    device=DEVICE
-)
-tone_color_converter.load_ckpt(f'{CKPT_CONVERTER}/checkpoint.pth')
+class Server:
+    def __init__(self):
+        self.converter = Converter()
+        self.loaded_models = {}
+
+    def __call__(self):
+        app = flask.Flask("OpenVoiceServer")
+        app.add_url_rule('/', view_func=self.index, methods=['GET'])
+        app.add_url_rule('/train/<model>', view_func=self.train, methods=['POST'])
+        app.add_url_rule('/generate/<model>', view_func=self.generate, methods=['POST'])
+        app.add_url_rule('/generate/<model>/<source_model>', view_func=self.generate, methods=['POST'])
+        app.run('0.0.0.0', port=8080)
 
 
-@app.get("/")
-async def read_root():
-    return "OK"
 
+    def index(self):
+        return "OK"
 
-@app.post("/generate")
-async def generate_tts(
-    source_speaker: UploadFile = File(...),
-    reference_speaker: UploadFile = File(...)
-):
-    try:
-        id = uuid.uuid4()
+    def train(self, model: str):
+        try:
+            from train import train
+            train(model, self.converter)
+            return "OK"
+        except:
+            result = traceback.format_exc()
+            return result, 500
 
-        source_name, source_ext = os.path.splitext(source_speaker.filename)
-        ref_name, ref_ext = os.path.splitext(reference_speaker.filename)
+    def _get_model(self, model):
+        if model not in self.loaded_models:
+            model_path = Path(f'/models/{model}')
+            if not model_path.is_file():
+                raise ValueError(f"Model {model} was not trained")
+            with open(f'/models/{model}', 'rb') as stream:
+                self.loaded_models[model] = pickle.load(stream)
+        return self.loaded_models[model]
 
-        output_path = f"{OUTPUT_DIR}/output_{id}.wav"
+    def generate(self, model, source_model=None):
+        source_path = None
+        output_path = None
+        try:
+            id = uuid.uuid4()
+            output_path = f"{OUTPUT_DIR}/output_{id}.wav"
+            source_path = f"{OUTPUT_DIR}/source_{id}.wav"
 
-        source_path = f"{OUTPUT_DIR}/source_{id}{source_ext}"
-        reference_path = f"{OUTPUT_DIR}/reference_{id}{ref_ext}"
+            os.makedirs(OUTPUT_DIR, exist_ok=True)
+            file = flask.request.files['file']
+            file.save(source_path)
 
-        os.makedirs(OUTPUT_DIR, exist_ok=True)
-        with open(source_path, "wb") as f:
-            f.write(await source_speaker.read())
-        with open(reference_path, "wb") as f:
-            f.write(await reference_speaker.read())
+            target_se = self._get_model(model)
+            if source_model is not None:
+                source_se = self._get_model(source_model)
+            else:
+                source_se = self.converter.convert(source_path)
 
-        source_se, _ = se_extractor.get_se(
-            source_path,
-            tone_color_converter,
-            vad=True
-        )
-        target_se, _ = se_extractor.get_se(
-            reference_path,
-            tone_color_converter,
-            vad=True
-        )
+            encode_message = "@MyShell"
 
-        encode_message = "@MyShell"
+            self.converter.tone_color_converter.convert(
+                audio_src_path=source_path,
+                src_se=source_se,
+                tgt_se=target_se,
+                output_path=output_path,
+                message=encode_message
+            )
 
-        tone_color_converter.convert(
-            audio_src_path=source_path,
-            src_se=source_se,
-            tgt_se=target_se,
-            output_path=output_path,
-            message=encode_message
-        )
+            if not os.path.exists(output_path):
+                raise ValueError("OpenVoice failed to create an output file")
 
-        if not os.path.exists(output_path):
-            raise HTTPException(status_code=500, detail="failed")
-
-        return FileResponse(
-            path=output_path,
-            media_type="audio/wav",
-            filename=os.path.basename(output_path)
-        )
-    except:
-        raise HTTPException(status_code=500, detail=str(traceback.format_exc()))
-    finally:
-        for file_path in [source_path, reference_path]:
-            if os.path.exists(file_path):
-                os.remove(file_path)
+            return flask.send_file(output_path)
+        except:
+            return traceback.format_exc(), 500
+        finally:
+            for path in [source_path, output_path]:
+                if path is not None and os.path.exists(path):
+                    os.remove(path)

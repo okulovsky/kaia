@@ -1,3 +1,5 @@
+
+
 from ....framework import DockerWebServiceApi, FileLike
 from .settings import WD14TaggerSettings
 from .controller import WD14TaggerController
@@ -30,3 +32,7 @@ class WD14Tagger(DockerWebServiceApi[WD14TaggerSettings, WD14TaggerController]):
     Controller = WD14TaggerController
     Settings = WD14TaggerSettings
     Model = WD14TaggerModel
+
+
+
+

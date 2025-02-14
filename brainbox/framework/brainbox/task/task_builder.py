@@ -23,7 +23,7 @@ class BrainBoxTaskBuilderResult(IOneBrainBoxTaskFactory):
         self._decider_parameter = decider_parameter
 
 
-    def to_task(self, id: str|None = None, batch_id: str|None = None) -> IBrainBoxTask:
+    def to_task(self, id: str|None = None, batch_id: str|None = None, info = None) -> IBrainBoxTask:
         from .task import BrainBoxTask
         actual_id = id if id is not None else self._id
 
@@ -35,7 +35,8 @@ class BrainBoxTaskBuilderResult(IOneBrainBoxTaskFactory):
             decider_parameter=self._decider_parameter,
             ordering_token=self._ordering_token,
             fake_dependencies=self._fake_dependencies,
-            batch=batch_id if batch_id is not None else actual_id
+            batch=batch_id if batch_id is not None else actual_id,
+            info = info,
         )
 
 

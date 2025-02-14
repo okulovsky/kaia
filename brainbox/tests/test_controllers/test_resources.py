@@ -29,8 +29,8 @@ class ResourcesTestCase(TestCase):
                 api.upload_resource(HelloBrainBox,'new/file', b'Hello')
                 self.assertEqual(2, len(api.list_resources(HelloBrainBox, '/')))
 
-                file = api.download_resource(HelloBrainBox,'new/file')
-                self.assertEqual(b'Hello', file.content)
+                file = api.download_resource(HelloBrainBox,'new/file', test_folder/'created_file')
+                self.assertEqual(b'Hello', FileIO.read_bytes(test_folder/'created_file'))
 
 
 

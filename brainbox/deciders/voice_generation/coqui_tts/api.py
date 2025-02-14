@@ -1,5 +1,9 @@
 import requests
-from ....framework import ResourcePrerequisite, DockerWebServiceApi, File, CombinedPrerequisite, ISingleLoadableModelApi
+
+from ....framework import (
+    ResourcePrerequisite, DockerWebServiceApi, File, CombinedPrerequisite,
+    ISingleLoadableModelApi, IPrerequisite, BrainBoxApi
+)
 from .controller import CoquiTTSController
 from .settings import CoquiTTSSettings
 from pathlib import Path
@@ -73,14 +77,8 @@ class CoquiTTS(DockerWebServiceApi[CoquiTTSSettings, CoquiTTSController], ISingl
 
 
     @staticmethod
-    def upload_voice(file: Path, custom_name: str|None = None) -> ResourcePrerequisite:
-        if custom_name is None:
-            custom_name = file.name
-        return ResourcePrerequisite(
-            CoquiTTS,
-            f'voices/{custom_name}',
-            file
-        )
+    def upload_voice(voice: str, *files) -> 'VoiceUploadPrerequisite':
+        return VoiceUploadPrerequisite(voice, files)
 
     Controller = CoquiTTSController
     Settings = CoquiTTSSettings
@@ -88,3 +86,16 @@ class CoquiTTS(DockerWebServiceApi[CoquiTTSSettings, CoquiTTSController], ISingl
     @classmethod
     def get_ordering_arguments_sequence(cls) -> tuple[str,...]|None:
         return ('model',)
+
+
+
+class VoiceUploadPrerequisite(IPrerequisite):
+    def __init__(self, voice: str, files: tuple[Path,...]):
+        self.voice = voice
+        self.files = files
+
+    def execute(self, api: BrainBoxApi):
+        ResourcePrerequisite(CoquiTTS,f'voices/{self.voice}', None).execute(api)
+        for file in self.files:
+            ResourcePrerequisite(CoquiTTS, f'voices/{self.voice}/{file.name}', file).execute(api)
+

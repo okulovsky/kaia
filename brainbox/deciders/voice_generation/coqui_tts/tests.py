@@ -44,7 +44,7 @@ class Test:
 
 
     def test_all(self, settings: CoquiTTSSettings):
-        CoquiTTS.upload_voice(TEST_VOICE_PATH).execute(self.api)
+        CoquiTTS.upload_voice('test_voice', TEST_VOICE_PATH).execute(self.api)
 
         for model in settings.builtin_models_to_download:
             yield from self.load_model_and_repr_description(model.model_name)

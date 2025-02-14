@@ -120,14 +120,19 @@ class TemplateWorkflow(IWorkflow, IOneBrainBoxTaskFactory):
             if ordering is not None:
                 ordering_token_components[ordering] = str(getattr(self, field.name))
         ordering_token ='/'.join(ordering_token_components[k] for k in sorted(ordering_token_components))
-        arguments = self.__dict__
+        arguments = {k:v for k,v in self.__dict__.items() if k!='_id'}
         arguments['workflow_type'] = type(self)
+
+        if not hasattr(self, '_id'):
+            self._id = BrainBoxTask.safe_id()
 
         return BrainBoxTask(
             decider='ComfyUI',
             decider_method='run_on_dictionary',
             arguments=arguments,
             ordering_token=ordering_token,
-            id = 'id_'+str(id(self))
+            id = self._id
         )
+
+
 

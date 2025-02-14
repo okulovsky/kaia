@@ -1,3 +1,5 @@
+import uuid
+
 from ...common.marshalling import endpoint
 from .interface import IBrainboxService
 from ...controllers import ControllerRegistry
@@ -38,14 +40,19 @@ class BrainBoxService(IBrainboxService):
         self.loop_thread.start()
 
     @endpoint(url='/jobs/add', method='POST')
-    def base_add(self, jobs:list[dict]):
+    def base_add(self, jobs:list[dict]) -> list[str]:
         now = datetime.now()
+        ids = []
         with Session(self.engine) as session:
             for i, job_dict in enumerate(jobs):
+                if 'id' not in job_dict:
+                    job_dict['id'] = str(uuid.uuid4())
                 job = Job(**job_dict)
                 job = job.set_defaults(now + timedelta(microseconds=i))
+                ids.append(job.id)
                 session.add(job)
             session.commit()
+        return ids
 
     @endpoint(url='/jobs/join', method='GET')
     def base_join(self,
@@ -98,9 +105,10 @@ class BrainBoxService(IBrainboxService):
     @endpoint(url='/jobs/summary', method='GET')
     def summary(self, ids: list[str]|None = None, batch_id: str|None = None) -> list[dict]:
         query = select(
-            Job.id, Job.decider, Job.decider_parameter, Job.method, Job.batch, Job.info, Job.received_timestamp,
-            Job.ready, Job.ready_timestamp, Job.assigned, Job.assigned_timestamp, Job.accepted,
-            Job.accepted_timestamp, Job.finished, Job.finished_timestamp, Job.success, Job.error,
+            Job.id, Job.decider, Job.decider_parameter, Job.method, Job.batch, Job.info, Job.progress,
+            Job.received_timestamp, Job.ready, Job.ready_timestamp, Job.assigned, Job.assigned_timestamp,
+            Job.accepted, Job.accepted_timestamp, Job.finished, Job.finished_timestamp,
+            Job.success, Job.error,
         )
         if ids is not None:
             query = query.where(Job.id.in_(ids))

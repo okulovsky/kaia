@@ -2,14 +2,14 @@ from typing import *
 from .task import IBrainBoxTask
 from abc import ABC, abstractmethod
 from ...job_processing import Job, OperatorLogItem
+from typing import *
+from dataclasses import dataclass
 
-
-
+@dataclass
 class _ArrayPostprocessor:
-    def __init__(self, index, api, postprocessor = None):
-        self.index = index
-        self.api = api
-        self.postprocessor = postprocessor
+    index: int
+    api: Any
+    postprocessor: Any = None
 
     def __call__(self, array):
         if self.index is None:
@@ -53,11 +53,13 @@ class IBrainboxService(ABC):
     def shutdown(self):
         pass
 
-    def add(self, task: Union[IBrainBoxTask, Iterable[IBrainBoxTask]]):
+    def add(self, task: Union[IBrainBoxTask, Iterable[IBrainBoxTask]]) -> str|list[str]:
         if isinstance(task, IBrainBoxTask):
+            single = True
             task.before_add(self)
             task = [task]
         else:
+            single = False
             try:
                 task = list(task)
             except:
@@ -68,9 +70,11 @@ class IBrainboxService(ABC):
                 t.before_add(self)
 
         job_dicts = []
+        resulting_ids = []
         for t in task:
             jobs = t.create_jobs()
             batch_id = t.get_resulting_id()
+            resulting_ids.append(batch_id)
             for j in jobs:
                 j.batch = batch_id
                 d = j.__dict__
@@ -78,6 +82,12 @@ class IBrainboxService(ABC):
                 job_dicts.append(d)
 
         self.base_add(job_dicts)
+        if single:
+            return resulting_ids[0]
+        else:
+            return resulting_ids
+
+
 
     def join(self, task: Union[IBrainBoxTask, str, Iterable[Union[IBrainBoxTask, str]]]):
         if isinstance(task, str) or isinstance(task, IBrainBoxTask):
@@ -98,7 +108,6 @@ class IBrainboxService(ABC):
                 ids.append(t)
                 postprocessors.append(_ArrayPostprocessor(index, self))
                 index += 1
-
             elif isinstance(t, IBrainBoxTask):
                 id = t.get_resulting_id()
                 if id is None:
@@ -112,6 +121,7 @@ class IBrainboxService(ABC):
 
         result = self.base_join(ids)
         result = [postproc(result) for postproc in postprocessors]
+
         if not_list:
             return result[0]
         return result

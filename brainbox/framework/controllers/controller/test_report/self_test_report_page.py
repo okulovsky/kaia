@@ -80,7 +80,10 @@ class Builder:
                 self.html.append("<i>File</i><br>")
                 self.add_file(value)
             elif isinstance(value, list) or isinstance(value, dict):
-                self.add_code(json.dumps(value, indent=2))
+                try:
+                    self.add_code(json.dumps(value, indent=2))
+                except:
+                    self.html.append("<b>cannot render</b>")
             else:
                 self.add_code(str(value))
 

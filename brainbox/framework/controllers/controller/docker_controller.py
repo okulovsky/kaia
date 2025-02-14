@@ -15,9 +15,6 @@ class DockerController(IController[TSettings]):
     def get_image_builder(self) -> IImageBuilder|None:
         return None
 
-    def get_notebook_configuration(self) -> RunConfiguration|None:
-        return None
-
     # endregion
 
     def get_executor(self):
@@ -127,25 +124,5 @@ class DockerController(IController[TSettings]):
             self.get_image_source().get_container_name(),
             self.get_executor()
         )
-
-
-
-    def run_notebook(self):
-        cfg = self.get_notebook_configuration()
-        if cfg is None:
-            raise ValueError(f"Cannot start notebook for {type(self)}: `get_notebook_configuration` returned None")
-        self.run_auxiliary_configuration(cfg)
-
-
-
-
-
-
-
-
-
-
-
-
 
 

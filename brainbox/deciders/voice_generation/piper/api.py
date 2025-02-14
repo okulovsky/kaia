@@ -3,7 +3,9 @@ from typing import Optional
 from .controller import PiperController
 from .settings import PiperSettings
 from .model import PiperModel
-from ....framework import DockerWebServiceApi, File
+from .... import BrainBoxApi
+from ....framework import DockerWebServiceApi, File, IPrerequisite
+from pathlib import Path
 
 
 class Piper(DockerWebServiceApi[PiperSettings, PiperController]):
@@ -30,4 +32,40 @@ class Piper(DockerWebServiceApi[PiperSettings, PiperController]):
     Settings = PiperSettings
     Model = PiperModel
 
-    
+
+    class UploadVoice(IPrerequisite):
+        def __init__(self,
+                     onnx_file_location: Path,
+                     custom_json_file_location: Path|None = None,
+                     custom_name: str|None = None
+                     ):
+            self.onnx_file_location = onnx_file_location
+            self.custom_json_file_location = custom_json_file_location
+            self.custom_name = custom_name
+
+        def execute(self, api: BrainBoxApi):
+            name = self.custom_name
+            if name is None:
+                name = self.onnx_file_location.name.split('.')[0]
+
+            api.controller_api.upload_resource(
+                'Piper',
+                f'models/{name}.onnx',
+                self.onnx_file_location
+            )
+            json_location = self.custom_json_file_location
+            if json_location is None:
+                json_location = self.onnx_file_location.parent/(self.onnx_file_location.name+'.json')
+            api.controller_api.upload_resource(
+                'Piper',
+                f'models/{name}.onnx.json',
+                json_location
+            )
+
+    class DeleteVoice(IPrerequisite):
+        def __init__(self, name: str):
+            self.name = name
+
+        def execute(self, api: BrainBoxApi):
+            api.controller_api.delete_resource('Piper', f'models/{self.name}.onnx')
+            api.controller_api.delete_resource('Piper', f'models/{self.name}.onnx.json')

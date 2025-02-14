@@ -1,7 +1,7 @@
 
 from algorithm import VideoProcessorApp
 import argparse
-from layer_comparator import get_comparator
+from layer_semantic_comparator import get_comparator
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

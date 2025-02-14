@@ -14,7 +14,9 @@ class ComfyUI(DockerWebServiceApi[ComfyUISettings, ComfyUIController]):
         super().__init__(address)
 
 
-    def run_on_dictionary(self, workflow_type, **kwargs):
+    def run_on_dictionary(self, workflow_type:type|str, **kwargs):
+        if isinstance(workflow_type, str):
+            workflow_type = getattr(ComfyUI.Workflows, workflow_type)
         workflow = workflow_type(**kwargs)
         return self.run_workflow(workflow)
 

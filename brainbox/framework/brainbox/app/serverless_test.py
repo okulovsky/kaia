@@ -7,7 +7,7 @@ from ...common import Locator, Loc
 
 class ServerlessTest:
     def __init__(self,
-                 services: Iterable[Union[Union[IController, IDecider]]],
+                 services: Iterable[Union[IController, IDecider]],
                  time_limit_in_seconds: int = 10,
                  allow_failures: bool = False,
                  ):

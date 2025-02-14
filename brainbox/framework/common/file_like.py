@@ -39,7 +39,24 @@ class FileLike:
             return parts[0], ''
         return '.'.join(parts[:-1]), '.'+parts[-1]
 
-
+    def get_path(self, extension_if_caching: str|None = None):
+        if isinstance(self.file, Path):
+            return self.file
+        elif isinstance(self.file, str):
+            if self.cache_folder is None:
+                return self.file
+            else:
+                return self.cache_folder/self.file
+        else:
+            name = str(uuid4())
+            if extension_if_caching is not None:
+                name += '.' + extension_if_caching
+            path = self.cache_folder/name
+            with self as stream:
+                data = stream.read()
+                with open(path,'wb') as out_stream:
+                    out_stream.write(data)
+            return path
 
     def __enter__(self):
         if isinstance(self.file, Path):

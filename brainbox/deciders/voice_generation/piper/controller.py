@@ -11,7 +11,6 @@ from .model import PiperModel
 
 class PiperController(
     DockerWebServiceController[PiperSettings],
-    INotebookableController,
     IModelDownloadingController
 ):
     def get_image_builder(self) -> IImageBuilder|None:

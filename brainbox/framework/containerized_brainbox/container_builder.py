@@ -129,4 +129,4 @@ yo_fluq_ds==2.0.5
 """
 
 if __name__ == '__main__':
-    create_builder().build_image('brainbox', LocalExecutor())
+    create_brainbox_builder().build_image('brainbox', LocalExecutor())

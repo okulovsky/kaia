@@ -16,8 +16,7 @@ class BoilerplateOnDemand(OnDemandDockerApi[BoilerplateOnDemandSettings, Boilerp
         FileIO.write_text(input, self.controller.resource_folder()/'input')
 
         configuration = RunConfiguration(
-            detach=False,
-            interactive=False,
+            detach_and_interactive=False
         )
         self.controller.run_with_configuration(configuration, self._monitor_progress)
 

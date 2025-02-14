@@ -36,8 +36,7 @@ class VideoToImagesController(OnDemandDockerController[VideoToImagesSettings]):
         return RunConfiguration(
             None,
             command_line_arguments=arguments,
-            detach=False,
-            interactive=False,
+            detach_and_interactive=False,
             dont_rm=True,
             mount_resource_folders={
                 'cache' : '/home/app/.cache'
@@ -60,7 +59,7 @@ class VideoToImagesController(OnDemandDockerController[VideoToImagesSettings]):
         result = api.execute(BrainBoxTask.call(VideoToImages).process(VideoToImages.AnalysisSettings(
             'sample.mp4',
             max_produced_frames=5,
-            add_comparator=True,
+            add_semantic_comparator=True,
         )))
         tc.assertEqual(5, len(result))
         yield TestReport.last_call(api).href('run-comparator')
