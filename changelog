@@ -1,3 +1,13 @@
+3.6.0
+    - BrainBox:
+        - Many small improvements in existing skills
+        - KohyaSS and PiperTraining to train Lora for images and piper model for voice. Underconstruction.
+        - OpenVoice, VideoToImages and Resemble-Enhance are finalized
+    - Avatar:
+        - The model now has "activity". The activity changes by request of the client
+    - Kaia:
+        - updated to reflect avatar's changes
+
 3.5.4
     - BrainBox:
         - Windows compatibility
