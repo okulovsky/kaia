@@ -1,6 +1,6 @@
 from typing import *
 from  dataclasses import dataclass, field
-from ..image_service import ImageService
+from ..image_service import ImageService, ImageServiceSettings
 from ..dubbing_service import DubbingService, TextLike, IDubCommandGenerator, DubbingServiceOutput, ParaphraseServiceSettings
 from ..state import InitialStateFactory, State
 import os
@@ -14,6 +14,7 @@ from kaia.dub import IntentsPack, Template
 from .interface import IAvatarApi
 from brainbox.framework.common.marshalling import endpoint
 from brainbox import File
+from ..narration_service import NarrationService, NarrationSettings, NarrationReply
 
 
 @dataclass
@@ -25,7 +26,8 @@ class AvatarSettings:
     brain_box_api: None | BrainBoxApi = None
     dubbing_task_generator: None|IDubCommandGenerator = None
     paraphrase_settings: None|ParaphraseServiceSettings = None
-    image_media_library_manager: None|MediaLibraryManager = None
+    image_settings: None|ImageServiceSettings = None
+    narration_settings: None|NarrationSettings = None
     errors_folder: None|Path = Loc.data_folder/'avatar_errors'
     resemblyzer_model_name: str|None = None
     whisper_model: str = 'base'
@@ -44,9 +46,9 @@ class AvatarService(IAvatarApi):
             )
 
         self.image_service = None
-        if self.settings.image_media_library_manager is not None:
+        if self.settings.image_settings is not None:
             self.image_service = ImageService(
-                self.settings.image_media_library_manager
+                self.settings.image_settings
             )
 
         self.recognition_service = RecognitionService(
@@ -55,12 +57,15 @@ class AvatarService(IAvatarApi):
             self.settings.whisper_model
         )
 
+        self.narration_service = None
+        if self.settings.narration_settings is not None:
+            self.narration_service = NarrationService(self.settings.narration_settings, self.image_service)
+
     @endpoint(url='/dub/start', method='POST')
     def dub(self, text: TextLike) -> DubbingServiceOutput:
         if self.dubbing_service is None:
             raise ValueError("Dubbing service is not set")
         return self.dubbing_service.dub(self.state, text)
-
 
     @endpoint(url='/dub/result', method='GET')
     def dub_get_result(self, job_id: str) -> File:
@@ -86,19 +91,27 @@ class AvatarService(IAvatarApi):
             return _empty_image
         return image
 
+    @endpoint(url='/image/current_description', method='GET')
+    def image_get_current_description(self) -> str|None:
+        if self.image_service is None:
+            return None
+        return self.image_service.get_current_image_description(self.state)
 
     @endpoint(url='/image/empty', method='GET')
     def image_get_empty(self) -> File:
         return _empty_image
 
     @endpoint(url='/state/change', method="POST")
-    def state_change(self, change: dict[str,Any]):
-        self.state.apply_change(change)
+    def state_change(self, change: dict[str,Any]) -> NarrationReply:
+        if self.narration_service is None:
+            self.state.apply_change(change)
+            return NarrationReply()
+        else:
+            return self.narration_service.apply_state_change(self.state, change)
 
     @endpoint(url='/state/get', method='GET')
     def state_get(self):
         return self.state.get_state()
-
 
     @endpoint(url='/image/report', method='POST')
     def image_report(self, report: str):
@@ -130,10 +143,35 @@ class AvatarService(IAvatarApi):
             actual_speaker
         )
 
-
     @endpoint(url='/recognition/speaker/train', method='POST')
     def recognition_speaker_train(self, media_library_path: Path):
         return self.recognition_service.speaker_train(media_library_path)
+
+    @endpoint(url='/narration/randomize/character', method='POST')
+    def narration_randomize_character(self) -> NarrationReply:
+        if self.narration_service is None:
+            return NarrationReply()
+        return self.narration_service.randomize_character(self.state)
+
+    @endpoint(url='/narration/randomize/activity', method='POST')
+    def narration_randomize_activity(self) -> NarrationReply:
+        if self.narration_service is None:
+            return NarrationReply()
+        return self.narration_service.randomize_activity(self.state)
+
+    @endpoint(url='/narration/reset', method='POST')
+    def narration_reset(self) -> NarrationReply:
+        if self.narration_service is None:
+            return NarrationReply()
+        return self.narration_service.reset(self.state)
+
+    @endpoint(url='/narration/tick', method='POST')
+    def narration_tick(self) -> NarrationReply:
+        if self.narration_service is None:
+            return NarrationReply()
+        return self.narration_service.tick(self.state)
+
+
 
 
 

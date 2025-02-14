@@ -38,5 +38,6 @@ class OpenTTSTaskGenerator(IDubCommandGenerator):
         voice = self.voices[voice_name]
         task = BrainBoxTask.call(OpenTTS)(voice='coqui-tts:en_vctk', lang='en', speakerId=voice, text=text)
         pack = BrainBoxExtendedTask(task, postprocessor=FilePostprocessor(metadata=DubbingMetadata(text, voice_name, voice)))
-        return BrainBoxCommand(pack)
+        command = BrainBoxCommand(pack)
+        return command
 

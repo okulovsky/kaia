@@ -4,6 +4,7 @@ from .memory_item import MemoryItem
 from yo_fluq import Queryable
 from kaia.dub import IntentsPack, Template
 from .rhasspy_utils import RhasspyHandler
+from datetime import datetime
 
 class State:
     def __init__(self, initial_state: dict[str, str]):
@@ -44,6 +45,7 @@ class State:
         return deepcopy(self._state)
 
     def add_memory(self, item: MemoryItem):
+        item.timestamp = datetime.now()
         self._memory.append(item)
 
     def iterate_memory_reversed(self) -> Queryable[MemoryItem]:
