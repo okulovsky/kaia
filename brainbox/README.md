@@ -2,6 +2,10 @@
 
 * [Introduction](#introduction)
   * [Included deciders](#included-deciders)
+    * [Text-to-speech](#text-to-speech)
+    * [Speech-to-text and voice analysis](#speech-to-text-and-voice-analysis)
+    * [LLM and text processing](#llm-and-text-processing)
+    * [Image generation and processing](#image-generation-and-processing)
 * [Installation](#installation)
   * [Docker](#docker)
   * [Python environment](#python-environment)
@@ -35,8 +39,7 @@ self-tests and documentation, as well as unified access to all the models.
 The main use case is fast prototyping of small AI-driven products: 
 managing chats in messengers, self-hosted voice assistants, 
 media processing (translation, covering images), etc.
-BrainBox is open-source and self-hosted, so no external APIs are needed; 
-GPU is recommended for some, but not all, models.
+BrainBox is open-source and self-hosted, so no external APIs are needed.
 
 BrainBox is not a production-ready solution. **Do not use it in production environment**,
 since it doesn't have any security features, isn't really compatible with high and even 
@@ -49,30 +52,42 @@ and few won't even run.
 
 ## Included deciders
 
-They are many. 
-At some point, BrainBox will have a comprehensive documentation for each of them, but we're not there yet.
-Important deciders are:
-* For TTS, text-to-speech: 
-  * [OpenTTS](https://github.com/synesthesiam/opentts) provides a decent baseline for english language with VITS model
-  * [CoquiTTS](https://github.com/coqui-ai/TTS) is a framework supporting many different models.
-    That includes VITS as well as YourTTS, and, of course, their own XTTS, that can do a good voice cloning.
-  * [TortoiseTTS](https://github.com/neonbjb/tortoise-tts) is, in my opinion, still the best in terms of quality. 
-    It is very slow, but not as slow as it used to be. 
-* For STT, speech-to-text, and other voice analysis:
-  * [Whisper](https://github.com/WhisperSpeech/WhisperSpeech) is a de-facto standard.
-  * [Kaldi](https://kaldi-asr.org/), which we use via its implementation in [Rhasspy](https://rhasspy.readthedocs.io/en/latest/),
-    provides much faster and accurate result _over the closed grammar and vocabulary_. 
-    It is not really a general solution for STT, but is perfect for home assistants.
-  * [Resemblyzer](https://github.com/resemble-ai/Resemblyzer) does speaker identification.
-* For text processing:
-  * [Ollama](https://ollama.com/), a de-facto standard for LLM management, is supported.
-* For image generation and processing:
-  * [ComfyUI](https://github.com/comfyanonymous/ComfyUI), a standard for image generation, is supported
-  * [YOLO](https://docs.ultralytics.com/) is supported for object detection.
+There are many! Once you install BrainBox, you will have all these AIs privately and free of charge on your machine, 
+accessible via user-friendly Python API, or by simple HTTP requests.
 
-... And more are coming. 
-Once you install BrainBox, you will have all these AIs privately and free of charge on your machine, 
-accessible via user-friendly Python API, or by simple HTTP requests!    
+At some point, BrainBox will have a comprehensive documentation for each of them, but we're not there yet.
+So here is a short description.
+
+### Text-to-speech
+
+* [OpenTTS](https://github.com/synesthesiam/opentts) provides a decent baseline for English language with VITS model, other languages are supproted as well.
+* [CoquiTTS](https://github.com/coqui-ai/TTS) is a framework supporting many different models.
+  That includes VITS as well as YourTTS, and, of course, their own XTTS, that can do a good voice cloning.
+* [TortoiseTTS](https://github.com/neonbjb/tortoise-tts) is, in my opinion, still the best in terms of quality. 
+  It is very slow, but not as slow as it used to be. 
+
+### Speech-to-text and voice analysis
+ 
+* [Whisper](https://github.com/WhisperSpeech/WhisperSpeech) is a de-facto standard.
+* [Kaldi](https://kaldi-asr.org/), which we use via its implementation in [Rhasspy](https://rhasspy.readthedocs.io/en/latest/),
+  provides much faster and accurate result _over the closed grammar and vocabulary_. 
+  It is not really a general solution for STT, but is perfect for home assistants.
+* [Resemblyzer](https://github.com/resemble-ai/Resemblyzer) does speaker identification.
+
+### LLM and text processing 
+
+* [Ollama](https://ollama.com/), a de-facto standard for LLM management, is supported.
+* [EspeakPhonemizer](https://pypi.org/project/espeak-phonemizer/) converts text to phonemes for many languages. 
+Mainly here because of how troublesome it is to install it on Windows.
+
+### Image generation and processing
+* [ComfyUI](https://github.com/comfyanonymous/ComfyUI), a standard for image generation, is supported
+* [YOLO](https://docs.ultralytics.com/) is used for fast object detection with neural netowrks.
+* [WD14Tagger](https://github.com/corkborg/wd14-tagger-standalone) describes the images with the tags. 
+Also available in ComfyUI, but has some additional perks. 
+* VideoToImages converts video to a series on images, allowing to select most sharp frame and to skip similar frames. 
+
+
  
 # Installation
 
@@ -230,7 +245,7 @@ self_test_report = requests.get(f'http://{api.address}/html/controllers/self_tes
 test_case.assertIsInstance(self_test_report, str)
 
 test_case_test_path = Path(tempfile.gettempdir()) / 'test_report.html'
-with open(test_case_test_path, 'w') as file:
+with open(test_case_test_path, 'w', encoding='utf-8') as file:
     file.write(self_test_report)
 
 ```
@@ -396,7 +411,6 @@ If you run BrainBox server at the machine you're running `api`,
 you may pass the path of the file:
 
 ```python
-
 import tempfile
 from pathlib import Path
 
@@ -405,7 +419,6 @@ test_case.assertIsInstance(path, Path)
 
 length = api.execute(BrainBox.Task.call(HelloBrainBox).file_length(path))
 test_case.assertEqual(length, 13)
-
 ```
 
 This solution is dirty as it won't work with a remote BrainBox, 

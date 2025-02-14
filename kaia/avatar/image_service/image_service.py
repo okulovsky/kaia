@@ -1,7 +1,8 @@
+from typing import *
 from ..media_library_manager import MediaLibraryManager
 from ..state import State, MemoryItem
 from dataclasses import dataclass
-from brainbox import File
+from brainbox import File, MediaLibrary
 
 @dataclass
 class ImageMemoryItem(MemoryItem):
@@ -13,11 +14,16 @@ class ImageMetadata:
     tags: dict
 
 
+@dataclass
+class ImageServiceSettings:
+    manager: MediaLibraryManager
+    record_to_description: Optional[Callable[[MediaLibrary.Record], str]] = None
+
 class ImageService:
     def __init__(self,
-                 manager: MediaLibraryManager
+                 settings: ImageServiceSettings
                  ):
-        self.manager = manager
+        self.settings = settings
 
     def mlm_record_to_file(self, content: MediaLibraryManager.Record):
         image = File(
@@ -29,9 +35,9 @@ class ImageService:
         return image
 
     def get_new_image(self, state: State) -> File:
-        content = self.manager.get_content(state.get_state())
+        content = self.settings.manager.get_content(state.get_state())
         image = self.mlm_record_to_file(content)
-        self.manager.feedback(content.file_id, 'seen')
+        self.settings.manager.feedback(content.file_id, 'seen')
         state.add_memory(ImageMemoryItem(content.file_id))
         return image
 
@@ -48,14 +54,25 @@ class ImageService:
         last_image = self._get_last_image_memory_item(state)
         if last_image is None:
             return
-        self.manager.feedback(last_image.image_file_name, feedback)
+        self.settings.manager.feedback(last_image.image_file_name, feedback)
 
     def get_current_image(self, state: State) -> File|None:
         last_image = self._get_last_image_memory_item(state)
         if last_image is None:
             return None
-        content = self.manager.get_content_by_id(last_image.image_file_name)
+        content = self.settings.manager.get_content_by_id(last_image.image_file_name)
         return self.mlm_record_to_file(content)
+
+    def get_current_image_description(self, state: State) -> str|None:
+        if self.settings.record_to_description is None:
+            return None
+        last_image = self._get_last_image_memory_item(state)
+        if last_image is None:
+            return None
+        self.settings.manager.feedback(last_image.image_file_name, 'description_requested')
+        record = self.settings.manager.media_library[last_image.image_file_name]
+        return self.settings.record_to_description(record)
+
 
 
 

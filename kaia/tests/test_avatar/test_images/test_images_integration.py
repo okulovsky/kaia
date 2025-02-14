@@ -1,6 +1,6 @@
 from brainbox import BrainBoxApi, BrainBoxTask, BrainBoxExtendedTask, DownloadingPostprocessor
 from brainbox.deciders import FakeFile, Collector
-from kaia.avatar import AvatarApi, AvatarSettings,  AnyContentStrategy, MediaLibraryManager
+from kaia.avatar import AvatarApi, AvatarSettings,  AnyContentStrategy, MediaLibraryManager, ImageServiceSettings
 from unittest import TestCase
 from uuid import uuid4
 from kaia.common import Loc
@@ -27,7 +27,8 @@ class AvatarDubbingTestCase(TestCase):
             #Testing that the images returned are indeed correct
             with Loc.create_test_file() as stats_file:
                 image_manager = MediaLibraryManager(AnyContentStrategy(), media_library_path, stats_file)
-                with AvatarApi.Test(AvatarSettings(image_media_library_manager=image_manager)) as avatar_api:
+                image_settings = ImageServiceSettings(image_manager)
+                with AvatarApi.Test(AvatarSettings(image_settings=image_settings)) as avatar_api:
                     avatar_api.state_change(dict(character='character_0'))
                     for i in range(10):
                         result = avatar_api.image_get_new()

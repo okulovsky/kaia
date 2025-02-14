@@ -1,3 +1,4 @@
+import os
 from typing import *
 from brainbox.framework.common.marshalling import Api, bind_to_api, TestApi
 from brainbox.framework import Loc, Locator
@@ -16,15 +17,19 @@ class ControllerApi(Api, IControllerService):
 
     def download_resource(self,
                  decider: str|IDecider|IController|type[IDecider]|type[IController],
-                 path: str
-                 ) -> File:
+                 path: str,
+                 target_path: Path|str
+                 ):
         decider = ControllerRegistry.to_controller_name(decider)
         address = f'http://{self.address}/resources/download/{decider}/{path}'
         response = requests.get(address)
         if response.status_code != 200:
             raise ValueError(f"Couldn't get file content for {address}\n" + response.text)
         content = response.content
-        return File(Path(path).name, content)
+        os.makedirs(Path(target_path).parent, exist_ok=True)
+        with open(target_path, 'wb') as stream:
+            stream.write(content)
+
 
     def upload_resource(self,
                decider: str | IDecider | IController | type[IDecider] | type[IController],

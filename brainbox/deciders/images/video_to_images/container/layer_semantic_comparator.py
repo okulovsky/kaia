@@ -19,7 +19,7 @@ def layer_comparator(iterable: Iterable[Frame]):
         embedding = cmp.encode(gray_image, convert_to_tensor=True)
 
         if old_embedding is not None:
-            frame.comparator_delta = util.cos_sim(embedding, old_embedding).item()
+            frame.semantic_comparator_delta = util.cos_sim(embedding, old_embedding).item()
 
         old_embedding = embedding
         yield frame

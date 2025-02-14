@@ -2,6 +2,7 @@ import cv2
 from frame import Frame
 from settings import AnalysisSettings
 from cv2 import cvtColor, COLOR_BGR2GRAY, Laplacian, CV_64F
+from PIL import Image
 
 def layer_capture(settings: AnalysisSettings):
     cap = cv2.VideoCapture('/resources/input/'+settings.source_file_name)
@@ -19,7 +20,8 @@ def layer_capture(settings: AnalysisSettings):
         if not ret:
             break
 
-        frame = Frame(src_frame)
+        pil_image = Image.fromarray(cv2.cvtColor(src_frame, cv2.COLOR_BGR2RGB))
+        frame = Frame(src_frame, pil_image)
         frame.index = cap_count
         frame.timestamp_in_ms = cap.get(cv2.CAP_PROP_POS_MSEC)
         frame.filename = str(cap_count).zfill(total_frames_digits) + '.png'

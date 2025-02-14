@@ -1,3 +1,4 @@
+import traceback
 from dataclasses import dataclass
 from .text_processor import TextLike, TextProcessor
 from .dub_command_generator import IDubCommandGenerator
@@ -44,7 +45,8 @@ class DubbingService:
 
 
     def get_result(self, job_id: str):
-        result = self._id_to_command[job_id].join(self.api)
+        command = self._id_to_command[job_id]
+        result = command.join(self.api)
         return result
 
 

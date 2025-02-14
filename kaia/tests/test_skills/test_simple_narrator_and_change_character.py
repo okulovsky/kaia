@@ -1,6 +1,9 @@
 import json
 
-from kaia.avatar import AvatarApi, AvatarSettings, NewContentStrategy, TestTaskGenerator, MediaLibraryManager
+from kaia.avatar import (
+    AvatarApi, AvatarSettings, NewContentStrategy, TestTaskGenerator, MediaLibraryManager,
+    NarrationSettings, ImageServiceSettings
+)
 from unittest import TestCase
 from brainbox import MediaLibrary, BrainBoxApi
 from brainbox.deciders import FakeFile
@@ -21,19 +24,22 @@ def state_to_tags(state):
 
 class SimpleNarratorCharacterTestCase(TestCase):
     def test_all(self):
+        characters = ['character_0','character_1', 'character_2']
         with BrainBoxApi.Test([FakeFile()]) as bb_api:
             with Loc.create_test_file() as media_library:
                 tags = {
                     f'{character}_{i}': dict(character=character, image=i)
-                    for character in ['character_0','character_1', 'character_2']
+                    for character in characters
                     for i in range(3)
                 }
                 MediaLibrary.generate(media_library, tags)
                 with Loc.create_test_file() as stats_file:
+                    manager = MediaLibraryManager(NewContentStrategy(), media_library, stats_file)
                     settings = AvatarSettings(
                         brain_box_api=bb_api,
                         dubbing_task_generator=TestTaskGenerator(),
-                        image_media_library_manager=MediaLibraryManager(NewContentStrategy(), media_library, stats_file)
+                        image_settings=ImageServiceSettings(manager),
+                        narration_settings=NarrationSettings(tuple(characters), welcome_utterance="Hello")
                     )
                     with AvatarApi.Test(settings) as avatar_api:
                         char_skill = ChangeCharacterSkill(['character_0','character_1','character_2'])

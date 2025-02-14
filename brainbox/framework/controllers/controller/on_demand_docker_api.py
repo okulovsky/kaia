@@ -1,4 +1,4 @@
-from ...deployment import Deployment
+from typing import Optional, Callable
 from ...common import IDecider
 from typing import Generic, TypeVar
 from .run_configuration import RunConfiguration
@@ -26,7 +26,7 @@ class OnDemandDockerApi(IDecider, Generic[TSettings, TController]):
     def controller(self, controller: TController):
         self._controller = controller
 
-    def run_container(self, configuration: RunConfiguration, monitor_function = None):
+    def run_container(self, configuration: RunConfiguration, monitor_function: Optional[Callable[[str],None]] = None):
         from .on_demand_docker_controller import OnDemandDockerController
         controller: OnDemandDockerController = self.controller
         controller.get_deployment().stop().remove()

@@ -4,3 +4,4 @@ if __name__ == '__main__':
     installer = ResembleEnhance.Controller()
     installer.install()
     installer.self_test()
+    #installer.run_notebook()

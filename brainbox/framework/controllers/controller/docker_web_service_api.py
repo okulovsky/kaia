@@ -30,6 +30,8 @@ class DockerWebServiceApi(IDecider, Generic[TSettings, TController]):
         return self.controller.address
 
     def endpoint(self, endpoint=''):
+        if len(endpoint)>0 and not endpoint.startswith('/'):
+            endpoint='/'+endpoint
         return 'http://'+self.address+endpoint
 
     @property

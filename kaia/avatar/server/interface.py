@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import *
 from ..dubbing_service import TextLike, DubbingServiceOutput
 from ..recognition_service import RecognitionSettings
+from ..narration_service import NarrationReply
 from brainbox import File
 from kaia.dub import Template, IntentsPack
 from pathlib import Path
@@ -11,7 +12,6 @@ class IAvatarApi(ABC):
     @abstractmethod
     def dub(self, text: TextLike) -> DubbingServiceOutput:
         pass
-
 
     @abstractmethod
     def dub_get_result(self, job_id: str) -> File:
@@ -34,7 +34,11 @@ class IAvatarApi(ABC):
         pass
 
     @abstractmethod
-    def state_change(self, change: dict[str, Any]) -> None:
+    def image_get_current_description(self) -> str|None:
+        pass
+
+    @abstractmethod
+    def state_change(self, change: dict[str, Any]) -> NarrationReply:
         pass
 
     @abstractmethod
@@ -56,3 +60,20 @@ class IAvatarApi(ABC):
     @abstractmethod
     def recognition_speaker_train(self, media_library_path: Path):
         pass
+
+    @abstractmethod
+    def narration_randomize_character(self) -> NarrationReply:
+        pass
+
+    @abstractmethod
+    def narration_randomize_activity(self) -> NarrationReply:
+        pass
+
+    @abstractmethod
+    def narration_reset(self) -> NarrationReply:
+        pass
+
+    @abstractmethod
+    def narration_tick(self) -> NarrationReply:
+        pass
+

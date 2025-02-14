@@ -26,8 +26,7 @@ class RunConfiguration:
     mount_root_folder: bool = False
     mount_custom_folders: None | dict[str, str] = None
 
-    detach: bool = True
-    interactive: bool = True
+    detach_and_interactive: bool = True
 
     def _mounts(self, resource_folder: ResourceFolder):
         if self.mount_resource_folders is not None:
@@ -59,8 +58,7 @@ class RunConfiguration:
         arguments += DockerArgumentsHelper.arg_set_env_variables(self.set_env_variables)
         if GpuRegistry.are_present():
             arguments += ['--gpus', 'all']
-        arguments += ['--interactive', '--tty'] if self.interactive else []
-        arguments += ['--detach'] if self.detach else []
+        arguments += ['--interactive', '--tty', '--detach'] if self.detach_and_interactive else []
         arguments += ['--rm'] if not self.dont_rm else []
         arguments += ['--user',f'{context.machine.user_id}:{context.machine.group_id}'] if not self.run_as_root else []
         arguments += ['--restart', 'unless-stopped'] if self.restart_unless_stopped else []
@@ -77,8 +75,7 @@ class RunConfiguration:
         configuration.publish_ports = {8899:8899}
         configuration.mount_data_folder = True
         configuration.mount_custom_folders = {Loc.root_folder: '/repo'}
-        configuration.detach = False
-        configuration.interactive = False
+        configuration.detach_and_interactive = False
         return configuration
 
     def as_service_worker(self, *arguments):
@@ -86,6 +83,5 @@ class RunConfiguration:
         configuration.command_line_arguments = list(arguments)
         configuration.publish_ports = {}
         configuration.mount_top_resource_folder = True
-        configuration.detach = False
-        configuration.interactive = False
+        configuration.detach_and_interactive = False
         return configuration

@@ -1,4 +1,6 @@
 import io
+import os
+
 import flask
 from tts_loader import load_tts
 import traceback
@@ -115,10 +117,11 @@ class CoquiInferenceWebApp:
             voice = flask.request.json['voice']
             language = flask.request.json['language']
             language = self._get_language(language)
-            path = f'/resources/voices/{voice}.wav'
-            if not Path(path).is_file():
-                raise ValueError(f"File {path} not found, perhaps the voice sample was not uploaded")
-            return self._run_model(text=text, speaker_wav=path, language=language)
+            voice_path = f'/resources/voices/{voice}/'
+            voice_paths = [voice_path+file for file in os.listdir(voice_path) if file.endswith('.wav')]
+            if len(voice_paths) == 0:
+                raise ValueError(f"Voice {voice} folder doesn't contain any .wav files")
+            return self._run_model(text=text, speaker_wav=voice_paths, language=language)
         except:
             return traceback.format_exc(), 500
 

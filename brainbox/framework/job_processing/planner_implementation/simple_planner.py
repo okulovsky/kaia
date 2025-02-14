@@ -50,6 +50,7 @@ class SimplePlanner(IPlanner):
 
     def plan(self, args: PlannerArguments):
         active_service: OperatorStateForPlanner|None = None
+
         if len(args.deciders) > 1:
             raise ValueError("Simple planner cannot operate with more than 1 decider active")
         elif len(args.deciders) == 1:

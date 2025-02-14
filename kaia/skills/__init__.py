@@ -1,3 +1,4 @@
+from .activity_skill import ActivitySkill
 from .date import DateSkill
 from .time import TimeSkill
 from .change_image_skill import ChangeImageSkill
@@ -15,5 +16,6 @@ from .recognition_feedback import RecognitionFeedbackSkill
 from .scheduled_time import ScheduledTime, Weekdays, WeekdayRepetition
 from .initialization_skill import InitializationSkill
 from .joke import JokeSkill
+from .narration_skill import NarrationSkill
 
 from . import weather

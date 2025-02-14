@@ -3,14 +3,18 @@ from unittest import TestCase
 from ....framework import (
     RunConfiguration, SmallImageBuilder,
     IImageBuilder, DockerWebServiceController, BrainBoxApi, IModelDownloadingController, DownloadableModel,
-    TestReport
+    TestReport, INotebookableController
 )
 from .settings import RhasspyKaldiSettings
 from .model import RhasspyKaldiModel
 from pathlib import Path
 
 
-class RhasspyKaldiController(DockerWebServiceController[RhasspyKaldiSettings], IModelDownloadingController):
+class RhasspyKaldiController(
+    DockerWebServiceController[RhasspyKaldiSettings],
+    IModelDownloadingController,
+    INotebookableController,
+):
     def get_image_builder(self) -> IImageBuilder|None:
         return SmallImageBuilder(
             Path(__file__).parent/'container',
@@ -40,14 +44,9 @@ class RhasspyKaldiController(DockerWebServiceController[RhasspyKaldiSettings], I
         from .api import RhasspyKaldi
         return RhasspyKaldi()
 
-    def run_notebook(self):
-        self.run_with_configuration(self.get_service_run_configuration(None).as_notebook_service())
-
     def post_install(self):
         self.download_models(self.settings.languages)
         
-
-
     def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable:
         from .tests import english, german, english_custom
         yield TestReport.attach_source_file(english)

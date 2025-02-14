@@ -7,7 +7,7 @@ from settings import AnalysisSettings
 from frame import Frame
 from layer_capture import layer_capture
 from layer_bufferer import layer_bufferer
-from layer_comparator import layer_comparator
+from layer_semantic_comparator import layer_comparator
 
 class VideoProcessorApp:
     def __init__(self):
@@ -25,7 +25,7 @@ class VideoProcessorApp:
         source = layer_capture(settings)
         if settings.buffer_by_laplacian_in_ms is not None:
             source = layer_bufferer(source, settings.buffer_by_laplacian_in_ms, 'laplacian')
-        if settings.add_comparator:
+        if settings.add_semantic_comparator:
             source = layer_comparator(source)
 
         with open(self.timestamps, 'w') as stream:
@@ -34,10 +34,10 @@ class VideoProcessorApp:
                     print(f"Interrupting at {index} >= {settings.max_produced_frames}")
                     break
 
-                pil_image = Image.fromarray(cv2.cvtColor(frame.frame, cv2.COLOR_BGR2RGB))
-                pil_image.save(os.path.join(self.output_directory, frame.filename), format="PNG")
+                frame.pil_image.save(os.path.join(self.output_directory, frame.filename), format="PNG")
                 data = frame.__dict__
                 del data['frame']
+                del data['pil_image']
                 stream.write(json.dumps(data))
                 stream.write('\n')
                 stream.flush()

@@ -1,6 +1,7 @@
 from .template import TemplateWorkflow
 from dataclasses import dataclass, field
 import numpy as np
+from .....framework import BrainBox
 import pprint
 
 @dataclass
@@ -26,6 +27,12 @@ class TextToImage(TemplateWorkflow):
     strength_03: float = 1.0
     lora_04: str|None = field(default="None", metadata=TemplateWorkflow.meta(is_model_with_priority=1))
     strength_04: float = 1.0
+
+    def __post_init__(self):
+        for i in range(1,5):
+            name = f'lora_0{i}'
+            if getattr(self, name) is None:
+                setattr(self, name, "None")
 
 
 
