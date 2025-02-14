@@ -8,6 +8,7 @@ from kaia.dub.languages.en import *
 from brainbox.deciders import Whisper, OpenTTS, RhasspyKaldi
 
 
+
 class CommonIntents(TemplatesCollection):
     stop = Template('Stop','Cancel')
 
@@ -45,8 +46,9 @@ class DemoCoreService(KaiaCoreService):
         skills_list.append(skills.VolumeSkill(0.2))
         skills_list.append(help:=skills.HelpSkill())
         skills_list.append(skills.LogFeedbackSkill())
-        skills_list.append(character_skill:=skills.ChangeCharacterSkill(characters))
-        skills_list.append(skills.InitializationSkill(character_skill))
+        skills_list.append(skills.ChangeCharacterSkill(characters))
+        skills_list.append(skills.InitializationSkill())
+        skills_list.append(skills.NarrationSkill())
 
         assistant = KaiaAssistant(skills_list)
         assistant.raise_exceptions = False

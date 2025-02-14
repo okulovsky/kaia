@@ -1,13 +1,9 @@
-from ..kaia import IKaiaSkill, InitializationCommand
+from ..kaia import IKaiaSkill, InitializationCommand, KaiaContext
 from .character_skill import ChangeCharacterSkill
+from eaglesong import ContextRequest
 
 
 class InitializationSkill(IKaiaSkill):
-    def __init__(self,
-                 character_skill: ChangeCharacterSkill
-                 ):
-        self.character_skill = character_skill
-
     def get_name(self) -> str:
         return type(self).__name__
 
@@ -24,7 +20,8 @@ class InitializationSkill(IKaiaSkill):
         return self.run
 
     def run(self):
-        yield from self.character_skill.switch_to_character()
+        context: KaiaContext = yield ContextRequest()
+        yield from context.avatar_api.narration_reset()
 
 
 

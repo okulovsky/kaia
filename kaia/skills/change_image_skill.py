@@ -1,6 +1,6 @@
 from typing import *
 from kaia.dub.languages.en import *
-from kaia.kaia import SingleLineKaiaSkill, KaiaContext
+from kaia.kaia import SingleLineKaiaSkill, KaiaContext, Message
 from kaia.avatar import World
 from brainbox import File
 from eaglesong import ContextRequest
@@ -10,6 +10,10 @@ class ChangeImageIntents(TemplatesCollection):
     bad_image = Template("Bad image")
     hide_image = Template("Hide image")
     good_image = Template('Good image')
+    describe_image = Template(
+        "Describe image",
+        "Show prompt"
+    )
 
 class ChangeImageReplies(TemplatesCollection):
     thanks = (
@@ -38,6 +42,10 @@ class ChangeImageSkill(SingleLineKaiaSkill):
         if input.template.name == ChangeImageIntents.good_image.name:
             avatar_api.image_report('good')
             yield ChangeImageReplies.thanks.utter()
+        if input in ChangeImageIntents.describe_image:
+            desc = avatar_api.image_get_current_description()
+            if desc is not None:
+                yield Message(Message.Type.System, desc)
 
 
 

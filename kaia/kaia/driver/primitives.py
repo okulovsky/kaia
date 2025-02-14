@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import datetime
 
 @dataclass
 class AudioPlayConfirmation:
@@ -11,5 +12,7 @@ class AudioCommand:
 class InitializationCommand:
     pass
 
+@dataclass
 class TimerTick:
-    pass
+    current_time: datetime = field(default_factory=datetime.now)
+

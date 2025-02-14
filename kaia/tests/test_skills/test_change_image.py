@@ -4,7 +4,7 @@ from eaglesong.core import Automaton, Scenario
 from brainbox import File, MediaLibrary
 from kaia.skills.change_image_skill import ChangeImageIntents, ChangeImageSkill
 from kaia.kaia import KaiaAssistant, KaiaContext
-from kaia.avatar import AvatarApi, AvatarSettings, NewContentStrategy, MediaLibraryManager
+from kaia.avatar import AvatarApi, AvatarSettings, NewContentStrategy, MediaLibraryManager, ImageServiceSettings
 from kaia.common import Loc
 
 def check_image(tag):
@@ -22,7 +22,7 @@ class ChangeImageTestCase(TestCase):
             MediaLibrary.generate(media_library, tags)
             with Loc.create_test_file() as stats_file:
                 manager = MediaLibraryManager(NewContentStrategy(False), media_library, stats_file)
-                with AvatarApi.Test(AvatarSettings(image_media_library_manager=manager)) as api:
+                with AvatarApi.Test(AvatarSettings(image_settings=ImageServiceSettings(manager))) as api:
                     (
                         Scenario(lambda: Automaton(KaiaAssistant([ChangeImageSkill()], raise_exception=False), KaiaContext(avatar_api=api)))
                         .send(ChangeImageIntents.change_image.utter())

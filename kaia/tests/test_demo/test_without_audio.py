@@ -27,7 +27,7 @@ class WihoutAudioTestCase(TestCase):
             updates[2].is_bot_message("Sure, I'm listening")
             updates[3].is_bot_audio("Sure, I'm listening")
 
-            for character in characters:
+            for character in reversed(characters):
                 tester.send_voice_command(f"I want to talk with {character}")
                 updates = tester.pull_updates(6)
                 updates[0].of_type('command_audio')

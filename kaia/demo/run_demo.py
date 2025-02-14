@@ -18,7 +18,7 @@ if __name__ == '__main__':
     set_audio_control_service_and_api(app, mic_settings)
     set_core_service(app)
 
-    fork_app = app.get_fork_app(False)
+    fork_app = app.get_fork_app()
     fork_app.run()
 
 

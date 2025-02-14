@@ -26,6 +26,12 @@ class Utterance(IAsserter):
     def to_str(self):
         return self.template.to_str(self.value)
 
+    def __str__(self):
+        return f'[Utterance: {self.template.name} {self.value}]'
+
+    def __repr__(self):
+        return self.__str__()
+
 
     def assertion(self, actual, test_case: TestCase):
         test_case.assertIsInstance(actual, Utterance)
@@ -42,9 +48,6 @@ class Utterance(IAsserter):
         else:
             return self.value.get(name, default_value)
 
-
-    def __str__(self):
-        return '[Utterance] '+self.to_str()
 
     def __add__(self, another: 'Utterance'):
         from .utterance_sequence import UtterancesSequence
