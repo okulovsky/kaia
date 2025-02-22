@@ -6,13 +6,13 @@ from brainbox.deciders import Collector, FakeText
 from yo_fluq import Query
 
 def generate_pack() -> BrainBox.CombinedTask:
-    return (
-        Query
-        .en(range(5))
-        .feed(Collector.FunctionalTaskBuilder(
-            lambda z: BrainBox.Task.call(FakeText)(prefix=str(z), time_to_sleep=0.1),
-            method='to_array'
-        )))
+    builder = Collector.TaskBuilder()
+    for i in range(5):
+        builder.append(
+            BrainBox.Task.call(FakeText)(prefix=str(i), time_to_sleep=0.1),
+            {}
+        )
+    return builder.to_collector_pack('to_array')
 
 
 

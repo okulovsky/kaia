@@ -6,13 +6,13 @@ from yo_fluq import Query
 class PackTestCase(TestCase):
     def test_pack(self):
         with BrainBoxApi.Test() as api:
-            pack = (
-                Query
-                .combinatorics.grid(a=list(range(3)), b=list(range(2)))
-                .feed(Collector.FunctionalTaskBuilder(
-                    lambda z: BrainBoxTask.call(FakeText)(f'{z.a}/{z.b}'),
-                    method='to_array'
-                )))
+            builder = Collector.TaskBuilder()
+            for tags in Query.combinatorics.grid(a=list(range(3)), b=list(range(2))):
+                builder.append(
+                    BrainBoxTask.call(FakeText)(f'{tags.a}/{tags.b}'),
+                    tags
+                )
+            pack = builder.to_collector_pack('to_array')
             result = api.execute(pack)
             tags = list(sorted((z['tags']['a'], z['tags']['b']) for z in result))
             self.assertEqual(

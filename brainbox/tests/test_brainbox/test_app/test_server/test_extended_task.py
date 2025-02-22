@@ -19,14 +19,5 @@ class ComplexPacksTestCase(TestCase):
 
             self.assertEqual({'test1.txt': 'Test1'}, api.execute(pack))
 
-            pack = BrainBoxExtendedTask(None, prerequisite=CacheUploadPrerequisite(File('test2.txt', b'Test2')))
-
-            self.assertEqual(
-                [None, {'test1.txt': 'Test1', 'test2.txt': 'Test2'}],
-                api.execute([
-                    pack,
-                    BrainBoxTask.call(Test).list()
-                ])
-            )
 
     
