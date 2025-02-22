@@ -17,6 +17,8 @@ class SimplePlanner(IPlanner):
         if not self.has_cooldown_delay:
             return [StopCommand(active_service.instance_id)]
         now = self.datetime_factory()
+        if active_service.not_busy_since is None:
+            return [StopCommand(active_service.instance_id)]
         delta = (now - active_service.not_busy_since).total_seconds()
         if delta < self.cooldown_delay_in_seconds:
             return []

@@ -29,7 +29,7 @@ class TaskBuilder:
             self.records.append(TaskBuilder.Record(task, tags))
         return task
 
-    def to_collector_pack(self, method: str):
+    def to_collector_pack(self, method: str, **kwargs):
         dependencies = {}
         tags = {}
         tasks = []
@@ -44,7 +44,7 @@ class TaskBuilder:
             decider='Collector',
             decider_method=method,
             dependencies=dependencies,
-            arguments=dict(tags=tags)
+            arguments=dict(tags=tags, **kwargs)
         )
 
         result = BrainBoxCombinedTask(resulting_task, tuple(tasks))

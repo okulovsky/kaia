@@ -7,14 +7,12 @@ from ...job_processing import Job
 
 @dataclass
 class BrainBoxExtendedTask(IBrainBoxTask):
-    task: IBrainBoxTask|None = None
+    task: IBrainBoxTask
     prerequisite: IPrerequisite|None = None
     postprocessor: IPostprocessor|None = None
 
     def create_jobs(self) -> list[Job]:
-        if self.task is not None:
-            return self.task.create_jobs()
-        return []
+        return self.task.create_jobs()
 
     def before_add(self, api):
         if self.prerequisite is not None:
@@ -26,8 +24,6 @@ class BrainBoxExtendedTask(IBrainBoxTask):
         return result
 
     def get_resulting_id(self) -> str|None:
-        if self.task is None:
-            return None
         return self.task.get_resulting_id()
 
 

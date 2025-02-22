@@ -25,6 +25,8 @@ class BrainBoxCommandCache(Generic[T]):
             raise ValueError(f"Filename for cache must end with .json or .pkl/.pickle, but was: {file.name}")
 
     def read(self) -> BrainBoxCommandCacheItem:
+        if not self.file.parent.is_dir():
+            return BrainBoxCommandCacheItem(None, None)
         if not self.file.is_file():
             return BrainBoxCommandCacheItem(None, None)
         if self._as_json:
@@ -53,7 +55,7 @@ class BrainBoxCommand(Generic[T]):
         self.cache = cache
 
     def with_cache(self, file: Path) -> 'BrainBoxCommand':
-        return BrainBoxCommand(self.task, BrainBoxCommandCache(file))
+        return BrainBoxCommand(self.task, BrainBoxCommandCache(Path(file)))
 
     def execute(self, api: BrainBoxApi) -> T:
         if self.cache is not None:

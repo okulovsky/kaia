@@ -1,3 +1,6 @@
+3.6.1
+    - BrainBox:
+        - Vosk, Zonos, minot changes in Piper, PiperTraining
 3.6.0
     - BrainBox:
         - Many small improvements in existing skills

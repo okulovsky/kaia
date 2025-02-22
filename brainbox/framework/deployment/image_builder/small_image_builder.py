@@ -19,7 +19,7 @@ USER app
 class SmallImageBuilder(IImageBuilder):
     def __init__(self,
                  code_path: Path,
-                 docker_template: str,
+                 docker_template: str|None,
                  dependencies: Optional[Iterable[str]|Iterable[Iterable[str]]],
                  add_current_user: bool = True,
                  copy_to_code_path: dict[Path, str]|None = None,
@@ -76,18 +76,19 @@ class SmallImageBuilder(IImageBuilder):
         return target
 
     def _prepare_container_folder(self, executor: IExecutor):
-        format_kwargs = {}
-        if self.dependencies is not None:
-            format_kwargs[SmallImageBuilder.PIP_INSTALL_PLACEHOLDER] = self._convert_dependencies()
-        if self.add_current_user:
-            format_kwargs[SmallImageBuilder.ADD_USER_PLACEHOLDER] = user_add_template.format(user_id=executor.get_machine().user_id, group_id=executor.get_machine().group_id)
+        if self.docker_template is not None:
+            format_kwargs = {}
+            if self.dependencies is not None:
+                format_kwargs[SmallImageBuilder.PIP_INSTALL_PLACEHOLDER] = self._convert_dependencies()
+            if self.add_current_user:
+                format_kwargs[SmallImageBuilder.ADD_USER_PLACEHOLDER] = user_add_template.format(user_id=executor.get_machine().user_id, group_id=executor.get_machine().group_id)
 
-        dockerfile = self.docker_template.format(**format_kwargs)
-        if self.reset_code_folder:
-            shutil.rmtree(self.code_path, ignore_errors=True)
-        os.makedirs(self.code_path, exist_ok=True)
-        with open(self.code_path / 'Dockerfile', 'w') as file:
-            file.write(dockerfile)
+            dockerfile = self.docker_template.format(**format_kwargs)
+            if self.reset_code_folder:
+                shutil.rmtree(self.code_path, ignore_errors=True)
+            os.makedirs(self.code_path, exist_ok=True)
+            with open(self.code_path / 'Dockerfile', 'w') as file:
+                file.write(dockerfile)
 
         if self.copy_to_code_path is not None:
             for source_path, target_str_path in self.copy_to_code_path.items():

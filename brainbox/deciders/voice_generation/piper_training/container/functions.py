@@ -65,19 +65,20 @@ class Functions:
             '--devices',
             '1',
             '--batch-size',
-            '8',
+            str(self.settings.batch_size),
             '--validation-split',
-            '0.0',
+            str(self.settings.validation_split),
             '--num-test-examples',
-            '0',
+            str(self.settings.num_test_examples),
             '--max_epochs',
-            '2166',
+            str(self.settings.max_epochs),
             '--resume_from_checkpoint',
             str(self.working_dir/'base_models'/self.settings.base_model),
             '--checkpoint-epochs',
-            '1',
+            str(self.settings.checkpoint_epochs),
             '--precision',
-            '32'
+            str(self.settings.precision),
+            *(['--keep-intermediate'] if self.settings.keep_intermediate else []),
         ])
 
     def export_model(self):
@@ -87,14 +88,21 @@ class Functions:
         os.makedirs(result_path, exist_ok=True)
         for model in os.listdir(model_path):
             name, extension = model.split('.')
-            subprocess.call([
-                'python3',
-                '-m',
-                'piper_train.export_onnx',
-                str(model_path/model),
-                str(result_path/(name+".onnx"))
-            ])
+            Functions.convert_custom_filename(model_path/model, result_path)
             shutil.copy(
                 preprocessed_path/'config.json',
                 str(result_path/(name+'.onnx.json'))
             )
+
+    @staticmethod
+    def convert_custom_filename(path, target_folder = None):
+        if target_folder is None:
+            target_folder = path.parent
+        name, extension = path.name.split('.')
+        subprocess.call([
+            'python3',
+            '-m',
+            'piper_train.export_onnx',
+            str(path),
+            str(target_folder / (name + ".onnx"))
+        ])

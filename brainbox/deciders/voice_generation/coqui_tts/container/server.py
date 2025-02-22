@@ -118,9 +118,9 @@ class CoquiInferenceWebApp:
             language = flask.request.json['language']
             language = self._get_language(language)
             voice_path = f'/resources/voices/{voice}/'
-            voice_paths = [voice_path+file for file in os.listdir(voice_path) if file.endswith('.wav')]
+            voice_paths = [voice_path+file for file in os.listdir(voice_path)]
             if len(voice_paths) == 0:
-                raise ValueError(f"Voice {voice} folder doesn't contain any .wav files")
+                raise ValueError(f"Voice {voice} folder doesn't contain any files")
             return self._run_model(text=text, speaker_wav=voice_paths, language=language)
         except:
             return traceback.format_exc(), 500

@@ -1,6 +1,7 @@
 from brainbox.framework import OnDemandDockerApi, FileLike, FileIO, File, RunConfiguration
 from .controller import PiperTrainingController
 from .settings import PiperTrainingSettings
+from .container.settings import TrainingSettings
 from pathlib import Path
 import zipfile
 import os
@@ -32,11 +33,18 @@ class PiperTraining(OnDemandDockerApi[PiperTrainingSettings, PiperTrainingContro
                     file.write(f'{record["id"]}|{record["character"]}|{record["text"]}\n')
 
 
-    def execute(self, dataset: FileLike.Type, name: str|None = None):
+    def execute(self, dataset: FileLike.Type, settings: TrainingSettings|dict|None = None, name: str|None = None):
         if name is None:
             name = FileLike.get_name(dataset).split('.')[0]
+        if settings is None:
+            settings = {}
+        elif isinstance(settings, TrainingSettings):
+            settings = settings.__dict__
+
         path = FileLike(dataset, self.cache_folder).get_path()
         self._unzip_dataset(name, path)
+        FileIO.write_json(settings, self.controller.resource_folder('trainings', name)/'settings.json')
+
         configuration = RunConfiguration(
             detach_and_interactive=False,
             mount_top_resource_folder=True,
@@ -55,7 +63,24 @@ class PiperTraining(OnDemandDockerApi[PiperTrainingSettings, PiperTrainingContro
                 result.append(dst_filename)
         return result
 
+    def convert_model(self, ckpt_model: FileLike.Type):
+        name = FileLike.get_name(ckpt_model)
+        print(name)
+
+        with FileLike(ckpt_model, self.cache_folder) as stream:
+            with open(self.controller.resource_folder('conversions')/name, 'wb') as output:
+                output.write(stream.read())
+
+        configuration = RunConfiguration(
+            detach_and_interactive=False,
+            mount_top_resource_folder=True,
+            command_line_arguments=['--convert',str(name)]
+        )
+        self.controller.run_with_configuration(configuration, print)
+
+
 
 
     Controller = PiperTrainingController
     Settings = PiperTrainingSettings
+    TrainingSettings = TrainingSettings

@@ -3,8 +3,7 @@ from typing import Optional
 from .controller import PiperController
 from .settings import PiperSettings
 from .model import PiperModel
-from .... import BrainBoxApi
-from ....framework import DockerWebServiceApi, File, IPrerequisite
+from ....framework import DockerWebServiceApi, File, IPrerequisite, BrainBoxApi
 from pathlib import Path
 
 

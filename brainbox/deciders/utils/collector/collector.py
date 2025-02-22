@@ -4,7 +4,7 @@ from ....framework import IDecider, FailedJobArgument, File, MediaLibrary
 from datetime import datetime
 from .collector_to_media_library_convertor import CollectorToMediaLibraryConvertor
 from .task_builder import TaskBuilder
-from .functional_task_builder import FunctionalTaskBuilder
+
 
 class Collector(IDecider):
 
@@ -15,7 +15,7 @@ class Collector(IDecider):
     def to_array(self, tags: dict[str, dict], **kwargs):
         final_result = []
         for key, value in tags.items():
-            item_result = dict(tags=value)
+            item_result = dict(tags=value, id=key)
             if key not in kwargs:
                 raise ValueError(f"Id {key} in tags, but not in kwargs")
             job_result = kwargs[key]
@@ -35,6 +35,18 @@ class Collector(IDecider):
                 raise ValueError(f"Dependency failed on argument {key}:\n{value.job.error}")
         return kwargs
 
+    def to_result_array(self, tags: dict[str,dict], raise_if_error: bool = False, **kwargs):
+        result = self.to_array(tags, **kwargs)
+        final_result = []
+        for r in result:
+            if r['error'] is not None:
+                if raise_if_error:
+                    raise ValueError(f"Error for task {r['tags']}:\n{r['error']}")
+                continue
+            final_result.append(r['result'])
+        return final_result
+
+
 
     TaskBuilder = TaskBuilder
-    FunctionalTaskBuilder = FunctionalTaskBuilder
+

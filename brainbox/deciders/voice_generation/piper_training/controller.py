@@ -52,9 +52,8 @@ class PiperTrainingController(OnDemandDockerController[PiperTrainingSettings], I
                 for instance in range(100):
                     zip.write(src_folder/file, f'voice/{instance}-'+file)
 
-        result = api.execute(BrainBoxTask.call(PiperTraining).execute(dataset))
+        result = api.execute(BrainBoxTask.call(PiperTraining).execute(dataset, PiperTraining.TrainingSettings()))
         yield TestReport.last_call(api).href('training')
-
 
         Piper.UploadVoice(api.cache_folder/result[0], custom_name=NAME).execute(api)
         voice_result = api.execute(BrainBoxTask.call(Piper).voiceover(VOICEOVER_TEXT, NAME))
@@ -84,7 +83,9 @@ RUN rm /home/app/piper/src/python/requirements.txt
 
 RUN sed -i 's/from . import attentions, commons, modules, monotonic_align/from . import attentions, commons, modules\\nimport monotonic_align/' /home/app/piper/src/python/piper_train/vits/models.py
 
-COPY lightning.py /home/app/piper/src/python/piper_train/vits/lightning.py
+COPY fixes/lightning.py /home/app/piper/src/python/piper_train/vits/lightning.py
+
+COPY fixes/main.py /home/app/piper/src/python/piper_train/__main__.py
 
 WORKDIR /home/app/piper/src/python
 
