@@ -2,8 +2,10 @@ from typing import Iterable
 from unittest import TestCase
 from ....framework import (
     RunConfiguration, TestReport, SmallImageBuilder, IImageBuilder, DockerWebServiceController,
-    BrainBoxApi, BrainBoxTask, FileIO, INotebookableController, IModelDownloadingController, DownloadableModel
+    BrainBoxApi, BrainBoxTask, FileIO, INotebookableController, IModelDownloadingController, DownloadableModel,
+    File
 )
+from ...common import VOICEOVER_TEXT, check_if_its_sound
 from .settings import ZonosSettings
 from pathlib import Path
 
@@ -50,15 +52,26 @@ class ZonosController(
     def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable:
         from .api import Zonos
 
-        api.execute(BrainBoxTask.call(Zonos).echo('argument'))
-
+        speaker_sample = File.read(Path(__file__).parent/'research/lina.mp3')
+        api.execute(BrainBoxTask.call(Zonos).train('test_speaker', speaker_sample))
 
         yield (
             TestReport
             .last_call(api)
-            .href('echo')
-            .with_comment("Returns JSON with passed arguments and `success` fields")
+            .href('train')
         )
+
+        result = BrainBoxTask.call(Zonos).voiceover(VOICEOVER_TEXT, 'test_speaker')
+        tc.assertIsInstance(result, str)
+        check_if_its_sound(api.open_file(result).content, tc)
+        yield (
+            TestReport
+            .last_call(api)
+            .href('voiceover')
+            .result_is_file(File.Kind.Audio)
+        )
+
+
 
 
 
