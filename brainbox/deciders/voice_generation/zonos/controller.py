@@ -35,6 +35,12 @@ class ZonosController(
     def get_default_settings(self):
         return ZonosSettings()
 
+    def post_install(self):
+        if not (self.resource_folder('pretrained')/'hub').is_dir():
+            self.run_with_configuration(self.get_service_run_configuration(None).as_service_worker('--install'))
+        else:
+            print('MODELS are already downloaded')
+
     def create_api(self):
         from .api import Zonos
         return Zonos()
