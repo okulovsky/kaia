@@ -24,6 +24,9 @@ class ZonosController(
             raise ValueError(f"`parameter` must be None for {self.get_name()}")
         return RunConfiguration(
             publish_ports={self.connection_settings.port:8080},
+            mount_resource_folders={
+                'pretrained': '/home/app/.cache/huggingface'
+            }
         )
 
     def get_notebook_configuration(self) -> RunConfiguration|None:
