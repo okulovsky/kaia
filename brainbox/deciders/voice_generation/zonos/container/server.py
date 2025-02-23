@@ -51,7 +51,7 @@ class ZonosApp:
                     self.speakers_cache[speaker] = pickle.load(stream)
             self.model.voiceover(
                 flask.request.json['text'],
-                speaker,
+                self.speakers_cache[speaker],
                 flask.request.json['language'],
                 temp_file
             )

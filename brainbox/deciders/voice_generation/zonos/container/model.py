@@ -14,6 +14,9 @@ class Model:
         return speaker
 
     def voiceover(self, text, speaker, language, output_file):
+        print(text)
+        print(language)
+        print(output_file)
         cond_dict = make_cond_dict(text=text, speaker=speaker, language=language)
         conditioning = self.model.prepare_conditioning(cond_dict)
         codes = self.model.generate(conditioning)

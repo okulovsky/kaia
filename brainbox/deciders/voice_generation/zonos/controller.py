@@ -30,7 +30,8 @@ class ZonosController(
                 'pretrained': '/home/app/.cache/huggingface',
                 'voices': '/voices',
                 'speakers': '/speakers',
-            }
+            },
+            dont_rm=True
         )
 
     def get_notebook_configuration(self) -> RunConfiguration|None:
@@ -61,7 +62,7 @@ class ZonosController(
             .href('train')
         )
 
-        result = BrainBoxTask.call(Zonos).voiceover(VOICEOVER_TEXT, 'test_speaker')
+        result = api.execute(BrainBoxTask.call(Zonos).voiceover(VOICEOVER_TEXT, 'test_speaker'))
         tc.assertIsInstance(result, str)
         check_if_its_sound(api.open_file(result).content, tc)
         yield (

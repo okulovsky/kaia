@@ -17,10 +17,10 @@ if __name__ == '__main__':
         subprocess.call([sys.executable, '-m', 'notebook', '--allow-root', '--port', '8899', '--ip', '0.0.0.0', "--NotebookApp.token=''"], cwd='/repo')
         exit(0)
 
+    model = Model()
+
     if args.install:
-        model = Model()
         model.compute_embedding(Path(__file__).parent/'lina.mp3')
         exit(0)
 
-
-    ZonosApp().create_app().run('0.0.0.0',8080)
+    ZonosApp(model).create_app().run('0.0.0.0',8080)
