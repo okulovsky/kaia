@@ -60,6 +60,15 @@ FROM python:3.10
 
 {{{SmallImageBuilder.PIP_INSTALL_PLACEHOLDER}}}
 
+WORKDIR /home/app
+
+{SmallImageBuilder.GIT_CLONE_AND_RESET(
+    'https://github.com/Zyphra/Zonos/',
+    'Zonos',
+    'a09ff4fa50cfa66bf79986e19c191f85f5cb53e8',
+    install=True
+)}
+
 COPY . /home/app/
 
 ENTRYPOINT ["python3","/home/app/main.py"]
