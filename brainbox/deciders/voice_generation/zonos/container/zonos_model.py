@@ -12,12 +12,18 @@ class ZonosModel:
         speaker = self.model.make_speaker_embedding(wav, sampling_rate)
         return speaker
 
-    def voiceover(self, text, speaker_model, language, output_file):
-        cond_dict = make_cond_dict(
+    def voiceover(self, text, speaker_model, language, output_file, emotion, speaking_rate: int|float|None):
+        if speaking_rate is None:
+            speaking_rate = 15 #Default from gradio
+        args = dict(
             text=text,
             speaker=speaker_model,
-            language=language
+            language=language,
+            speaking_rate = float(speaking_rate)
         )
+        if emotion is not None:
+            args['emotion'] = emotion
+        cond_dict = make_cond_dict(**args)
         conditioning = self.model.prepare_conditioning(cond_dict)
         codes = self.model.generate(conditioning)
         wavs = self.model.autoencoder.decode(codes).cpu()

@@ -1,6 +1,7 @@
 import json
 import pickle
 import base64
+import jsonpickle
 
 
 
@@ -28,14 +29,22 @@ class Format:
         return False
 
     @staticmethod
-    def encode(data: dict):
+    def encode(data: dict, use_json_pickle: bool = False):
         result = {}
         for key, value in data.items():
             if Format.check_json(value):
                 result[key] = value
             else:
-                s = base64.b64encode(pickle.dumps(value)).decode('ascii')
-                result[key] = {Format.CONTROL_FIELD: 'base64', Format.CONTENT_FIELD: s}
+                if use_json_pickle:
+                    result[key] = {
+                        Format.CONTROL_FIELD: 'jsonpickle',
+                        Format.CONTENT_FIELD: json.loads(jsonpickle.dumps(value))
+                    }
+                else:
+                    s = base64.b64encode(pickle.dumps(value)).decode('ascii')
+                    result[key] = {
+                        Format.CONTROL_FIELD: 'base64', Format.CONTENT_FIELD: s
+                    }
         return result
 
     @staticmethod
@@ -49,8 +58,10 @@ class Format:
             ):
                 if data[key][Format.CONTROL_FIELD] == 'base64':
                     result[key] =  pickle.loads(base64.b64decode(data[key][Format.CONTENT_FIELD]))
+                elif data[key][Format.CONTROL_FIELD] == 'jsonpickle':
+                    result[key] = jsonpickle.loads(json.dumps(data[key][Format.CONTENT_FIELD]))
                 else:
-                    raise ValueError("only @type=base64 is supported")
+                    raise ValueError("only @type=base64 and @type=jsonpickle is supported")
             else:
                 result[key] = data[key]
         return result

@@ -11,4 +11,8 @@ class VoskSettings:
             'en',
             'https://alphacephei.com/vosk/models/vosk-model-en-us-0.22-lgraph.zip'
         ),
+        VoskModel(
+            'de',
+            'https://alphacephei.com/vosk/models/vosk-model-de-0.21.zip'
+        )
     )

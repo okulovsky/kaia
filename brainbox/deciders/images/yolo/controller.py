@@ -26,7 +26,6 @@ class YoloController(DockerWebServiceController[YoloSettings], IModelDownloading
         return RunConfiguration(
             parameter,
             publish_ports={self.connection_settings.port:8084},
-            dont_rm=True
         )
 
     def get_default_settings(self):

@@ -72,6 +72,36 @@ class ZonosController(
             .result_is_file(File.Kind.Audio)
         )
 
+        result = api.execute(BrainBoxTask.call(Zonos).voiceover(VOICEOVER_TEXT, 'test_speaker', speaking_rate=10))
+        check_if_its_sound(api.open_file(result).content, tc)
+        yield (
+            TestReport
+            .last_call(api)
+            .href('voiceover')
+            .result_is_file(File.Kind.Audio)
+            .with_comment("Slower speech")
+        )
+
+        result = api.execute(BrainBoxTask.call(Zonos).voiceover(VOICEOVER_TEXT, 'test_speaker', speaking_rate=20))
+        check_if_its_sound(api.open_file(result).content, tc)
+        yield (
+            TestReport
+            .last_call(api)
+            .href('voiceover')
+            .result_is_file(File.Kind.Audio)
+            .with_comment("Faster speech")
+        )
+
+
+        result = api.execute(BrainBoxTask.call(Zonos).voiceover(VOICEOVER_TEXT, 'test_speaker', emotion=Zonos.Emotions.Happiness))
+        check_if_its_sound(api.open_file(result).content, tc)
+        yield (
+            TestReport
+            .last_call(api)
+            .href('voiceover')
+            .result_is_file(File.Kind.Audio)
+            .with_comment("With emotion")
+        )
 
 
 DOCKERFILE = f'''

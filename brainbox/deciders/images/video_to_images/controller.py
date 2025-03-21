@@ -37,7 +37,6 @@ class VideoToImagesController(OnDemandDockerController[VideoToImagesSettings]):
             None,
             command_line_arguments=arguments,
             detach_and_interactive=False,
-            dont_rm=True,
             mount_resource_folders={
                 'cache' : '/home/app/.cache'
             }

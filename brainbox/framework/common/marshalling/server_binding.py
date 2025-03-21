@@ -30,7 +30,7 @@ class ServerBinding:
         arguments = self._get_arguments(kwargs, arguments)
         result = self.meta.method(**arguments)
         result = dict(result=result, error = None)
-        result = Format.encode(result)
+        result = Format.encode(result, self.meta.endpoint.json_pickle_result)
         return result
 
     def __call__(self, **kwargs):

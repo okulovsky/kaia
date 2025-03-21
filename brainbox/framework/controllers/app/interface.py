@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from .dto import *
-from ..controller import ControllerRegistry
+from ..controller import ControllerRegistry, TestReport
 from yo_fluq import Query
 
 
@@ -35,7 +35,7 @@ class IControllerService(ABC):
         pass
 
     @abstractmethod
-    def self_test(self, decider: str|type):
+    def self_test(self, decider: str|type) -> TestReport:
         pass
 
     @abstractmethod

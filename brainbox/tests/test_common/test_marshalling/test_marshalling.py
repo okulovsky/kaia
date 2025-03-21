@@ -10,6 +10,7 @@ class MarhsallingTestCase(TestCase):
             self.assertEqual(7, api.sum(5, 2))
             self.assertEqual('test', api.custom_type('test').data)
             self.assertEqual('test', api.custom_type(Buffer('test')).data.data)
+            self.assertEqual('test', api.custom_type_jsonpickle(Buffer('test')).data.data)
             self.assertRaises(Exception, lambda: api.throwing())
             self.assertEqual('custom_url test', api.custom_url('test'))
 
@@ -33,6 +34,9 @@ class MarhsallingTestCase(TestCase):
                 'custom_url Test',
                 reply.json()['result']
             )
+
+            reply = requests.post(f'http://{api.address}/custom_type_jsonpickle', json=dict(arguments=dict(data='test')))
+            self.assertEqual('test', reply.json()['result']['@content']['data'])
 
 
 
