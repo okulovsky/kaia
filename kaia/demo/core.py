@@ -6,7 +6,7 @@ from brainbox import File, ControllersSetup
 from .app import KaiaApp
 from kaia.dub.languages.en import *
 from brainbox.deciders import Whisper, OpenTTS, RhasspyKaldi
-
+from . import smalltalk_skill
 
 
 class CommonIntents(TemplatesCollection):
@@ -32,6 +32,7 @@ class DemoCoreService(KaiaCoreService):
         weather_settings = skills.weather.WeatherSettings(52.521992, 13.413244, 'Europe/Berlin')
         skills_list.append(skills.weather.WeatherSkill(weather_settings))
         skills_list.append(skills.JokeSkill())
+        skills_list.append(skills.SmalltalkSkill(smalltalk_skill.SmalltalkInputs, smalltalk_skill.SmalltalkReply))
 
         timer_audio = File.read(Path(__file__).parent/'files/sounds/alarm.wav')
         timer_audio.text = '*alarm ringing*'
