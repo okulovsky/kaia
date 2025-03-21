@@ -1,7 +1,7 @@
 from typing import *
 from dataclasses import dataclass
 from .strategies import IContentStrategy
-from .feedback_provider import FeedbackProvider
+from .feedback_provider import InMemoryFeedbackProvider, FileFeedbackProvider
 from pathlib import Path
 from brainbox import MediaLibrary
 from .tag_matcher import ITagMatcherFactory, ExactTagMatcher
@@ -15,13 +15,19 @@ class MediaLibraryManager:
 
     def __init__(self,
                  strategy: IContentStrategy,
-                 media_library_path: Path,
-                 feedback_file_path: Path,
+                 media_library: Path|MediaLibrary,
+                 feedback_file_path: Path|None = None,
                  tag_matcher_factory: ITagMatcherFactory = ExactTagMatcher.Factory1to1()
                  ):
         self.strategy = strategy
-        self.media_library = MediaLibrary.read(media_library_path)
-        self.feedback_provider = FeedbackProvider(feedback_file_path)
+        if isinstance(media_library, MediaLibrary):
+            self.media_library = media_library
+        else:
+            self.media_library = MediaLibrary.read(media_library)
+        if feedback_file_path is None:
+            self.feedback_provider = InMemoryFeedbackProvider()
+        else:
+            self.feedback_provider = FileFeedbackProvider(feedback_file_path)
         self.tag_matcher_factory = tag_matcher_factory
 
     def find_content(self, state: dict[str, str], additional_required_tags: None|dict[str, str] = None) -> Optional['MediaLibraryManager.Record']:
