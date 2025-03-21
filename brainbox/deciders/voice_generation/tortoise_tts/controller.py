@@ -29,7 +29,6 @@ class TortoiseTTSController(DockerWebServiceController[TortoiseTTSSettings], INo
                 tortoise_models='/home/app/.cache/tortoise/models',
                 stash='/stash',
             ),
-            #dont_rm=True
         )
 
     def get_notebook_configuration(self) -> RunConfiguration|None:

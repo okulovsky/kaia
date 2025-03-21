@@ -47,6 +47,12 @@ class ControllerApi(Api, IControllerService):
         if reply.status_code != 200:
             raise ValueError(reply.text)
 
+    def install_if_not_installed(self, decider: str|IDecider|IController|type[IDecider]|type[IController], with_self_test: bool = True):
+        if not self.controller_status(decider).installation_status.installed:
+            self.install(decider)
+            if with_self_test:
+                self.self_test(decider)
+
 
     class Test(TestApi['ControllerApi']):
         def __init__(self,

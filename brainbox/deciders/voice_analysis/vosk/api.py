@@ -29,6 +29,10 @@ class Vosk(DockerWebServiceApi[VoskSettings, VoskController]):
                 raise ValueError(f"Endpoint transcribe returned error\n{result.text}")
             return result.json()
 
+    def transcribe_to_array(self, file: FileLike.Type, model_name: str|None = None):
+        result = self.transcribe(file, model_name)
+        return [item for part in result for item in part['result']]
+
     Settings = VoskSettings
     Controller = VoskController
     Model = VoskModel

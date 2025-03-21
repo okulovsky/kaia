@@ -46,7 +46,7 @@ class ControllerService(IControllerService):
         name = ControllerRegistry.to_controller_name(decider)
         return self.settings.registry.get_controller(name)
 
-    @endpoint(url='/controllers/install')
+    @endpoint(url='/controllers/install', json_pickle_result=True)
     def install(self, decider: str|type, join: bool = True) -> InstallationReport|None:
         if self.running_installation is not None and not self.running_installation.exited:
             raise ValueError("Another installation is in progress")
@@ -84,7 +84,7 @@ class ControllerService(IControllerService):
         self.get_controller(decider).stop(instance_id)
 
 
-    @endpoint(url='/controllers/join-installation')
+    @endpoint(url='/controllers/join-installation', json_pickle_result=True)
     def join_installation(self) -> InstallationReport:
         if self.running_installation is None:
             raise ValueError("No installation is in progress")
@@ -100,7 +100,7 @@ class ControllerService(IControllerService):
 
 
 
-    @endpoint(url='/controllers/installation-report')
+    @endpoint(url='/controllers/installation-report', json_pickle_result=True)
     def installation_report(self) -> InstallationReport:
         if self.running_installation is None:
             raise ValueError("No installation is in progress")
@@ -108,7 +108,7 @@ class ControllerService(IControllerService):
 
 
 
-    @endpoint(url='/controllers/status')
+    @endpoint(url='/controllers/status', json_pickle_result=True)
     def status(self):
         installation_statuses = self.settings.registry.get_installation_statuses()
         containers = []
@@ -155,7 +155,7 @@ class ControllerService(IControllerService):
             installation
         )
 
-    @endpoint(url='/controllers/self_test')
+    @endpoint(url='/controllers/self_test', json_pickle_result=True)
     def self_test(self, decider: str|type) -> TestReport:
         controller = self.get_controller(decider)
         return controller.self_test(locator=self.settings.registry.locator, api=self.settings.api)

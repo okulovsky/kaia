@@ -57,6 +57,12 @@ class BrainBoxCommand(Generic[T]):
     def with_cache(self, file: Path) -> 'BrainBoxCommand':
         return BrainBoxCommand(self.task, BrainBoxCommandCache(Path(file)))
 
+    def clear_cache(self) -> 'BrainBoxCommand':
+        if self.cache is not None:
+            if self.cache.file.is_file():
+                os.unlink(self.cache.file)
+        return self
+
     def execute(self, api: BrainBoxApi) -> T:
         if self.cache is not None:
             cached = self.cache.read()

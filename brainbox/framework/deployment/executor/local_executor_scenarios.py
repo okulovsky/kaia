@@ -1,3 +1,5 @@
+import traceback
+
 from .command import  Command
 import subprocess
 from dataclasses import dataclass
@@ -48,16 +50,21 @@ class ExecutionScenario:
 
     def _monitor(self, stream):
         """Reads lines from the stream and calls the callback with each line."""
-        for line in iter(stream.readline, ""):
-            if line=='':
-                break
-            no_newline = line
-            if no_newline.endswith('\n'):
-                no_newline = no_newline[:-1]
-            self.options.monitor_output(no_newline)
-            self._monitored_output.append(no_newline)
+        try:
+            for line in iter(stream.readline, ""):
+                if line=='':
+                    break
+                no_newline = line
+                if no_newline.endswith('\n'):
+                    no_newline = no_newline[:-1]
+                self.options.monitor_output(no_newline)
+                self._monitored_output.append(no_newline)
 
-        stream.close()
+            stream.close()
+        except:
+            ex = traceback.format_exc()
+            self.options.monitor_output("Error when reading stream. The process continues to run, but the monitoring is broken")
+            self.options.monitor_output(ex)
 
 
     def _execute_with_monitoring(self):
@@ -70,6 +77,7 @@ class ExecutionScenario:
                 **self.call_kwargs,
                 text=True,
                 bufsize=1,
+                encoding='utf-8'
             )
 
             stdout_thread = threading.Thread(target=self._monitor, args=(process.stdout,), daemon=True)

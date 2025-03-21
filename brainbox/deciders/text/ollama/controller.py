@@ -6,6 +6,7 @@ from ....framework import (
 )
 from .settings import OllamaSettings, OllamaModel
 from pathlib import Path
+from yo_fluq import FileIO
 
 
 class OllamaController(DockerWebServiceController[OllamaSettings], IModelDownloadingController):
@@ -37,6 +38,12 @@ class OllamaController(DockerWebServiceController[OllamaSettings], IModelDownloa
     def create_api(self):
         from .api import Ollama
         return Ollama()
+
+    def pre_install(self):
+        path = Path(__file__).parent/'container/run.sh'
+        sh = FileIO.read_text(path)
+        sh = sh.replace('\r','')
+        FileIO.write_bytes(sh.encode('ascii'), path)
 
     def post_install(self):
         self.download_models(self.settings.models_to_install)

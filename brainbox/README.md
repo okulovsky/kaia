@@ -60,11 +60,19 @@ So here is a short description.
 
 ### Text-to-speech
 
+Best choice:
+* [Piper](https://github.com/rhasspy/piper) - fast and resource-efficient text-to-speech.
+Lots of languages are supported.
+* [Zonos](https://github.com/Zyphra/Zonos) - ultimate solution for artistic voice-cloning.
+Perfect results in terms of quality and stability. 
+* PiperTraining: a container to train models for Piper.
+
+Other solutions:
 * [OpenTTS](https://github.com/synesthesiam/opentts) provides a decent baseline for English language with VITS model, other languages are supproted as well.
 * [CoquiTTS](https://github.com/coqui-ai/TTS) is a framework supporting many different models.
   That includes VITS as well as YourTTS, and, of course, their own XTTS, that can do a good voice cloning.
-* [TortoiseTTS](https://github.com/neonbjb/tortoise-tts) is, in my opinion, still the best in terms of quality. 
-  It is very slow, but not as slow as it used to be. 
+* [TortoiseTTS](https://github.com/neonbjb/tortoise-tts) Good voice cloning, still very slow, but not as slow as it used to be, English-only.
+* [OpenVoice](https://github.com/myshell-ai/OpenVoice) - lighter option for voice cloning, moderate quality.
 
 ### Speech-to-text and voice analysis
  
@@ -73,6 +81,8 @@ So here is a short description.
   provides much faster and accurate result _over the closed grammar and vocabulary_. 
   It is not really a general solution for STT, but is perfect for home assistants.
 * [Resemblyzer](https://github.com/resemble-ai/Resemblyzer) does speaker identification.
+* [Vosk](https://alphacephei.com/vosk/) - can be faster than Whisper, 
+also the results have more direct connection to the audio, e.g. each word is located to timestamps.  
 
 ### LLM and text processing 
 
@@ -86,9 +96,8 @@ Mainly here because of how troublesome it is to install it on Windows.
 * [WD14Tagger](https://github.com/corkborg/wd14-tagger-standalone) describes the images with the tags. 
 Also available in ComfyUI, but has some additional perks. 
 * VideoToImages converts video to a series on images, allowing to select most sharp frame and to skip similar frames. 
+* [KohyaSS](https://github.com/bmaltais/kohya_ss) is used to train LoRA for image generation.
 
-
- 
 # Installation
 
 ## Docker 

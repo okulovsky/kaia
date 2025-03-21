@@ -2,10 +2,34 @@ from brainbox.framework import OnDemandDockerApi, FileLike, FileIO, File, RunCon
 from .controller import PiperTrainingController
 from .settings import PiperTrainingSettings
 from .container.settings import TrainingSettings
+from .model import PiperTrainingModel
 from pathlib import Path
 import zipfile
 import os
 import shutil
+import re
+
+class Monitor:
+    def __init__(self, api: 'PiperTraining', expected_epochs):
+        self.api = api
+        self.expected_epochs = expected_epochs
+        self.first_epoch = None
+
+    def __call__(self, s: str):
+        print(s)
+        epochs = re.findall('checkpoints/epoch=(\d+)-step', s)
+        if len(epochs) > 0:
+            try:
+                ep = int(epochs[-1])
+                if self.first_epoch is None:
+                    self.first_epoch = ep
+                    return
+                percentage = (ep-self.first_epoch)/(self.expected_epochs-self.first_epoch)
+                self.api.context.logger.report_progress(percentage)
+            except:
+                pass
+
+
 
 class PiperTraining(OnDemandDockerApi[PiperTrainingSettings, PiperTrainingController]):
     def _unzip_dataset(self, name: str, path: Path):
@@ -33,6 +57,7 @@ class PiperTraining(OnDemandDockerApi[PiperTrainingSettings, PiperTrainingContro
                     file.write(f'{record["id"]}|{record["character"]}|{record["text"]}\n')
 
 
+
     def execute(self, dataset: FileLike.Type, settings: TrainingSettings|dict|None = None, name: str|None = None):
         if name is None:
             name = FileLike.get_name(dataset).split('.')[0]
@@ -50,7 +75,9 @@ class PiperTraining(OnDemandDockerApi[PiperTrainingSettings, PiperTrainingContro
             mount_top_resource_folder=True,
             command_line_arguments=['--dataset',name]
         )
-        self.controller.run_with_configuration(configuration, print)
+
+        monitor = Monitor(self, settings['max_epochs'])
+        self.controller.run_with_configuration(configuration, monitor)
         result = []
         result_folder = self.controller.resource_folder('trainings',name,'result')
         for file in os.listdir(result_folder):
@@ -61,11 +88,12 @@ class PiperTraining(OnDemandDockerApi[PiperTrainingSettings, PiperTrainingContro
             )
             if file.endswith('.onnx'):
                 result.append(dst_filename)
+        if settings['delete_training_files']:
+            shutil.rmtree(self.controller.resource_folder('trainings', name))
         return result
 
     def convert_model(self, ckpt_model: FileLike.Type):
         name = FileLike.get_name(ckpt_model)
-        print(name)
 
         with FileLike(ckpt_model, self.cache_folder) as stream:
             with open(self.controller.resource_folder('conversions')/name, 'wb') as output:
@@ -84,3 +112,4 @@ class PiperTraining(OnDemandDockerApi[PiperTrainingSettings, PiperTrainingContro
     Controller = PiperTrainingController
     Settings = PiperTrainingSettings
     TrainingSettings = TrainingSettings
+    Model = PiperTrainingModel

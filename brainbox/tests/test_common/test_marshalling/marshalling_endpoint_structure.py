@@ -20,6 +20,10 @@ class IMy(ABC):
         pass
 
     @abstractmethod
+    def custom_type_jsonpickle(self, data) -> Buffer:
+        pass
+
+    @abstractmethod
     def throwing(self):
         pass
 
@@ -38,6 +42,10 @@ class MyImplementation(IMy):
 
     @endpoint(method='POST')
     def custom_type(self, data) -> Buffer:
+        return Buffer(data)
+
+    @endpoint(method='POST', json_pickle_result=True)
+    def custom_type_jsonpickle(self, data) -> Buffer:
         return Buffer(data)
 
     @endpoint()

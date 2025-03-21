@@ -35,6 +35,8 @@ class BrainBoxApi(Api, IBrainboxService):
             fname = fname.name
         if custom_file_path is None:
             custom_file_path = self.cache_folder/fname
+        else:
+            custom_file_path = Path(custom_file_path)
         os.makedirs(custom_file_path.parent, exist_ok=True)
         should_download = True
         if custom_file_path.is_file():

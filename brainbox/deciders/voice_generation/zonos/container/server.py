@@ -75,7 +75,9 @@ class ZonosApp:
                     self.loaded_speakers[speaker] = pickle.load(stream)
             text = data['text']
             language = data['language']
-            self.model.voiceover(text, self.loaded_speakers[speaker], language, output_file)
+            emotion = data['emotion']
+            speaking_rate = data['speaking_rate']
+            self.model.voiceover(text, self.loaded_speakers[speaker], language, output_file, emotion, speaking_rate)
             return flask.send_file(output_file)
         except:
             return traceback.format_exc(), 500

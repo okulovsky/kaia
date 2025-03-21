@@ -65,6 +65,11 @@ class VoskController(
             .last_call(api)
         )
 
+        api.execute(BrainBoxTask.call(Vosk).transcribe_to_array(file, 'en'))
+        yield (
+            TestReport
+            .last_call(api)
+        )
 
 
 DOCKERFILE = f'''
