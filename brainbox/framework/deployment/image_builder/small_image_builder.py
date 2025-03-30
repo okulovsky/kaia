@@ -87,7 +87,7 @@ class SmallImageBuilder(IImageBuilder):
             if self.reset_code_folder:
                 shutil.rmtree(self.code_path, ignore_errors=True)
             os.makedirs(self.code_path, exist_ok=True)
-            with open(self.code_path / 'Dockerfile', 'w') as file:
+            with open(self.code_path / 'Dockerfile', 'w', encoding='utf-8') as file:
                 file.write(dockerfile)
 
         if self.copy_to_code_path is not None:

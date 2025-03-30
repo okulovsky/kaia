@@ -22,19 +22,19 @@ if __name__ == '__main__':
 
     if args.train is not None:
         path = Path('/app/training/'+args.train)
-        with open(path/'parameters.json') as file:
+        with open(path/'parameters.json', encoding='utf-8') as file:
             params = json.load(file)
         if not args.mock:
             error_code = subprocess.call(params)
-            with open(path/'error_code.txt', 'w') as error_code_file:
+            with open(path/'error_code.txt', 'w', encoding='utf-8') as error_code_file:
                 error_code_file.write(str(error_code))
         else:
-            with open(path/'model/config.toml') as cfg_file:
+            with open(path/'model/config.toml', encoding='utf-8') as cfg_file:
                 cfg = toml.load(cfg_file)
             output_path = Path(cfg['output_dir'])
             for interfix in ['', '-000000']:
                 output_file=output_path/(cfg['output_name']+interfix+'.safetensors')
-                with open(output_file,'wb') as file:
+                with open(output_file,'wb', encoding='utf-8') as file:
                     file.write(b'koyha_ss_mock_output_file')
 
 
@@ -42,7 +42,7 @@ if __name__ == '__main__':
                 print(f'steps: {i}%', file=sys.stderr)
                 time.sleep(0.01)
 
-            with open(path/'error_code.txt', 'w') as error_code_file:
+            with open(path/'error_code.txt', 'w', encoding='utf-8') as error_code_file:
                 error_code_file.write("0")
 
 

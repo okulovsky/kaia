@@ -19,7 +19,7 @@ class VideoProcessorApp:
 
 
     def run(self):
-        with open(self.settings_file,'r') as file:
+        with open(self.settings_file,'r', encoding='utf-8') as file:
             settings = AnalysisSettings(**json.load(file))
 
         source = layer_capture(settings)
@@ -28,7 +28,7 @@ class VideoProcessorApp:
         if settings.add_semantic_comparator:
             source = layer_comparator(source)
 
-        with open(self.timestamps, 'w') as stream:
+        with open(self.timestamps, 'w', encoding='utf-8') as stream:
             for index, frame in enumerate(source):
                 if settings.max_produced_frames is not None and index>=settings.max_produced_frames:
                     print(f"Interrupting at {index} >= {settings.max_produced_frames}")

@@ -70,7 +70,7 @@ class Audio(Media):
 
     @staticmethod
     def from_file(filename, text: Optional[str] = None):
-        with open(filename,'rb') as file:
+        with open(filename,'rb', encoding='utf-8') as file:
             data = file.read()
         return Audio(data, text, str(filename))
 

@@ -40,7 +40,7 @@ def download_file(url: str, file: Path, keep_current_if_exists: bool = True):
     os.makedirs(file.parent, exist_ok=True)
 
     # Write the file with a progress bar
-    with open(file, 'wb') as file, tqdm(
+    with open(file, 'wb', encoding='utf8') as file, tqdm(
             total=file_size,
             unit='B',
             unit_scale=True,
