@@ -52,7 +52,7 @@ class RhasspyKaldiServer:
             return traceback.format_exc(), 500
 
     def phonemes(self, language):
-        with open(profile_path/language/'kaldi/phoneme_examples.txt', encoding='utf-8') as file:
+        with open(profile_path/language/'kaldi/phoneme_examples.txt') as file:
             return file.read()
 
 
