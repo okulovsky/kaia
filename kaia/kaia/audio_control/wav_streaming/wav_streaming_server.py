@@ -126,8 +126,10 @@ class WavStreamingServer:
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         wav_filename = f'{client_id}_{timestamp}.wav'
         
+        sample_rate = 48000
+
         try:
-            self._write_combined_wav(wav_filename, chunks)
+            self._write_combined_wav(wav_filename, sample_rate, chunks)
         except Exception as e:
             print(f'Error during processing: {str(e)}')
             return {'status': 'error', 'message': str(e)}
@@ -145,31 +147,20 @@ class WavStreamingServer:
             'process_time': process_time
         }
 
-    def _write_combined_wav(self, wav_filename, chunks):
+    def _write_combined_wav(self, wav_filename, sample_rate, chunks):
         wav_folder = os.path.join(self.settings.folder)
-
+        wav_path = os.path.join(wav_folder, wav_filename)
+        
         print(f'Creating WAV file: {wav_filename}')
         
-        total_audio_size = sum(len(chunk_data) for _, chunk_data in chunks)
+        writer = WavWriter(wav_path, sample_rate=sample_rate, frame_length=0)
         
-        with open(os.path.join(wav_folder, wav_filename), 'wb') as f:
-            f.write(b'RIFF')
-            f.write(struct.pack('<I', 36 + total_audio_size))  # File size
-            f.write(b'WAVE')
-            f.write(b'fmt ')
-            f.write(struct.pack('<I', 16))  # Format chunk size
-            f.write(struct.pack('<H', 1))   # Audio format (PCM)
-            f.write(struct.pack('<H', 1))   # Num channels
-            f.write(struct.pack('<I', 48000))  # Sample rate
-            f.write(struct.pack('<I', 48000 * 2))  # Byte rate
-            f.write(struct.pack('<H', 2))   # Block align
-            f.write(struct.pack('<H', 16))  # Bits per sample
-            f.write(b'data')
-            f.write(struct.pack('<I', total_audio_size))  # Data chunk size
-            
+        try:
             for idx, (chunk_idx, chunk_data) in enumerate(chunks):
-                f.write(chunk_data)
+                writer.write_packed(chunk_data)
                 print(f'Wrote chunk {chunk_idx} ({len(chunk_data)} bytes)')
+        finally:
+            writer.close()
 
     def terminate(self):
         os._exit(0)
