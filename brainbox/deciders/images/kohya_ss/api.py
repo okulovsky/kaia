@@ -99,7 +99,7 @@ class KohyaSS(OnDemandDockerApi[KohyaSSSettings, KohyaSSController]):
 
         model_folder = self._get_dst_folder()/'model'
         os.makedirs(model_folder, exist_ok=True)
-        with open(model_folder/'config.toml', 'w', encoding='utf-8') as file:
+        with open(model_folder/'config.toml', 'w') as file:
             toml.dump(cfg, file)
 
     def _small_files_and_folders(self, settings: LoraTrainingSettings):
@@ -148,7 +148,7 @@ class KohyaSS(OnDemandDockerApi[KohyaSSSettings, KohyaSSController]):
                 value = None
                 pass
             self.context.logger.report_progress(value)
-        with open(self.cache_folder/self._get_logs_file_name(), 'a', encoding='utf-8') as stream:
+        with open(self.cache_folder/self._get_logs_file_name(), 'a') as stream:
             stream.write(s)
 
 
