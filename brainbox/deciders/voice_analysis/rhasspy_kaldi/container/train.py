@@ -41,7 +41,7 @@ class Trainer:
 
     def _get_pronunciations(self):
         custom_words_path = self.path/'kaldi_custom_words.txt'
-        with open(custom_words_path, 'w', encoding='utf-8') as file:
+        with open(custom_words_path, 'w') as file:
             file.write(self.custom_words)
 
         dictionaries = [
@@ -51,7 +51,7 @@ class Trainer:
         pronunciations = defaultdict(list)
 
         for dict_path in dictionaries:
-            with open(dict_path, "r", encoding='utf-8') as base_dict_file:
+            with open(dict_path, "r") as base_dict_file:
                 dict_content = {}
                 rhasspynlu.g2p.read_pronunciations(base_dict_file, word_dict=dict_content)
                 for word in dict_content:
@@ -60,7 +60,7 @@ class Trainer:
         return pronunciations
 
     def _get_frequent_words(self):
-        with open(profile_path / self.language/'frequent_words.txt', 'r', encoding='utf-8') as file:
+        with open(profile_path / self.language/'frequent_words.txt', 'r') as file:
             frequent_words = [s.strip() for s in file][:100]
         return frequent_words
 
@@ -105,7 +105,7 @@ class Trainer:
         )
 
         unknown_words = {}
-        with open(self.path/'kaldi_unknown_words.txt', encoding='utf-8') as file:
+        with open(self.path/'kaldi_unknown_words.txt') as file:
             for line in file:
                 try:
                     first_space = line.index(' ')
