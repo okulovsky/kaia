@@ -52,10 +52,16 @@ class PiperTrainingController(OnDemandDockerController[PiperTrainingSettings], I
                 for instance in range(100):
                     zip.write(src_folder/file, f'voice/{instance}-'+file)
 
-        result = api.execute(BrainBoxTask.call(PiperTraining).execute(dataset, PiperTraining.TrainingSettings()))
+        task = PiperTraining.create_training_pack(
+            dataset,
+            PiperTraining.TrainingSettings(),
+            clean_up_afterwards=False,
+            reset_if_existing=True
+        )
+        result = api.execute(task)
         yield TestReport.last_call(api).href('training')
 
-        Piper.UploadVoice(api.cache_folder/result[0], custom_name=NAME).execute(api)
+        Piper.UploadVoice(api.cache_folder/result[0]['onnx'], custom_name=NAME).execute(api)
         voice_result = api.execute(BrainBoxTask.call(Piper).voiceover(VOICEOVER_TEXT, NAME))
         check_if_its_sound(api.open_file(voice_result).content, tc)
         yield TestReport.last_call(api).href('inference').result_is_file(File.Kind.Audio)
@@ -65,7 +71,7 @@ class PiperTrainingController(OnDemandDockerController[PiperTrainingSettings], I
 
 
 DOCKERFILE = f"""
-FROM python:3.9
+FROM python:3.9.21
 
 {{{SmallImageBuilder.ADD_USER_PLACEHOLDER}}}
 

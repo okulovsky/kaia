@@ -20,23 +20,39 @@ class ResemblyzerServer:
         app = flask.Flask(__name__)
         app.add_url_rule('/train/<model>', view_func=self.train, methods=['POST'])
         app.add_url_rule('/classify/<model>', view_func=self.classify, methods=['POST'])
+        app.add_url_rule('/distances/<model>', view_func=self.distances, methods=['POST'])
         app.add_url_rule('/', view_func=self.index, methods=['GET'])
         app.run('0.0.0.0',8084)
 
+    def _get_model(self, model):
+        if model not in self.models_cache:
+            with open(MODELS_FOLDER / model, 'rb') as file:
+                self.models_cache[model] = Model(**pickle.load(file))
+        return self.models_cache[model]
+
+    def _get_embedding(self):
+        path = Path('/resources') / str(uuid.uuid4())
+        file = flask.request.files['file']
+        file.save(path)
+        embedding = self.wav_processor.get_encoding(path)
+        os.unlink(path)
+        return embedding
+
     def classify(self, model: str):
         try:
-            path = Path('/resources') / str(uuid.uuid4())
-            file = flask.request.files['file']
-            file.save(path)
-            embedding = self.wav_processor.get_encoding(path)
-            os.unlink(path)
-            if model not in self.models_cache:
-                with open(MODELS_FOLDER / model, 'rb') as file:
-                    self.models_cache[model] = Model(**pickle.load(file))
-            winner = self.models_cache[model].compute_winner(embedding)
+            embedding = self._get_embedding()
+            winner = self._get_model(model).compute_winner(embedding)
             if winner is None:
                 raise ValueError("Undef winner")
             return flask.jsonify(dict(speaker=winner))
+        except:
+            return traceback.format_exc(), 500
+
+    def distances(self, model: str):
+        try:
+            embedding = self._get_embedding()
+            result = self._get_model(model).compute_full(embedding)
+            return flask.jsonify(result)
         except:
             return traceback.format_exc(), 500
 

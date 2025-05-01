@@ -3,9 +3,11 @@ from pathlib import Path
 import shutil
 import subprocess
 from settings import TrainingSettings
+from typing import Optional
+import re
 
 class Functions:
-    def __init__(self, dataset: str, working_dir: str, settings: TrainingSettings):
+    def __init__(self, dataset: str, working_dir: str, settings: Optional[TrainingSettings]):
         self.dataset = dataset
         self.working_dir = Path(working_dir)
         self.settings = settings
@@ -13,6 +15,23 @@ class Functions:
 
     def get_path(self):
         return self.working_dir/'trainings'/self.dataset
+
+    def get_all_ckpt(self):
+        i = 0
+        preprocessed_path = self.get_path() / 'preprocessed'
+        result = []
+        while True:
+            model_path = preprocessed_path / f'lightning_logs/version_{i}/checkpoints/'
+            if not model_path.is_dir():
+                break
+            i += 1
+            for model in os.listdir(model_path):
+                match = re.match('epoch=(\d+)-step=(\d+)\.ckpt', model)
+                if match is None:
+                    continue
+                result.append((model_path/model, int(match.group(1))))
+        return [r[0] for r in sorted(result, key = lambda z: z[1])]
+
 
     def is_single_speaker(self):
         with open(self.get_path()/ 'source/metadata.csv', 'r') as file:
@@ -54,6 +73,19 @@ class Functions:
     def train(self):
         preprocessed_path = self.get_path()/'preprocessed'
 
+        resume = [
+            '--resume_from_checkpoint',
+            str(self.working_dir / 'base_models' / self.settings.base_model),
+        ]
+
+        if self.settings.continue_existing:
+            all_models = self.get_all_ckpt()
+            if len(all_models) == 0:
+                raise ValueError("Cannot continue the training: no stored checkpoints are available")
+            resume[1] = str(all_models[-1])
+        elif self.settings.single_speaker_to_multi_speaker:
+            resume[0] = '--resume_from_single_speaker_checkpoint'
+
         subprocess.call([
             'python3',
             '-m',
@@ -72,8 +104,7 @@ class Functions:
             str(self.settings.num_test_examples),
             '--max_epochs',
             str(self.settings.max_epochs),
-            '--resume_from_checkpoint',
-            str(self.working_dir/'base_models'/self.settings.base_model),
+            *resume,
             '--checkpoint-epochs',
             str(self.settings.checkpoint_epochs),
             '--precision',
@@ -83,12 +114,14 @@ class Functions:
 
     def export_model(self):
         preprocessed_path = self.get_path()/'preprocessed'
-        model_path = preprocessed_path/'lightning_logs/version_0/checkpoints/'
         result_path = self.get_path()/'result'
         os.makedirs(result_path, exist_ok=True)
-        for model in os.listdir(model_path):
-            name, extension = model.split('.')
-            Functions.convert_custom_filename(model_path/model, result_path)
+        for model in self.get_all_ckpt():
+            parts = model.name.split('.')
+            if len(parts) != 2:
+                raise ValueError(f"Wrong filename format {model}")
+            name, _ = parts
+            Functions.convert_custom_filename(model, result_path)
             shutil.copy(
                 preprocessed_path/'config.json',
                 str(result_path/(name+'.onnx.json'))

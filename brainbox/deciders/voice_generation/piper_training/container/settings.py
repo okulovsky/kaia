@@ -7,11 +7,13 @@ class TrainingSettings:
     base_model: str = 'lessac.ckpt'
     batch_size: int = 8
     validation_split: float = 0.0
-    max_epochs: int = 2170
+    max_epochs: int = 2164+6
     checkpoint_epochs: int = 1
     precision: int = 32
     num_test_examples: int = 0
     keep_intermediate: bool = False
-    delete_training_files: bool = True
+    single_speaker_to_multi_speaker: bool = False
+    continue_existing: bool = False
+
 
     

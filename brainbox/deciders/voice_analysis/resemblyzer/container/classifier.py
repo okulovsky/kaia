@@ -49,11 +49,8 @@ class Model:
         rows = []
         for key, value in self.embeddings.items():
             for i, score in enumerate(np.inner(embedding, value)):
-                rows.append((key, i, score))
-        df = pd.DataFrame(rows, columns=['speaker', 'sample_index', 'score'])
-        df = df.sort_values('score', ascending=False)
-        df['order'] = list(range(df.shape[0]))
-        return df
+                rows.append(dict(speaker=key, sample_index=i, score=float(score)))
+        return rows
 
     def evaluate(self, test):
         dfs = []
@@ -61,7 +58,10 @@ class Model:
         matches = 0
         for key, samples in test.items():
             for i, sample in enumerate(samples):
-                df = self.compute_full(sample)
+                rows = self.compute_full(sample)
+                df = pd.DataFrame(rows)
+                df = df.sort_values('score', ascending=False)
+                df['order'] = list(range(df.shape[0]))
                 df['true_speaker'] = key
                 df['source_sample_index'] = i
                 dfs.append(df)

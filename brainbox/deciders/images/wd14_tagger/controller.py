@@ -64,7 +64,7 @@ class WD14TaggerController(
 
 
 DOCKERFILE = f'''
-FROM python:3.11
+FROM python:3.11.11
 
 {SmallImageBuilder.APT_INSTALL('ffmpeg libsm6 libxext6')}
 

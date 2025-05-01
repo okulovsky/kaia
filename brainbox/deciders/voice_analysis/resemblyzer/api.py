@@ -25,6 +25,20 @@ class Resemblyzer(DockerWebServiceApi[ResemblyzerSettings, ResemblyzerController
                 raise ValueError(f"Resemblyzer threw an error\n{reply.text}")
             return reply.json()['speaker']
 
+
+    def distances(self, file: FileLike.Type, model: str):
+        with FileLike(file, self.cache_folder) as file:
+            reply = requests.post(
+                f'http://{self.address}/distances/{model}',
+                files = (
+                    ('file', file),
+                )
+            )
+            if reply.status_code != 200:
+                raise ValueError(f"Resemblyzer threw an error\n{reply.text}")
+            return reply.json()
+
+
     def train(self, model: str):
         reply = requests.post(f'http://{self.address}/train/{model}')
         if reply.status_code != 200:
