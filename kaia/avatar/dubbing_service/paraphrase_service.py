@@ -17,18 +17,20 @@ class ParaphraseService:
 
 
     def _paraphrase_utterance(self, u: Utterance, state) -> list[Utterance]:
+        if not isinstance(u, Utterance):
+            return [u]
         if u.template.meta.paraphrase is None:
             return [u]
         template_tag = {self.settings.template_to_paraphrase_tag_name: u.template.name}
         content = self.settings.manager.find_content(state, template_tag)
         if content is None:
             return [u]
-        self.settings.manager.feedback(content.file_id, 'seen')
-        self.last_file_id = content.file_id
+        self.settings.manager.feedback(content.filename, 'seen')
+        self.last_file_id = content.filename
         if u.template.meta.paraphrase.type == ParaphraseInfo.Type.After:
-            return [u, Utterance.from_string(content.content)]
+            return [u, Utterance.from_string(content.get_content())]
         elif u.template.meta.paraphrase.type == ParaphraseInfo.Type.Instead:
-            return [Utterance.from_string(content.content)]
+            return [Utterance.from_string(content.get_content())]
         else:
             raise ValueError(f'Unknown paraphrase type: {u.template.meta.paraphrase.type}')
 

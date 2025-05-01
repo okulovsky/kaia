@@ -13,7 +13,7 @@ class IFeedbackProvider(ABC):
     def save_feedback(self, feedback: dict):
         pass
 
-    def add_feedback_to_media_library(self, ml: MediaLibrary) -> MediaLibrary:
+    def add_feedback_to_tags(self, ml: MediaLibrary) -> MediaLibrary:
         ml = ml.clone()
         feedback = self.load_feedback()
         all_keys = set(key for fb in feedback.values() for key in fb)
