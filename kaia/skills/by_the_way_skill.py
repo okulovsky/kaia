@@ -65,11 +65,9 @@ class ByTheWayNotification:
 
 class ByTheWaySkill(IKaiaSkill):
     def __init__(self,
-                 notifications: Iterable[ByTheWayNotification],
-                 datetime_factory: Callable[[], datetime] = datetime.now
+                 notifications: Iterable[ByTheWayNotification]
                  ):
         self.notifications = tuple(notifications)
-        self.datetime_factory = datetime_factory
         self.last_called_time: Optional[datetime] = None
         self.current_time: Optional[datetime] = None
         self.assistant: Optional[KaiaAssistant] = None
@@ -102,12 +100,14 @@ class ByTheWaySkill(IKaiaSkill):
         if not isinstance(input, TimerTick):
             return False
 
+        current_time = input.current_time
+
         if self.last_called_time is None:
-            self.last_called_time = self.datetime_factory() - timedelta(seconds=1)
-            self.current_time = self.datetime_factory()
+            self.last_called_time = current_time - timedelta(seconds=1)
+            self.current_time = current_time
         else:
             self.last_called_time = self.current_time
-            self.current_time = self.datetime_factory()
+            self.current_time = current_time
 
         notification = self._find_notification()
         return notification is not None

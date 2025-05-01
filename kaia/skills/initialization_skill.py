@@ -4,6 +4,9 @@ from eaglesong import ContextRequest
 
 
 class InitializationSkill(IKaiaSkill):
+    def __init__(self, state_fields: dict|None = None):
+        self.state_fields = state_fields if state_fields is not None else {}
+
     def get_name(self) -> str:
         return type(self).__name__
 
@@ -22,6 +25,7 @@ class InitializationSkill(IKaiaSkill):
     def run(self):
         context: KaiaContext = yield ContextRequest()
         yield from context.avatar_api.narration_reset()
+
 
 
 
