@@ -10,12 +10,22 @@ import inspect
 from abc import ABC, abstractmethod
 
 class Stage:
-    def __init__(self, prompt, wait_before: Optional[float], label: Optional[str], act_before: Optional[Callable]):
-        self.wait_before = wait_before
-        self.prompt = prompt
+    def __init__(self,
+                 prompt,
+                 label: Optional[str],
+                 act_before: List[Callable],
+                 prompt_factory: Optional[Callable]
+                 ):
+        self.prompt_factory = prompt
         self.label = label
         self.expectations = None #type: Optional[List[Callable]]
-        self.act_before = act_before
+        self.act_before = tuple(act_before)
+
+    def prepare_and_create_prompt(self):
+        for action in self.act_before:
+            action()
+        return self.prompt_factory()
+
 
 @dataclass
 class LogItem:
@@ -46,25 +56,25 @@ class Scenario:
         self.keep_listens_type = tuple(keep_listens_type_in_log) if keep_listens_type_in_log is not None else ()
 
         self.stages = []  # type: List[Stage]
-        self.wait_on_next_stage = None
-        self.act_on_next_stage = None
+        self.act_on_next_stage = []
 
         self.stashed_values = {}
         self._forks: Dict[str,'Scenario'] = {}
         self.log = [] #type: List[LogItem]
 
     def send(self, obj, label = None) -> 'Scenario':
-        self.stages.append(Stage(obj, self.wait_on_next_stage, label, self.act_on_next_stage))
-        self.wait_on_next_stage = None
-        self.act_on_next_stage = None
-        return self
+        return self.act_and_send(lambda: obj, label)
 
     def wait(self, value) ->'Scenario':
-        self.wait_on_next_stage = value
-        return self
+        return self.act(lambda: time.sleep(value))
 
     def act(self, callable: Callable) -> 'Scenario':
-        self.act_on_next_stage = callable
+        self.act_on_next_stage.append(callable)
+        return self
+
+    def act_and_send(self, callable: Callable, label = None) -> 'Scenario':
+        self.stages.append(Stage(callable, label, self.act_on_next_stage, None))
+        self.act_on_next_stage = []
         return self
 
     def fork(self, name: str) -> 'Scenario':
@@ -97,12 +107,12 @@ class Scenario:
         return self
 
 
-    def _validate_stage(self, stage_index: int, s: Stage, response: List, test_case: TestCase) -> Tuple[Optional[Exception], Optional[str]]:
+    def _validate_stage(self, stage_index: int, prompt, s: Stage, response: List, test_case: TestCase) -> Tuple[Optional[Exception], Optional[str]]:
         if s.expectations is not None:
             if len(s.expectations) != len(response):
                 return None, f"Error at stage#{stage_index}: wrong amount of output, expected {len(s.expectations)} but was {len(response)}"
             for j, q in enumerate(zip(s.expectations, response)):
-                err_msg = f'Stage {stage_index}, expectation {j}\n> {s.prompt} \n< {q[1]}\nExpectation: {q[0]}\n\n'
+                err_msg = f'Stage {stage_index}, expectation {j}\n> {prompt} \n< {q[1]}\nExpectation: {q[0]}\n\n'
                 signature = inspect.signature(q[0])
                 if len(signature.parameters) == 2:
                     try:
@@ -129,21 +139,17 @@ class Scenario:
         first_exception_base = None
 
         for i, s in enumerate(self.stages):
-            if s.wait_before is not None:
-                time.sleep(s.wait_before)
-            if s.act_before is not None:
-                s.act_before()
-
+            prompt = s.prepare_and_create_prompt()
             try:
-                interpreter.process(s.prompt)
+                interpreter.process(prompt)
             except Exception as ex:
                 if self.printing is not None:
                     self.printing(self.log, True)
-                raise ValueError(f"Error when processing input {s.prompt}") from ex
+                raise ValueError(f"Error when processing input {prompt}") from ex
 
 
-            base_exception, error_msg = self._validate_stage(i,s,interpreter.current_log, test_case)
-            item = LogItem(s.label, s.prompt, interpreter.current_log)
+            base_exception, error_msg = self._validate_stage(i,prompt,s,interpreter.current_log, test_case)
+            item = LogItem(s.label, prompt, interpreter.current_log)
 
             if error_msg is not None:
                 exception = ValueError(error_msg)
