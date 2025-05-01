@@ -6,3 +6,4 @@ from .core import set_core_service
 from .web import set_web_service_and_api
 from .wav_streaming import set_streaming_service_and_api_address
 from .tester import KaiaAppTester
+from .frontend import Frontend

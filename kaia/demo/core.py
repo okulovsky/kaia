@@ -57,13 +57,18 @@ class DemoCoreService(KaiaCoreService):
         assistant.additional_intents.extend(CommonIntents.get_templates())
         return assistant
 
-
-def set_core_service(app: KaiaApp):
-    setup = ControllersSetup((
+def get_controller_setup():
+    return ControllersSetup((
         ControllersSetup.Instance(RhasspyKaldi),
         ControllersSetup.Instance(OpenTTS),
         ControllersSetup.Instance(Whisper, None, 'base')
     ))
+
+def set_core_service(app: KaiaApp, add_controller_setup: bool = True):
+    if add_controller_setup:
+        setup = get_controller_setup()
+    else:
+        setup = None
     settings = KaiaCoreServiceSettings(
         avatar_api=app.avatar_api,
         audio_api=app.audio_control_api,
