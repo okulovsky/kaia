@@ -2,7 +2,7 @@ from unittest import TestCase
 from brainbox import BrainBoxApi, BrainBoxTask
 from kaia.avatar import AvatarApi, AvatarSettings, RecognitionSettings
 from kaia.avatar.utils import TestSpeaker
-from brainbox.deciders import RhasspyKaldi, Collector, OpenTTS, Resemblyzer, Whisper
+from brainbox.deciders import RhasspyKaldi, Collector, OpenTTS, Resemblyzer, Whisper, Vosk
 from kaia.dub import Template, TemplatesCollection, IntentsPack
 from kaia.dub.languages.en import OrdinalDub
 from yo_fluq import *
@@ -44,16 +44,34 @@ class RecognitionTestCase(TestCase):
         )
         self.assertIn("hello", utterance_1.lower())
 
-
-    def make_resemblyzer(self, speaker: TestSpeaker, bbapi: BrainBoxApi, api: AvatarApi):
-        pack = (Query
-                .combinatorics.grid(speaker=['p256','p257'], split=['train'], text=["Some text to recognize", "Some more text", "Other text"])
-                .feed(Collector.FunctionalTaskBuilder(
-                    lambda z: BrainBoxTask.call(OpenTTS)(text=z.text, speakerId=z.speaker)))
+    def make_vosk(self, speaker: TestSpeaker, api: AvatarApi):
+        message = 'Hello'
+        test_1 = speaker.speak(message, 1)
+        utterance_1 = api.recognition_transcribe(
+            test_1,
+            RecognitionSettings(RecognitionSettings.NLU.Vosk, vosk_model='en')
         )
+        self.assertIn("hello", utterance_1.lower())
+
+    def train_resemblyzer(self, bbapi: BrainBoxApi, api: AvatarApi):
+        builder = Collector.TaskBuilder()
+        grid = (Query.combinatorics.grid(
+            speaker=['p256', 'p257'],
+            split=['train'],
+            text=["Some text to recognize", "Some more text", "Other text"])
+            .to_list()
+        )
+        for item in grid:
+            builder.append(
+                BrainBoxTask.call(OpenTTS)(text=item.text, speakerId=item.speaker),
+                tags = item
+            )
+        pack = builder.to_collector_pack('to_media_library')
         path = bbapi.download(bbapi.execute(pack))
         api.recognition_speaker_train(path)
 
+
+    def make_resemblyzer(self, speaker: TestSpeaker, bbapi: BrainBoxApi, api: AvatarApi):
         test_1 = speaker.speak('Some text to recognize', 'p256')
         api.recognition_transcribe(
             test_1,
@@ -82,33 +100,26 @@ class RecognitionTestCase(TestCase):
 
 
     def test_recognition(self):
-        self.skipTest("Resemblyzer test is excluded atm")
         services = [
             RhasspyKaldi(),
             Collector(),
             OpenTTS(),
             Whisper(),
-            Resemblyzer()
+            Resemblyzer(),
+            Vosk()
         ]
         with BrainBoxApi.Test(services, always_on_planner=True, stop_containers_at_termination=False) as bb_api:
             speaker = TestSpeaker(bb_api)
             with AvatarApi.Test(AvatarSettings(brain_box_api=bb_api, resemblyzer_model_name=RESEMBLYZER_MODEL)) as av_api:
-                self.make_rhasspy(speaker, av_api)
-                self.make_whisper(speaker, av_api)
-                self.make_resemblyzer(speaker, bb_api, av_api)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                with self.subTest('Train resemblyzer'):
+                    self.train_resemblyzer(bb_api, av_api)
+                with self.subTest('Rhasspy'):
+                    self.make_rhasspy(speaker, av_api)
+                with self.subTest('Whisper'):
+                    self.make_whisper(speaker, av_api)
+                with self.subTest("VOSK"):
+                    self.make_vosk(speaker, av_api)
+                with self.subTest("Resemblyzer"):
+                    self.skipTest('Resemblyzer is not tested at the moment')
+                    self.make_resemblyzer(speaker, bb_api, av_api)
 

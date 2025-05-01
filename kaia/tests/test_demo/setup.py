@@ -13,7 +13,7 @@ class TestSetup:
         set_brainbox_service_and_api(app)
         set_avatar_service_and_api(app)
         set_web_service_and_api(app)
-        set_core_service(app)
+        set_core_service(app, False)
         self.tester = KaiaAppTester(app, self.tc)
         return self.tester.__enter__()
 
