@@ -7,6 +7,7 @@ from typing import Callable, Tuple, Optional
 from brainbox.framework.common import Fork
 from dataclasses import dataclass
 from pathlib import Path
+from .frontend import Frontend
 
 
 @dataclass
@@ -41,6 +42,7 @@ class KaiaApp:
     wav_streaming_server: WavStreamingServer|None = None
     wav_streaming_api: WavStreamingApi|None = None
     kaia_core: KaiaCoreService | None = None
+    frontend_server: Frontend|None = None
 
     brainbox_cache_folder: Path|None = None
 
@@ -56,6 +58,7 @@ class KaiaApp:
             self.kaia_server,
             self.audio_control_server,
             self.wav_streaming_server,
+            self.frontend_server,
             self.kaia_core
             ]
 

@@ -82,7 +82,7 @@ class OpenVoiceController(
 
 DOCKERFILE = f'''
 
-FROM python:3.9-slim
+FROM python:3.9.21-slim
 
 {SmallImageBuilder.APT_INSTALL('git unzip build-essential ffmpeg wget')}
 

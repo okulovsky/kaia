@@ -24,7 +24,13 @@ class TextProcessor:
         if isinstance(obj, Utterance):
             return [obj.to_str()]
         if isinstance(obj, UtterancesSequence):
-            return [u.to_str() for u in obj.utterances]
+            result = []
+            for u in obj.utterances:
+                if isinstance(u, str):
+                    result.append(u)
+                else:
+                    result.append(u.to_str())
+            return result
 
     def _prettify_utterance_string(self, s: str):
         s = s.strip()

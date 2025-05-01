@@ -1,3 +1,21 @@
+3.6.3.
+    - BrainBox:
+        - All deciders are build from exact python version (3.x.x)
+        - PiperTraining is finalized
+        - Small improvements
+        - Flow module to build flows with BrainBox tasks
+    - Eaglesong:
+        - small improvement in test scenarios
+    - Avatar:
+        - VOSK can now be used for speech-to-text
+        - Content management is refactored
+    - Demo:
+        - experimental frontend support is added
+    - Kaia:
+        - Skill's interaction is improved; Cookbook skill is added
+    - New project: Chara
+        - Will contain AI-intensive recipies for Kaia functionality
+        - Started with a voice clone recipe
 3.6.1
     - BrainBox:
         - Vosk, Zonos, minot changes in Piper, PiperTraining

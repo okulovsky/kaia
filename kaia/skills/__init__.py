@@ -17,5 +17,6 @@ from .scheduled_time import ScheduledTime, Weekdays, WeekdayRepetition
 from .initialization_skill import InitializationSkill
 from .joke import JokeSkill
 from .narration_skill import NarrationSkill
+from .cookbook_skill import CookBookSkill
 
 from . import weather

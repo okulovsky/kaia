@@ -13,13 +13,20 @@ class Piper(DockerWebServiceApi[PiperSettings, PiperController]):
 
     def voiceover(self,
                   text: str,
-                  model: str = "en"
+                  model: str = "en",
+                  speaker: int|None = None,
+                  noise_scale: float|None = None,
+                  length_scale: float|None = None,
+                  noise_w: float|None = None,
                   ) -> File:
-       
         url = f"http://{self.address}/synthesize"
         payload = {
             "text": text,
-            "model": model
+            "model": model,
+            "noise_scale": noise_scale,
+            "length_scale": length_scale,
+            "noise_w": noise_w,
+            "speaker": speaker
         }
         reply = requests.post(url, json=payload, timeout=30)
         if reply.status_code != 200:

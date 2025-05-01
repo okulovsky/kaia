@@ -78,7 +78,7 @@ class EspeakPhonemizerController(
 
 
 DOCKERFILE = f'''
-FROM python:3.8
+FROM python:3.8.20
 
 {SmallImageBuilder.APT_INSTALL('libespeak-ng1')}
 

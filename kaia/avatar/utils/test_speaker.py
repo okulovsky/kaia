@@ -14,15 +14,17 @@ class TestSpeaker:
                  brainbox_api: BrainBoxApi,
                  cache_folder: Path|None = None,
                  remake_everything: bool = False,
-                 copy_to_bb_folder: bool = True
+                 copy_to_folder: Path|None = None
                  ):
-        self.copy_to_bb_folder = copy_to_bb_folder
         self.brainbox_api = brainbox_api
         if cache_folder is None:
             cache_folder = Loc.temp_folder/'test_speaker'
         self.cache_folder = cache_folder
         self.remake_everything = remake_everything
+        self.copy_to_folder = copy_to_folder
         os.makedirs(self.cache_folder, exist_ok=True)
+        if self.copy_to_folder is not None:
+            os.makedirs(self.copy_to_folder, exist_ok=True)
 
     def _get_speaker_path_and_task(self, text: str, speaker: int|str|None = None):
         if speaker is None:
@@ -35,28 +37,19 @@ class TestSpeaker:
         return speaker, filename, task
 
 
-    def _from_cache(self, filename):
-        if self.copy_to_bb_folder:
-            new_file_name = BrainBoxTask.safe_id()+".wav"
-            self.brainbox_api.upload(new_file_name, FileIO.read_bytes(filename))
-            return new_file_name
-        else:
-            return filename
-
-
     def speak(self, text: str, speaker: int|str|None = None, return_cache_path: bool = False):
-        speaker, filename, task = self._get_speaker_path_and_task(text, speaker)
-        if filename.is_file() and not self.remake_everything:
-            if return_cache_path:
-                return filename
-            else:
-                return self._from_cache(filename)
-        file = self.brainbox_api.execute(task)
-        self.brainbox_api.download(file, filename, True)
-        if return_cache_path:
-            return filename
+        speaker, path, task = self._get_speaker_path_and_task(text, speaker)
+        if path.is_file() and not self.remake_everything:
+            pass
         else:
-            return file
+            file = self.brainbox_api.execute(task)
+            self.brainbox_api.download(file, path, True)
+        if self.copy_to_folder is not None:
+            shutil.copy(path, self.copy_to_folder/path.name)
+        if return_cache_path:
+            return path
+        else:
+            return path.name
 
 
     def silence(self, duration_in_seconds: int, sample_rate: int = 22050):

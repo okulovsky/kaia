@@ -70,7 +70,7 @@ class TortoiseTTSController(DockerWebServiceController[TortoiseTTSSettings], INo
 
 
 DOCKERFILE = f'''
-FROM python:3.9
+FROM python:3.9.21
 
 {{{SmallImageBuilder.ADD_USER_PLACEHOLDER}}}
 

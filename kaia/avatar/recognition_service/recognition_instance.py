@@ -1,26 +1,31 @@
 from typing import Any
 from enum import Enum
 from brainbox import BrainBoxApi, BrainBoxTask, BrainBoxCombinedTask
-from brainbox.deciders import RhasspyKaldi, Whisper, Resemblyzer, Collector
+from brainbox.deciders import RhasspyKaldi, Whisper, Resemblyzer, Collector, Vosk
 from ..state import State, MemoryItem
 from dataclasses import dataclass
 from ..world import World
+import pandas as pd
+from yo_fluq import *
 
 class RecognitionSettings:
     class NLU(Enum):
         Rhasspy = 0
         Whisper = 1
+        Vosk = 2
 
     def __init__(self,
                  nlu: 'RecognitionSettings.NLU' = None,
                  whisper_prompt: None | str = None,
                  rhasspy_model: None | str = None,
+                 vosk_model: None | str = None
                  ):
         if nlu is None:
             nlu = RecognitionSettings.NLU.Rhasspy
         self.nlu = nlu
         self.whisper_prompt = whisper_prompt
         self.rhasspy_model = rhasspy_model
+        self.vosk_model = vosk_model
 
 @dataclass
 class RecognitionData(MemoryItem):
@@ -40,7 +45,7 @@ class RecognitionData(MemoryItem):
         if self.resemblyzer_model_name is not None:
             resemblyzer_task = (
                 BrainBoxTask
-                .call(Resemblyzer)(file=filename, model=self.resemblyzer_model_name)
+                .call(Resemblyzer).distances(file=filename, model=self.resemblyzer_model_name)
                 .to_task(id = filename.split('.')[0]+'.resemblyzer')
             )
             base_tasks.append(resemblyzer_task)
@@ -82,16 +87,29 @@ class RecognitionData(MemoryItem):
         self.full_recognition = brainbox_api.execute(pack)
         self.result = self.full_recognition['whisper']
 
+    def run_vosk_recognition(self, brainbox_api: BrainBoxApi):
+        task = (
+            BrainBoxTask
+            .call(Vosk)
+            .transcribe_to_string(file = self.file_id, model_name=self.settings.vosk_model)
+            .to_task(id=self.file_id.split('.')[0]+'.vosk')
+        )
+        pack = self._create_pack('vosk', task, self.file_id)
+        self.full_recognition = brainbox_api.execute(pack)
+        self.result = self.full_recognition['vosk']
+
+    def _fix_recognition(self):
+        return Query.en(self.full_recognition['resemblyzer']).argmax(lambda z: z['score'])['speaker']
 
     def run(self, state: State, brainbox_api: BrainBoxApi):
-        rhasspy = self.settings.nlu == self.settings.NLU.Rhasspy
-
-        if rhasspy:
+        if self.settings.nlu == self.settings.NLU.Rhasspy:
             self.run_rhasspy_recognition(state, brainbox_api)
+        elif self.settings.nlu == self.settings.NLU.Vosk:
+            self.run_vosk_recognition(brainbox_api)
         else:
             self.run_whisper_recognition(brainbox_api)
 
         if 'resemblyzer' in self.full_recognition:
-            state.apply_change({World.user.field_name:self.full_recognition['resemblyzer']})
+            state.apply_change({World.user.field_name:self._fix_recognition()})
 
         state.add_memory(self)

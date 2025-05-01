@@ -56,9 +56,10 @@ class CoquiTTSController(DockerWebServiceController[CoquiTTSSettings], INotebook
 
 
 
+#python:3.11.6@sha256:2a725c9721f737a2944244c98c714d24f8bcfaddd9f5c15083cbaa024f7fce54
 
 DOCKERFILE = f'''
-FROM python:3.11
+FROM python:3.11.11
 
 {SmallImageBuilder.APT_INSTALL('espeak')}
 

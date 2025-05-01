@@ -6,13 +6,13 @@ from kaia.skills import ScheduledTime
 from kaia.dub.core import Utterance, Template
 from kaia.skills.time import TimeIntents
 from kaia.skills.date import DateIntents
-from kaia.kaia import DateTimeTestFactory, KaiaAssistant, TimerTick
+from kaia.kaia import TestTimeFactory, KaiaAssistant, TimerTick
 
 ut = Template('By the way, test').utter()
 
 def get_scenario(*notification: ByTheWayNotification):
-    factory = DateTimeTestFactory()
-    btw = ByTheWaySkill(notification, factory)
+    factory = TestTimeFactory()
+    btw = ByTheWaySkill(notification)
     assistant = KaiaAssistant(
         [
             TimeSkill(),
@@ -41,7 +41,7 @@ class ByTheWayTestCase(TestCase):
             sc
             .send(TimeIntents.question.utter())
             .check(Utterance)
-            .send(TimerTick())
+            .send(factory.tick())
             .check(ut)
             .validate()
         )
@@ -58,7 +58,7 @@ class ByTheWayTestCase(TestCase):
             sc
             .send(DateIntents.question.utter())
             .check(Utterance)
-            .send(TimerTick())
+            .send(factory.tick())
             .check()
             .validate()
         )
@@ -75,13 +75,11 @@ class ByTheWayTestCase(TestCase):
             sc
             .send(TimeIntents.question.utter())
             .check(Utterance)
-            .send(TimerTick())
+            .act_and_send(lambda: factory.tick())
             .check()
-            .act(lambda: factory.add(59))
-            .send(TimerTick())
+            .act_and_send(lambda: factory.shift(59).tick())
             .check()
-            .act(lambda: factory.add(1))
-            .send(TimerTick())
+            .act_and_send(lambda: factory.shift(1).tick())
             .check(ut)
             .validate()
         )
@@ -98,12 +96,12 @@ class ByTheWayTestCase(TestCase):
             sc
             .send(TimeIntents.question.utter())
             .check(Utterance)
-            .send(TimerTick())
+            .act_and_send(lambda: factory.tick())
             .check(ut)
-            .act(lambda: factory.add(1))
+            .act(lambda: factory.shift(1))
             .send(TimeIntents.question.utter())
             .check(Utterance)
-            .send(TimerTick())
+            .act_and_send(lambda: factory.tick())
             .check(ut)
             .validate()
         )
@@ -120,16 +118,16 @@ class ByTheWayTestCase(TestCase):
             sc
             .send(TimeIntents.question.utter())
             .check(Utterance)
-            .send(TimerTick())
+            .act_and_send(lambda: factory.tick())
             .check(ut)
             .send(TimeIntents.question.utter())
             .check(Utterance)
-            .send(TimerTick())
+            .act_and_send(lambda: factory.tick())
             .check()
-            .act(lambda: factory.add(60*60*1))
+            .act_and_send(lambda: factory.shift(60*60*1))
             .send(TimeIntents.question.utter())
             .check(Utterance)
-            .send(TimerTick())
+            .act_and_send(lambda: factory.tick())
             .check(ut)
             .validate()
         )
@@ -148,17 +146,12 @@ class ByTheWayTestCase(TestCase):
         (
             sc
             .send(TimeIntents.question.utter())
-            .act(lambda: factory.add(4))
-            .act(lambda: print('AFTER TIME INTENTS'))
-            .send(TimerTick())
+            .act_and_send(lambda: factory.shift(4).tick())
             .check()
             .send(DateIntents.question.utter())
-            .act(lambda: factory.add(2))
-            .act(lambda: print('AFTER DATE INTENTS'))
-            .send(TimerTick())
+            .act_and_send(lambda: factory.shift(2).tick())
             .check() #Because second intent should have overriden the first
-            .act(lambda: factory.add(12))
-            .send(TimerTick())
+            .act_and_send(lambda: factory.shift(12).tick())
             .check(ut)
             .validate()
         )

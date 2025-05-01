@@ -51,27 +51,31 @@ class ResemblyzerController(DockerWebServiceController[ResemblyzerSettings], INo
         yield (TestReport
                .last_call(api)
                .href('train')
-               .with_resources(Resemblyzer,f'datasets/{model_name}')
                .with_comment("Training the model with pre-uploaded resources")
                )
 
         media_library = MediaLibrary.read(media_library_path)
 
         first_time = True
+        first_file = None
         for record in media_library.records:
             if record.tags['split'] == 'test':
                 file = record.get_file()
                 result = api.execute(BrainBoxTask.call(Resemblyzer).classify(file, model_name))
                 if first_time:
+                    first_file = file
                     yield TestReport.last_call(api).href('inference').with_comment("Running inference with trained model")
                 first_time = False
                 tc.assertEqual(record.tags['speaker'], result)
+
+        api.execute(BrainBoxTask.call(Resemblyzer).distances(first_file,model_name))
+        yield TestReport.last_call(api).href('distances')
 
 
 
 
 DOCKERFILE = f'''
-FROM python:3.8
+FROM python:3.8.20
 
 {{{SmallImageBuilder.ADD_USER_PLACEHOLDER}}}
 

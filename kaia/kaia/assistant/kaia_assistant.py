@@ -1,6 +1,6 @@
 from typing import *
 from .kaia_skill import IKaiaSkill
-from eaglesong.core import Automaton, ContextRequest, AutomatonExit, Listen
+from eaglesong.core import Automaton, ContextRequest, AutomatonExit, Listen, Return
 from kaia.dub.core import Template, IntentsPack
 from ..server import Message
 from dataclasses import dataclass, field
@@ -8,6 +8,7 @@ import traceback
 from datetime import datetime
 from .automaton_not_found_skill import AutomatonNotFoundSkill
 from .exception_in_skill import ExceptionHandledSkill
+from .feedback import Feedback
 
 @dataclass
 class ActiveSkill:
@@ -50,7 +51,7 @@ class KaiaAssistant:
                  custom_words_in_core_intents: dict[str, str] = None
                  ):
         self.skills = tuple(skills)
-        self.active_skill: Optional[ActiveSkill] = None
+        self.active_skills: list[ActiveSkill] = []
         self.history: list[AssistantHistoryItem] = []
         self.max_history_length = max_history_length
         self.datetime_factory = datetime_factory
@@ -112,43 +113,44 @@ class KaiaAssistant:
         return packs
 
 
-    def _get_automaton(self, input, context) -> Tuple[Optional[Automaton], bool]:
-        if self.active_skill is not None:
-            if self.active_skill.skill.should_proceed(input):
-                return self.active_skill.automaton, True
+    def _get_automaton(self, input, context) -> Optional[Automaton]:
+        for skill in reversed(self.active_skills):
+            if skill.skill.should_proceed(input):
+                return skill.automaton
 
         for skill in self.skills:
-
             if not skill.should_start(input):
                 continue
             aut = Automaton(skill.get_runner(), context)
             if skill.get_type() != IKaiaSkill.Type.SingleLine:
-                self.active_skill = ActiveSkill(skill, aut)
-                return aut, True
-            return aut, False
+                self.active_skills.append(ActiveSkill(skill, aut))
+            return aut
 
         aut = Automaton(self.automaton_not_found_skill.get_runner(), context)
-        return aut, False
+        return aut
+
+    def _remove_automaton(self, aut: Automaton):
+        self.active_skills = [a for a in self.active_skills if a.automaton != aut]
 
     def _one_step(self, input, context):
         history_item = AssistantHistoryItem(self.datetime_factory(), input)
         self.history.append(history_item)
         self.history = self.history[-self.max_history_length:]
-        aut, is_active_skill = self._get_automaton(input, context)
+        aut = self._get_automaton(input, context)
 
         try:
             while True:
                 reply = aut.process(input)
                 if isinstance(reply, Listen):
-                    return reply
+                    return (reply, None)
                 if isinstance(reply, AutomatonExit):
-                    if is_active_skill:
-                        self.active_skill = None
-                    break
+                    self._remove_automaton(aut)
+                    if isinstance(reply, Return) and reply.value is not None and isinstance(reply.value, Feedback):
+                        return None, reply.value.content
+                    return Listen(), None
                 input = yield reply
                 reply_history_item = AssistantHistoryItemReply(self.datetime_factory(), reply, input)
                 history_item.replies.append(reply_history_item)
-            return Listen()
         except:
             if self.raise_exceptions:
                 raise
@@ -159,13 +161,16 @@ class KaiaAssistant:
 
 
     def __call__(self):
+        input = yield
         while True:
-            input = yield
-            context = yield ContextRequest()
             if isinstance(input, Template):
                 raise ValueError("Template is found as an input for KaiaAssistant. Did you forget `utter()`?")
-            listen = yield from self._one_step(input, context)
-            yield listen
+            context = yield ContextRequest()
+            listen, returned = yield from self._one_step(input, context)
+            if returned is not None:
+                input = returned
+            else:
+                input = yield listen
 
 
 

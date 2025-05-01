@@ -11,6 +11,7 @@ mic_settings = MicSettings(
 
 if __name__ == '__main__':
     app = KaiaApp(folder=Loc.data_folder/'demo')
+    app.session_id='test'
     set_brainbox_service_and_api(app)
     set_streaming_service_and_api_address(app)
     set_avatar_service_and_api(app)

@@ -20,7 +20,7 @@ class WihoutAudioTestCase(TestCase):
             updates[3].is_bot_audio("Hello!")
             updates[4].is_bot_audio("Nice to see you!")
 
-            tester.send_voice_command("How are you?")
+            tester.send_voice_command("Are you here?")
             updates = tester.pull_updates(4)
             updates[0].of_type('command_audio')
             updates[1].is_user_message('Are you here?')
@@ -52,7 +52,23 @@ class WihoutAudioTestCase(TestCase):
             updates[7].is_bot_audio("Nice to see you!")
 
 
+    def test_echo_skill(self):
+        with TestSetup(self) as tester:
+            updates = tester.pull_updates(3)
+            updates[0].is_system_message('Rhasspy')
+            updates[1].is_system_message('Rhasspy')
+            updates[2].of_type('notification_driver_start')
 
+            tester.send_initial_package()
+            updates = tester.pull_updates(5)
+            updates[4].is_bot_audio("Nice to see you!")
 
+            tester.send_voice_command("Repeat after me!")
+            updates = tester.pull_updates(4)
+            updates[-1].is_bot_audio("Say anything and I will repeat.")
+
+            tester.send_voice_command("You're a beautiful person with charming personality")
+            updates = tester.pull_updates()
+            updates[-1].is_bot_audio("You're a beautiful person with charming personality.")
 
 

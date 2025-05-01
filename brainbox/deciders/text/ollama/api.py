@@ -1,8 +1,12 @@
+import uuid
+
 import requests
 from ....framework import DockerWebServiceApi
 from .model import OllamaModel
 from .settings import OllamaSettings
 from .controller import OllamaController
+
+SESSION_ID = str(uuid.uuid4())
 
 class Ollama(DockerWebServiceApi[OllamaSettings, OllamaController]):
     def __init__(self, address: str|None = None, parameter: str|None = None):
@@ -16,7 +20,7 @@ class Ollama(DockerWebServiceApi[OllamaSettings, OllamaController]):
                 model=self.container_parameter,
                 prompt=prompt,
                 stream=False,
-                **kwargs
+                **kwargs,
             )
         )
         if reply.status_code != 200:
@@ -26,23 +30,29 @@ class Ollama(DockerWebServiceApi[OllamaSettings, OllamaController]):
     def completions(self, prompt: str, **kwargs):
         return self.completions_json(prompt, **kwargs)['response']
 
-    def question_json(self, prompt: str):
+    def question_json(self, prompt: str, system_prompt: str|None = None, options: dict|None = None):
+        messages = []
+        if system_prompt is not None:
+            messages.append(dict(role='system', content=system_prompt))
+        messages.append(dict(role='user', content=prompt))
+        json = dict(
+                model=self.container_parameter,
+                messages=messages,
+                stream=False,
+                session_id = SESSION_ID
+            )
+        if options is not None:
+            json['options'] = options
         reply = requests.post(
             f'http://{self.address}/api/chat',
-            json=dict(
-                model=self.container_parameter,
-                messages=[
-                    dict(role='user', content=prompt),
-                ],
-                stream=False
-            )
+            json=json
         )
         if reply.status_code != 200:
             raise ValueError(f'Status code {reply.status_code}, value\n{reply.text}')
         return reply.json()
 
-    def question(self, prompt: str):
-        return self.question_json(prompt)['message']['content']
+    def question(self, prompt: str, system_prompt: str|None = None, options: dict|None = None):
+        return self.question_json(prompt, system_prompt, options)['message']['content']
 
 
     Controller = OllamaController

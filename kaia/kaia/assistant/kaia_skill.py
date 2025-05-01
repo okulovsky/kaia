@@ -37,7 +37,7 @@ class IKaiaSkill(ABC):
         return []
 
 
-class SingleLineKaiaSkill(IKaiaSkill):
+class KaiaSkillBase(IKaiaSkill):
     def __init__(self,
                  intents_class: Optional[Type[TemplatesCollection]] = None,
                  replies_class: Optional[Type[TemplatesCollection]] = None,
@@ -63,6 +63,15 @@ class SingleLineKaiaSkill(IKaiaSkill):
 
     def get_replies(self) -> Iterable[Template]:
         return self._dubs
+
+
+class SingleLineKaiaSkill(KaiaSkillBase):
+    def __init__(self,
+                 intents_class: Optional[Type[TemplatesCollection]] = None,
+                 replies_class: Optional[Type[TemplatesCollection]] = None,
+                 name: Optional[str] = None,
+                 ):
+        super().__init__(intents_class, replies_class, name)
 
     def get_type(self) -> 'IKaiaSkill.Type':
         return IKaiaSkill.Type.SingleLine

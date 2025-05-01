@@ -84,7 +84,7 @@ class ComfyUIController(DockerWebServiceController[ComfyUISettings]):
 
 
 DOCKERFILE = f'''
-FROM python:3.12
+FROM python:3.12.8
 
 {{{SmallImageBuilder.ADD_USER_PLACEHOLDER}}}
 

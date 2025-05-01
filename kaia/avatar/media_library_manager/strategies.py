@@ -1,8 +1,7 @@
 from  dataclasses import dataclass
-
 import numpy as np
 from abc import ABC, abstractmethod
-from brainbox import MediaLibrary
+import pandas as pd
 
 
 
@@ -24,10 +23,10 @@ def get_random_weighed_element(elements) -> int:
 
 class IContentStrategy(ABC):
     @abstractmethod
-    def choose_filename(self, ml: MediaLibrary) -> str | None:
+    def choose_filename(self, df: pd.DataFrame) -> str | None:
         pass
 
-    def ensure(self, df, *required_columns):
+    def ensure(self, df: pd.DataFrame, *required_columns):
         for column in required_columns:
             if column not in df.columns:
                 df[column] = 0
@@ -40,8 +39,7 @@ class NewContentStrategy(IContentStrategy):
     def __init__(self, randomize: bool = True):
         self.randomize = randomize
 
-    def choose_filename(self, ml: MediaLibrary) -> str|None:
-        df = ml.to_df()
+    def choose_filename(self, df: pd.DataFrame) -> str|None:
         if df.shape[0] == 0:
             return None
         self.ensure(df, 'feedback_bad', 'feedback_seen')
@@ -57,8 +55,7 @@ class NewContentStrategy(IContentStrategy):
             return df.filename.iloc[0]
 
 class GoodContentStrategy(IContentStrategy):
-    def choose_filename(self, ml: MediaLibrary) -> str | None:
-        df = ml.to_df()
+    def choose_filename(self, df: pd.DataFrame) -> str | None:
         if df.shape[0] == 0:
             return None
         self.ensure(df, 'feedback_bad', 'feedback_seen', 'feedback_good')
@@ -72,8 +69,7 @@ class GoodContentStrategy(IContentStrategy):
 
 
 class AnyContentStrategy(IContentStrategy):
-    def choose_filename(self, ml: MediaLibrary) -> str | None:
-        df = ml.to_df()
+    def choose_filename(self, df: pd.DataFrame) -> str | None:
         if df.shape[0] == 0:
             return None
         return df.sample(1).filename.iloc[0]
@@ -83,9 +79,9 @@ class SequentialStrategy(IContentStrategy):
     def __init__(self, *strategies):
         self.strategies = strategies
 
-    def choose_filename(self, ml: MediaLibrary) -> str | None:
+    def choose_filename(self, df: pd.DataFrame) -> str | None:
         for s in self.strategies:
-            result = s.choose_filename(ml)
+            result = s.choose_filename(df)
             if result is not None:
                 return result
         return None
@@ -100,9 +96,9 @@ class WeightedStrategy:
     def __init__(self, *weighted_strategies: 'WeightedStrategy.Item'):
         self.random_strategies = weighted_strategies
 
-    def choose_filename(self, ml: MediaLibrary) -> str | None:
+    def choose_filename(self, df: pd.DataFrame) -> str | None:
         random_strategy = get_random_weighed_element([s.weight for s in self.random_strategies])
-        result = self.random_strategies[random_strategy].strategy.choose_filename(ml)
+        result = self.random_strategies[random_strategy].strategy.choose_filename(df)
         return result
 
 

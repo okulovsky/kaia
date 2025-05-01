@@ -16,6 +16,10 @@ MODEL_DIR = Path("/models")
 class TTSRequest(BaseModel):
     text: str
     model: str
+    noise_scale: float|None
+    length_scale: float|None
+    noise_w: float|None
+    speaker: int|None
 
 class ModelDownloadRequest(BaseModel):
     name: str
@@ -40,12 +44,17 @@ async def synthesize_text(request: TTSRequest):
         #If not, can we somehow preload this model to make it even faster?
         with open(text_filename,'w') as stream:
             stream.write(request.text)
-        command = f'cat {text_filename} | /usr/share/piper/piper --model {model_path} --output_file {container_audio_path}'
+        command = [f'cat {text_filename} | /usr/share/piper/piper --model {model_path} --output_file {container_audio_path}']
+        for option in ['noise_scale', 'length_scale', 'noise_w','speaker']:
+            value = getattr(request, option)
+            if value is not None:
+                command.append(f' --{option} {value}')
+        command = ' '.join(command)
 
-        subprocess.run(
-            ["sh", "-c", command],
-            check=True,
-        )
+        try:
+            subprocess.check_output(["sh", "-c", command])
+        except subprocess.CalledProcessError as ex:
+            raise ValueError(f"Exception when called\n{command}\n\nThe error: {ex.output}")
 
         return FileResponse(
             path=container_audio_path,

@@ -18,11 +18,10 @@ class AvatarDubbingTestCase(TestCase):
         with BrainBoxApi.ServerlessTest([FakeFile(), Collector()]) as bb_api:
 
             #Creating a media library with pseudo images
-            pack = (Query
-                    .combinatorics.grid(character=['character_0', 'character_1'], scene=['kitchen', 'forest'])
-                    .feed(Collector.FunctionalTaskBuilder(lambda z: BrainBoxTask.call(FakeFile)(z, array_length=10)))
-                    )
-            media_library_path = bb_api.cache_folder/bb_api.execute(pack)
+            task_builder = Collector.TaskBuilder()
+            for item in Query.combinatorics.grid(character=['character_0', 'character_1'], scene=['kitchen', 'forest']):
+                task_builder.append(BrainBoxTask.call(FakeFile)(item, array_length=10),item)
+            media_library_path = bb_api.cache_folder/bb_api.execute(task_builder.to_collector_pack('to_media_library'))
 
             #Testing that the images returned are indeed correct
             with Loc.create_test_file() as stats_file:

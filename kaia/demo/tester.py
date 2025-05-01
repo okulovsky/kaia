@@ -73,9 +73,9 @@ class KaiaAppTester:
         self.tc = tc
 
         if custom_brainbox_api is None:
-            self.test_speaker = TestSpeaker(self.app.brainbox_api)
+            self.test_speaker = TestSpeaker(self.app.brainbox_api, copy_to_folder=self.app.folder/'kaia/cache')
         else:
-            self.test_speaker = TestSpeaker(custom_brainbox_api)
+            self.test_speaker = TestSpeaker(custom_brainbox_api, copy_to_folder=self.app.folder/'kaia/cache')
         if custom_kaia_address is None:
             self.address = f"127.0.0.1:{self.app.kaia_server.settings.port}"
         else:
@@ -114,6 +114,13 @@ class KaiaAppTester:
         path = self.test_speaker.speak(text, speaker, return_cache_path=True)
         self.app.audio_control_api.playback_mic_sample(path)
 
+    def send_voice_command_via_mocked_web_mic(self, text, speaker: int|str|None = None):
+        name = self.test_speaker.speak(text, speaker, False)
+        requests.post(
+            self.endpoint(f'/command/{self.session_id}/injection_audio'),
+            json = dict(filename=name)
+        )
+
     def send_initial_package(self):
         return requests.post(
             self.endpoint(f'/command/{self.session_id}/command_initialize'),
@@ -126,12 +133,14 @@ class KaiaAppTester:
             json=update.item.payload['filename']
         )
 
-    def pull_updates(self, count: int|None = None, time_limit_in_seconds: int = 10) -> list[BusItemWrapper]:
+    def pull_updates(self, count: int|None = None, time_limit_in_seconds: int = 10, print_every_and_use_prefix: str|None = None) -> list[BusItemWrapper]:
         start = datetime.now()
         result = []
         while True:
             for c in self.app.kaia_api.pull_updates():
                 result.append(BusItemWrapper(c, self.tc))
+                if print_every_and_use_prefix is not None:
+                    print(f'{print_every_and_use_prefix}{c}')
             if count is not None:
                 if len(result) == count:
                     return result

@@ -137,19 +137,10 @@ temp/
 externals/
 /data/
 
+#Dockerfiles for deciders
+/brainbox/deciders/**/Dockerfile
 
-.dockerignore
 
-Dockerfile
+#Experimental features
+/brainbox/deciders/experimental/
 
-kaia_tests/sample
-
-kaia_tests/sample-journal
-
-recepies/creative_articulator/summarization
-
-kaia_tests/streaming_test.wav
-
-my/deployment/local_run/logs.txt
-
-kaia_tests/test_kaia/streaming_test.wav

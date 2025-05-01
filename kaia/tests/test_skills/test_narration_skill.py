@@ -1,32 +1,19 @@
-import json
 from unittest import TestCase
 from eaglesong.core import Automaton, Scenario
 from brainbox import File, MediaLibrary
 from kaia.skills import NarrationSkill, InitializationSkill
-from kaia.kaia import KaiaAssistant, KaiaContext, InitializationCommand, TimerTick
+from kaia.kaia import KaiaAssistant, KaiaContext, InitializationCommand, TestTimeFactory
 from kaia.avatar import (
     AvatarApi, AvatarSettings, NewContentStrategy, MediaLibraryManager, InitialStateFactory, KnownFields,
     NarrationSettings, ImageServiceSettings
 )
 from kaia.common import Loc
-from datetime import datetime, timedelta
 
 def check_image(name):
     def _check(arg, tc: TestCase):
         tc.assertIsInstance(arg, File)
         tc.assertEqual(name, arg.name)
     return _check
-
-class DT:
-    def __init__(self):
-        self.current = datetime(2020,1,1)
-
-    def delta(self, value):
-        return self.current+timedelta(seconds=value)
-
-    def set(self, value):
-        self.current = self.delta(value)
-        return self.current
 
 class ChangeImageTestCase(TestCase):
     def run_in_setup(self, action):
@@ -82,16 +69,16 @@ class ChangeImageTestCase(TestCase):
         self.run_in_setup(self.action_initialization)
 
     def action_tick(self, scenario: Scenario):
-        t = DT()
+        t = TestTimeFactory()
         (
             scenario
             .send(InitializationCommand())
             .check(check_image('B-1'), 'Hello')
-            .send(TimerTick(t.delta(0)))
+            .send(t.delta(0).tick())
             .check()
-            .send(TimerTick(t.delta(9)))
+            .send(t.delta(9).tick())
             .check()
-            .send(TimerTick(t.set(10)))
+            .send(t.delta(10).tick())
             .check(check_image('B-2'))
             .validate()
         )
