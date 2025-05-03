@@ -33,12 +33,12 @@ class AudioControlServerTestCase(TestCase):
                         self.assertEqual(ac.MicState.Standby, ac_api.get_state())
 
                         #Computer
-                        ac_api.playback_mic_sample(speaker.speak('Computer!', return_cache_path=True))
+                        ac_api.playback_mic_sample(speaker.speak('Computer!').path)
                         self.assertEqual(0, Query.file.text(tmp_file).count())
                         self.assertEqual(ac.MicState.Open, ac_api.get_state())
 
                         #Are you here?
-                        ac_api.playback_mic_sample(speaker.speak("Are you here?", return_cache_path=True))
+                        ac_api.playback_mic_sample(speaker.speak("Are you here?").path)
                         self.assertEqual(ac.MicState.Standby, ac_api.get_state())
                         files = Query.file.text(tmp_file).to_list()
                         self.assertEqual(1, len(files))
@@ -51,7 +51,7 @@ class AudioControlServerTestCase(TestCase):
                         ac_api.set_state(ac.MicState.Open)
                         time.sleep(0.1)
                         self.assertEqual(ac.MicState.Open, ac_api.get_state())
-                        ac_api.playback_mic_sample(speaker.speak("Make me a sandwich", return_cache_path=True))
+                        ac_api.playback_mic_sample(speaker.speak("Make me a sandwich").path)
                         self.assertEqual(ac.MicState.Standby, ac_api.get_state())
 
                         files = Query.file.text(tmp_file).to_list()

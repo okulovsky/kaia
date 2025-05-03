@@ -7,24 +7,43 @@ from pathlib import Path
 from kaia.common import Loc
 import os
 import re
+from dataclasses import dataclass
+
+@dataclass
+class TestSpeakerResult:
+    path: Path
+    _api: BrainBoxApi
+    _reset: bool = False
+
+    def reset(self):
+        return TestSpeakerResult(self.path, True)
+
+    def upload_to_brainbox_with_random_name(self) -> str:
+        name = BrainBoxTask.safe_id()+'.wav'
+        self._api.upload(name, self.path)
+        return name
+
+    def copy_to_folder(self, folder: Path) -> 'TestSpeakerResult':
+        os.makedirs(folder, exist_ok=True)
+        new_path = folder/self.path.name
+        if new_path.is_file() and self._reset:
+            os.unlink(new_path)
+        if not new_path.is_file():
+            shutil.copy(self.path, new_path)
+        return TestSpeakerResult(new_path, self._api, self._reset)
 
 
 class TestSpeaker:
     def __init__(self,
                  brainbox_api: BrainBoxApi,
                  cache_folder: Path|None = None,
-                 remake_everything: bool = False,
-                 copy_to_folder: Path|None = None
+                 remake_everything: bool = False
                  ):
         self.brainbox_api = brainbox_api
         if cache_folder is None:
             cache_folder = Loc.temp_folder/'test_speaker'
         self.cache_folder = cache_folder
         self.remake_everything = remake_everything
-        self.copy_to_folder = copy_to_folder
-        os.makedirs(self.cache_folder, exist_ok=True)
-        if self.copy_to_folder is not None:
-            os.makedirs(self.copy_to_folder, exist_ok=True)
 
     def _get_speaker_path_and_task(self, text: str, speaker: int|str|None = None):
         if speaker is None:
@@ -37,19 +56,14 @@ class TestSpeaker:
         return speaker, filename, task
 
 
-    def speak(self, text: str, speaker: int|str|None = None, return_cache_path: bool = False):
+    def speak(self, text: str, speaker: int|str|None = None):
         speaker, path, task = self._get_speaker_path_and_task(text, speaker)
         if path.is_file() and not self.remake_everything:
             pass
         else:
             file = self.brainbox_api.execute(task)
             self.brainbox_api.download(file, path, True)
-        if self.copy_to_folder is not None:
-            shutil.copy(path, self.copy_to_folder/path.name)
-        if return_cache_path:
-            return path
-        else:
-            return path.name
+        return TestSpeakerResult(path, self.brainbox_api, self.remake_everything)
 
 
     def silence(self, duration_in_seconds: int, sample_rate: int = 22050):
@@ -65,7 +79,7 @@ class TestSpeaker:
                 str(duration_in_seconds),
                 filename
             ])
-        return self._from_cache(filename)
+        return TestSpeakerResult(filename, self.brainbox_api, self.remake_everything)
 
 
 

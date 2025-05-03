@@ -158,6 +158,7 @@ class KaiaAssistant:
             yield Message(Message.Type.Error, ex)
             if self.exception_in_skill is not None:
                 yield from self.exception_in_skill.get_runner()()
+        return Listen(), None
 
 
     def __call__(self):

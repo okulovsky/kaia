@@ -29,12 +29,12 @@ def _parse(template: str):
         else:
             template_parts.append(part)
 
-    return ''.join(template_parts), addresses, operators
+    return template_parts, addresses, operators
 
 
 class Prompter(IPrompter[T], Generic[T]):
     def __init__(self, template: str):
-        self.template, self.field_to_address, self.field_to_formatter = _parse(template)
+        self.template_parts, self.field_to_address, self.field_to_formatter = _parse(template)
 
     def __call__(self, obj: T) -> str:
         values = {}
@@ -43,6 +43,15 @@ class Prompter(IPrompter[T], Generic[T]):
             if key in self.field_to_formatter:
                 o = self.field_to_formatter[key](o)
             values[key] = o
-        return self.template.format(**values)
+        return ''.join(self.template_parts).format(**values)
 
+    def to_readable_string(self):
+        result = []
+        for part in self.template_parts:
+            if part.startswith('{') and part.endswith('}'):
+                addr: Address = self.field_to_address[part[1:-1]]
+                result.append(f'<<{addr.__str__()}>>')
+            else:
+                result.append(part)
+        return ''.join(result)
 

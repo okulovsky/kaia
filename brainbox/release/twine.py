@@ -37,7 +37,7 @@ def make_all():
     shutil.rmtree(release_folder, ignore_errors=True)
     os.makedirs(bb_release_folder)
 
-    for folder in ['framework', 'deciders', 'doc']:
+    for folder in ['framework', 'deciders', 'doc', 'flow']:
         shutil.copytree(src_folder/folder, bb_release_folder/folder)
     for file in ['run.py', 'run_test.py','__init__.py']:
         shutil.copy(src_folder/file, bb_release_folder/file)

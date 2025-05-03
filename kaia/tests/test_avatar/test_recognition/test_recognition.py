@@ -23,13 +23,13 @@ class RecognitionTestCase(TestCase):
 
         # Testing samples
         utterance_0 = api.recognition_transcribe(
-            speaker.speak(Templates.how_are_you().to_str()),
+            speaker.speak(Templates.how_are_you().to_str()).upload_to_brainbox_with_random_name(),
             RecognitionSettings(RecognitionSettings.NLU.Rhasspy, rhasspy_model=rhasspy_model)
         )
         self.assertIn(utterance_0, Templates.how_are_you)
 
         utterance_1 = api.recognition_transcribe(
-            speaker.speak(Templates.cancel_the_timer(index=2).to_str()),
+            speaker.speak(Templates.cancel_the_timer(index=2).to_str()).upload_to_brainbox_with_random_name(),
             RecognitionSettings(RecognitionSettings.NLU.Rhasspy, rhasspy_model=rhasspy_model)
         )
         self.assertIn(utterance_1, Templates.cancel_the_timer)
@@ -37,7 +37,7 @@ class RecognitionTestCase(TestCase):
 
     def make_whisper(self, speaker: TestSpeaker, api: AvatarApi):
         message = "Hello"
-        test_1 = speaker.speak(message, 1)
+        test_1 = speaker.speak(message, 1).upload_to_brainbox_with_random_name()
         utterance_1 = api.recognition_transcribe(
             test_1,
             RecognitionSettings(RecognitionSettings.NLU.Whisper, whisper_prompt="Greetings of some sort:")
@@ -46,7 +46,7 @@ class RecognitionTestCase(TestCase):
 
     def make_vosk(self, speaker: TestSpeaker, api: AvatarApi):
         message = 'Hello'
-        test_1 = speaker.speak(message, 1)
+        test_1 = speaker.speak(message, 1).upload_to_brainbox_with_random_name()
         utterance_1 = api.recognition_transcribe(
             test_1,
             RecognitionSettings(RecognitionSettings.NLU.Vosk, vosk_model='en')
@@ -72,7 +72,7 @@ class RecognitionTestCase(TestCase):
 
 
     def make_resemblyzer(self, speaker: TestSpeaker, bbapi: BrainBoxApi, api: AvatarApi):
-        test_1 = speaker.speak('Some text to recognize', 'p256')
+        test_1 = speaker.speak('Some text to recognize', 'p256').upload_to_brainbox_with_random_name()
         api.recognition_transcribe(
             test_1,
             RecognitionSettings(RecognitionSettings.NLU.Whisper, whisper_prompt="Greetings of some sort:")
@@ -80,7 +80,7 @@ class RecognitionTestCase(TestCase):
         state = api.state_get()
         self.assertEqual('p256', state['user'])
 
-        test_2 = speaker.speak('Some text to recognize', 'p257')
+        test_2 = speaker.speak('Some text to recognize', 'p257').upload_to_brainbox_with_random_name()
         api.recognition_transcribe(
             test_2,
             RecognitionSettings(RecognitionSettings.NLU.Whisper, whisper_prompt="Greetings of some sort:")

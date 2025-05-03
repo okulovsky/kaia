@@ -68,7 +68,7 @@ class WihoutAudioTestCase(TestCase):
             updates[-1].is_bot_audio("Say anything and I will repeat.")
 
             tester.send_voice_command("You're a beautiful person with charming personality")
-            updates = tester.pull_updates()
+            updates = tester.pull_updates(4)
             updates[-1].is_bot_audio("You're a beautiful person with charming personality.")
 
 

@@ -73,9 +73,9 @@ class KaiaAppTester:
         self.tc = tc
 
         if custom_brainbox_api is None:
-            self.test_speaker = TestSpeaker(self.app.brainbox_api, copy_to_folder=self.app.folder/'kaia/cache')
+            self.test_speaker = TestSpeaker(self.app.brainbox_api)
         else:
-            self.test_speaker = TestSpeaker(custom_brainbox_api, copy_to_folder=self.app.folder/'kaia/cache')
+            self.test_speaker = TestSpeaker(custom_brainbox_api)
         if custom_kaia_address is None:
             self.address = f"127.0.0.1:{self.app.kaia_server.settings.port}"
         else:
@@ -104,18 +104,18 @@ class KaiaAppTester:
 
 
     def send_voice_command(self, text: str, speaker: int|str|None = None):
-        file_id = self.test_speaker.speak(text, speaker)
+        file_id = self.test_speaker.speak(text, speaker).upload_to_brainbox_with_random_name()
         requests.post(
             self.endpoint(f'/command/{self.session_id}/command_audio'),
             json=file_id
         )
 
     def send_voice_command_via_audio_control(self, text: str, speaker: int|str|None = None):
-        path = self.test_speaker.speak(text, speaker, return_cache_path=True)
+        path = self.test_speaker.speak(text, speaker).path
         self.app.audio_control_api.playback_mic_sample(path)
 
     def send_voice_command_via_mocked_web_mic(self, text, speaker: int|str|None = None):
-        name = self.test_speaker.speak(text, speaker, False)
+        name = self.test_speaker.speak(text, speaker).copy_to_folder(self.app.folder/'kaia/cache').path.name
         requests.post(
             self.endpoint(f'/command/{self.session_id}/injection_audio'),
             json = dict(filename=name)

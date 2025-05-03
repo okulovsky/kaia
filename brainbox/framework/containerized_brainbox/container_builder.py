@@ -43,7 +43,7 @@ RUN apt-get update \
 
 
 TEMPLATE = f'''
-FROM python:3.11
+FROM python:3.11.11
 
 {DOCKER_INSTALL}
 

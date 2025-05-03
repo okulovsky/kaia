@@ -1,5 +1,5 @@
 from kaia import skills
-from .avatar import characters
+from .avatar import characters, KnownFields
 from kaia.kaia import KaiaCoreService, KaiaCoreServiceSettings, Message, KaiaAssistant
 from pathlib import Path
 from brainbox import File, ControllersSetup
@@ -7,6 +7,7 @@ from .app import KaiaApp
 from kaia.dub.languages.en import *
 from brainbox.deciders import Whisper, OpenTTS, RhasspyKaldi
 from . import smalltalk_skill
+from talents.german.quiz import GermanQuizSkill
 
 
 class CommonIntents(TemplatesCollection):
@@ -19,8 +20,7 @@ class DemoCoreService(KaiaCoreService):
                  ):
         super().__init__(settings)
 
-
-    def create_assistant(self):
+    def create_skills(self):
         skills_list = []
 
         skills_list.append(skills.EchoSkill())
@@ -34,24 +34,33 @@ class DemoCoreService(KaiaCoreService):
         skills_list.append(skills.JokeSkill())
         skills_list.append(skills.SmalltalkSkill(smalltalk_skill.SmalltalkInputs, smalltalk_skill.SmalltalkReply))
 
-        timer_audio = File.read(Path(__file__).parent/'files/sounds/alarm.wav')
+        timer_audio = File.read(Path(__file__).parent / 'files/sounds/alarm.wav')
         timer_audio.text = '*alarm ringing*'
         timer_register = skills.NotificationRegister(
             (timer_audio, Message(Message.Type.System, "*alarm ringing*")),
-            (Message(Message.Type.System, '*alarm stopped*'), )
+            (Message(Message.Type.System, '*alarm stopped*'),)
         )
         skills_list.append(skills.TimerSkill(timer_register))
-        skills_list.append(skills.NotificationSkill([timer_register], pause_between_alarms_in_seconds=10, volume_delta=0.2))
+        skills_list.append(
+            skills.NotificationSkill([timer_register], pause_between_alarms_in_seconds=10, volume_delta=0.2))
 
         skills_list.append(skills.ChangeImageSkill())
         skills_list.append(skills.VolumeSkill(0.2))
-        skills_list.append(help:=skills.HelpSkill())
+        skills_list.append(help := skills.HelpSkill())
         skills_list.append(skills.LogFeedbackSkill())
         skills_list.append(skills.ChangeCharacterSkill(characters))
-        skills_list.append(skills.InitializationSkill())
+        skills_list.append(skills.InitializationSkill({KnownFields.language: 'en'}))
         skills_list.append(skills.NarrationSkill())
 
-        assistant = KaiaAssistant(skills_list)
+        skills_list.append(GermanQuizSkill.create_skill(
+            Path(__file__).parent / 'files/german_quiz_words.json',
+            None,
+            3,
+        ))
+        return skills_list
+
+    def create_assistant(self):
+        assistant = KaiaAssistant(self.create_skills())
         assistant.raise_exceptions = False
         help.assistant = assistant
         assistant.additional_intents.extend(CommonIntents.get_templates())
