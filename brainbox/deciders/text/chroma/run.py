@@ -1,4 +1,4 @@
-from brainbox.deciders.RAG.chroma.controller import ChromaController
+from brainbox.deciders.text.chroma.controller import ChromaController
 
 if __name__ == '__main__':
     controller = ChromaController()

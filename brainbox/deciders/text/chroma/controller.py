@@ -2,7 +2,7 @@ from typing import Iterable
 from unittest import TestCase
 
 from brainbox import BrainBoxTask
-from brainbox.deciders.RAG.chroma.settings import ChromaSettings
+from .settings import ChromaSettings
 from brainbox.framework import (
     DockerWebServiceController, IImageBuilder, SmallImageBuilder, RunConfiguration,
     INotebookableController, BrainBoxApi, TestReport)

@@ -1,8 +1,8 @@
 from typing import List, Dict
 import requests
 
-from brainbox.deciders.RAG.chroma.controller import ChromaController
-from brainbox.deciders.RAG.chroma.settings import ChromaSettings
+from .controller import ChromaController
+from .settings import ChromaSettings
 from brainbox.framework import DockerWebServiceApi
 from uuid import uuid4
 
