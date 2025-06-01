@@ -26,7 +26,7 @@ class Chroma(DockerWebServiceApi[ChromaSettings, ChromaController]):
     def download_model(self, embedding_model_name: str):
         response = requests.post(
             self.endpoint("/download_model"),
-            data={
+            params={
                 "embedding_model_name": embedding_model_name,
             }
         )
@@ -37,7 +37,7 @@ class Chroma(DockerWebServiceApi[ChromaSettings, ChromaController]):
     def build_db_from_json(self, filename: str, collection_name: str):
         response = requests.post(
             self.endpoint("/build_db/from_json"),
-            data={
+            params={
                 "filename": filename,
                 "collection_name": collection_name,
             }
@@ -49,7 +49,7 @@ class Chroma(DockerWebServiceApi[ChromaSettings, ChromaController]):
     def build_db_from_zip_archive(self, archive_name: str, collection_name: str):
         response = requests.post(
             self.endpoint("/build_db/from_zip_archive"),
-            data={
+            params={
                 "archive_name": archive_name,
                 "collection_name": collection_name,
             }
@@ -61,9 +61,9 @@ class Chroma(DockerWebServiceApi[ChromaSettings, ChromaController]):
     def init_chroma_client(self, collection_name: str):
         response = requests.post(
             self.endpoint("/init_chroma_client"),
-            data={
-                "collection_name": collection_name,
-            }
+            params={
+                "collection_name": collection_name
+            },
         )
         if response.status_code != 200:
             raise ValueError(f"Endpoint /init_chroma_client returned unexpected status code {response.status_code}\n{response.text}")
@@ -72,9 +72,7 @@ class Chroma(DockerWebServiceApi[ChromaSettings, ChromaController]):
     def add_documents(self, data: List[Dict]):
         response = requests.post(
             self.endpoint("/add_documents"),
-            data = {
-                "data": data,
-            }
+            json=data,
         )
         if response.status_code != 200:
             raise ValueError(f"Endpoint /add_documents returned unexpected status code {response.status_code}/{response.text}")
@@ -83,9 +81,7 @@ class Chroma(DockerWebServiceApi[ChromaSettings, ChromaController]):
     def delete_documents(self, ids: List[uuid4]):
         response = requests.post(
             self.endpoint("/delete_documents"),
-            data = {
-                "ids": ids,
-            }
+            json=ids,
         )
         if response.status_code != 200:
             raise ValueError(f"Endpoint /delete_documents returned unexpected status code {response.status_code}/{response.text}")

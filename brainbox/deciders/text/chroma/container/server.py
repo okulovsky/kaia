@@ -43,7 +43,7 @@ class Retriever:
     async def index(self) -> str:
         return f"{type(self).__name__} is running"
 
-    async def download_model(self, embedding_model_name: str = Form(...)) -> str:
+    async def download_model(self, embedding_model_name: str) -> str:
         self.embedding_model = HuggingFaceEmbeddings(
             model_name=embedding_model_name,
             model_kwargs={
@@ -53,7 +53,7 @@ class Retriever:
         )
         return "OK"
 
-    async def build_db_from_json(self, filename: str = Form(...), collection_name: str = Form(...)) -> str:
+    async def build_db_from_json(self, filename: str, collection_name: str) -> str:
         try:
             with open(Path(__file__).parent / "datasets" / filename, 'r', encoding='utf-8') as file:
                 data = json.load(file)
@@ -63,7 +63,7 @@ class Retriever:
         except Exception as e:
             HTTPException(status_code=500, detail=str(e))
 
-    async def build_db_from_zip_archive(self, archive_name: str = Form(...), collection_name: str = Form(...)) -> str:
+    async def build_db_from_zip_archive(self, archive_name: str, collection_name: str) -> str:
         try:
             shutil.unpack_archive(Path(__file__).parent / archive_name, self.persist_directory_name)
             await self.init_chroma_client(collection_name)
@@ -97,22 +97,20 @@ class Retriever:
     async def _add_data_to_db(self, data: List[Dict]):
         docs = []
         ids = []
-        for post in data:
-            chunks = self.splitter.split_text(post["text"])
+        for post_data in data:
+            text = post_data.pop("text")
+            chunks = self.splitter.split_text(text)
             for chunk in chunks:
                 document = Document(
                     page_content=chunk,
-                    metadata={
-                        "source": post["source"],
-                        "file": post["file"],
-                    }
+                    metadata=post_data
                 )
                 docs.append(document)
                 ids.append(str(uuid4()))
 
         self.client.add_documents(documents=docs, ids=ids)
 
-    async def init_chroma_client(self, collection_name: str = Form(...)) -> str:
+    async def init_chroma_client(self, collection_name: str) -> str:
         self.client = Chroma(
                 collection_name=collection_name,
                 embedding_function=self.embedding_model,
