@@ -1,4 +1,6 @@
 """
+### Advanced timer's handling
+
 Such handling of the timer's signals brings the problem for the multi-step skills that expect
 a certain input (such as menu). Obviously, they are going to be ruined by TimerTicks coming unexpectedly.
 

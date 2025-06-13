@@ -1,7 +1,3 @@
-import sys
-
-import telegram
-
 from eaglesong.core import IAutomaton
 from .telegram_interpreters import TelegramInterpreter
 from .primitives import TgChannel, TgUpdatePackage, TgContext

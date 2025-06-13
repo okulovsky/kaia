@@ -1,4 +1,6 @@
 """
+## Timers
+
 The bots we saw so far were triggered by the user input. Sometimes the bots should be triggered by some other
 means, and in this case the timer is used to poll the bot and produce the output if necessary.
 
