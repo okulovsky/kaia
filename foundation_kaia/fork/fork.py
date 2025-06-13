@@ -4,10 +4,10 @@ import sys
 import pickle
 import atexit
 import time
-from pathlib import Path
 from uuid import uuid4
 from typing import Callable
-from .loc import Loc
+from ..misc import Loc
+
 
 class Fork:
     def __init__(self, method: Callable, raise_if_exited: bool = True):
@@ -28,7 +28,7 @@ class Fork:
             [
                 sys.executable,
                 '-m',
-                'brainbox.framework.common.fork_worker',
+                'foundation_kaia.fork.fork_worker',
                 str(self.method),
                 str(path)
             ],

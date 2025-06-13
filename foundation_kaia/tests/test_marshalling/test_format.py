@@ -1,4 +1,4 @@
-from brainbox.framework.common.marshalling.format import Format
+from foundation_kaia.marshalling.format import Format
 from unittest import TestCase
 import json
 

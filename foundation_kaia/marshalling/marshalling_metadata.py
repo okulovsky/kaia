@@ -1,6 +1,6 @@
 from typing import *
 from dataclasses import dataclass
-from ..signature_processor import SignatureProcessor
+from .signature_processor import SignatureProcessor
 from .endpoint import EndpointMetadata
 
 @dataclass

@@ -3,6 +3,7 @@ from .server import Server
 from .api import Api
 from ..fork import Fork
 
+
 TApi = TypeVar('TApi')
 
 class TestApi(Generic[TApi]):

@@ -1,5 +1,5 @@
 from unittest import TestCase
-from brainbox.tests.test_common.test_marshalling.marshalling_endpoint_structure import MyApi, Buffer
+from foundation_kaia.tests.test_marshalling.marshalling_endpoint_structure import MyApi, Buffer
 import requests
 
 class MarhsallingTestCase(TestCase):

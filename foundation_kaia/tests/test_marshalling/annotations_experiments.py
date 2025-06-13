@@ -1,4 +1,4 @@
-from brainbox.framework.common.marshalling import Api, bind_to_api, endpoint, TestApi, Server
+from foundation_kaia.marshalling import Api, bind_to_api, endpoint, TestApi, Server
 from abc import abstractmethod, ABC
 
 class IMy(ABC):

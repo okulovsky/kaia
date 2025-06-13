@@ -1,10 +1,7 @@
-import time
 from typing import *
 from .marshalling_metadata import MarshallingMetadata
 from .api_binding import ApiBinding
-from ..api_utils import ApiUtils
-import requests
-import re
+from .api_utils import ApiUtils
 
 def bind_to_api(api_type: Type):
     def decorator(cls):

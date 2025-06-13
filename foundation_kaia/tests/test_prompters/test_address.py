@@ -1,7 +1,9 @@
 from typing import *
 from unittest import TestCase
-from brainbox.flow import AddressBuilder,AddressBuilderGC, Address
+from foundation_kaia.prompters import AddressBuilder,AddressBuilderGC, Address
 from dataclasses import dataclass
+
+
 
 @dataclass
 class MyClass:
@@ -13,8 +15,9 @@ class AddressBuilderTestCase(TestCase):
     def test_access(self):
         b: MyClass = AddressBuilder()
         result = b.c.c.a
-        key = result.__str__()[3:-3]
-        address = AddressBuilderGC.cache[key]
+        key = result.__str__()[2:-2]
+        address = AddressBuilderGC.find(AddressBuilderGC.Dimension.address, key)
+        self.assertIsNotNone(address)
         self.assertEqual(3, len(address.address))
         self.assertEqual('c', address.address[0].element)
         self.assertEqual('c', address.address[1].element)

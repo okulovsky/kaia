@@ -1,4 +1,4 @@
-from brainbox.framework.common.marshalling import endpoint, Api, TestApi, bind_to_api, Server
+from foundation_kaia.marshalling import endpoint, Api, TestApi, bind_to_api, Server
 from abc import ABC, abstractmethod
 
 class Buffer:
