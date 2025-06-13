@@ -6,7 +6,7 @@ from ..assistant import KaiaAssistant
 from .driver import KaiaDriver
 from ..server import KaiaApi, Message
 from brainbox import BrainBoxApi, ControllersSetup
-from kaia.avatar import AvatarApi
+from avatar import AvatarApi
 from pathlib import Path
 from eaglesong.core import Automaton
 from dataclasses import dataclass
@@ -84,10 +84,8 @@ class KaiaCoreService(ABC):
         assistant = self.create_assistant()
         intents = tuple(assistant.get_intents())
         self.settings.kaia_api.add_message(Message(Message.Type.System, f"Training {len(intents)} Rhasspy models"))
-        self.settings.avatar_api.recognition_train(
-            intents,
-            assistant.get_replies()
-        )
+        self.settings.avatar_api.recognition_train(intents)
+        self.settings.avatar_api.dub_paraphrase_set_replies(assistant.get_replies())
         self.settings.kaia_api.add_message(Message(Message.Type.System, "Rhasspy is trained"))
         if self.settings.audio_api is not None:
             self.settings.audio_api.set_volume(self.settings.initial_volume)

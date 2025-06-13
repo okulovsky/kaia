@@ -1,7 +1,7 @@
 from typing import *
 from .kaia_skill import IKaiaSkill
 from eaglesong.core import Automaton, ContextRequest, AutomatonExit, Listen, Return
-from kaia.dub.core import Template, IntentsPack
+from eaglesong.templates import Template, IntentsPack
 from ..server import Message
 from dataclasses import dataclass, field
 import traceback

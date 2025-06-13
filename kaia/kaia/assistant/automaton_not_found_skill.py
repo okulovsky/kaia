@@ -1,5 +1,5 @@
 from typing import *
-from kaia.dub.languages.en import *
+from eaglesong.templates import *
 from .kaia_skill import SingleLineKaiaSkill
 from datetime import datetime
 

@@ -1,5 +1,5 @@
 from .interface import IAudioControlApi
-from brainbox.framework.common.marshalling import Api, bind_to_api, TestApi
+from foundation_kaia.marshalling import Api, bind_to_api, TestApi
 from .service import AudioControlService
 from .server import AudioControlServer
 

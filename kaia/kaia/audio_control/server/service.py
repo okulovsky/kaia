@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from brainbox.framework.common.marshalling import endpoint
+from foundation_kaia.marshalling import endpoint
 import time
 from typing import *
 import pandas as pd

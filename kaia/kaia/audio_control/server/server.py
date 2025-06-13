@@ -1,4 +1,4 @@
-from brainbox.framework.common.marshalling import Server
+from foundation_kaia.marshalling import Server
 from .service import AudioControlService
 
 class AudioControlServer(Server):

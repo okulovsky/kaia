@@ -1,6 +1,6 @@
 from .partial_listen_translator import PartialListenTranslator
 from eaglesong import Return
-from kaia.dub import Template, Utterance
+from eaglesong.templates import Template, Utterance
 
 class ImmediateStopListenPayload:
     def __init__(self, template: Template):

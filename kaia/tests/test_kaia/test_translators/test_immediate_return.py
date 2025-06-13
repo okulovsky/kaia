@@ -1,7 +1,7 @@
 from kaia.kaia.translators import ImmediateStopListenPayload, ImmediateStopTranslator
 from eaglesong import Scenario, Listen, Automaton, Return
 from unittest import TestCase
-from kaia.dub import *
+from eaglesong.templates import *
 
 class Intents:
     stop = Template("Stop")

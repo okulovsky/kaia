@@ -1,6 +1,6 @@
 from typing import *
 from abc import ABC, abstractmethod
-from kaia.dub.core import Template, Utterance, TemplatesCollection, IntentsPack
+from eaglesong.templates import Template, Utterance, TemplatesCollection, IntentsPack
 from enum import Enum
 
 class IKaiaSkill(ABC):
@@ -37,16 +37,34 @@ class IKaiaSkill(ABC):
         return []
 
 
+def _class_to_intent_collection(c) -> tuple[Template,...]:
+    if c is None:
+        return ()
+    if isinstance(c, type):
+        if issubclass(c, TemplatesCollection):
+            return tuple(c.get_templates())
+        else:
+            raise ValueError(f"If type, must be TemplatesCollection, but was {c}")
+    try:
+        l = tuple(c)
+    except Exception as ex:
+        raise ValueError("If not type, expected to be iterable of Templates") from ex
+    for index, element in enumerate(l):
+        if not isinstance(element, Template):
+            raise ValueError(f"If iterable, expect to contain only Templates, but at index {index} was\n{element}")
+    return l
+
+
 class KaiaSkillBase(IKaiaSkill):
     def __init__(self,
-                 intents_class: Optional[Type[TemplatesCollection]] = None,
-                 replies_class: Optional[Type[TemplatesCollection]] = None,
+                 intents_class: Union[Type[TemplatesCollection], Iterable[Template],None] = None,
+                 replies_class: Union[Type[TemplatesCollection], Iterable[Template],None] = None,
                  name: Optional[str] = None,
                  ):
         self._name = name if name is not None else type(self).__name__
-        self._intents = intents_class.get_templates() if intents_class is not None else []
-        self._dubs = replies_class.get_templates() if replies_class is not None else []
-        self._intents_names = set(i.name for i in self._intents)
+        self._intents = _class_to_intent_collection(intents_class)
+        self._dubs = _class_to_intent_collection(replies_class)
+        self._intents_names = set(i.get_name() for i in self._intents)
 
     @abstractmethod
     def run(self):
@@ -78,5 +96,5 @@ class SingleLineKaiaSkill(KaiaSkillBase):
 
     def should_start(self, input) -> False:
         if isinstance(input, Utterance):
-            return input.template.name in self._intents_names
+            return input.template.get_name() in self._intents_names
         return False

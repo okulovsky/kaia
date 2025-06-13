@@ -8,12 +8,12 @@ from enum import Enum
 from .server import KaiaServerSettings, KaiaServer
 import requests
 import webbrowser
-from eaglesong.core import primitives
 from pathlib import Path
 from kaia.common import Loc
 from yo_fluq import FileIO
 from brainbox import File
 from brainbox.framework.common import Fork
+from .buttons import ButtonGrid
 
 
 @dataclass
@@ -93,6 +93,19 @@ class KaiaApi:
                 sender = message.sender,
                 avatar = message.avatar
             )))
+
+    def add_buttons(self, button_grid: ButtonGrid|None):
+        if button_grid is not None:
+            data = button_grid.__dict__
+            data['elements'] = [e.__dict__ for e in button_grid.elements]
+        else:
+            data = None
+        return self.bus.add_message(BusItem(
+            session_id = self.session_id,
+            timestamp = datetime.now(),
+            type = 'reaction_buttons',
+            payload = data
+        ))
 
     def set_volume(self, volume: float):
         return self.bus.add_message(BusItem(

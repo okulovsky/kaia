@@ -6,7 +6,7 @@ from kaia.kaia.assistant.automaton_not_found_skill import AutomatonNotFoundRepli
 from kaia.kaia.translators import VoiceoverTranslator, RhasspyTextToUtteranceTranslator
 from brainbox import BrainBoxApi
 from brainbox.deciders import FakeFile
-from kaia.avatar import DubbingService, AvatarApi, AvatarSettings, TestTaskGenerator
+from avatar import DubbingService, AvatarApi, AvatarSettings, TestTaskGenerator
 from eaglesong.core import Automaton, Scenario
 from datetime import datetime
 import json
@@ -37,10 +37,6 @@ class AssistantTestCase(TestCase):
 
     def test_audio_wrapper(self):
         with BrainBoxApi.Test([FakeFile()]) as bb_api:
-            dubbing_service = DubbingService(
-                TestTaskGenerator(),
-                bb_api
-            )
             with AvatarApi.Test(AvatarSettings(dubbing_task_generator=TestTaskGenerator(), brain_box_api=bb_api)) as avatar_api:
                 assistant = KaiaAssistant([DateSkill(), TimeSkill(lambda: datetime(2020, 1, 1, 13, 45))])
                 assistant = RhasspyTextToUtteranceTranslator(assistant, assistant.get_intents())
@@ -53,10 +49,10 @@ class AssistantTestCase(TestCase):
                 )
 
                 self.assertIsInstance(resp[0], str)
-                self.assertEqual('It is thirteen hours and forty five minutes.', resp[0])
+                self.assertEqual('It is 13 hours and 45 minutes.', resp[0])
 
                 self.assertDictEqual(
-                    {'voice': 'voice_0', 'text': 'It is thirteen hours and forty five minutes.'},
+                    {'voice': 'voice_0', 'text': 'It is 13 hours and 45 minutes.'},
                     json.loads(resp[1].content)
                 )
 

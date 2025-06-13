@@ -1,7 +1,7 @@
 from typing import *
 from ..driver import AudioCommand
 from .partial_listen_translator import PartialListenTranslator
-from kaia.avatar import AvatarApi, RecognitionSettings
+from avatar import AvatarApi, RecognitionSettings
 
 
 class RecognitionTranslator(PartialListenTranslator):

@@ -1,7 +1,7 @@
 from unittest import TestCase
 from brainbox import IDecider, BrainBoxApi
 from brainbox.deciders import Collector
-from kaia.avatar import AvatarApi, AvatarSettings, RecognitionSettings
+from avatar import AvatarApi, AvatarSettings, RecognitionSettings
 from kaia.kaia.translators import RecognitionTranslator
 from kaia.kaia import AudioCommand
 from eaglesong import Scenario, Automaton, Listen
@@ -31,7 +31,7 @@ class Skill:
 
 class ACAndAvatarTestCase(TestCase):
     def test_ac_and_avatar_test_integration(self):
-        with BrainBoxApi.Test([Whisper(), Resemblyzer(), Collector()]) as bb_api:
+        with BrainBoxApi.Test() as bb_api:
             with AvatarApi.Test(AvatarSettings(brain_box_api=bb_api, resemblyzer_model_name='x')) as avatar_api:
                 skill = Skill(avatar_api)
                 skill = RecognitionTranslator(skill, avatar_api)
