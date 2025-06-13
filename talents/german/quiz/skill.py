@@ -1,10 +1,10 @@
 from typing import Iterable
-from kaia.dub import Template, TemplatesCollection, Utterance, ToStrDub
+from eaglesong.templates import Template, TemplatesCollection, Utterance, ToStrDub, TemplateVariable
 from kaia.kaia import IKaiaSkill, KaiaContext, OpenMic
-from kaia.avatar import ContentManager, KnownFields, NewContentStrategy, DataClassDataProvider
+from avatar import ContentManager, WorldFields, NewContentStrategy, DataClassDataProvider
 from eaglesong import Listen, Return, ContextRequest
 from chara.tools import Language
-from kaia.avatar import RecognitionSettings
+from avatar import RecognitionSettings
 from .quiz_helper import Question, QuizHelper
 from yo_fluq import FileIO
 
@@ -18,9 +18,7 @@ class Replies(TemplatesCollection):
     bad_plural = Template("Falsche Pluralform.")
     bad_article_and_plural = Template("Die ganze Grammatik ist falsch.")
     summary = Template(
-        "{fully_correct} Prozent der Fragen wurden vollständig richtig beantwortet, weitere {partially_correct} Prozent wiesen Grammatikfehler auf.",
-        fully_correct = ToStrDub(),
-        partially_correct = ToStrDub()
+        f"{TemplateVariable('fully_correct')} Prozent der Fragen wurden vollständig richtig beantwortet, weitere {TemplateVariable('partially_correct')} Prozent wiesen Grammatikfehler auf.",
     )
 
 
@@ -57,7 +55,7 @@ class GermanQuizSkill(IKaiaSkill):
 
     def run(self):
         context: KaiaContext = yield ContextRequest()
-        with context.avatar_api.push_state({KnownFields.language: "de"}):
+        with context.avatar_api.push_state({WorldFields.language: "de"}):
             yield from self.run_algorithm()
 
     def run_algorithm(self):
