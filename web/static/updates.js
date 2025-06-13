@@ -49,6 +49,34 @@ function add_image(payload) {
     image_control.src = `${BASE_URL}/file/${payload['filename']}`
 }
 
+
+function add_buttons(payload) {
+  const overlay = document.getElementById('overlay');
+  overlay.innerHTML = '';
+
+  if (!payload) {
+    overlay.style.display = 'none';
+    return;
+  }
+
+  overlay.style.display = 'grid';
+  overlay.style.gridTemplateColumns = `repeat(${payload.width}, 1fr)`;
+  overlay.style.gridTemplateRows = `repeat(${payload.height}, 50px)`;
+  overlay.style.gap = '5px';
+
+  for (const btn of payload.buttons) {
+    const button = document.createElement('button');
+    button.textContent = btn.text;
+    button.className = 'grid-button';
+
+    button.style.gridColumn = `${btn.column + 1} / span ${btn.column_span || 1}`;
+    button.style.gridRow = `${btn.row + 1} / span ${btn.row_span || 1}`;
+
+    overlay.appendChild(button);
+  }
+}
+
+
 function process_updates(data) {
     initialize_next = false
 
@@ -72,7 +100,9 @@ function process_updates(data) {
         if (element['type'] == 'notification_driver_start') {
             initialize_next = true
         }
-
+        if (element['type'] == 'overlay_buttons') {
+            add_buttons(element['payload'])
+        }
     }
 
     if (initialize_next) {
