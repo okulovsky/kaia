@@ -1,25 +1,26 @@
 from unittest import TestCase
-from kaia.skills.weather.skill import WeatherReply
-from kaia.skills.weather.forecast import Forecast
+from kaia.skills.weather.templates import WeatherReply,Forecast, Precipitation
+
 
 class WeatherReplyTestCase(TestCase):
     def test_reply(self):
-        f = Forecast(True, 10, 20, True, None)
+        f = Forecast(True, 10, 20, True, ())
         self.assertEquals(
             'The temperature today is between 10 and 20, mostly sunny, no precipitations.',
-            WeatherReply.forecast.utter(f.__dict__).to_str()
+            WeatherReply.forecast.utter(f).to_str()
         )
 
     def test_reply_with_precipitations(self):
-        f = Forecast(True, 10, 20, True, None)
-        v = f.__dict__
-        v['precipitations'] = [
-            WeatherReply.precipitation.utter(code=61, start=14).to_str(),
-            WeatherReply.precipitation.utter(code=63, start=16, end=17).to_str()
-        ]
+        f = Forecast(
+            True, 10, 20, True,
+            (
+                Precipitation(61, 14),
+                Precipitation(63, 16, 17)
+            )
+        )
         self.assertEquals(
             'The temperature today is between 10 and 20, mostly sunny, slight rain at 14 and moderate rain from 16 to 17.',
-            WeatherReply.forecast.utter(v).to_str()
+            WeatherReply.forecast.utter(f).to_str()
         )
 
 

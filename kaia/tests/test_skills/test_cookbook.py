@@ -1,6 +1,7 @@
 from kaia.skills.cookbook_skill import CookBookSkill, Recipe, CookBookIntents
 from kaia.skills.notification_skill import NotificationRegister, NotificationInfo, NotificationSkill
 from kaia.kaia import KaiaAssistant, TestTimeFactory
+from eaglesong.templates import Utterance
 from eaglesong import Scenario, Automaton
 from unittest import TestCase
 
@@ -9,7 +10,8 @@ def S(factory: TestTimeFactory):
         'tea',
         [
             Recipe.Stage("Boil water"),
-            Recipe.Stage("Put a teabag in the water, and wait 1 minute", 1),
+            Recipe.Stage("Put a teabag in the water"),
+            Recipe.Stage(timer_for_minutes=1),
             Recipe.Stage("Enjoy your tea"),
         ]
     )
@@ -36,6 +38,8 @@ class CookbookTestCase(TestCase):
             .check(str)
             .send(CookBookIntents.next_step())
             .check(str)
+            .send(CookBookIntents.next_step())
+            .check(Utterance)
             .act_and_send(lambda: tf.shift(59).tick())
             .check()
             .act_and_send(lambda: tf.shift(1).tick())

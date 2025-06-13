@@ -3,8 +3,8 @@ from eaglesong.core import Automaton, Scenario
 from brainbox import File, MediaLibrary
 from kaia.skills import NarrationSkill, InitializationSkill
 from kaia.kaia import KaiaAssistant, KaiaContext, InitializationCommand, TestTimeFactory
-from kaia.avatar import (
-    AvatarApi, AvatarSettings, NewContentStrategy, MediaLibraryManager, InitialStateFactory, KnownFields,
+from avatar import (
+    AvatarApi, AvatarSettings, NewContentStrategy, MediaLibraryManager, InitialStateFactory, WorldFields,
     NarrationSettings, ImageServiceSettings
 )
 from kaia.common import Loc
@@ -21,7 +21,7 @@ class ChangeImageTestCase(TestCase):
             characters = ('A', 'B')
             activities = ('1', '2', '3')
             tags = {
-                f'{character}-{activity}': {KnownFields.character: character, KnownFields.activity: activity}
+                f'{character}-{activity}': {WorldFields.character: character, WorldFields.activity: activity}
                 for character in characters
                 for activity in activities
             }
@@ -30,7 +30,7 @@ class ChangeImageTestCase(TestCase):
             with Loc.create_test_file() as stats_file:
                 manager = MediaLibraryManager(NewContentStrategy(False), media_library, stats_file)
                 settings = AvatarSettings(
-                    initial_state_factory=InitialStateFactory.Simple({KnownFields.character: characters[0]}),
+                    initial_state_factory=InitialStateFactory.Simple({WorldFields.character: characters[0]}),
                     image_settings=ImageServiceSettings(manager),
                     narration_settings=NarrationSettings(
                         characters,

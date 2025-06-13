@@ -1,7 +1,7 @@
 from typing import *
-from kaia.dub.languages.en import *
+from eaglesong.templates import *
 from kaia.kaia import SingleLineKaiaSkill, KaiaContext, Message
-from kaia.avatar import World
+from avatar import World
 from brainbox import File
 from eaglesong import ContextRequest
 
@@ -10,15 +10,15 @@ class ChangeImageIntents(TemplatesCollection):
     bad_image = Template("Bad image")
     hide_image = Template("Hide image")
     good_image = Template('Good image')
-    describe_image = Template(
-        "Describe image",
-        "Show prompt"
-    )
+    describe_image = Template("Describe image", "Show prompt")
 
 class ChangeImageReplies(TemplatesCollection):
     thanks = (
         Template("Thanks, I'm flattered! You're cute too!")
-        .paraphrase(f'{World.user} sees {World.character} and says that {World.character} looks good')
+        .context(
+            f'{World.user} sees {World.character} and says that {World.character} looks good',
+            reply_to=ChangeImageIntents.good_image
+        )
     )
 
 class ChangeImageSkill(SingleLineKaiaSkill):
@@ -32,14 +32,14 @@ class ChangeImageSkill(SingleLineKaiaSkill):
         input: Utterance = yield
         context: KaiaContext = yield ContextRequest()
         avatar_api = context.avatar_api
-        if input.template.name == ChangeImageIntents.change_image.name:
+        if input in ChangeImageIntents.change_image:
             yield avatar_api.image_get_new()
-        elif input.template.name == ChangeImageIntents.bad_image.name:
+        elif input in ChangeImageIntents.bad_image:
             avatar_api.image_report('bad')
             yield avatar_api.image_get_new()
-        elif input.template.name == ChangeImageIntents.hide_image.name:
+        elif input in ChangeImageIntents.hide_image:
             yield avatar_api.image_get_empty()
-        if input.template.name == ChangeImageIntents.good_image.name:
+        if input in ChangeImageIntents.good_image:
             avatar_api.image_report('good')
             yield ChangeImageReplies.thanks.utter()
         if input in ChangeImageIntents.describe_image:

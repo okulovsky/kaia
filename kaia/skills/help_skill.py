@@ -1,12 +1,15 @@
 from typing import *
 from kaia.kaia import KaiaAssistant, SingleLineKaiaSkill, Message
-from kaia.dub.languages.en import *
+from eaglesong.templates import *
 
 class HelpIntents(TemplatesCollection):
     help = Template("What can you do?")
 
 class HelpReplies(TemplatesCollection):
-    help = Template("Here is the list of available commands")
+    help = (
+        Template("Here is the list of available commands")
+        .no_paraphrasing()
+    )
 
 class HelpSkill(SingleLineKaiaSkill):
     def __init__(self):

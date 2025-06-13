@@ -1,6 +1,6 @@
 import json
 
-from kaia.avatar import (
+from avatar import (
     AvatarApi, AvatarSettings, NewContentStrategy, TestTaskGenerator, MediaLibraryManager,
     NarrationSettings, ImageServiceSettings
 )
@@ -53,7 +53,7 @@ class SimpleNarratorCharacterTestCase(TestCase):
                             Scenario(lambda: Automaton(aut, KaiaContext(avatar_api=avatar_api)))
                             .send(TimeIntents.question.utter())
                             .send(ChangeImageIntents.change_image.utter())
-                            .send(char_skill.intents.change_character.utter(character='character_1'))
+                            .send(ChangeCharacterIntents.change_character.utter(character='character_1'))
                             .send(TimeIntents.question.utter())
                             .send(ChangeImageIntents.change_image.utter())
                             .send(ChangeCharacterIntents.change_character.utter())

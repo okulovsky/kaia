@@ -2,7 +2,7 @@ from typing import *
 from ..kaia import IKaiaSkill, KaiaAssistant, AssistantHistoryItem, TimerTick
 from .scheduled_time import ScheduledTime
 from dataclasses import dataclass
-from kaia.dub.core import Template, Utterance
+from eaglesong.templates import Template, Utterance
 from datetime import datetime, timedelta
 from abc import ABC, abstractmethod
 
@@ -40,7 +40,7 @@ class ByTheWayIntentTrigger(IByTheWayTrigger):
             if not isinstance(item.message, Utterance):
                 return False
             for template in self.intents:
-                if item.message.template.name == template.name:
+                if item.message in template:
                     delta = (arg.current_time - item.last_interation_timestamp).total_seconds()
                     if delta >= self.delay_in_seconds:
                         return True

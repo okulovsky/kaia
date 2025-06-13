@@ -28,12 +28,12 @@ class TestDate(TestCase):
             .check(TimerReplies.timer_is_set.utter(duration=timedelta(minutes=5)))
             .send(TimerIntents.how_much_timers.utter())
             .check(
-                TimerReplies.you_have.utter(amount=1) + TimerReplies.timer_description.utter(index=1, remaining_time = timedelta(minutes=5)),
+                TimerReplies.you_have.utter(amount=1) + TimerReplies.timer_description.utter(index=1, duration = timedelta(minutes=5)),
             )
             .act(lambda: dtf.shift(30))
             .send(TimerIntents.how_much_timers.utter())
             .check(
-                TimerReplies.you_have(amount=1) + TimerReplies.timer_description(index=1, remaining_time=timedelta(minutes=4, seconds=30)),
+                TimerReplies.you_have(amount=1) + TimerReplies.timer_description(index=1, duration=timedelta(minutes=4, seconds=30)),
             )
             .send(TimerIntents.cancel_the_timer.utter())
             .check(

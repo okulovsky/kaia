@@ -4,7 +4,7 @@ from eaglesong.core import Automaton, Scenario
 from brainbox import File, MediaLibrary
 from kaia.skills.change_image_skill import ChangeImageIntents, ChangeImageSkill
 from kaia.kaia import KaiaAssistant, KaiaContext
-from kaia.avatar import AvatarApi, AvatarSettings, NewContentStrategy, MediaLibraryManager, ImageServiceSettings
+from avatar import AvatarApi, AvatarSettings, NewContentStrategy, MediaLibraryManager, ImageServiceSettings
 from kaia.common import Loc
 
 def check_image(tag):

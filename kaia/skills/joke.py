@@ -1,5 +1,5 @@
 import requests
-from kaia.dub.languages.en import *
+from eaglesong.templates import *
 from kaia.kaia import SingleLineKaiaSkill
 
 

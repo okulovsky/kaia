@@ -1,43 +1,57 @@
-from typing import Iterable
 from kaia.kaia import IKaiaSkill
-from kaia.dub import Template, TemplatesCollection, ToStrDub, StringSetDub, Utterance
-from kaia.dub.languages.en import CardinalDub
+from eaglesong.templates import *
+from avatar import World
 from .notification_skill import NotificationRegister, NotificationInfo
 from dataclasses import dataclass
 from yo_fluq import *
 from datetime import datetime, timedelta
 from eaglesong import Listen, Return
 
-class CookBookIntents(TemplatesCollection):
-    recipe = Template(
-        "How to cook {dish}",
-        dish=ToStrDub()
-    )
+DISH = TemplateVariable(
+    "dish",
+    description="one of the dish in the cookbook"
+)
 
-    next_step = Template(
-        "Next step"
-    )
+MINUTES = TemplateVariable(
+    "minutes",
+    description="the duration of the set timer, in minutes"
+)
+
+class CookBookIntents(TemplatesCollection):
+    recipe = Template(f"How to cook {DISH}")
+    next_step = Template("Next step")
+    cancel = Template("Cancel the recipe")
+
 
 class CookBookReplies(TemplatesCollection):
-    no_recipe = Template(
-        "Can't find a recipe for {dish}",
-        dish = ToStrDub()
+    no_recipe = (
+        Template(f"Can't find a recipe for {DISH}")
+        .no_paraphrasing()
     )
-    too_many_recipies = Template(
-        "More that one recipe for {dish}",
-        dish = ToStrDub()
+
+    too_many_recipies = (
+        Template(f"More that one recipe for {DISH}")
+        .no_paraphrasing()
     )
-    timer_set = Template(
-        "I'll call you in {minutes} minutes",
-        minutes = CardinalDub(1000)
+
+    timer_set = (
+        Template(f"I'll call you in {MINUTES} minutes")
+        .context(f"{World.character} guides {World.user} through recipe, and now it's time to wait. {World.character} sets timer and says {World.character.pronoun} will call {World.user} when the time is right.")
+    )
+
+    timer_is_busy = (
+        Template(f"You need to wait for the timer. {MINUTES} minutes remaining")
+        .context(f"{World.user} is asking what is the next step in the recipe, but currently {World.user} needs to wait for the timer to finish the previous step, and {World.character} informs {World.user.pronoun} about this fact.")
     )
 
 @dataclass
 class RecipeStage:
-    text: str
+    text: str|None = None
     timer_for_minutes: int|None = None
 
-
+    def __post_init__(self):
+        if (self.text is None) == (self.timer_for_minutes is None):
+            raise ValueError("Exactly one of `text` and `timer_for_minutes` must be set")
 
 @dataclass
 class Recipe:
@@ -56,8 +70,6 @@ class CookBookSkill(IKaiaSkill):
                  recipes: list[Recipe],
                  datetime_factory: Optional[Callable[[], datetime]] = None):
         self.recipes = recipes
-        dub = StringSetDub([r.dish for r in recipes])
-        self.template = CookBookIntents.recipe.substitute(dict(dish=dub))
         self.notification_register = register
         self.datetime_factory = datetime_factory if datetime_factory is not None else datetime.now
 
@@ -68,7 +80,8 @@ class CookBookSkill(IKaiaSkill):
         return IKaiaSkill.Type.MultiLine
 
     def get_intents(self) -> Iterable[Template]:
-        return [self.template, CookBookIntents.next_step]
+        template = CookBookIntents.recipe.substitute(dish=OptionsDub([r.dish for r in self.recipes]))
+        return CookBookIntents.get_templates(template)
 
     def get_replies(self) -> Iterable[Template]:
         return CookBookReplies.get_templates()
@@ -77,11 +90,14 @@ class CookBookSkill(IKaiaSkill):
         return type(self).__name__
 
     def should_start(self, input) -> bool:
-        return isinstance(input, Utterance) and input in self.template
+        return isinstance(input, Utterance) and input in CookBookIntents.recipe
 
     def should_proceed(self, input) -> bool:
-        if isinstance(input, Utterance) and input in CookBookIntents.next_step:
-            return True
+        if isinstance(input, Utterance):
+            if input in CookBookIntents.next_step:
+                return True
+            if input in CookBookIntents.cancel:
+                return True
         if isinstance(input, CookBookContinuation):
             return True
         return False
@@ -98,8 +114,10 @@ class CookBookSkill(IKaiaSkill):
             raise Return()
         recipe = recipies[0]
         for stage in recipe.stages:
-            yield stage.text
-            if stage.timer_for_minutes is not None:
+            if stage.text is not None:
+                yield stage.text
+            else:
+                yield CookBookReplies.timer_set(stage.timer_for_minutes)
                 info = NotificationInfo(
                     self.datetime_factory(),
                     timedelta(minutes=stage.timer_for_minutes),
@@ -107,7 +125,11 @@ class CookBookSkill(IKaiaSkill):
                 )
                 self.notification_register.instances['cookbook'] = info
                 yield
-            yield Listen()
+            response = yield Listen()
+            if response in CookBookIntents.cancel:
+                if 'cookbook' in self.notification_register.instances:
+                    del self.notification_register.instances['cookbook']
+                break
 
 
 

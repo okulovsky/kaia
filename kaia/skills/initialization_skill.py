@@ -1,5 +1,4 @@
 from ..kaia import IKaiaSkill, InitializationCommand, KaiaContext
-from .character_skill import ChangeCharacterSkill
 from eaglesong import ContextRequest
 
 
