@@ -5,7 +5,7 @@ from kaia.kaia.audio_control.wav_streaming import WavStreamingApi, WavApiSetting
 from pathlib import Path
 from brainbox import BrainBoxTask, BrainBoxApi
 from brainbox.deciders import OpenTTS, Whisper
-from kaia.avatar.utils import TestSpeaker
+from avatar.utils import TestSpeaker
 from kaia.kaia import audio_control as ac
 from yo_fluq import FileIO, Query
 from kaia.tests.test_kaia.test_audio_control import create_test_settings

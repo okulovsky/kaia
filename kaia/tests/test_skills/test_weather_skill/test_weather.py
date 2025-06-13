@@ -1,7 +1,8 @@
 from unittest import TestCase
 from datetime import datetime
 from eaglesong.core import Automaton, Scenario, Return
-from kaia.skills.weather.skill import WeatherSkill, WeatherIntents, WeatherReply, WeatherSettings
+from kaia.skills.weather.skill import WeatherSkill, WeatherSettings
+from kaia.skills.weather.templates import WeatherIntents, WeatherReply, TEMPERATURE, WEATHER_CODE, Precipitation, Forecast
 from kaia.skills.weather.request import get_sample
 
 
@@ -21,8 +22,8 @@ class WeatherTestCase(TestCase):
             .send(WeatherIntents.question.utter())
             .check(
                 WeatherReply.weather.utter(
-                    temperature_2m = 4.6,
-                    weathercode = 80
+                    TEMPERATURE.assign(4),
+                    WEATHER_CODE.assign(80)
                 ),
                 Return
             )
@@ -32,29 +33,28 @@ class WeatherTestCase(TestCase):
 
 
     def test_forecast_today(self):
-        (
+        result = (
             S(14)
             .send(WeatherIntents.forecast.utter())
-            .check(WeatherReply.forecast.utter(
-                for_today=True,
-                min_t = 6,
-                max_t = 8,
-                is_sunny = False,
-                precipitations = ('slight rain at 14', 'moderate rain at 15', 'slight rain at 16')
-            ), Return)
+            .check(Scenario.stash('forecast'), Return)
             .validate()
         )
+        val = result.stashed_values['forecast'].value.__dict__
+        true =  {'for_today': True, 'min_t': 6, 'max_t': 8, 'is_sunny': False, 'precipitations': (Precipitation(weather_code=61, start=14, end=None), Precipitation(weather_code=63, start=15, end=None), Precipitation(weather_code=61, start=16, end=None))}
+        self.assertEqual(str(val), str(true))
+
+
 
     def test_forecast_tomorrow(self):
         (
             S(20)
             .send(WeatherIntents.forecast.utter())
-            .check(WeatherReply.forecast.utter(
+            .check(WeatherReply.forecast.utter(Forecast(
                 for_today=False,
                 min_t = 2,
                 max_t = 3,
                 is_sunny = True,
-                precipitations = None
-            ), Return)
+                precipitations = ()
+            )), Return)
             .validate()
         )

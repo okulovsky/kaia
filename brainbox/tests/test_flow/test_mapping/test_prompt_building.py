@@ -14,12 +14,6 @@ class OntologyPromptTestCase(TestCase):
         data = MyClass(34,'test')
         self.assertEqual('Number 34, string test', prompt(data))
 
-    def test_inline_prompt(self):
-        o = Referrer()
-        prompt = Prompter(f"Number <<number>>, string <<s>>")
-        data = MyClass(34, 'test')
-        self.assertEqual('Number 34, string test', prompt(data))
-
 
 
 

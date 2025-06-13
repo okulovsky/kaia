@@ -1,9 +1,9 @@
-from kaia.dub.languages.en import *
+from eaglesong.templates import *
 
 class SmalltalkInputs(TemplatesCollection):
     you_are_awesome = Template("You are awesome!")
 
 
 class SmalltalkReply(TemplatesCollection):
-    thanks_you_too = Template("Aw, thanks! You too!").meta.set(reply_to=SmalltalkInputs.you_are_awesome)
+    thanks_you_too = Template("Aw, thanks! You too!").context(reply_to=SmalltalkInputs.you_are_awesome)
 

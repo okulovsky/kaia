@@ -1,8 +1,8 @@
 from typing import *
 from ..kaia import IKaiaSkill, OpenMic
-from kaia.dub.core import Template, Utterance, TemplatesCollection
+from eaglesong.templates import Template, Utterance, TemplatesCollection
 from eaglesong import Listen
-from kaia.avatar import RecognitionSettings, World
+from avatar import RecognitionSettings, World
 
 
 class EchoIntents(TemplatesCollection):
@@ -12,7 +12,10 @@ class EchoIntents(TemplatesCollection):
 class EchoReplies(TemplatesCollection):
     echo_request = (
         Template("Say anything and I will repeat")
-        .paraphrase(f"{World.user} asks {World.character} to reply whatever {World.user} says, and {World.character} agrees to play this game.")
+        .context(
+            f"{World.user} asks {World.character} to reply whatever {World.user} says, and {World.character} agrees to play this game.",
+            reply_to=EchoIntents.echo
+        )
     )
 
 
@@ -24,7 +27,7 @@ class EchoSkill(IKaiaSkill):
     def should_start(self, input) -> False:
         if not isinstance(input, Utterance):
             return False
-        if input.template.name != EchoIntents.echo.name:
+        if input not in EchoIntents.echo:
             return False
         return True
 

@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, time
 from eaglesong.core import Automaton, Scenario
 from kaia.skills import TimeSkill, DateSkill, ByTheWayIntentTrigger, ByTheWaySkill, ByTheWayNotification
 from kaia.skills import ScheduledTime
-from kaia.dub.core import Utterance, Template
+from eaglesong.templates import Utterance, Template
 from kaia.skills.time import TimeIntents
 from kaia.skills.date import DateIntents
 from kaia.kaia import TestTimeFactory, KaiaAssistant, TimerTick

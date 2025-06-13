@@ -1,4 +1,10 @@
 """
+## Authorization: combining chat flows
+
+This section demonstrates how to achieve code reusability across different chatflow
+
+### No reusability: copy and paste!
+
 Authorization is very important step of the chat bot. The following code shows the simplest way
 to authorize only yourself as a user of the chatbot: you just write your chat id in env. variable,
 and check that the user is legit.

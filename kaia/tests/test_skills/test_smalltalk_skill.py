@@ -1,4 +1,4 @@
-from kaia.dub import Template, TemplatesCollection
+from eaglesong.templates import Template, TemplatesCollection
 from unittest import TestCase
 from kaia.skills import SmalltalkSkill
 from eaglesong import Automaton, Scenario
@@ -9,8 +9,8 @@ class Intents(TemplatesCollection):
     whats_up = Template("What's up?")
 
 class Replies(TemplatesCollection):
-    i_am_fine = Template("I'm fine").meta.set(reply_to=Intents.how_are_how)
-    not_much = Template("Not much").meta.set(reply_to=Intents.whats_up)
+    i_am_fine = Template("I'm fine").context(reply_to=Intents.how_are_how)
+    not_much = Template("Not much").context(reply_to=Intents.whats_up)
 
 def create_automaton():
     skills = [SmalltalkSkill(Intents, Replies)]

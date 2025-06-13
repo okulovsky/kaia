@@ -1,4 +1,5 @@
-from kaia.dub.languages.en import *
+from eaglesong.templates import *
+from dataclasses import dataclass
 
 
 # https://open-meteo.com/en/docs#hourly=temperature_2m,weathercode
@@ -33,17 +34,17 @@ weather_code = {
     99: 'thunderstorm with heavy hail'
 }
 
+inverted_weather_code = {s:v for v, s in weather_code.items()}
+
 sunny_dict = {
-    True: 'sunny',
-    False: 'cloudy'
+    'sunny': True,
+    'cloudy': False
 }
 
 today_dict = {
-    True: 'today',
-    False: 'tomorrow'
+    'today': True,
+    'tomorrow': False,
 }
-
-weather_code_dub = DictDub(weather_code, 'weather_code')
 
 class WeatherIntents(TemplatesCollection):
     question = Template(
@@ -53,28 +54,79 @@ class WeatherIntents(TemplatesCollection):
         'Weather forecast'
     )
 
+TEMPERATURE = TemplateVariable(
+    'temperature',
+    ToStrDub(),
+    "Temperature, from -50 to 50 Celsius"
+)
+
+MIN_TEMPERATURE = TEMPERATURE.rename("min_t")
+MAX_TEMPERATURE = TEMPERATURE.rename("max_t")
+
+WEATHER_CODE = TemplateVariable(
+    'weather_code',
+    OptionsDub(inverted_weather_code),
+    "Weather code, can be e.g. `clear sky`, `cloudy`, `rain` or `blizzard`"
+)
+
+TODAY = TemplateVariable(
+    "for_today",
+    OptionsDub(today_dict),
+    "Word `today` or `tomorrow`"
+)
+
+SUNNY = TemplateVariable(
+    'is_sunny',
+    OptionsDub(sunny_dict),
+    "Word `sunny` or `cloudy`"
+)
+
+TIME_START = TemplateVariable(
+    "start",
+)
+
+TIME_END = TemplateVariable(
+    "end"
+)
+
+
+@dataclass
+class Precipitation:
+    weather_code: int
+    start: int
+    end: int|None = None
+
+@dataclass
+class Forecast:
+    for_today: bool
+    min_t: int
+    max_t: int
+    is_sunny: bool
+    precipitations: tuple[Precipitation,...]
+
+
+precipitation_template = DataclassTemplateDub(
+    Precipitation,
+    f'{WEATHER_CODE} at {TIME_START}',
+    f'{WEATHER_CODE} from {TIME_START} to {TIME_END}',
+)
+
+PRECIPITATIONS = TemplateVariable(
+    'precipitations',
+    ListDub(precipitation_template, word_if_empty='no precipitations'),
+    "the string describing the precipitations during the day, e.g. `rain at 16:00, drizzle from 17:00 to 19:00`"
+)
+
+
+
 class WeatherReply(TemplatesCollection):
     weather = Template(
-        'It is {temperature_2m} grads today, {weathercode}',
-        temperature_2m = CardinalDub(-50, 50),
-        weathercode = weather_code_dub
+        f'It is {TEMPERATURE} grads today, {WEATHER_CODE}',
     )
 
     forecast = Template(
-        "The temperature {for_today} is between {min_t} and {max_t}, mostly {is_sunny}, {precipitations}.",
-        "The temperature {for_today} is between {min_t} and {max_t}, mostly {is_sunny}, no precipitations.",
-        min_t = ToStrDub(),
-        max_t = ToStrDub(),
-        is_sunny = DictDub(sunny_dict),
-        for_today = DictDub(today_dict),
-        precipitations = StringListDub()
-    )
+        f"The temperature {TODAY} is between {MIN_TEMPERATURE} and {MAX_TEMPERATURE}, mostly {SUNNY}, {PRECIPITATIONS}.",
+    ).with_type(Forecast)
 
-    precipitation = Template(
-        '{code} at {start}',
-        '{code} from {start} to {end}',
-        code = weather_code_dub,
-        start = ToStrDub(),
-        end = ToStrDub()
-    )
+
 

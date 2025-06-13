@@ -1,6 +1,6 @@
 from typing import *
 from kaia.kaia import SingleLineKaiaSkill
-from kaia.dub.core import TemplatesCollection, Utterance, Template
+from eaglesong.templates import TemplatesCollection, Utterance
 
 
 class SmalltalkSkill(SingleLineKaiaSkill):
@@ -14,10 +14,11 @@ class SmalltalkSkill(SingleLineKaiaSkill):
     def run(self):
         input: Utterance = yield
         for reply in self.replies.get_templates():
-            repl:Template = reply.meta.reply_to
-            if repl is None:
-                raise ValueError(f'`reply_to` not sent for `{reply.name}`')
-            if repl.name == input.template.name:
-                yield reply.utter()
-                break
+            reply_to = reply.get_context().reply_to
+            if reply_to is None:
+                raise ValueError(f'`reply_to` not sent for `{reply.get_name()}`')
+            for repl in reply_to:
+                if repl.get_name() == input.template.get_name():
+                    yield reply.utter()
+                    return
 

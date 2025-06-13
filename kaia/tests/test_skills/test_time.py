@@ -13,3 +13,7 @@ class TimeSkillTestCase(TestCase):
             .validate()
         )
 
+    def test_template(self):
+        s = TimeReplies.answer.utter(hours=13, minutes=45).to_str()
+        self.assertEqual('It is 13 hours and 45 minutes.', s)
+

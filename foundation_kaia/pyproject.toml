@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kaia-foundation"
+description = "Utilities used in Kaia project"
+version = "1.0.0"
+requires-python = ">=3.10, <4.0"
+license = "LGPL-3.0-or-later"
+authors = [
+    {name = "Yuri Okulovsky", email = "yuri.okulovsky@gmail.com"}
+]
+
+dependencies = [
+    "yo_fluq",
+    "requests",
+    "jsonpickle",
+    "Jinja2",
+    "flask"
+]
+
+classifiers = [
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Information Technology",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Development Status :: 4 - Beta"
+]
+
+[project.urls]
+repository = "https://github.com/okulovsky/kaia/tree/main/foundation_kaia"
+
+[tool.setuptools.packages.find]
+where = ["."]

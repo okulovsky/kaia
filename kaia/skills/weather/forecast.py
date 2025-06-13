@@ -1,24 +1,11 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import pandas as pd
-from .templates import WeatherReply
+from .templates import Precipitation, Forecast
 from .settings import WeatherSettings
 
 
 
-@dataclass
-class Precipitation:
-    code: int
-    start: int
-    end: int|None = None
-
-@dataclass 
-class Forecast:
-    for_today: bool
-    min_t: int
-    max_t: int
-    is_sunny: bool
-    precipitations: tuple[Precipitation,...]|None
 
 
 
@@ -41,8 +28,6 @@ def _get_precipitation(df):
         else:
             pres.append(Precipitation(b['code'], b['start'], b['end']))
 
-    if len(pres)==0:
-        return None
     return pres
     
 
@@ -71,13 +56,7 @@ def make_forecast(data, dt: datetime, settings: WeatherSettings):
     is_sunny = df.is_sunny.mean() > 0.5
 
     ps = _get_precipitation(df)
-    return Forecast(for_today, min_temperature, max_temperature, is_sunny, ps)
+    return Forecast(for_today, min_temperature, max_temperature, is_sunny, tuple(ps))
 
-    
-def convert_forecast_to_utterance(forecast: Forecast):
-    value = forecast.__dict__
-    if value['precipitations'] is not None:
-        value['precipitations'] = tuple(WeatherReply.precipitation.to_str(s.__dict__) for s in value['precipitations'])
-    return WeatherReply.forecast.utter(**value)
 
 

@@ -18,9 +18,11 @@ def create_brainbox_builder():
         [d for d in DEPENDENCIES.split('\n') if d.strip()!=''],
         add_current_user=True,
         copy_to_code_path={
+            bb_folder.parent/'foundation_kaia': '/foundation_kaia',
             bb_folder/'framework' : '/brainbox/framework',
             bb_folder/'deciders': '/brainbox/deciders',
             bb_folder/'run.py': '/brainbox/run.py',
+            bb_folder/'__init__.py': '/brainbox/__init__.py',
             },
         write_to_code_path={
             '/pyproject.toml': TOML
@@ -64,6 +66,15 @@ TOML = '''
 [build-system]
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+version = "0.0.0"
+name = "brainbox-container"
+
+[tool.setuptools]
+packages = ["brainbox", "foundation_kaia"]
+
+
 '''
 
 DEPENDENCIES = """

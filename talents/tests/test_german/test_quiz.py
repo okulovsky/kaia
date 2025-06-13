@@ -2,7 +2,7 @@ from unittest import TestCase
 from eaglesong import Scenario, Automaton, Return
 from talents.german.quiz import Intents, Replies,GermanQuizSkill, Question
 from brainbox import MediaLibrary
-from kaia.avatar import ContentManager, NewContentStrategy, DataClassDataProvider
+from avatar import ContentManager, NewContentStrategy, DataClassDataProvider
 
 questions = [
     Question(

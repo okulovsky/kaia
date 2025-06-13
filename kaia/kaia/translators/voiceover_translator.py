@@ -1,7 +1,7 @@
 from typing import *
 from eaglesong.core import Translator, TranslatorOutputPackage
-from kaia.avatar import AvatarApi, TextLike
-from kaia.dub import Utterance, UtterancesSequence
+from avatar import AvatarApi, TextLike
+from eaglesong.templates import Utterance, UtterancesSequence
 
 
 class VoiceoverTranslator(Translator):

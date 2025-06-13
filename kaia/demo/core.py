@@ -1,10 +1,10 @@
 from kaia import skills
-from .avatar import characters, KnownFields
+from .avatar_definition import characters, WorldFields
 from kaia.kaia import KaiaCoreService, KaiaCoreServiceSettings, Message, KaiaAssistant
 from pathlib import Path
 from brainbox import File, ControllersSetup
 from .app import KaiaApp
-from kaia.dub.languages.en import *
+from eaglesong.templates import *
 from brainbox.deciders import Whisper, OpenTTS, RhasspyKaldi
 from . import smalltalk_skill
 from talents.german.quiz import GermanQuizSkill
@@ -49,7 +49,7 @@ class DemoCoreService(KaiaCoreService):
         skills_list.append(help := skills.HelpSkill())
         skills_list.append(skills.LogFeedbackSkill())
         skills_list.append(skills.ChangeCharacterSkill(characters))
-        skills_list.append(skills.InitializationSkill({KnownFields.language: 'en'}))
+        skills_list.append(skills.InitializationSkill({WorldFields.language: 'en'}))
         skills_list.append(skills.NarrationSkill())
 
         skills_list.append(GermanQuizSkill.create_skill(

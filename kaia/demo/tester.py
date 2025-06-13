@@ -1,7 +1,7 @@
 import time
 
 import requests
-from kaia.avatar.utils import TestSpeaker
+from avatar.utils import TestSpeaker
 from .app import KaiaApp
 from brainbox.framework.common import ApiUtils
 from unittest import TestCase

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from ..prompters import Address, AddressBuilder
+from foundation_kaia.prompters import Address, AddressBuilder
 from copy import deepcopy
 
 class IApplicator(ABC):

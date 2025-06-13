@@ -1,6 +1,7 @@
 from eaglesong.core import IAutomaton, Interpreter, primitives as prim
 from ..server import Message, KaiaApi
 from brainbox import File
+from ..server.buttons import ButtonGrid
 
 
 class Confirmation:
@@ -18,6 +19,7 @@ class KaiaInterpreter(Interpreter):
         self.handle_type(prim.Terminate, self._process_terminate)
         self.handle_type(File, self._process_file)
         self.handle_type(Message, self._publish_message)
+        self.handle_type(ButtonGrid, self._publish_button_grid)
 
 
     def _process_empty(self, response):
@@ -61,6 +63,10 @@ class KaiaInterpreter(Interpreter):
             return self._process_audio(item)
         else:
             raise ValueError(f"Unsupported file kind {item.Kind}")
+
+    def _publish_button_grid(self, item: ButtonGrid):
+        self.kaia_api.add_buttons(item)
+        return Interpreter.continue_cycle(Confirmation())
 
     def process(self, item):
         return self._process(item)

@@ -1,4 +1,6 @@
 """
+### Providing the chatflow as inner routine
+
 Finally, let's get of this `main` method, so we could compose our skill from `Authorize` object and
 `echobot` function like from bricks. To do so, we pass `echobot` function to `Authorize`, and
 `Authorize` will call it when ready.
@@ -33,7 +35,14 @@ class Authorize:
 
         yield from self.inner_routine()
 
-#bot = Bot("auth2", Authorize('KAIA_TEST_BOT_CHAT_ID', echobot)) # INCORRECT. Can fix with deepcopy, but that is sometimes desired behaviour, so factory is better
+"""
+INCORRECT way to create a bot would be:
+`bot = Bot("auth2", Authorize('KAIA_TEST_BOT_CHAT_ID', echobot))`
+
+It can be fixed with deepcopy, but that is sometimes desired behaviour, so factory is better
+
+The correct way is:
+"""
 
 bot = Bot("auth2", lambda: Authorize('KAIA_TEST_BOT_CHAT_ID', echobot)())
 

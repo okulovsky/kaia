@@ -1,4 +1,6 @@
 """
+## Questionnaire: Calling other functions
+
 How do we call other functions from `main`?
 
 If it's just a normal Python function, such as `datetime.now()` below, you can of course

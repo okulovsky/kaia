@@ -1,5 +1,5 @@
 from typing import Iterable, Union
-from ...common.marshalling import Api, bind_to_api, TestApi
+from foundation_kaia.marshalling import Api, bind_to_api, TestApi
 from ...common import File, Loc, FileLike, IDecider, Locator
 from .interface import IBrainboxService
 from .service import BrainBoxService

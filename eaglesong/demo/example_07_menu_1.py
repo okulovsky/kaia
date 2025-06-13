@@ -1,6 +1,7 @@
 """
-There is a small `kaia.eaglesong.amenities` library, which currently contains only one thing: button-driver menu.
-It is often very handy to program your skills as menus.
+## Example library
+
+This will demonstrate a reusable `menu` component, handy for different Telegram chatbots
 
 The following menu allows you to pick a value from the lists. The value is then displayed to you.
 """

@@ -1,8 +1,5 @@
-import pandas as pd
-
-from ....job_processing import Job
 from .batch_page import _select, _pretty_sec
-from sqlalchemy import select, case, func
+from sqlalchemy import func
 from yo_fluq import *
 import numpy as np
 from ....common import HTML

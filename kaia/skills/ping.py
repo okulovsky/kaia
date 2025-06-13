@@ -1,8 +1,8 @@
 from typing import *
-from kaia.dub.languages.en import *
+from eaglesong.templates import *
 from kaia.kaia import SingleLineKaiaSkill
 from datetime import datetime
-from kaia.avatar import World
+from avatar import World
 
 class PingIntents(TemplatesCollection):
     question = Template(
@@ -13,7 +13,10 @@ class PingIntents(TemplatesCollection):
 class PingReplies(TemplatesCollection):
     answer = (
         Template("Sure, I'm listening.")
-        .paraphrase(f"{World.user} asks if {World.character} is still listening to {World.user}, and {World.character} wants to confirm")
+        .context(
+            f"{World.user} asks if {World.character} is still listening to {World.user}, and {World.character} confirms",
+            reply_to=PingIntents.question
+        )
     )
 
 class PingSkill(SingleLineKaiaSkill):

@@ -1,10 +1,10 @@
 from typing import *
-from .templates import WeatherIntents, WeatherReply
+from . import templates as t
 from kaia.kaia import SingleLineKaiaSkill
 from datetime import datetime
 from .request import get_open_meteo, parse_open_meteo
-from kaia.dub.core import Utterance
-from .forecast import make_forecast, convert_forecast_to_utterance
+from eaglesong.templates import Utterance
+from .forecast import make_forecast
 from .settings import WeatherSettings
 
 
@@ -16,8 +16,8 @@ class WeatherSkill(SingleLineKaiaSkill):
                  request_caller: Optional[Callable] = None
     ):
         super().__init__(
-            WeatherIntents,
-            WeatherReply,
+            t.WeatherIntents,
+            t.WeatherReply,
         )
         self.settings = settings
         self.datetime_factory = datetime_factory
@@ -28,17 +28,19 @@ class WeatherSkill(SingleLineKaiaSkill):
 
     def run(self):
         intent: Utterance = yield None
-        if intent.template == WeatherIntents.question:
+        if intent in t.WeatherIntents.question:
             reply = self.request_caller()
             time = self.datetime_factory()
             info = parse_open_meteo(time, reply)
-            yield WeatherReply.weather.utter(**info)
-        elif intent.template == WeatherIntents.forecast:
+            yield t.WeatherReply.weather.utter(
+                t.WEATHER_CODE.assign(info['weathercode']),
+                t.TEMPERATURE.assign(int(info['temperature_2m']))
+            )
+        elif intent.template == t.WeatherIntents.forecast:
             data = self.request_caller()
             time = self.datetime_factory()
             forecast = make_forecast(data, time, self.settings)
-            reply = convert_forecast_to_utterance(forecast)
-            yield reply
+            yield t.WeatherReply.forecast.utter(forecast)
 
 
 

@@ -1,4 +1,6 @@
 """
+### Reusability on the methods' level
+
 Now let's see how we can organize the authorization code better, to be able to reuse it.
 
 First, we can decompose the code to `authorize` and `echobot` methods, and combine the calls in `main`.

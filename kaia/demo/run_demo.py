@@ -12,7 +12,7 @@ mic_settings = MicSettings(
 
 
 if __name__ == '__main__':
-    kaia_session_id = None
+    kaia_session_id = 'test'
 
     if (len(sys.argv) > 1):
         print("Custom kaia session id: " + sys.argv[1])

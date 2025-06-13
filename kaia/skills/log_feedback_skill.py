@@ -1,5 +1,5 @@
 from kaia.kaia import SingleLineKaiaSkill, KaiaLog
-from kaia.dub.languages.en import *
+from eaglesong.templates import *
 
 class LogFeedbackIntents(TemplatesCollection):
     report = Template("Something is wrong", "You're misbehaving")

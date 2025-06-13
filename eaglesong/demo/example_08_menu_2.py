@@ -1,4 +1,6 @@
 """
+### Custom actions in menu
+
 You can also associate custom actions with menu items.
 
 The first way is to create a class inherited from `MenuItem`, and implement it's `run` method.

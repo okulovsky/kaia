@@ -1,6 +1,6 @@
 from typing import TypeVar, Generic, Any, Callable
 from abc import ABC, abstractmethod
-from ..prompters import IPrompter
+from foundation_kaia.prompters import IPrompter
 from dataclasses import dataclass, field
 import hashlib
 from brainbox import BrainBoxTask

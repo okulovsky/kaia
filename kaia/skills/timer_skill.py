@@ -1,22 +1,39 @@
 from eaglesong.core import Return
 from typing import *
-from kaia.dub.languages.en import *
+from eaglesong.templates import *
 from kaia.kaia import SingleLineKaiaSkill
 from datetime import datetime
 from .notification_skill import NotificationRegister, NotificationInfo
-from kaia.avatar import World
+from avatar import World
+
+
+
+DURATION = TemplateVariable(
+    'duration',
+    TimedeltaDub(0,2),
+    'the duration of the timer'
+)
+
+INDEX = TemplateVariable(
+    'index',
+    OrdinalDub(1,10),
+    'when several timers are used, the index of the timer, so `first`, `second`, etc up to `tenth`.'
+)
+
+AMOUNT = TemplateVariable(
+    'amount',
+    CardinalDub(1,10),
+    "the amount of currently active timers"
+)
 
 class TimerIntents(TemplatesCollection):
     set_the_timer = Template(
-        'Set the timer for {duration}',
-        'Set the {index} timer for {duration}',
-        duration = TimedeltaDub(0, 2),
-        index = OrdinalDub(1,10)
+        f'Set the timer for {DURATION}',
+        f'Set the {INDEX} timer for {DURATION}',
     )
     cancel_the_timer = Template(
         'Cancel the timer',
-        'Cancel the {index} timer',
-        index = OrdinalDub(1, 10)
+        f'Cancel the {INDEX} timer',
     )
     how_much_timers = Template(
         'How much timers do I have?'
@@ -24,43 +41,53 @@ class TimerIntents(TemplatesCollection):
 
 
 class TimerReplies(TemplatesCollection):
-    timer_is_set = Template(
-        'The timer for {duration} is set',
-        '{index} timer for {duration} is set',
-        duration = TimedeltaDub(),
-        index = OrdinalDub(1, 10)
-    ).paraphrase.after(f'{World.user} asks {World.character} to monitor a timer for {World.user}, and {World.character} responds with an agreement.')
+    timer_is_set = (
+        Template(
+            f'The timer for {DURATION} is set',
+            f'{INDEX} timer for {DURATION} is set',
+        ).context(
+            f'{World.user} asks to set the timer, and {World.character} agrees'
+        )
+    )
 
     timer_is_cancelled = Template(
         'The timer is cancelled',
-        'The {index} timer is cancelled',
-        index = OrdinalDub(1, 10)
-    ).paraphrase.after(f'{World.user} asked {World.character} to monitor a timer, but then changed {World.user.pronoun.possessive} mind and said not to monitor timer anymore. {World.character} responds with a confirmation.')
+        f'The {INDEX} timer is cancelled',
+    ).context(
+        f'{World.user} asks to cancel the previously set the timer, and {World.character} agrees'
+    )
 
     which_timer_error = Template(
-        'You have {amount} timers, I do not know which one to cancel.',
-        amount = CardinalDub(1, 10)
+        f'You have {AMOUNT} timers, I do not know which one to cancel.',
+    ).context(
+        reply_to=TimerIntents.cancel_the_timer,
+        reply_details=f"{World.user} didn't specify the timer's index, but several timers are currently active"
     )
 
     no_such_timer = Template(
-        'I do not have the {index} timer',
-        index = OrdinalDub(1, 10)
+        f'I do not have the {INDEX} timer',
+    ).context(
+        reply_to=TimerIntents.cancel_the_timer,
+        reply_details=f"{World.user} requested to cancel the specific timer, but this timer is not currently active"
     )
 
     no_timers = Template(
         'I do not have timers'
+    ).context(
+        reply_to=TimerIntents.how_much_timers,
+        reply_details="No timers are available"
     )
 
     you_have = Template(
-        "You have {amount} {timers}",
-        amount = CardinalDub(1, 10),
-        timers = PluralAgreement('amount','timer','timers')
+        f"You have {AMOUNT} {PluralAgreement('amount','timer').as_variable()}",
+    ).context(
+        reply_to=TimerIntents.how_much_timers
     )
 
     timer_description = Template(
-        'The {index} timer has {remaining_time}',
-        index = OrdinalDub(1, 10),
-        remaining_time = TimedeltaDub()
+        f'The {INDEX} timer has {DURATION}',
+    ).context(
+        f'{World.user} asks about the remaining time on the timer, and {World.character} replies'
     )
 
 
@@ -78,7 +105,7 @@ class TimerSkill(SingleLineKaiaSkill):
     def run(self):
         input: Utterance = yield
 
-        if input.template.name == TimerIntents.set_the_timer.name:
+        if input in TimerIntents.set_the_timer:
             duration = input.value['duration']
             timer_info = NotificationInfo(self.datetime_factory(), duration)
             if 'index' in input.value:
@@ -93,7 +120,7 @@ class TimerSkill(SingleLineKaiaSkill):
             else:
                 yield TimerReplies.timer_is_set.utter(duration=duration, index = index)
 
-        if input.template.name == TimerIntents.cancel_the_timer.name:
+        if input in TimerIntents.cancel_the_timer:
             if 'index' in input.value:
                 index = input.value['index']
             else:
@@ -113,14 +140,14 @@ class TimerSkill(SingleLineKaiaSkill):
             else:
                 yield TimerReplies.timer_is_cancelled.utter(index = index)
 
-        if input.template.name == TimerIntents.how_much_timers.name:
+        if input in TimerIntents.how_much_timers:
             if len(self.timers) == 0:
                 yield TimerReplies.no_timers.utter()
             else:
                 utterances = [TimerReplies.you_have.utter(amount=len(self.timers))]
                 for index in sorted(self.timers):
                     info = self.timers[index]
-                    utterances.append(TimerReplies.timer_description.utter(index=index, remaining_time = info.duration - (self.datetime_factory() - info.start)))
+                    utterances.append(TimerReplies.timer_description.utter(index=index, duration = info.duration - (self.datetime_factory() - info.start)))
                 yield UtterancesSequence(*utterances)
 
 

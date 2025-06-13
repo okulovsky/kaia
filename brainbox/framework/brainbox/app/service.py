@@ -1,6 +1,6 @@
 import uuid
 
-from ...common.marshalling import endpoint
+from foundation_kaia.marshalling import endpoint
 from .interface import IBrainboxService
 from ...controllers import ControllerRegistry
 from ...job_processing import IPlanner, MainLoop, Core, Job, SimplePlanner, OperatorLogItem, FailedJobArgument

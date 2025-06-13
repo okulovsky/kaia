@@ -1,8 +1,8 @@
 from typing import *
 from eaglesong.core import Translator, TranslatorInputPackage
-from kaia.dub.core import Utterance
+from eaglesong.templates import Utterance
 from kaia.kaia.server import KaiaApi, Message
-from kaia.avatar import AvatarApi, World
+from avatar import AvatarApi, WorldFields
 
 class KaiaMessageTranslator(Translator):
     def __init__(self,
@@ -39,7 +39,7 @@ class KaiaMessageTranslator(Translator):
             return input.outer_input
 
         if message is not None:
-            self._set_name_and_avatar(message, World.user.field_name)
+            self._set_name_and_avatar(message, WorldFields.user)
             self.kaia_api.add_message(message)
 
         return input.outer_input
@@ -55,7 +55,7 @@ class KaiaMessageTranslator(Translator):
         else:
             return output.inner_output
 
-        self._set_name_and_avatar(message, World.character.field_name)
+        self._set_name_and_avatar(message, WorldFields.character)
         return message
 
 

@@ -1,10 +1,12 @@
 """
+### Implementing chat flow as a class
+
 The decomposition to functions is totally fine. But myself, I prefer the object-oriented way of encoding skills.
 Here, we first create `Authorize` object. Then, we may do some fine-tuning of this object (sometimes
 skills have lots of internal variables and it's unhandy to place all of them in constructor). And finally,
 we use this object like a function in `yield from`.
 
-Essentially, we write something like `yield from Authorize('KAIA_TEST_BOT_CHAT_ID')().
+Essentially, we write something like `yield from Authorize('KAIA_TEST_BOT_CHAT_ID')()`.
 Those double brackets may seem weird, but this is totally fine thanks to `Authorize` class
 implementing `__call__` method.
 """

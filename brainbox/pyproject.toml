@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kaia-brainbox"
+description = "Web-server and API to access the curated set of AI-deciders, packaged as containers"
+version = "1.0.0"
+readme = 'README.md'
+requires-python = ">=3.10, <4.0"
+license = "LGPL-3.0-or-later"
+
+authors = [
+    {name = "Yuri Okulovsky", email = "yuri.okulovsky@gmail.com"}
+]
+
+dependencies = [
+    "yo_fluq",
+    "flask",
+    "requests",
+    "sqlalchemy",
+    "soundfile",
+    "kaia-foundation",
+    "toml",
+    "pandas"
+]
+
+classifiers = [
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Information Technology",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Development Status :: 4 - Beta"
+]
+
+[project.optional-dependencies]
+dev = [
+    "tox",
+    "tox-conda",
+    "twine",
+]
+
+[project.urls]
+repository = "https://github.com/okulovsky/kaia/tree/main/brainbox"
+
+[tool.setuptools.packages.find]
+where = ["."]

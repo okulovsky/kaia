@@ -3,6 +3,7 @@ from typing import *
 from datetime import datetime
 from eaglesong.core import IAutomaton
 from .primitives import TimerTick, InitializationCommand, AudioCommand, AudioPlayConfirmation
+from ..server.buttons import ButtonPressedEvent
 from .interpreter import KaiaInterpreter
 from queue import Queue
 from ..server import KaiaApi, Message, BusItem
@@ -10,7 +11,7 @@ import traceback
 from pathlib import Path
 from dataclasses import dataclass
 from .kaia_log import KaiaLog
-from kaia.avatar import AvatarApi
+from avatar import AvatarApi
 
 
 
@@ -64,6 +65,9 @@ class KaiaDriver:
             return AudioPlayConfirmation(update.payload)
         if update.type == 'command_initialize':
             return InitializationCommand()
+        if update.type == 'command_button':
+            return ButtonPressedEvent(update.payload)
+
         return None
 
 

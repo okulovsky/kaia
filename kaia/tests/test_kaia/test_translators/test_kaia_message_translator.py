@@ -3,9 +3,9 @@ from kaia.kaia import Message
 from eaglesong import Listen, Scenario, Automaton, IAsserter
 from unittest import TestCase
 from kaia.kaia.translators import KaiaMessageTranslator
-from kaia.avatar import AvatarApi, AvatarSettings
-from kaia.avatar import World
-from kaia.dub import Template
+from avatar import AvatarApi, AvatarSettings
+from avatar import WorldFields
+from eaglesong.templates import Template
 
 
 class FakeGuiApi:
@@ -41,10 +41,10 @@ class KaiaMessageTranslatorTestCase(TestCase):
                 S
                 .send(template())
                 .check(adder)
-                .act(lambda: api.state_change({World.character.field_name:'character_1'}))
+                .act(lambda: api.state_change({WorldFields.character:'character_1'}))
                 .send("Test string")
                 .check(adder)
-                .act(lambda: api.state_change({World.user.field_name:'user'}))
+                .act(lambda: api.state_change({WorldFields.user:'user'}))
                 .send("Test2")
                 .check(adder)
                 .validate()

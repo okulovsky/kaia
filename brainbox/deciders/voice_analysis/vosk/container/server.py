@@ -1,3 +1,4 @@
+import subprocess
 import traceback
 import flask
 import os
@@ -43,16 +44,24 @@ class VoskApp:
     def transcribe(self, model_name = None):
         fname = f'/resources/input_{uuid4()}.wav'
         try:
-            file = flask.request.files['file']
-            file.save(fname)
-
             if model_name is None:
                 if self.model_name is None:
                     raise ValueError("No model is provided with a request and no model is pre-loaded on the server")
             else:
                 if self.model_name is None or self.model_name != model_name:
                     self._load_model_internal(model_name)
-            wf = wave.open(fname, "rb")
+
+            file = flask.request.files['file']
+            file.save(fname)
+            try:
+                wf = wave.open(fname, "rb")
+            except:
+                fixed_fname = f'/resources/input_{uuid4()}.wav'
+                subprocess.call(['ffmpeg','-i',fname,fixed_fname])
+                os.unlink(fname)
+                fname = fixed_fname
+                wf = wave.open(fname, "rb")
+
             if wf.getnchannels() != 1 or wf.getsampwidth() != 2 or wf.getcomptype() != "NONE":
                 raise ValueError("Audio file must be WAV format mono PCM.")
             rec = KaldiRecognizer(self.model, wf.getframerate())

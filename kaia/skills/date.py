@@ -1,10 +1,10 @@
 from typing import *
 from eaglesong.core import Return
 from kaia.kaia import SingleLineKaiaSkill
-from kaia.dub.languages.en import *
+from eaglesong.templates import *
 from datetime import date, timedelta, datetime
 from enum import Enum
-from kaia.avatar import World
+from avatar import World
 
 class RelativeDay(Enum):
     Today = 0
@@ -23,22 +23,37 @@ class Weekdays(Enum):
     Saturday = 5
     Sunday = 6
 
+DELTA = TemplateVariable(
+    "delta",
+    description="The day relative to today, e.g. the word `yesterday` or `day after tomorrow`",
+    dub = OptionsDub(RelativeDay)
+)
+
+DATE = TemplateVariable(
+    "date",
+    description="The full date of the day"
+)
+
+WEEKDAY = TemplateVariable(
+    "weekday",
+    description="The weekday, e.g. the word `Monday` or `Thursday`"
+)
+
 
 class DateIntents(TemplatesCollection):
     question = Template(
-        'What is the date?',
-        'What date is {delta}?',
-        'What date was {delta}?',
-        delta=EnumDub(RelativeDay)
+        f'What is the date?',
+        f'What date is {DELTA}?',
+        f'What date was {DELTA}?',
     )
 
 class DateReplies(TemplatesCollection):
     answer = (
-        Template(
-            "It is {weekday}, {date}.",
-            weekday = EnumDub(Weekdays),
-            date = DateDub())
-        .paraphrase.after(f"{World.user} asks what date is today, and {World.character} replies with an exact answer.")
+        Template(f"It is {WEEKDAY}, {DATE}.")
+        .context(
+            f"{World.user} asks what date is today, and {World.character} replies with an exact answer.",
+            reply_to=DateIntents.question
+        )
     )
 
 
@@ -54,7 +69,7 @@ class DateSkill(SingleLineKaiaSkill):
     def run(self):
         input = yield #type: Utterance
 
-        if input.template.name!=DateIntents.question.name:
+        if input not in DateIntents.question:
             raise Return()
 
         if 'delta' not in input.value:
@@ -67,8 +82,8 @@ class DateSkill(SingleLineKaiaSkill):
             date = date.date()
 
         yield DateReplies.answer.utter(
-            weekday = Weekdays(date.weekday()),
-            date = date
+            WEEKDAY.assign(Weekdays(date.weekday())),
+            DATE.assign(date)
         )
 
 
