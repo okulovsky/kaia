@@ -59,7 +59,7 @@ def create_parser():
     parser.add_argument('-m', '--model', type=str, choices=['base', 'large-v2'], default='base')
     parser.add_argument('--download_root', type=str, default='/resources/models')
     parser.add_argument('-t', '--compute_type', type=str, default='float32')
-    parser.add_argument('-l', '--language', type=str, default='ru')
+    parser.add_argument('-l', '--language', type=str, default='en')
 
     parser.add_argument('--hf_token', type=str)
 

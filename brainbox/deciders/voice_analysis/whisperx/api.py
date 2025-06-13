@@ -19,10 +19,11 @@ class WhisperX(OnDemandDockerApi[WhisperXSettings, WhisperXController]):
         os.makedirs(output_dir, exist_ok=True)
 
     def _move_file(self, filename: FileLike.Type):
-        source_dir = Path(__file__).parent / 'files'
+        path = FileLike.get_path(FileLike(filename, self.cache_folder))
         target_dir = Path(self._get_dst_folder()) / 'files'
+        shutil.rmtree(target_dir)
         os.makedirs(target_dir, exist_ok=True)
-        shutil.copy(source_dir / filename, target_dir)
+        shutil.copy(path, target_dir)
 
     def execute(self, filename: FileLike.Type):
         self._move_file(filename)

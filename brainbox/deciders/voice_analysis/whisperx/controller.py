@@ -29,7 +29,7 @@ class WhisperXController(OnDemandDockerController[WhisperXSettings]):
     def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable:
         from .api import WhisperX
 
-        filename = 'dubai.mp4'
+        filename = Path(__file__).parent/'files/sample.mp4'
         api.execute(BrainBoxTask.call(WhisperX).execute(filename))
         yield TestReport.last_call(api).href('run')
 
