@@ -60,15 +60,14 @@ def create_parser():
     parser.add_argument('--download_root', type=str, default='/resources/models')
     parser.add_argument('-t', '--compute_type', type=str, default='float32')
     parser.add_argument('-l', '--language', type=str, default='ru')
-    # Здесь вставьте токен с huggingface, чтобы модель подгружалась без проблем: https://huggingface.co/settings/tokens
-    parser.add_argument('--hf_token', type=str, default='')
+
+    parser.add_argument('--hf_token', type=str)
 
     return parser
 
 if __name__ == '__main__':
     parser = create_parser()
     args = parser.parse_args()
-    print(f'Running with arguments {args}')
 
     if args.notebook:
         subprocess.call([sys.executable, '-m', 'notebook', '--allow-root', '--port', '8899', '--ip', '0.0.0.0',
