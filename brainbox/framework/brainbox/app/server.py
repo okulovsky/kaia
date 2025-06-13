@@ -1,6 +1,6 @@
 import pickle
 import flask
-from ...common.marshalling import Server
+from foundation_kaia.marshalling import Server
 from ...common import Loc
 from .service import BrainBoxServiceSettings, BrainBoxService
 from ...controllers import ControllerServer, ControllerServerSettings

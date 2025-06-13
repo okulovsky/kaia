@@ -75,6 +75,8 @@ class VoskController(
 DOCKERFILE = f'''
 FROM python:3.9.21
 
+{SmallImageBuilder.APT_INSTALL('ffmpeg')}
+
 {{{SmallImageBuilder.ADD_USER_PLACEHOLDER}}}
 
 {{{SmallImageBuilder.PIP_INSTALL_PLACEHOLDER}}}

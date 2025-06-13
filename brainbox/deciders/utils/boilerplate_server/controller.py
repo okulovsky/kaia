@@ -52,7 +52,7 @@ class BoilerplateServerController(
 
 
 DOCKERFILE = f'''
-FROM python:3.11
+FROM python:3.11.11
 
 {{{SmallImageBuilder.ADD_USER_PLACEHOLDER}}}
 

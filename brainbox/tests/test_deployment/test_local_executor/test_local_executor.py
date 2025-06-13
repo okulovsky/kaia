@@ -1,7 +1,8 @@
 from brainbox.framework.deployment import LocalExecutor, Command
 import sys
-from unittest import TestCase
+from unittest import TestCase, skipIf
 from datetime import datetime
+import os
 
 ERROR = (sys.executable,'-m','brainbox.tests.test_deployment.test_local_executor.error')
 NOERROR = (sys.executable,'-m','brainbox.tests.test_deployment.test_local_executor.no_error')
@@ -14,6 +15,7 @@ class Monitor:
         self.buffer.append((s,datetime.now()))
 
 class LocalExecutorTestCase(TestCase):
+    @skipIf("TOX_ENV_DIR" in os.environ, "Test not supported in Tox")
     def test_no_output_handling_error(self):
         try:
             LocalExecutor().execute(ERROR, Command.Options())
@@ -23,6 +25,7 @@ class LocalExecutorTestCase(TestCase):
         print(s)
         self.assertIsNotNone(s)
 
+    @skipIf("TOX_ENV_DIR" in os.environ, "Test not supported in Tox")
     def test_no_output_handling(self):
         self.assertIsNone(
             LocalExecutor().execute(ERROR, Command.Options(ignore_exit_code=True))
@@ -33,7 +36,7 @@ class LocalExecutorTestCase(TestCase):
         )
 
 
-
+    @skipIf("TOX_ENV_DIR" in os.environ, "Test not supported in Tox")
     def test_return_output_error(self):
         try:
             LocalExecutor().execute(ERROR, Command.Options(return_output=True))
@@ -50,6 +53,7 @@ class LocalExecutorTestCase(TestCase):
             actual = actual.replace('\r', '')
             self.assertEqual(expected, actual)
 
+    @skipIf("TOX_ENV_DIR" in os.environ, "Test not supported in Tox")
     def test_return_output(self):
         result = LocalExecutor().execute(ERROR, Command.Options(return_output=True, ignore_exit_code=True))
         self.check(result, 'STDOUT', 'STDERR', 'Traceback (most recent call last):')
@@ -58,6 +62,7 @@ class LocalExecutorTestCase(TestCase):
         self.check(result, 'STDOUT', 'STDERR', 'NO_ERROR')
 
 
+    @skipIf("TOX_ENV_DIR" in os.environ, "Test not supported in Tox")
     def test_monitoring_output_error(self):
         try:
             LocalExecutor().execute(ERROR, Command.Options(monitor_output=print))
@@ -75,7 +80,7 @@ class LocalExecutorTestCase(TestCase):
         self.assertLess(d,max)
 
 
-
+    @skipIf("TOX_ENV_DIR" in os.environ, "Test not supported in Tox")
     def test_monitoring_output(self):
         monitor = Monitor()
         result = LocalExecutor().execute(NOERROR, Command.Options(monitor_output=monitor))
@@ -84,7 +89,7 @@ class LocalExecutorTestCase(TestCase):
         self.check('\n'.join(z[0] for z in monitor.buffer), 'STDOUT', 'STDERR', 'NO_ERROR')
         self.check(result, 'STDOUT', 'STDERR', 'NO_ERROR')
 
-
+    @skipIf("TOX_ENV_DIR" in os.environ, "Test not supported in Tox")
     def test_monitoring_output_error_ignored(self):
         monitor = Monitor()
         result = LocalExecutor().execute(ERROR, Command.Options(monitor_output=monitor, ignore_exit_code=True))

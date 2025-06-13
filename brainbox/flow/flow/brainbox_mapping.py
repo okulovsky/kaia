@@ -6,7 +6,7 @@ from pathlib import Path
 from yo_fluq import *
 from .object_to_task import IObjectConverter, PromptBasedObjectConverter
 from ..cache import JsonCacheManager, ICacheManager
-from ..prompters import Address
+from foundation_kaia.prompters import Address
 
 T = TypeVar('T')
 

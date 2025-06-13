@@ -9,8 +9,8 @@ import pickle
 from ..common import FileIO
 from copy import deepcopy
 from ..common import File
-
 import pandas as pd
+
 from yo_fluq import Queryable
 from copy import copy
 
@@ -126,6 +126,7 @@ class MediaLibrary:
                     yield (record, record.get_content(zp))
 
     def to_df(self):
+
         df = pd.DataFrame([r.tags for r in self.records])
         for field in ['filename','timestamp','job_id']:
             df[field] = [getattr(r, field) for r in self.records]

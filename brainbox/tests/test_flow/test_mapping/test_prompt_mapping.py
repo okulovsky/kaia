@@ -56,19 +56,19 @@ class PromptMappingTestCase(TestCase):
                             prompt_argument_name='prefix'
                         ),
                         SimpleApplicator('field_2'),
-                    )
+                    ),
+                    text_file
                 )
                 result_1 = mapping.process([], models).result
 
                 result_2 = mapping.process([], models+[MyModel(field_1='3')])
-
-                self.assertEqual(1, len(result_2.tasks))
+                self.assertEqual(2, sum(result_2.is_task_cached))
 
         self.assertEqual(
             [{'field_1': '1', 'field_2': 'Prompt for field_1=1'},
              {'field_1': '2', 'field_2': 'Prompt for field_1=2'},
              {'field_1': '3', 'field_2': 'Prompt for field_1=3'}],
-            [r.__dict__ for r in result_2]
+            [r.__dict__ for r in result_2.result]
         )
 
 

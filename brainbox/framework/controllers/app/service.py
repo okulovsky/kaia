@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from threading import Thread
 
 from ...common import Loc, FileIO
-from ...common.marshalling import endpoint
+from foundation_kaia.marshalling import endpoint
 from ..controller import TestReport, DockerWebServiceApi, ControllerRegistry, IController, IModelDownloadingController
 from .interface import IControllerService, ControllerServiceStatus, InstallationReport, ControllersSetup
 

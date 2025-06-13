@@ -1,18 +1,20 @@
 from ..brainbox_mapping import BrainBoxMapping
-from ...prompters import IPrompter
+from foundation_kaia.prompters import IPrompter
 from ..applicator import IApplicator
 from ...parsers import IParser
 from ..object_to_task import PromptBasedObjectConverter
 from brainbox import BrainBox
 from .step import IStep, IStepFactory
+from pathlib import Path
 
 class BrainBoxMappingStep(IStep):
-    def __init__(self, api: BrainBox.Api, mapping: BrainBoxMapping):
+    def __init__(self, api: BrainBox.Api, mapping: BrainBoxMapping, cache: Path|None = None):
         self.api = api
         self.mapping = mapping
+        self.cache = cache
 
     def process(self, history, current):
-        return self.mapping.create(current).execute(self.api)
+        return self.mapping.create(current, self.cache).execute(self.api)
 
     def shorten(self, data):
         return data.result

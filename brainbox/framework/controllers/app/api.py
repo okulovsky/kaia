@@ -1,6 +1,6 @@
 import os
 from typing import *
-from brainbox.framework.common.marshalling import Api, bind_to_api, TestApi
+from foundation_kaia.marshalling import Api, bind_to_api, TestApi
 from brainbox.framework import Loc, Locator
 from .interface import IControllerService
 from .service import ControllerService, ControllerServerSettings
