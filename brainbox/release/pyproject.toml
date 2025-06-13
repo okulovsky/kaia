@@ -21,7 +21,8 @@ dependencies = [
     "requests",
     "sqlalchemy",
     "soundfile",
-    "jsonpickle"
+    "jsonpickle",
+    "huggingface_hub"
 ]
 
 classifiers = [

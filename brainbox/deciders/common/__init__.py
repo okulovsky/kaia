@@ -49,3 +49,16 @@ def download_file(url: str, file: Path, keep_current_if_exists: bool = True):
         for chunk in response.iter_content(chunk_size=8192):  # Read in 8 KB chunks
             file.write(chunk)
             progress_bar.update(len(chunk))
+
+
+
+from huggingface_hub import HfApi, hf_hub_url
+import requests
+
+def check_hf_model_access(repo_id: str, token: str):
+    api = HfApi()
+    url = hf_hub_url(repo_id=repo_id, filename="config.json")
+    headers = {"Authorization": f"Bearer {token}"}
+    response = requests.head(url, headers=headers)
+    if response.status_code == 403:
+        raise ValueError(f"You do not have the access to {repo_id}. Visit https://huggingface.co/{repo_id} and request access")
