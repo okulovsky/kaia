@@ -1,3 +1,20 @@
+3.7.0.
+    MAJOR REFACTORING
+    - foundation_kaia: Now contains Marhalling, Fork, Addresses/Prompts and other things that are used everywhere
+    - brainbox: updated to accomodate foundation_kaia
+    - eaglesong:
+        - Now also contain Templates (previously known as dubs)
+        - Templates are significantly improved, the structure streamlined, the algorithms improved, the connotations simplified
+        - Is prepared for a release as a separate project
+    - chara:
+        - Now contains paraphrasing project that allows you to set the paraphrases for your characters
+    - avatar:
+        - Now is a separate subproject
+        - Now contains a free-speech analysis with the new Templates
+    - kaia:
+        - skills and talents are refactored to match the new architecture, otherwise unchanged
+        - buttons are prototyped but they don't yet work
+    - project requirements updated and streamlined
 3.6.3.
     - BrainBox:
         - All deciders are build from exact python version (3.x.x)

@@ -1,0 +1,25 @@
+#brainbox
+yo_fluq_ds
+flask
+requests
+sqlalchemy
+soundfile
+jsonpickle
+python-dotenv
+
+#eaglesong
+nltk==3.8.1
+num2words
+networkx
+python-telegram-bot
+
+#kaia
+flask-cors
+pvporcupine==1.9.5
+pvrecorder
+pyaudio
+
+#research infra
+gradio
+plotly
+notebook
