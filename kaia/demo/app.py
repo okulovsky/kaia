@@ -1,5 +1,5 @@
 from brainbox import BrainBoxApi, BrainBoxServer
-from kaia.avatar import AvatarApi, AvatarServer
+from avatar import AvatarApi, AvatarServer
 from kaia.kaia import KaiaServer, KaiaApi, KaiaCoreService
 from kaia.kaia.audio_control import AudioControlServer, AudioControlApi
 from kaia.kaia.audio_control.wav_streaming import WavStreamingServer, WavStreamingApi

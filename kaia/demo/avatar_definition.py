@@ -2,14 +2,14 @@ import os
 
 from brainbox import BrainBoxCommand, File, BrainBox, FilePostprocessor
 from brainbox.deciders import Piper
-from kaia.avatar import (
+from avatar import (
     AvatarServer, AvatarSettings, IDubCommandGenerator, ImageServiceSettings, OpenTTSTaskGenerator,
     MediaLibraryManager, DubbingMetadata,
     NewContentStrategy, GoodContentStrategy, AnyContentStrategy, WeightedStrategy, SequentialStrategy,
     AvatarApi, InitialStateFactory,
-    NarrationSettings, KnownFields
+    NarrationSettings, WorldFields
 )
-from kaia.avatar import World
+
 from pathlib import Path
 from .app import KaiaApp
 from kaia.skills.character_skill import ChangeCharacterReplies
@@ -21,13 +21,13 @@ class DemoDubCommandGenerator(IDubCommandGenerator):
         self.character_to_voice = character_to_voice
 
     def generate_command(self, text: str, state: dict[str, str]) -> BrainBoxCommand[File]:
-        if state.get(KnownFields.language,'en') == 'en':
+        if state.get(WorldFields.language,'en') == 'en':
             return OpenTTSTaskGenerator(self.character_to_voice).generate_command(text, state)
         else:
             task = BrainBox.Task.call(Piper).voiceover(text, 'de')
             pack = BrainBox.ExtendedTask(
                 task,
-                postprocessor=FilePostprocessor(metadata=DubbingMetadata(text, state[KnownFields.character], 'de'))
+                postprocessor=FilePostprocessor(metadata=DubbingMetadata(text, state[WorldFields.character], 'de'))
             )
             return BrainBoxCommand(pack)
 
@@ -60,7 +60,7 @@ def set_avatar_service_and_api(app: KaiaApp):
     )
 
     settings = AvatarSettings(
-        initial_state_factory=InitialStateFactory.Simple({World.character.field_name:'Lina'}),
+        initial_state_factory=InitialStateFactory.Simple({WorldFields.character:'Lina'}),
         dubbing_task_generator=DemoDubCommandGenerator(character_to_voice),
         image_settings=image_settings,
         errors_folder=app.folder/'/avatar/errors',
