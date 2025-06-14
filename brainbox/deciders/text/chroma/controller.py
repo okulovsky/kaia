@@ -27,10 +27,6 @@ class ChromaController(
             raise ValueError(f"`parameter` must be None for {self.get_name()}")
         return RunConfiguration(
             publish_ports={self.connection_settings.port:5252},
-            mount_resource_folders={
-                "pretrained": "/home/app/models",
-                "posts_db": "/home/app/posts_db",
-            }
         )
 
     def create_api(self):
@@ -48,32 +44,7 @@ class ChromaController(
     def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable:
         from .api import Chroma
 
-        embedding_model_name = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
-        json_db_filename = "data_for_test.json"
-        collection_name = "test"
         query = "What happened to Harry Potter?"
-
-        api.execute(
-            BrainBoxTask.call(Chroma)
-            .download_model(embedding_model_name=embedding_model_name)
-        )
-
-        yield (
-            TestReport
-            .last_call(api)
-            .href('download_model')
-        )
-
-        api.execute(
-            BrainBoxTask.call(Chroma)
-            .build_db_from_json(filename=json_db_filename, collection_name=collection_name)
-        )
-
-        yield (
-            TestReport
-            .last_call(api)
-            .href('build_db_from_json')
-        )
 
         api.execute(
             BrainBoxTask.call(Chroma)
