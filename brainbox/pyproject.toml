@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "kaia-brainbox"
 description = "Web-server and API to access the curated set of AI-deciders, packaged as containers"
-version = "1.0.0"
+version = "3.7.3"
 readme = 'README.md'
 requires-python = ">=3.10, <4.0"
 license = "LGPL-3.0-or-later"
@@ -22,7 +22,8 @@ dependencies = [
     "soundfile",
     "kaia-foundation",
     "toml",
-    "pandas"
+    "pandas",
+    "huggingface_hub"
 ]
 
 classifiers = [

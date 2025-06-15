@@ -2,7 +2,7 @@ from unittest import TestCase
 from dataclasses import dataclass
 from brainbox.flow import Referrer, Prompter, SimpleApplicator, PromptBasedObjectConverter, BrainBoxMappingStep, BrainBoxMapping
 from brainbox import BrainBox
-from kaia.common import Loc
+from foundation_kaia.misc import Loc
 
 @dataclass
 class MyModel:

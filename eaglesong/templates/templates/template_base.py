@@ -47,7 +47,7 @@ class TemplateBase(Generic[TDub]):
                 context: str|None = None,
                 reply_to: Union['TemplateBase', Iterable['TemplateBase'], None] = None,
                 reply_details: str|None = None
-                ) -> Self:
+                ) -> TSelf:
         obj = self.clone()
         if isinstance(context, str):
             context = Prompter(context)

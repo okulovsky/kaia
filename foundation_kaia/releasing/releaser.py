@@ -57,7 +57,10 @@ class Releaser:
         to_execute = sys.executable
         if self.tox_python is not None:
             to_execute = self.tox_python
-        subprocess.call([to_execute, '-m', 'tox', '-rvv'], cwd=folder, env={**os.environ, "PYTHONPATH": ""})
+        result = subprocess.call([to_execute, '-m', 'tox', '-rvv'], cwd=folder, env={**os.environ, "PYTHONPATH": ""})
+        if result!=0:
+            print(f"TESTS FAILED for {self.package_name}")
+            exit(0)
 
     def fix_toml_for_packaging(self, path):
         lines = []

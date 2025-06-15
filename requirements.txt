@@ -23,3 +23,7 @@ pyaudio
 gradio
 plotly
 notebook
+
+#deployment infra
+build
+twine
