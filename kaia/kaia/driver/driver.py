@@ -2,8 +2,7 @@ import time
 from typing import *
 from datetime import datetime
 from eaglesong.core import IAutomaton
-from .primitives import TimerTick, InitializationCommand, AudioCommand, AudioPlayConfirmation
-from ..server.buttons import ButtonPressedEvent
+from .primitives import TimerTick, InitializationCommand, AudioCommand, AudioPlayConfirmation, ButtonPressedEvent
 from .interpreter import KaiaInterpreter
 from queue import Queue
 from ..server import KaiaApi, Message, BusItem

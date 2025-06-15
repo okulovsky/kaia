@@ -6,19 +6,6 @@ from pathlib import Path
 
 class IAudioControlApi(ABC):
     @abstractmethod
-    def status(self) -> pd.DataFrame:
-        pass
-
-    @abstractmethod
-    def graph(self) -> str:
-        pass
-
-
-    @abstractmethod
-    def index(self) -> str:
-        pass
-
-    @abstractmethod
     def is_alive(self) -> bool:
         pass
 

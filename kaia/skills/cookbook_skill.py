@@ -1,4 +1,4 @@
-from kaia.kaia import IKaiaSkill
+from kaia.kaia import IKaiaSkill, ButtonPressedEvent, Overlay
 from eaglesong.templates import *
 from avatar import World
 from .notification_skill import NotificationRegister, NotificationInfo
@@ -18,9 +18,12 @@ MINUTES = TemplateVariable(
 )
 
 class CookBookIntents(TemplatesCollection):
+    recipe_book = Template("Recipe book")
     recipe = Template(f"How to cook {DISH}")
     next_step = Template("Next step")
     cancel = Template("Cancel the recipe")
+    what_to_cook = Template("What do you want to cook?")
+
 
 
 class CookBookReplies(TemplatesCollection):
@@ -42,6 +45,11 @@ class CookBookReplies(TemplatesCollection):
     timer_is_busy = (
         Template(f"You need to wait for the timer. {MINUTES} minutes remaining")
         .context(f"{World.user} is asking what is the next step in the recipe, but currently {World.user} needs to wait for the timer to finish the previous step, and {World.character} informs {World.user.pronoun} about this fact.")
+    )
+
+    recipe_is_cancelled = (
+        Template(f"The recipe is cancelled.")
+        .context(reply_to=CookBookIntents.cancel)
     )
 
 @dataclass
@@ -90,7 +98,10 @@ class CookBookSkill(IKaiaSkill):
         return type(self).__name__
 
     def should_start(self, input) -> bool:
-        return isinstance(input, Utterance) and input in CookBookIntents.recipe
+        if isinstance(input, Utterance):
+            if input in CookBookIntents.recipe_book or input in CookBookIntents.recipe:
+                return True
+        return False
 
     def should_proceed(self, input) -> bool:
         if isinstance(input, Utterance):
@@ -100,11 +111,11 @@ class CookBookSkill(IKaiaSkill):
                 return True
         if isinstance(input, CookBookContinuation):
             return True
+        if isinstance(input, ButtonPressedEvent):
+            return True
         return False
 
-    def run(self):
-        input: Utterance = yield
-        recipe_name = input.get_field()
+    def run_recipe(self, recipe_name):
         recipies = [r for r in self.recipes if r.dish == recipe_name]
         if len(recipies) == 0:
             yield CookBookReplies.no_recipe(recipe_name)
@@ -129,7 +140,29 @@ class CookBookSkill(IKaiaSkill):
             if response in CookBookIntents.cancel:
                 if 'cookbook' in self.notification_register.instances:
                     del self.notification_register.instances['cookbook']
+                yield CookBookReplies.recipe_is_cancelled()
                 break
+
+    def run(self):
+        input: Utterance = yield
+        if input in CookBookIntents.recipe:
+            yield from self.run_recipe(input.get_field())
+        builder = Overlay.GridBuilder(4)
+        for recipe in self.recipes:
+            builder.add(recipe.dish, dict(dish=recipe.dish))
+        builder.add('CANCEL', dict(action='cancel'))
+        yield builder.to_overlay()
+        button_pressed = yield Listen()
+        if not isinstance(button_pressed, ButtonPressedEvent):
+            yield CookBookReplies.recipe_is_cancelled()
+        if 'action' in button_pressed.button_feedback and button_pressed.button_feedback['action']=='cancel':
+            yield CookBookReplies.recipe_is_cancelled()
+        yield from self.run_recipe(button_pressed.button_feedback['dish'])
+
+
+
+
+
 
 
 

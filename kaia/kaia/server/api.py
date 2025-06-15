@@ -13,7 +13,8 @@ from kaia.common import Loc
 from yo_fluq import FileIO
 from brainbox import File
 from brainbox.framework.common import Fork
-from .buttons import ButtonGrid
+from .overlay import Overlay
+from copy import copy
 
 
 @dataclass
@@ -94,16 +95,14 @@ class KaiaApi:
                 avatar = message.avatar
             )))
 
-    def add_buttons(self, button_grid: ButtonGrid|None):
-        if button_grid is not None:
-            data = button_grid.__dict__
-            data['elements'] = [e.__dict__ for e in button_grid.elements]
-        else:
-            data = None
+    def add_overlay(self, overlay: Overlay):
+        data = copy(overlay.__dict__)
+        if data['elements'] is not None:
+            data['elements'] = [e.__dict__ for e in overlay.elements]
         return self.bus.add_message(BusItem(
             session_id = self.session_id,
             timestamp = datetime.now(),
-            type = 'reaction_buttons',
+            type = 'reaction_overlay',
             payload = data
         ))
 

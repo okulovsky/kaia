@@ -13,6 +13,14 @@ from talents.german.quiz import GermanQuizSkill
 class CommonIntents(TemplatesCollection):
     stop = Template('Stop','Cancel')
 
+def create_timer_register():
+    timer_audio = File.read(Path(__file__).parent / 'files/sounds/alarm.wav')
+    timer_audio.text = '*alarm ringing*'
+    timer_register = skills.NotificationRegister(
+        (timer_audio, Message(Message.Type.System, "*alarm ringing*")),
+        (Message(Message.Type.System, '*alarm stopped*'),)
+    )
+    return timer_register
 
 class DemoCoreService(KaiaCoreService):
     def __init__(self,
@@ -34,15 +42,27 @@ class DemoCoreService(KaiaCoreService):
         skills_list.append(skills.JokeSkill())
         skills_list.append(skills.SmalltalkSkill(smalltalk_skill.SmalltalkInputs, smalltalk_skill.SmalltalkReply))
 
-        timer_audio = File.read(Path(__file__).parent / 'files/sounds/alarm.wav')
-        timer_audio.text = '*alarm ringing*'
-        timer_register = skills.NotificationRegister(
-            (timer_audio, Message(Message.Type.System, "*alarm ringing*")),
-            (Message(Message.Type.System, '*alarm stopped*'),)
-        )
+
+        timer_register = create_timer_register()
+        recipe_register = create_timer_register()
         skills_list.append(skills.TimerSkill(timer_register))
         skills_list.append(
-            skills.NotificationSkill([timer_register], pause_between_alarms_in_seconds=10, volume_delta=0.2))
+            skills.NotificationSkill([timer_register, recipe_register], pause_between_alarms_in_seconds=10, volume_delta=0.2)
+        )
+        skills_list.append(skills.CookBookSkill(
+            recipe_register,
+            [skills.Recipe(
+                'tea',
+                [
+                    skills.Recipe.Stage("Boil water"),
+                    skills.Recipe.Stage("Put a teabag in the water"),
+                    skills.Recipe.Stage(timer_for_minutes=1),
+                    skills.Recipe.Stage("Enjoy your tea"),
+                ]
+            )]
+        ))
+
+
 
         skills_list.append(skills.ChangeImageSkill())
         skills_list.append(skills.VolumeSkill(0.2))

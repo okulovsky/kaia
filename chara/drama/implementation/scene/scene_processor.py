@@ -87,9 +87,11 @@ class SceneProcessor(ISceneProcessor):
         result.next_messages = self._parse_messages(raw_messages, scene.user_character.name)
         if scene.progress.progress >= 1 and scene.progress.length_strict:
             result.finished = True
+        elif scene.progress.finalization_requested:
+            result.finished = True
         elif scene.progress.goal_check_requested and scene.progress.goal is not None:
             result.finished = self._parse_goal(self._exec(self.prompter.goal_check(scene)))
-        if result.finished or scene.progress.finalization_requested:
+        if result.finished:
             result.summary = self._exec(self.prompter.scene_summary(scene))
             result.cumulative_summary = self._exec(self.prompter.cumulative_summary(scene, result.summary))
         return result

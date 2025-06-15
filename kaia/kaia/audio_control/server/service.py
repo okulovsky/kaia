@@ -22,47 +22,6 @@ class AudioControlService(IAudioControlApi):
         self.cycle = self.cycle_factory()
         Thread(target=self.cycle.run, daemon=True).start()
 
-    @endpoint(url='/status', method='GET')
-    def status(self):
-        rows = []
-        now = datetime.now()
-        for m in self.cycle.responds_log:
-            row = {}
-            row['ago'] = (now - m.timestamp).total_seconds()
-            if m.exception is not None:
-                row['exception'] = m.exception
-            if m.iteration_result is not None:
-                row['state_b'] = m.iteration_result.mic_state_before.name
-                row['state'] = m.iteration_result.mic_state_now.name
-                row['play_b'] = None if m.iteration_result.playing_before is None else f'+ {m.iteration_result.playing_before.recording.title}'
-                row['play'] = None if m.iteration_result.playing_now is None else f'+ {m.iteration_result.playing_now.recording.title}'
-                row['input'] = m.iteration_result.produced_file_name
-            rows.append(row)
-        return pd.DataFrame(rows)
-
-    @endpoint(url='/graph', method='GET')
-    def graph(self):
-        from matplotlib import pyplot as plt
-        import base64
-        df = pd.DataFrame([z.__dict__ for z in self.cycle._levels])
-        fig, ax = plt.subplots(1,1,figsize=(20,10))
-        df.set_index('timestamp').level.plot(ax=ax)
-        buf = io.BytesIO()
-        plt.savefig(buf, format='png')
-        bts = buf.getvalue()
-        base64EncodedStr = base64.b64encode(bts).decode('ascii')
-        return f'<img src="data:image/png;base64, {base64EncodedStr}"/>'
-
-    @endpoint(url='/index', method='GET')
-    def index(self):
-        message_lines = []
-        message_lines.append('AudioControlServer is running')
-        now = datetime.now()
-        message_lines.append(f'Updated {(now-self.cycle.last_update_time).total_seconds()} seconds ago')
-        df = self.status()
-        message_lines.append(df.to_html())
-        return "<br>".join(message_lines)
-
     @endpoint(url='/is_alive', method='GET')
     def is_alive(self):
         now = self.cycle.last_update_time

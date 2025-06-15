@@ -1,3 +1,8 @@
+3.7.2.
+    - audio_control is fixed, now diagnostics methods work as they should
+    - buttons fully work (but are a bit ugly). Cookbook skill now demonstrates buttons as well
+3.7.1.
+    - chara.drama is added, allows to write scenarios for a free conversation
 3.7.0.
     MAJOR REFACTORING
     - foundation_kaia: Now contains Marhalling, Fork, Addresses/Prompts and other things that are used everywhere

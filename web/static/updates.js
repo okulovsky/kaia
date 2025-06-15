@@ -1,3 +1,5 @@
+import { add_buttons } from './buttons.js';
+
 let SESSION_ID = ''
 // Set your own BASE_URL
 // Setting empty string means all requests will be made to /
@@ -6,7 +8,7 @@ const BASE_URL = ''
 let last_message = 0
 
 function build_message_p(payload) {
-    p = ''
+    let p = ''
     p+='<p class = "';
 
     if (payload['type'] == 'FromUser') p+='right'
@@ -22,14 +24,14 @@ function build_message_p(payload) {
 }
 
 function add_message(payload) {
-    html_addition = build_message_p(payload)
-    control = document.getElementById("chat")
+    let html_addition = build_message_p(payload)
+    let control = document.getElementById("chat")
     control.innerHTML += html_addition
     control.scrollTop = control.scrollHeight
 }
 
 function add_sound(payload) {
-    audio_is_playing = true
+    let audio_is_playing = true
     const audio_control = new Audio(`${BASE_URL}/file/${payload['filename']}`)
     audio_control.play()
     audio_control.addEventListener("ended", () => {
@@ -45,40 +47,13 @@ function add_sound(payload) {
 }
 
 function add_image(payload) {
-    image_control = document.getElementById("main_image")
+    let image_control = document.getElementById("main_image")
     image_control.src = `${BASE_URL}/file/${payload['filename']}`
 }
 
 
-function add_buttons(payload) {
-  const overlay = document.getElementById('overlay');
-  overlay.innerHTML = '';
-
-  if (!payload) {
-    overlay.style.display = 'none';
-    return;
-  }
-
-  overlay.style.display = 'grid';
-  overlay.style.gridTemplateColumns = `repeat(${payload.width}, 1fr)`;
-  overlay.style.gridTemplateRows = `repeat(${payload.height}, 50px)`;
-  overlay.style.gap = '5px';
-
-  for (const btn of payload.buttons) {
-    const button = document.createElement('button');
-    button.textContent = btn.text;
-    button.className = 'grid-button';
-
-    button.style.gridColumn = `${btn.column + 1} / span ${btn.column_span || 1}`;
-    button.style.gridRow = `${btn.row + 1} / span ${btn.row_span || 1}`;
-
-    overlay.appendChild(button);
-  }
-}
-
-
 function process_updates(data) {
-    initialize_next = false
+    let initialize_next = false
 
     for (const element of data) {
         if (element['id'] > last_message) {
@@ -100,8 +75,8 @@ function process_updates(data) {
         if (element['type'] == 'notification_driver_start') {
             initialize_next = true
         }
-        if (element['type'] == 'overlay_buttons') {
-            add_buttons(element['payload'])
+        if (element['type'] == 'reaction_overlay') {
+            add_buttons(element['payload'], BASE_URL, SESSION_ID)
         }
     }
 
@@ -113,17 +88,35 @@ function process_updates(data) {
     }
 }
 
+async function safe_json_fetch(url, options = {}) {
+  const response = await fetch(url, options);
+  const contentType = response.headers.get("Content-Type");
+  const text = await response.text();
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}\n${text}`);
+  }
+
+  if (!contentType || !contentType.includes("application/json")) {
+    throw new Error(`Expected JSON but got Content-Type: ${contentType}\n${text}`);
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    throw new Error(`JSON parse failed: ${e.message}\nRaw response:\n${text}`);
+  }
+}
 
 function updates() {
-  fetch(`${BASE_URL}/updates/${SESSION_ID}/${last_message}`)
-  .then(response => response.json())
+  safe_json_fetch(`${BASE_URL}/updates/${SESSION_ID}/${last_message}`)
   .then(data => process_updates(data))
   .catch(err => {
-        msg = "Error in updates:\n"+err
+        let msg = "Error in updates:\n"+err
         console.warn(msg, err)
         add_message({
             type: "Error",
-            message: msg,
+            text: msg,
             sender: null,
             avatar: null
         })
@@ -131,10 +124,10 @@ function updates() {
 }
 
 function initialize() {
-    control = document.getElementById("chat")
+    let control = document.getElementById("chat")
     control.innerHTML = ''
 
-    session_control = document.getElementById("customSessionIdHolder")
+    let session_control = document.getElementById("customSessionIdHolder")
     SESSION_ID = session_control.innerText
     if (SESSION_ID == '***SESSION_ID***') {
         SESSION_ID = Math.floor(Math.random() * 1000000).toString()
