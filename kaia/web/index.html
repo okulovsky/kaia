@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+
+<head>
+    <link rel="stylesheet" href="static/style/index.css">
+    <script src="static/jquery-3.7.0.js"></script>
+    <script type="module" src="static/updates.js"></script>
+</head>
+
+<body>
+<div id="content">
+    <div id="image">
+        <img id="main_image" src="static/style/image.png" alt="main image">
+        <div id="overlay"></div>
+        <div id="under_chat">&nbsp;</div>
+    </div>
+    <div id="chat">
+    </div>
+</div>
+
+<div id="buttons">
+    <table>
+        <tr>
+            <td class="button_1">1</td>
+            <td class="button_2">3</td>
+            <td class="button_3">&#x1F921;</td>
+            <td class="button_4">&#128251;</td>
+        </tr>
+        <tr>
+            <td class="button_5">5</td>
+            <td class="button_6">6</td>
+            <td class="button_7">7</td>
+            <td class="button_8">8</td>
+        </tr>
+        <tr>
+            <td class="button_9">9</td>
+            <td class="button_10">10</td>
+            <td class="button_11">11</td>
+            <td class="button_12">12</td>
+        </tr>
+        <tr>
+            <td class="button_13 active">&#x2B05;</td>
+            <td class="button_14">14</td>
+            <td class="button_15">&#x21BB</td>
+            <td class="button_16 active">&#x2716;</td>
+        </tr>
+    </table>
+    <script>
+        $( ".button_13" ).on( "click", function() {
+            $( "#buttons" ).animate( {'margin-left': '-50vw'}, 200);
+        });
+        $(".button_16").on("click", function(){
+            top.close();
+        });
+        $(".button_15").on("click", function(){
+            location.reload();
+        });
+        $("#main_image").on("click", function(){
+            $( "#buttons" ).animate( {'margin-left': '0'}, 200).animate({'padding' : '0px 5px'}, 60).animate({'padding' : '0px 0px'}, 120);
+        });
+    </script>
+</div>
+  <script type="module">
+    import { AvatarClient } from './scripts/client.js';
+    import { Dispatcher }   from './scripts/dispatcher.js';
+    import { ChatHandler }  from './scripts/chat-handler.js';
+    import { ImageCommandHandler } from './scripts/image-handler.js';
+    import { ButtonGridHandler } from './scripts/button-grid-handler.js';
+
+    const chatDiv   = document.getElementById('chat');
+
+    const client     = new AvatarClient(baseInput.value, 'default');
+    const dispatcher = new Dispatcher(client, 1);
+    new ChatHandler(dispatcher, chatDiv, baseInput.value);
+    dispatcher.start();
+    });
+</body>
+</html>
