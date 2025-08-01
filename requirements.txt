@@ -6,12 +6,16 @@ sqlalchemy
 soundfile
 jsonpickle
 python-dotenv
+dill
 
 #eaglesong
 nltk==3.8.1
 num2words
 networkx
 python-telegram-bot
+inflect
+lemminflect
+pymorphy3
 
 #kaia
 flask-cors
