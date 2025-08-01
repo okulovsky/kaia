@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from .template import Template
+from grammatron import Template
 
 @dataclass
 class IntentsPack:
