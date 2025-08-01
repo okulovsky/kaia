@@ -1,7 +1,7 @@
 # Table of contents
 
 * [eaglesong](#eaglesong)
-* [eaglesong.templates](#eaglesong.templates)
+* [grammatron](#grammatron)
 * [eaglesong demo](#eaglesong-demo)
   * [Echobot: Introduction](#echobot:-introduction)
   * [Questionnaire: Calling other functions](#questionnaire:-calling-other-functions)
@@ -56,7 +56,7 @@ If you don't wish to do it, the Appendix to this readme will contain the source 
 
 `eaglesong` also offer elegant method to test the conversation flows, written in this fashion. To see how, consult `tests/test_demo/` folder.
 
-# eaglesong.templates
+# grammatron
 
 Templates are the way to define the utterances of the chatbot __or__ the user, 
 and convert them into text, or parse from texts. 
@@ -64,9 +64,9 @@ and convert them into text, or parse from texts.
 The template can be defined like this:
 
 ```python
-from eaglesong.templates import TemplateVariable, Template, CardinalDub
+from grammatron import VariableDub, Template, CardinalDub
 
-DURATION = TemplateVariable("duration", CardinalDub(0,100))
+DURATION = VariableDub("duration", CardinalDub(0,100))
 template = Template(f"Set the timer for {DURATION} minutes")
 
 utterance = template(20)

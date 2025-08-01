@@ -22,7 +22,10 @@ dependencies = [
     "pandas",
     "num2words",
     "networkx",
-    "regex"
+    "regex",
+    "inflect",
+    "lemminflect",
+    "pymorphy3"
 ]
 
 classifiers = [
