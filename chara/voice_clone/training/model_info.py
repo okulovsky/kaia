@@ -2,7 +2,7 @@ import copy
 from dataclasses import dataclass
 import re
 from brainbox import BrainBox, IPrerequisite, BrainBoxApi, CombinedPrerequisite
-from brainbox.deciders import Piper, Collector, EmptyTask
+from brainbox.deciders import Piper, Collector, EmptyDecider
 from pathlib import Path
 from yo_fluq import Query
 
@@ -61,7 +61,7 @@ class ModelInfo:
     def create_upload_command(models: list['ModelInfo']) -> BrainBox.Command:
         reqs = [ModelUploadPrerequisite(m.json, m.onnx) for m in models]
         task = BrainBox.ExtendedTask(
-            BrainBox.Task.call(EmptyTask)(),
+            BrainBox.Task.call(EmptyDecider)(),
             CombinedPrerequisite(reqs)
         )
         return BrainBox.Command(task)

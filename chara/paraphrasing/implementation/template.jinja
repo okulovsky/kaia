@@ -11,25 +11,25 @@ The user's name is {{user}}. {{user.description}}
 
 You're currently working on one of the assistant replies.
 
-{%if info.has_context %}
+{%if model.has_context %}
 
 # Context
 
-{% if info.context.context is not none %}
+{% if model.context.context is not none %}
 The circumstances are following:
-{{info.context.context(_)}}
+{{model.context.context(_)}}
 {% endif %}
 
-{% if info.reply_to_examples is not none %}
+{% if model.reply_to_examples is not none %}
 The reply is a response for the following utterances from user:
-{% for example in info.reply_to_examples %}
+{% for example in model.reply_to_examples %}
 * {{ example }}
 {% endfor %}
 {% endif %}
 
-{% if info.context.reply_details is not none %}
+{% if model.context.reply_details is not none %}
 The reply needs to express the following:
-{{ info.context.reply_details(_) }}
+{{ model.context.reply_details(_) }}
 {% endif %}
 
 {% endif %}
@@ -38,26 +38,18 @@ The reply needs to express the following:
 
 The current, default answers are:
 
-{% for sample in info.samples %}
+{% for sample in model.samples %}
 * {{ sample }}
 {% endfor %}
 
-{% if info.has_variables %}
-You need to preserve all the placeholders inside '{' and '}' symbols.
-The reply should not depend on any assumptions about these.
-The grammar of the sentence should remain correct with the values in these placeholders.
-Assume the default replies are always correct.
-{% endif %}
-
-{% if info.has_variables_to_description %}
-Variables:
-{% for variable, description in info.variables_to_description.items() %}
-* {{ variable }}: {{ description }}
+{% if model.has_description %}
+Where:
+{% for desc in model.variables_description %}
+{{ desc }}
 {% endfor %}
-{% endif %}
+All of these variables must be included in the paraphrase in the meaningful places, exactly in the way they are. Do not use new variables, only use these from the list.
 
-{% if info.has_grammar_adoptions %}
-Values in square brackets, e.g. [minute|minutes], are put into agreement by the dialog system. You should not change values inside these square brackets, just put it in the appropriate place.
+The variables can turn into anything. The paraphrase should not assume the values, and must remain correct for any possible value of the variable.
 {% endif %}
 
 You now need to paraphrase the default answers so that they match character's and user's personalities and their relationship.

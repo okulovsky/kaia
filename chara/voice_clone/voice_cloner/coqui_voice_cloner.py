@@ -1,5 +1,5 @@
 from brainbox import BrainBox
-from brainbox.deciders import CoquiTTS, EmptyTask
+from brainbox.deciders import CoquiTTS, EmptyDecider
 from .voice_cloner import VoiceCloner
 from .character import Character
 from ...tools import Language, LanguageToDecider
@@ -31,7 +31,7 @@ class CoquiVoiceCloner(VoiceCloner):
     def create_training_tasks(self) -> dict[str,BrainBox.ITask]:
         model_name = self.create_model_name(self.character.name)
         task = BrainBox.ExtendedTask(
-            BrainBox.Task.call(EmptyTask)(),
+            BrainBox.Task.call(EmptyDecider)(),
             prerequisite=CoquiTTS.upload_voice(
                 model_name,
                 *self.character.get_voice_samples()
