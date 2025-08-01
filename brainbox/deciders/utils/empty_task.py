@@ -1,5 +1,5 @@
 from ...framework import IDecider
 
-class EmptyTask(IDecider):
+class EmptyDecider(IDecider):
     def __call__(self):
         return "OK"
