@@ -19,23 +19,28 @@ class AvatarDebugReport:
 class TimerEvent(IMessage):
     time: datetime
 
+
+
+
 @dataclass
-class InitializationEvent(IMessage):
-    pass
+class ExceptionEvent(IMessage):
+    source: str
+    traceback: str
+
 
 
 class AvatarProcessor:
     def __init__(self,
                  client: StreamClient,
                  time_tick_interval_in_seconds: float|None = None,
-                 add_initialization_event: bool = False
+                 add_error_events: bool = False
                  ):
         self.client = client
         self.rules = RulesCollection()
         self._stop_flag = threading.Event()
         self.time_tick_interval_in_seconds = time_tick_interval_in_seconds
         self.last_time_tick: TimerEvent|None = None
-        self.add_initialization_event = add_initialization_event
+        self.add_error_events = add_error_events
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -50,7 +55,10 @@ class AvatarProcessor:
         self._stop_flag.set()
 
     def run(self, filters: list[IProcessingFilter]|None = None):
-        self.client.stream.ready()
+        if filters is None:
+            filters = []
+
+        self.client.initialize()
         # Group rules by host_object
         grouped = defaultdict(list)
         for rule in self.rules.rules:
@@ -72,9 +80,6 @@ class AvatarProcessor:
             t.start()
             self._threads.append(t)
 
-        if self.add_initialization_event:
-            self.client.put(InitializationEvent())
-
         try:
             while not self._stop_flag.is_set():
                 if self.time_tick_interval_in_seconds is not None:
@@ -89,18 +94,22 @@ class AvatarProcessor:
                     for processor in self.processors:
                         processor.put(message)
 
-                if filters is not None:
-                    exit = False
+                exit = False
+                for filter in filters:
+                    if filter.should_stop_on_queue(messages):
+                        exit = True
+                while not self._event_queue.empty():
+                    event: ProcessingEvent = self._event_queue.get()
+                    if self.add_error_events and event.type == ProcessingEvent.Type.Error:
+                        name = None
+                        if event.rule is not None:
+                            name = event.rule.name
+                        self.client.put(ExceptionEvent(name, event.exception))
                     for filter in filters:
-                        if filter.should_stop_on_queue(messages):
+                        if filter.should_stop_on_event(event):
                             exit = True
-                    while not self._event_queue.empty():
-                        event: ProcessingEvent = self._event_queue.get()
-                        for filter in filters:
-                            if filter.should_stop_on_event(event):
-                                exit = True
-                    if exit:
-                        break
+                if exit:
+                    break
                 time.sleep(0.01)
         finally:
             for processor in self.processors:

@@ -2,7 +2,7 @@ from .app import KaiaApp, IAppInitializer
 from avatar.messaging import IMessage
 from avatar.server import AvatarServer, AvatarServerSettings, MessagingComponent, AvatarStream, AvatarApi
 from avatar.server.components import *
-from phonix.daemon import RecordingComponent
+from phonix.components import PhonixMonitoringComponent, PhonixRecordingComponent, PhonixApi
 from dataclasses import dataclass, field
 import importlib
 import inspect
@@ -10,6 +10,11 @@ import pkgutil
 from pathlib import Path
 from copy import copy
 from yo_fluq import FileIO
+
+
+@dataclass
+class SessionSectionStart(IMessage):
+    pass
 
 
 def find_subclasses_in_package(base_class: type, package_name: str) -> list[type]:
@@ -42,32 +47,41 @@ class AvatarServerAppSettings(IAppInitializer):
 
 
     def bind_app(self, app: 'KaiaApp'):
-        bbox_folder = app.working_folder/'brainbox/temp/brainbox_cache'
+        PORT = 13002
+
+        start_message = SessionSectionStart()
+        start_message_id = start_message.envelop.id
+
         components = [
-            MessagingComponent(app.working_folder/'avatar/messages.db', create_aliases()),
-            FileCacheComponent(bbox_folder)
+            MessagingComponent(
+                app.working_folder/'avatar/messages.db',
+                create_aliases(),
+                dict(default=(start_message,))
+            ),
+            FileCacheComponent(app.brainbox_cache_folder)
         ]
         static_folders = copy(self.additional_static_folders)
         web_folder = Path(__file__).parent.parent/'web'
         static_folders['static'] = web_folder/'static'
         components.append(StaticPathsComponent(static_folders))
         components.append(TypeScriptComponent(web_folder/'scripts', self.compile_scripts))
-        components.append(IndexComponent(
-            FileIO.read_text(web_folder / 'index.html'),
-            f'127.0.0.1:13002'
-        ))
+        components.append(MainComponent(FileIO.read_text(web_folder / 'index.html')))
 
         if self.add_phonix_component:
-            components.append(RecordingComponent(bbox_folder))
+            components.append(PhonixRecordingComponent(app.brainbox_cache_folder))
+            components.append(PhonixMonitoringComponent())
         if self.add_chunks_component:
-            components.append(AudioChunksComponent(bbox_folder))
+            components.append(AudioChunksComponent(app.brainbox_cache_folder))
             
         settings = AvatarServerSettings(
             tuple(components),
+            port=PORT
         )
+        app.avatar_api = AvatarApi(f'127.0.0.1:{PORT}')
+        app._avatar_client = AvatarStream(app.avatar_api).create_client(start_message_id)
         app.avatar_server = AvatarServer(settings)
-        app.avatar_api = AvatarApi(f'127.0.0.1:{settings.port}')
-        app.avatar_stream = AvatarStream(app.avatar_api)
+        app.phonix_api = PhonixApi(f'127.0.0.1:{PORT}')
+
 
 
 

@@ -1,3 +1,4 @@
+import time
 from unittest import TestCase
 from dataclasses import dataclass
 from typing import Any
@@ -28,14 +29,6 @@ class ButtonGridHandlerTestCase(TestCase):
 
             messages = client.pull()
 
-
-
-            # 2) open page and start dispatcher
-            base_input = WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.ID, "baseUrl"))
-            )
-            base_input.clear()
-            base_input.send_keys(address)
             driver.find_element(By.ID, "processBtn").click()
 
             # 3) wait for buttons to render
@@ -53,6 +46,7 @@ class ButtonGridHandlerTestCase(TestCase):
 
             # 5) click the first two
             buttons[0].click()
+            time.sleep(0.1)
 
             messages = client.pull()
             self.assertEqual(1, len(messages))
@@ -60,6 +54,8 @@ class ButtonGridHandlerTestCase(TestCase):
             self.assertEqual('yes_feedback', messages[0].button_feedback)
 
             buttons[1].click()
+            time.sleep(0.1)
+
             messages = client.pull()
             self.assertEqual(1, len(messages))
             self.assertIsInstance(messages[0], ButtonPressedEvent)
@@ -70,21 +66,18 @@ HTML = '''<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><title>ButtonGrid Test</title></head>
 <body>
-  <label for="baseUrl">Base URL:</label>
-  <input id="baseUrl" value="http://localhost:8000" />
   <button id="processBtn">Start</button>
   <div id="buttonOverlay"></div>
   <script type="module">
-    import { AvatarClient }      from './scripts/client.js';
-    import { Dispatcher }        from './scripts/dispatcher.js';
-    import { ButtonGridHandler } from './scripts/button-grid-handler.js';
+    import { AvatarClient }      from '/scripts/client.js';
+    import { Dispatcher }        from '/scripts/dispatcher.js';
+    import { ButtonGridHandler } from '/scripts/button-grid-handler.js';
 
-    const baseInput = document.getElementById('baseUrl');
     const startBtn  = document.getElementById('processBtn');
     const overlay   = document.getElementById('buttonOverlay');
 
     startBtn.addEventListener('click', () => {
-      const client     = new AvatarClient(baseInput.value, 'default');
+      const client     = new AvatarClient(window.location.origin, 'default');
       const dispatcher = new Dispatcher(client, 1);
       new ButtonGridHandler(dispatcher, overlay, client);
       dispatcher.start();

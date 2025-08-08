@@ -21,7 +21,7 @@ TTextMessage = TypeVar('TTextMessage', bound=ITextMessage)
 @dataclass
 class PlayableTextMessage(IMessage, Generic[TTextMessage]):
     text: TTextMessage
-    info: TextInfo = field(metadata=dict(json=True))
+    info: TextInfo
 
 @dataclass
 class UtteranceEvent(IMessage, ITextMessage):

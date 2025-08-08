@@ -1,31 +1,51 @@
 from dataclasses import dataclass
-from avatar.services import TextInfo
 from brainbox import BrainBox
+from brainbox.framework import ControllersSetup
 from .app import KaiaApp, IAppInitializer
-from avatar.messaging import AvatarProcessor, IMessage
+from avatar.messaging import AvatarProcessor
 from avatar import services as s
 from avatar.services.common import content_manager as cm, AvatarService
 import inspect
-from brainbox.deciders import Piper
+from brainbox.deciders import Piper, RhasspyKaldi, Whisper, Resemblyzer
 from pathlib import Path
+from kaia.assistant import KaiaAssistant
 
 
 characters =  ('Ocean', 'Mountain', 'Meadow', 'Forest')
 
-class DemoDubTaskFactory(s.VoiceoverService.TaskFactory):
-    def create_task(self, s: str, info: TextInfo) -> BrainBox.ITask:
+class DemoDubTaskFactory(s.TTSService.TaskFactory):
+    def create_task(self, s: str, info: s.TextInfo) -> BrainBox.ITask:
         return BrainBox.Task.call(Piper).voiceover(s, info.language)
 
 def _speaker_to_image_url(speaker):
     return f'/static/unknown.png'
 
+
+@dataclass
+class AvatarServiceSetup:
+    service: AvatarService
+    is_asynchronous: bool = False
+
+
 @dataclass
 class AvatarProcessorAppSettings(IAppInitializer):
     timer_event_span_in_seconds: float = 1
     initialization_event_at_startup: bool = True
+    error_events: bool = True
 
     def create_brainbox_service(self, app: KaiaApp, state: s.State):
-        return s.BrainBoxService(app.brainbox_api)
+        bbox = s.BrainBoxService(
+            app.brainbox_api,
+            ControllersSetup((
+                 ControllersSetup.Instance(RhasspyKaldi),
+                 ControllersSetup.Instance(Whisper, None, 'base'),
+                 ControllersSetup.Instance(Piper),
+                 ControllersSetup.Instance(Resemblyzer),
+            )))
+        return AvatarServiceSetup(
+            bbox,
+            True
+        )
 
 
     def create_image_service(self, app:KaiaApp, state: s.State):
@@ -47,6 +67,11 @@ class AvatarProcessorAppSettings(IAppInitializer):
             image_manager,
         )
 
+    def create_stt_service(self, app: KaiaApp, state: s.State):
+        return s.STTService(
+            s.RhasspyRecognitionSetup(KaiaAssistant.RHASSPY_MAIN_MODEL_NAME)
+        )
+
     def create_narration_service(self, app: KaiaApp, state: s.State):
         return s.NarrationService(
             state,
@@ -60,7 +85,7 @@ class AvatarProcessorAppSettings(IAppInitializer):
         return s.StateToUtterancesApplicationService(state)
 
     def create_voiceover_service(self, app: KaiaApp, state: s.State):
-        return s.VoiceoverService(
+        return s.TTSService(
             DemoDubTaskFactory()
         )
 
@@ -70,15 +95,22 @@ class AvatarProcessorAppSettings(IAppInitializer):
     def create_chat_service(self, app: KaiaApp, state: s.State):
         return s.ChatService(state, _speaker_to_image_url)
 
+    def create_sound_event_to_stt_command(self, app: KaiaApp, state: s.State):
+        return s.STTIntegrationService(state)
 
+    def create_text_command_to_tts_command(self, app: KaiaApp, state: s.State):
+        return s.TTSIntegrationService()
+
+    def new_state(self):
+        return s.State(character=characters[0], language='en')
 
     def bind_app(self, app: KaiaApp):
         proc = AvatarProcessor(
-            app.avatar_stream.create_client(),
+            app.create_avatar_client(),
             self.timer_event_span_in_seconds,
-            self.initialization_event_at_startup
+            self.error_events
         )
-        state = s.State()
+        state = self.new_state()
 
         methods = [
             member for name, member in inspect.getmembers(self, predicate=inspect.ismethod)
@@ -86,13 +118,20 @@ class AvatarProcessorAppSettings(IAppInitializer):
         ]
         for method in methods:
             service = method(app, state)
+
             if service is None:
                 continue
-            if not isinstance(service, AvatarService):
-                raise ValueError(f"Method {method.__name__} retured {type(service)} while AvatarService is expected")
-            if app.brainbox_api is None and service.requires_brainbox():
+
+            if isinstance(service, AvatarService):
+                setup = AvatarServiceSetup(service)
+            elif isinstance(service, AvatarServiceSetup):
+                setup = service
+            else:
+                raise ValueError(f"Method {method.__name__} retured {type(service)} while AvatarService or AvatarServiceSetup is expected")
+            if app.brainbox_api is None and setup.service.requires_brainbox():
                 continue
-            proc.rules.bind(service)
+            print(f'Binding {setup.service}')
+            proc.rules.bind(setup.service, is_asyncronous=setup.is_asynchronous)
 
         app.avatar_processor = proc
 

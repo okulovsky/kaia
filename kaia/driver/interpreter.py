@@ -1,6 +1,7 @@
+from typing import Type
 from eaglesong.core import IAutomaton, Interpreter, primitives as prim
 from avatar.messaging import IMessage, StreamClient
-from avatar.services import ChatCommand, UtteranceSequenceCommand
+from avatar.services import ChatCommand, UtteranceSequenceCommand, TextCommand
 from grammatron import Utterance, UtterancesSequence
 
 
@@ -12,9 +13,11 @@ class KaiaInterpreter(Interpreter):
     def __init__(self,
                  client: StreamClient,
                  automaton: IAutomaton,
+                 expect_confirmations_for_types: tuple[Type,...]
                  ):
         self.client = client
         self.current_message: IMessage|None = None
+        self.expect_confirmations_for_types = expect_confirmations_for_types
         super().__init__(automaton)
         self.handle_type(prim.Return, self._process_return)
         self.handle_type(prim.Listen, self._process_listen)
@@ -33,7 +36,10 @@ class KaiaInterpreter(Interpreter):
     def _process_message(self, message):
         if self.current_message is not None:
             message = message.as_reply_to(self.current_message)
-        self.client.put(message)
+        if isinstance(message, self.expect_confirmations_for_types):
+            self.client.run_synchronously(message)
+        else:
+            self.client.put(message)
         return Interpreter.continue_cycle()
 
     def _process_terminate(self, response: prim.Terminate):

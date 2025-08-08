@@ -65,10 +65,10 @@ class NarrationService(AvatarService):
         if character is not None:
             self.last_update_time = self.current_time
             self.state.character = character
-            yield self.state.with_new_envelop().as_confirmation_for(message)
             yield NewImageCommand()
             if self.welcome_command is not None:
                 yield self.welcome_command.with_new_envelop()
+            yield self.state.with_new_envelop().as_confirmation_for(message)
 
     @message_handler
     def change_activity(self, message: ChangeActivityCommand):
@@ -79,8 +79,8 @@ class NarrationService(AvatarService):
         if activity is not None:
             self.last_update_time = self.current_time
             self.state.activity = activity
-            yield self.state.with_new_envelop().as_confirmation_for(message)
             yield NewImageCommand()
+            yield self.state.with_new_envelop().as_confirmation_for(message)
 
     @message_handler
     def on_tick(self, message: TimerEvent):

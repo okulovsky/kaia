@@ -4,6 +4,14 @@ from ..stream import IMessage, StreamClient
 from ..rules import Rule
 from .processing_event import ProcessingEvent
 from queue import Queue
+from dataclasses import dataclass
+
+@dataclass
+class ErrorEvent(IMessage):
+    exception_type: str
+    exception_message: str
+    source: str
+    traceback: str
 
 class RuleProcessor:
     def __init__(self, message: IMessage, event_queue: Queue, client: StreamClient, rule: Rule):
@@ -46,15 +54,14 @@ class RuleProcessor:
                             f"expected {self.rule.outputs}"
                         )
 
-                message.as_reply_to(self.message).as_from_publisher(self.rule.name)
-
+                if message.envelop.reply_to is None:
+                    message.as_reply_to(self.message)
+                message.as_from_publisher(self.rule.name)
+                self.client.put(message)
 
         except:
             tb = traceback.format_exc()
             self.event_queue.put(ProcessingEvent(ProcessingEvent.Type.Error, self.message, self.rule, raw_result, parsed_result, tb))
             return
-
-        for message in parsed_result:
-            self.client.put(message)
 
         self.event_queue.put(ProcessingEvent(ProcessingEvent.Type.Finished, self.message, self.rule, raw_result, parsed_result))

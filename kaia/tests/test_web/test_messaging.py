@@ -1,3 +1,5 @@
+import time
+
 from kaia.tests.test_web.environment import TestEnvironmentFactory
 from unittest import TestCase
 from selenium.webdriver.common.by import By
@@ -20,20 +22,12 @@ class MessagingTestCase(TestCase):
         with TestEnvironmentFactory(HTML, aliases=dict(TestReply = TestReply, Confirmation = Confirmation)) as env:
             env.client.put(TestInput())
 
-            base_input = WebDriverWait(env.driver, 10).until(
-                EC.presence_of_element_located((By.ID, "baseUrl"))
-            )
-            base_input.clear()
-            base_input.send_keys(f'http://{env.api.address}')
-            print('base_input is set')
-
             # 3) Click the \"Fetch & Process\" button
             process_btn = env.driver.find_element(By.ID, "processBtn")
             process_btn.click()
-            print('button is clicked')
 
             # 4) Wait until the log shows that messages were fetched
-            WebDriverWait(env.driver, 100).until(
+            WebDriverWait(env.driver, 10).until(
                 EC.text_to_be_present_in_element(
                     (By.ID, "log"),
                     "Sent confirmation"
@@ -51,6 +45,7 @@ class MessagingTestCase(TestCase):
 
 
 
+
 HTML = '''
 <!DOCTYPE html>
 <html lang="en">
@@ -61,16 +56,13 @@ HTML = '''
 </head>
 <body>
   <h1>TestInput Processor</h1>
-  <label for="baseUrl">API Base URL:</label>
-  <input id="baseUrl" type="text" value="http://localhost:8000" />
   <button id="processBtn">Fetch & Process</button>
   <div id="log"></div>
 
   <script type="module">
-    import { Message } from './scripts/message.js';
-    import { AvatarClient } from './scripts/client.js';
+    import { Message } from '/scripts/message.js';
+    import { AvatarClient } from '/scripts/client.js';
 
-    const baseUrlInput = document.getElementById('baseUrl');
     const processBtn = document.getElementById('processBtn');
     const logContainer = document.getElementById('log');
 
@@ -83,12 +75,7 @@ HTML = '''
 
     processBtn.addEventListener('click', async () => {
       logContainer.innerHTML = '';
-      const baseUrl = (baseUrlInput.value || '').trim();
-      if (!baseUrl) {
-        logMessage('Please provide a valid base URL.');
-        return;
-      }
-      const client = new AvatarClient(baseUrl);
+      const client = new AvatarClient(window.location.origin);
 
       try {
         const messages = await client.getMessages();

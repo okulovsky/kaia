@@ -2,6 +2,8 @@ from typing import *
 from ....messaging import IMessage
 from dataclasses import dataclass
 from enum import StrEnum
+from pathlib import Path
+import base64
 
 @dataclass
 class SoundEvent(IMessage):
@@ -46,6 +48,15 @@ class ImageCommand(IMessage):
     metadata: Any = None
     file_id: str|None = None
 
+    @staticmethod
+    def from_file(path: str | Path) -> "ImageCommand":
+        path = Path(path)
+        with path.open("rb") as f:
+            data = f.read()
+            encoded = base64.b64encode(data).decode("utf-8")
+        return ImageCommand(base_64=encoded, metadata={"path": str(path)})
+
+
 
 @dataclass
 class SoundInjectionCommand(IMessage):
@@ -56,3 +67,13 @@ class SoundInjectionCommand(IMessage):
 @dataclass
 class VolumeCommand(IMessage):
     value: float
+
+
+@dataclass
+class OpenMicCommand(IMessage):
+    pass
+
+
+@dataclass
+class InitializationEvent(IMessage):
+    pass

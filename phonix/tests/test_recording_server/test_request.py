@@ -1,4 +1,4 @@
-from phonix.daemon import RecordingApi
+from phonix.components import PhonixApi
 from phonix.daemon.inputs import FakeInput
 from avatar.server.components.audio_chunks import WavWriter
 from unittest import TestCase
@@ -19,7 +19,7 @@ class StreamingTestCase(TestCase):
         input.start()
 
         with Loc.create_test_folder() as folder:
-            with RecordingApi.Test(folder) as api:
+            with PhonixApi.Test(folder) as api:
                 request = api.create_recording_request(file_id, input.current_sample_rate, [])
                 packages = []
                 while not input.is_buffer_empty():

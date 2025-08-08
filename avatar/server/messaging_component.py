@@ -1,36 +1,50 @@
 import os
-import uuid
-
 import flask
 from .components import IAvatarComponent
 from pathlib import Path
 from .message_record import MessageRecord, Base
 from sqlalchemy import create_engine, asc
 from sqlalchemy.orm import sessionmaker
-from .serialization import get_full_name_by_type
+from .naming import get_full_name_by_type
 import uuid
+from foundation_kaia.misc import Loc
+from ..messaging import IMessage
 
 class MessagingComponent(IAvatarComponent):
-    def __init__(self, db_path: Path, aliases: dict[str, type] = None):
+    def __init__(self,
+                 db_path: Path|None = None,
+                 aliases: dict[str, type] = None,
+                 session_to_initialization_messages: dict[str,tuple[IMessage,...]]|None = None,
+                 ):
         self.db_path = db_path
+        if self.db_path is None:
+            self.db_path = Loc.temp_folder/'avatar_debug_db'
+            if self.db_path.is_file():
+                os.unlink(self.db_path)
         if aliases is None:
             aliases = {}
         self.aliases = aliases
+        self.session_to_initialization_messages = session_to_initialization_messages
 
-    def setup_server(self, app: flask.Flask):
+    def setup_server(self, app: IAvatarComponent.App, address: str):
         os.makedirs(self.db_path.parent, exist_ok=True)
         self.engine = create_engine(f'sqlite:///{self.db_path}', echo=False, future=True)
         Base.metadata.create_all(self.engine)
         self.Session = sessionmaker(bind=self.engine, future=True)
         app.add_url_rule('/messages/add', view_func=self.messages_add, methods=['POST'])
         app.add_url_rule('/messages/get', view_func=self.messages_get, methods=['GET'])
+        app.add_url_rule('/messages/last', view_func=self.messages_last, methods=['GET'])
+        if self.session_to_initialization_messages is not None:
+            from .stream import AvatarStream
+            for session, messages in self.session_to_initialization_messages.items():
+                for message in messages:
+                    js = AvatarStream.to_json(message, session)
+                    self._add_message(js)
 
-    def messages_add(self):
-        data = flask.request.get_json(force=True)
-
+    def _add_message(self, data):
         for field in ('message_type', 'envelop', 'payload'):
             if field not in data:
-                return flask.jsonify({'error': f'Missing field: {field}'}), 400
+                raise ValueError(f'Missing field: {field}')
 
         if data['message_type'] in self.aliases:
             data['message_type'] = get_full_name_by_type(self.aliases[data['message_type']])
@@ -51,7 +65,35 @@ class MessagingComponent(IAvatarComponent):
             db.commit()
             db.refresh(msg)
 
+
+
+    def messages_add(self):
+        data = flask.request.get_json(force=True)
+        try:
+            self._add_message(data)
+        except ValueError as ex:
+            return flask.jsonify({'error': ex.args[0]})
         return "OK"
+
+
+    def messages_last(self):
+        session_param = flask.request.args.get('session', default=None, type=str)
+
+        with self.Session() as db:
+            q = db.query(MessageRecord)
+
+            if session_param is not None:
+                q = q.filter(MessageRecord.session == session_param)
+
+            last_message = (
+                q
+                .order_by(MessageRecord.id.desc())
+                .first()
+            )
+
+            id = None if last_message is None else last_message.message_id
+            return flask.jsonify({'id': id})
+
 
     def messages_get(self):
         session_param = flask.request.args.get('session', default=None, type=str)

@@ -7,11 +7,6 @@ from brainbox import BrainBox
 import jsonpickle
 
 @dataclass
-class OpenMicCommand(IMessage):
-    recognition_setup: IRecognitionSetup|None = None
-
-
-@dataclass
 class STTRhasspyTrainingCommand(IMessage):
     intent_packs: list[IntentsPack]
 
@@ -53,16 +48,18 @@ class STTService(AvatarService):
         result: STTConfirmation = bb_result.result
         if result is None:
             raise ValueError(f"Expected result, error\n{bb_result.error}")
-        return result.as_propagation_confirmation_to(sound)
+        return result.as_confirmation_for(sound).as_reply_to(bb_result)
+
 
 
     @message_handler
     def train_rhasspy(self, message: STTRhasspyTrainingCommand):
         for pack in message.intent_packs:
             self.handlers[pack.name] = RhasspyHandler(pack.templates)
+        task = RhasspyRecognitionSetup.create_training_task(message.intent_packs)
         return (
             BrainBoxService
-            .Command(RhasspyRecognitionSetup.create_training_command(message.intent_packs))
+            .Command(task)
             .as_propagation_confirmation_to(message)
         )
 

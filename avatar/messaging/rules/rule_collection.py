@@ -81,7 +81,7 @@ class RulesCollection:
         return rule
 
 
-    def bind(self, obj: Any, custom_host_name: str|None = None):
+    def bind(self, obj: Any, custom_host_name: str|None = None, is_asyncronous: bool = False):
         if callable(obj):
             self.add(obj, custom_host_name=custom_host_name)
             return self
@@ -92,7 +92,7 @@ class RulesCollection:
         if len(handlers) == 0:
             raise ValueError("No methods with @message_handler: have you forgot to add decorator?")
         for handler in handlers:
-            self.add(handler, custom_host_name=custom_host_name)
+            self.add(handler, custom_host_name=custom_host_name, is_asynchronous=is_asyncronous)
         return self
 
 

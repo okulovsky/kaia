@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from .app import KaiaApp, IAppInitializer
 from phonix import daemon as d
-from phonix.server import PhonixServer
 from avatar.messaging import TestStream
 
 @dataclass
@@ -10,37 +9,49 @@ class PhonixAppSettings(IAppInitializer):
     rate: int = 16000
     chunk: int = 512
     channels: int = 1
-    silence_level: float = 0.1
+    silence_level: float = 0.03
     silence_margin_length_in_seconds: float = 1
     max_open_mic_time_in_seconds: float = 15
+    in_unit_test_environment: bool = False
+    supress_reports: bool = False
 
     def bind_app(self, app: 'KaiaApp'):
-        api = d.RecordingApi(app.avatar_api.address)
-        internal_stream = TestStream(10000)
+        if self.in_unit_test_environment:
+            input = d.FakeInput()
+            output = d.FakeOutput()
+        else:
+            input = d.PyAudioInput(self.device, self.rate, self.chunk, self.channels)
+            output = d.PyAudioOutput()
+
+        units = [
+            d.PorcupineWakeWordUnit(),
+            d.SilenceMarginUnit(
+                self.silence_level,
+                self.silence_margin_length_in_seconds,
+                1 if not self.supress_reports else None
+            ),
+            d.RecordingUnit(
+                app.phonix_api,
+                self.silence_margin_length_in_seconds * 1.1
+            ),
+            d.TooLongOpenMicUnit(self.max_open_mic_time_in_seconds)
+        ]
+
+        if self.in_unit_test_environment:
+            units.append(d.MicRecordingUnit(app.working_folder/'mic_recording.wav'))
+
+        if not self.supress_reports:
+            units.append(d.LevelReportingUnit())
 
         daemon = d.PhonixDeamon(
-            internal_stream.create_client(),
+            app.create_avatar_client(),
             d.AvatarFileRetriever(app.avatar_api),
-            d.PyAudioInput(self.device, self.rate, self.chunk, self.channels),
-            d.PyAudioOutput(),
-            [
-                d.PorcupineWakeWordUnit(),
-                d.SilenceMarginUnit(
-                    self.silence_level,
-                    self.silence_margin_length_in_seconds,
-                ),
-                d.RecordingUnit(
-                    api,
-                    self.silence_margin_length_in_seconds*1.1
-                ),
-                d.LevelReportingUnit(),
-                d.TooLongOpenMicUnit(self.max_open_mic_time_in_seconds)
-            ],
-            d.PhonixDeamon.get_default_system_sounds(),
-            app.avatar_stream.create_client(),
+            input,
+            output,
+            units,
+            d.PhonixDeamon.get_default_system_sounds() if not self.in_unit_test_environment else {},
         )
 
-        server = PhonixServer(daemon, api)
-        app.phonix_server = server
+        app.phonix_daemon = daemon
 
 

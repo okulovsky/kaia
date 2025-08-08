@@ -49,7 +49,8 @@ class EchoSkill(IKaiaSkill):
 
     def run(self):
         yield "Say anything and I will repeat"
-        yield OpenMicCommand(WhisperRecognitionSetup())
+        yield OpenMicCommand()
+        yield WhisperRecognitionSetup()
         s = yield Listen()
         yield s
 

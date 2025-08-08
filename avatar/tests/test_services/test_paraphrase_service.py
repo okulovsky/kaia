@@ -39,7 +39,7 @@ class ParaphraseTestCase(TestCase):
 
         state = State(character='character_0', language='en')
         proc = AvatarProcessor(TestStream().create_client())
-        proc.rules.add(StateToUtterancesApplicationService(state))
+        proc.rules.bind(StateToUtterancesApplicationService(state))
         proc.rules.add(
             ParaphraseService(state, manager),
             RuleConnector(

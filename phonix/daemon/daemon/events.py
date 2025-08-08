@@ -4,9 +4,9 @@ from ..processing import MicState
 from avatar.messaging import IMessage
 
 @dataclass
-class StateChange(IMessage):
+class MicStateChangeReport(IMessage):
     state: MicState
 
 @dataclass
-class PlayStarted(IMessage):
+class SoundPlayStarted(IMessage):
     metadata: Any

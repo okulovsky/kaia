@@ -41,6 +41,8 @@ class AssistantHistoryItem:
 
 
 class KaiaAssistant:
+    RHASSPY_MAIN_MODEL_NAME = 'CORE'
+
     def __init__(self,
                  skills: Iterable[IKaiaSkill],
                  automaton_not_found_skill: IKaiaSkill| None = None,
@@ -110,7 +112,7 @@ class KaiaAssistant:
         core_intents = [i for skill in self.all_skills for i in skill.get_intents()] + self.additional_intents
         packs = []
         packs.append(IntentsPack(
-            'CORE',
+            KaiaAssistant.RHASSPY_MAIN_MODEL_NAME,
             tuple(core_intents),
             {} if self.custom_words_in_core_intents is None else self.custom_words_in_core_intents
         ))

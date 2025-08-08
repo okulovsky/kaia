@@ -3,7 +3,8 @@ from typing import Any, Type, Optional, Union, Callable, TypeVar, Generic
 from ..messaging import IMessage, message_handler
 from dataclasses import dataclass
 from brainbox import BrainBox
-from .common import AvatarService
+from brainbox.framework import ControllersSetup
+from .common import AvatarService, InitializationEvent
 
 @dataclass
 class BrainBoxServiceCommand(IMessage):
@@ -22,11 +23,17 @@ class BrainBoxService(AvatarService):
     Command = BrainBoxServiceCommand
     Confirmation = BrainBoxServiceConfirmation
 
-    def __init__(self, api: Union[BrainBox.Api, Callable]):
+    def __init__(self,
+                 api: Union[BrainBox.Api, Callable],
+                 setup: ControllersSetup|None = None
+                 ):
+        self.api: BrainBox.Api|None = None
         if isinstance(api, BrainBox.Api):
+            self.api: BrainBox.Api = api
             self.api_call = api.execute
         else:
             self.api_call = api
+        self.setup = setup
 
     def requires_brainbox(self):
         return True
@@ -41,3 +48,8 @@ class BrainBoxService(AvatarService):
             reply: IMessage = BrainBoxServiceConfirmation(None, ''.join(traceback.format_exception(ex)))
             return reply.as_confirmation_for(input)
 
+    @message_handler
+    def initialize(self, initialization: InitializationEvent):
+        if self.api is not None and self.setup is not None:
+            for controller_setup in self.setup.controllers:
+                self.api.controller_api.setup(controller_setup)

@@ -47,10 +47,11 @@ class DriverTestCase(TestCase):
 
 
     def test_driver(self):
-        client = TestStream().create_client()
+        client = TestStream().create_client(None).with_name('main')
         driver = KaiaDriver(
-            lambda context: Automaton(test_routine, context),
-            client.clone()
+            lambda _: test_routine,
+            client.clone('driver'),
+            expect_confirmations_for_types=()
         )
         driver.run_in_thread()
         client.put(TextEvent('text'))

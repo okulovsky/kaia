@@ -43,7 +43,7 @@ class TypeScriptComponent(IAvatarComponent):
         return flask.send_from_directory(self.ts_path/'dist', path)
 
 
-    def setup_server(self, app: flask.Flask):
+    def setup_server(self, app: IAvatarComponent.App, address: str):
         if self.compile_at_start_up:
             self.compile()
         app.add_url_rule(f'/scripts/<path:path>', view_func=self.get_typescript_file, methods=['GET'])

@@ -23,34 +23,35 @@ class NarrationTestCase(TestCase):
 
     def test_random_character_change(self):
         m = self.proc.debug_and_stop_by_empty_queue(NarrationService.ChangeCharacterCommand()).messages
-        self.assertEqual(3, len(m))
+        self.assertEqual(4, len(m))
         self.assertEqual('c0', self.state.character)
         self.assertEqual('a1', self.state.activity)
-        self.assertIsInstance(m[-2], ImageService.NewImageCommand)
-        self.assertIsInstance(m[-1], UtteranceSequenceCommand)
+        self.assertIsInstance(m[1], ImageService.NewImageCommand)
+        self.assertIsInstance(m[2], UtteranceSequenceCommand)
 
 
     def test_character_change(self):
         m = self.proc.debug_and_stop_by_empty_queue(NarrationService.ChangeCharacterCommand('c2')).messages
-        self.assertEqual(3, len(m))
+        print(m)
+        self.assertEqual(4, len(m))
         self.assertEqual('c2', self.state.character)
         self.assertEqual('a1', self.state.activity)
-        self.assertIsInstance(m[-2], ImageService.NewImageCommand)
-        self.assertIsInstance(m[-1], UtteranceSequenceCommand)
+        self.assertIsInstance(m[1], ImageService.NewImageCommand)
+        self.assertIsInstance(m[2], UtteranceSequenceCommand)
 
     def test_random_activity_change(self):
         m = self.proc.debug_and_stop_by_empty_queue(NarrationService.ChangeActivityCommand()).messages
-        self.assertEqual(2, len(m))
+        self.assertEqual(3, len(m))
         self.assertEqual('c1', self.state.character)
         self.assertEqual('a0', self.state.activity)
-        self.assertIsInstance(m[-1], ImageService.NewImageCommand)
+        self.assertIsInstance(m[1], ImageService.NewImageCommand)
 
     def test_activity_change(self):
         m = self.proc.debug_and_stop_by_empty_queue(NarrationService.ChangeActivityCommand('a2')).messages
-        self.assertEqual(2, len(m))
+        self.assertEqual(3, len(m))
         self.assertEqual('c1', self.state.character)
         self.assertEqual('a2', self.state.activity)
-        self.assertIsInstance(m[-1], ImageService.NewImageCommand)
+        self.assertIsInstance(m[-2], ImageService.NewImageCommand)
 
     def test_time_ticks(self):
         d = datetime.datetime.now()
@@ -67,14 +68,14 @@ class NarrationTestCase(TestCase):
         self.assertEqual('a1', self.state.activity)
 
         m = self.proc.debug_and_stop_by_empty_queue(TimerEvent(d+datetime.timedelta(seconds=60))).messages
-        self.assertEqual(2, len(m))
+        self.assertEqual(3, len(m))
         self.assertEqual('a0', self.state.activity)
-        self.assertIsInstance(m[-1], ImageService.NewImageCommand)
+        self.assertIsInstance(m[1], ImageService.NewImageCommand)
 
         m = self.proc.debug_and_stop_by_empty_queue(TimerEvent(d+datetime.timedelta(seconds=120))).messages
-        self.assertEqual(2, len(m))
+        self.assertEqual(3, len(m))
         self.assertEqual('a1', self.state.activity)
-        self.assertIsInstance(m[-1], ImageService.NewImageCommand)
+        self.assertIsInstance(m[1], ImageService.NewImageCommand)
 
     def test_state_request(self):
         m = self.proc.debug_and_stop_by_empty_queue(NarrationService.StateRequest()).messages

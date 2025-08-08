@@ -11,6 +11,10 @@ class BrainBoxExtendedTask(IBrainBoxTask):
     prerequisite: IPrerequisite|None = None
     postprocessor: IPostprocessor|None = None
 
+    def __post_init__(self):
+        if not isinstance(self.task, IBrainBoxTask):
+            raise TypeError("task must be a BrainBoxTask")
+
     def create_jobs(self) -> list[Job]:
         return self.task.create_jobs()
 

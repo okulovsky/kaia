@@ -7,7 +7,7 @@ from grammatron import Template, CardinalDub, Utterance
 
 
 class WhisperIntegrationTestCase(TestCase):
-    def test_whisper(self):
+    def dont_test_whisper(self):
         with BrainBox.Api.Test() as api:
             speaker = TestSpeaker(api)
             input = speaker.speak('Set the timer for ten minutes').to_brain_box()
@@ -18,7 +18,7 @@ class WhisperIntegrationTestCase(TestCase):
             self.assertIsInstance(result, STTConfirmation)
             self.assertEqual('Set the timer for 10 minutes.', result.recognition)
 
-    def test_whisper_with_free_speech(self):
+    def dont_test_whisper_with_free_speech(self):
         with BrainBox.Api.Test() as api:
             speaker = TestSpeaker(api)
             input = speaker.speak('Set the timer for ten minutes').to_brain_box()

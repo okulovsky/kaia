@@ -6,14 +6,14 @@ class MicClosingTestCase(TestCase):
         with PhonixTestEnvironmentFactory(waiting_time_to_close_the_mic=0.5) as api:
             injection = api.client.put(SoundInjectionCommand('computer.wav'))
 
-            api.client.query(1).feed(slice(lambda z: z.is_confirmation_of(injection)))
-            api.client.query(1).feed(slice(lambda z: isinstance(z, SoundConfirmation)))
-
+            wake_word_epoch = api.client.query(1).feed(slice(lambda z: z.is_confirmation_of(injection)))
             q = api.client.query(1).feed(slice(lambda z: isinstance(z, SoundConfirmation)))
+
+            print(q)
 
             self.assertEqual(4, len(q))
             self.assertIsInstance(q[0], SystemSoundCommand)
-            self.assertIsInstance(q[1], StateChange)
-            self.assertIsInstance(q[2], PlayStarted)
+            self.assertIsInstance(q[1], MicStateChangeReport)
+            self.assertIsInstance(q[2], SoundPlayStarted)
             self.assertIsInstance(q[3], SoundConfirmation)
 

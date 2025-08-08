@@ -11,7 +11,7 @@ class MessagingAPI:
 
     def add(
         self,
-        type: str,
+        message_type: str,
         session: Optional[str],
         envelop: Dict[str, Any],
         payload: Dict[str, Any],
@@ -22,7 +22,7 @@ class MessagingAPI:
         Raises HTTPError on 4xx/5xx.
         """
         body = {
-            "message_type": type,
+            "message_type": message_type,
             "envelop": envelop,
             "payload": payload,
             "session": session
@@ -56,4 +56,23 @@ class MessagingAPI:
         r = requests.get(f"http://{self.address}/messages/get", params=params)
         r.raise_for_status()
         return r.json()
+
+    def last(
+        self,
+        session: Optional[str] = None,
+    ) -> str|None:
+        """
+        GET /get
+        Query‑params:
+          session, last_message_id, count
+        Returns a list of MessageRecord dicts.
+        Raises HTTPError on 4xx/5xx.
+        """
+        params: Dict[str, Any] = {}
+        if session is not None:
+            params["session"] = session
+
+        r = requests.get(f"http://{self.address}/messages/last", params=params)
+        r.raise_for_status()
+        return r.json()['id']
 

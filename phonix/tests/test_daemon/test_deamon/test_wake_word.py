@@ -7,16 +7,18 @@ class WakeWordTestCase(TestCase):
 
             q = api.client.query(1).feed(slice(lambda z: z.is_confirmation_of(injection)))
             print(q) # Sound Confirmation and only then Injection confirmation, why?
-            self.assertEqual(6, len(q))
+            self.assertEqual(8, len(q))
             self.assertIsInstance(q[0], SoundInjectionCommand)
             self.assertIsInstance(q[1], WakeWordEvent)
             self.assertIsInstance(q[2], SystemSoundCommand)
-            self.assertIsInstance(q[3], StateChange)
-            self.assertIsInstance(q[4], PlayStarted)
-            self.assertIsInstance(q[5], Confirmation)
+            self.assertIsInstance(q[3], MicStateChangeReport)
+            self.assertIsInstance(q[4], MicStateChangeReport)
+            self.assertIsInstance(q[5], SoundPlayStarted)
+            self.assertIsInstance(q[6], SoundConfirmation)
+            self.assertTrue(q[6].is_confirmation_of(q[5]))
+            self.assertTrue(q[6].is_confirmation_of(q[2]))
+            self.assertIsInstance(q[7], Confirmation)
 
-            q = api.client.query(1).feed(slice(lambda z: z.is_confirmation_of(q[4])))
-            self.assertIsInstance(q[0], SoundConfirmation)
 
 
     def test_wake_word_then_sound(self):

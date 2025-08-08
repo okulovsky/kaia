@@ -1,7 +1,8 @@
-import copy
+from typing import Type
 import time
-from typing import Callable
-from avatar.server import AvatarApi, AvatarStream
+from typing import Callable, Any
+from avatar.messaging import StreamClient
+from avatar.services import UtteranceSequenceCommand, TextCommand
 from loguru import logger
 from .context import KaiaContext
 from eaglesong import Automaton
@@ -15,29 +16,33 @@ from ..assistant import KaiaAssistant
 
 class KaiaDriver:
     def __init__(self,
-                 assistant_factory: Callable[[],KaiaAssistant],
-                 avatar_api: AvatarApi,
-                 input_transformer: IKaiaInputTransformer|None = None
+                 assistant_factory: Callable[[KaiaContext],Any],
+                 client: StreamClient,
+                 input_transformer: IKaiaInputTransformer|None = None,
+                 expect_confirmations_for_types: tuple[Type,...] = (UtteranceSequenceCommand, TextCommand)
                  ):
         self.assistant_factory = assistant_factory
-        self.avatar_api = avatar_api
-        self.client = AvatarStream(self.avatar_api).create_client()
+        self.client = client
         self.input_transformer = input_transformer
+        self.expect_confirmations_for_types = expect_confirmations_for_types
         self.interpreter: KaiaInterpreter|None = None
 
     def initialize(self):
         context = KaiaContext(self.client)
-        assistant = self.assistant_factory()
+        assistant = self.assistant_factory(context)
+
         automaton = Automaton(assistant, context)
-        self.interpreter = KaiaInterpreter(self.client, automaton)
+        self.interpreter = KaiaInterpreter(self.client, automaton, self.expect_confirmations_for_types)
         logger.info("Interpreter (re)created")
+
+
+
 
     def _trim(self, obj):
         return str(obj)[:100]
 
     def process(self, message):
         logger.info(f"Processing message {self._trim(message)}")
-
 
         if self.interpreter is None:
             logger.info("Interpreter is not created, creating")
@@ -66,9 +71,7 @@ class KaiaDriver:
             self.initialize()
 
     def run(self):
-        logger.info("Waiting for AvatarAPI to start")
-        self.avatar_api.wait()
-        logger.info("AvatarAPI is available")
+        self.client.initialize()
         while True:
             messages = self.client.pull()
             for message in messages:

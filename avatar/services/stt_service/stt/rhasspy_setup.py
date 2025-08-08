@@ -36,14 +36,14 @@ class RhasspyRecognitionSetup(IRecognitionSetup):
         )
 
     @staticmethod
-    def create_training_command(intents_packs: Iterable[IntentsPack]):
+    def create_training_task(intents_packs: Iterable[IntentsPack]):
         tasks = []
         for pack in intents_packs:
             handler = RhasspyHandler(pack.templates)
             tasks.append(
                 BrainBox.Task.call(RhasspyKaldi).train(pack.name, pack.language, handler.ini_file, pack.custom_words)
             )
-        BrainBox.CombinedTask(
-            BrainBox.Task.call(EmptyDecider),
+        return BrainBox.CombinedTask(
+            BrainBox.Task.call(EmptyDecider)(),
             tuple(tasks)
         )

@@ -7,13 +7,14 @@ class StateToUtterancesApplicationService(AvatarService):
 
     @message_handler
     def on_utterance(self, text: UtteranceSequenceCommand) -> PlayableTextMessage[UtteranceSequenceCommand]:
-        return PlayableTextMessage(
+        result = PlayableTextMessage(
             text,
             TextInfo(
                 self.state.character,
                 self.state.language
             )
-        )
+        ).as_propagation_confirmation_to(text)
+        return result
 
     @message_handler
     def on_text(self, text: TextCommand) -> PlayableTextMessage[TextCommand]:
@@ -23,7 +24,7 @@ class StateToUtterancesApplicationService(AvatarService):
                 self.state.character,
                 self.state.language
             )
-        )
+        ).as_propagation_confirmation_to(text)
 
     def requires_brainbox(self):
         return False

@@ -1,12 +1,13 @@
 from dataclasses import dataclass
 from pathlib import Path
-from avatar.messaging import Stream, AvatarProcessor
+from avatar.messaging import AvatarProcessor, StreamClient
 from avatar.server import AvatarServer, AvatarApi
 from brainbox import BrainBoxServer, BrainBoxApi
-from phonix.server import PhonixServer
+from phonix.components import PhonixApi
 from kaia import KaiaDriver
 from foundation_kaia.fork import ForkApp
 from abc import abstractmethod, ABC
+from phonix.daemon import PhonixDeamon
 
 class IAppInitializer(ABC):
     @abstractmethod
@@ -21,15 +22,32 @@ class KaiaApp:
 
     brainbox_server: BrainBoxServer|None = None
     brainbox_api: BrainBoxApi|None = None
+    custom_brainbox_cache_folder: Path|None = None
+
+    @property
+    def brainbox_cache_folder(self) -> Path:
+        if self.custom_brainbox_cache_folder is not None:
+            return self.custom_brainbox_cache_folder
+        return self.working_folder/'cache'
+
 
     avatar_api: AvatarApi|None = None
-    avatar_stream: Stream|None = None
     avatar_server: AvatarServer|None = None
     avatar_processor: AvatarProcessor|None = None
 
-    phonix_server: PhonixServer|None = None
+    _avatar_client: StreamClient|None = None
+
+    def create_avatar_client(self) -> StreamClient|None:
+        if self._avatar_client is None:
+            return None
+        return self._avatar_client.clone()
+
+
+    phonix_api: PhonixApi|None = None
 
     kaia_driver: KaiaDriver|None = None
+    phonix_daemon: PhonixDeamon|None = None
+
 
     _MISSING = object()
 
@@ -41,7 +59,7 @@ class KaiaApp:
             self.brainbox_server,
             self.avatar_server,
             self.avatar_processor,
-            self.phonix_server,
+            self.phonix_daemon,
             self.kaia_driver,
         ]
 

@@ -1,19 +1,21 @@
-from phonix.server import PhonixService
-from phonix.recoding_server import RecordingServer, RecordingServerSettings, RecordingApiSettings, RecordingApi
+import os
+
+from avatar.server import AvatarServer, AvatarApi, AvatarStream, AvatarServerSettings, MessagingComponent
+from phonix.components import PhonixMonitoringComponent, PhonixRecordingComponent, PhonixApi
 from phonix.daemon import *
 from avatar.messaging import TestStream
 from foundation_kaia.fork import Fork
+from foundation_kaia.misc import Loc
 
 if __name__ == '__main__':
-    recording_server_settings = RecordingServerSettings()
-    recording_server = RecordingServer(recording_server_settings)
-    recording_api_settings = RecordingApiSettings()
-    recording_api = RecordingApi(recording_api_settings)
+    port = 13000
+    api = AvatarApi(f'127.0.0.1:{port}')
+    stream = AvatarStream(api)
+    recording_api = PhonixApi(f'127.0.0.1:{port}')
 
-    client = TestStream().create_client()
     daemon = PhonixDeamon(
-        client,
-        FileServerGetter(f'127.0.0.1:{recording_server_settings.port}'),
+        stream.create_client(),
+        AvatarFileRetriever(api),
         PyAudioInput(),
         PyAudioOutput(),
         [
@@ -25,9 +27,20 @@ if __name__ == '__main__':
         ],
         PhonixDeamon.get_default_system_sounds()
     )
+    daemon.run_in_thread()
+    recording = PhonixRecordingComponent(Loc.temp_folder/'phonix/recordings')
+    monitoring = PhonixMonitoringComponent()
+    db_path = Loc.test_folder/'phonix/db'
+    if db_path.is_file():
+        os.unlink(db_path)
+    messaging = MessagingComponent(db_path)
 
-    phonix_service = PhonixService(daemon, recording_api)
-
-    Fork(recording_server).start()
-    phonix_service()
-
+    settings = AvatarServerSettings(
+        (
+            recording,
+            monitoring,
+            messaging
+        ),
+        port
+    )
+    AvatarServer(settings)()

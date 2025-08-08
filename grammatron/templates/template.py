@@ -43,7 +43,7 @@ class Template(TemplateBase[LanguageDispatchDub[TemplateDub]]):
     def with_type(self, _type: Type) -> 'Template':
         obj = self.clone()
         obj._type = _type
-        obj._dub = _create_dub(self._args, self._kwargs, lambda *seq: DataclassTemplateDub(_type, *seq))
+        #obj._dub = _create_dub(self._args, self._kwargs, lambda *seq: DataclassTemplateDub(_type, *seq))
         return obj
 
 

@@ -2,34 +2,52 @@ import time
 from abc import ABC, abstractmethod
 from .message import IMessage
 from typing import TypeVar, Type
+from avatar.messaging.amenities import ThreadCollection
 import time
 from yo_fluq import Queryable, Query
+from loguru import logger
 
 
 T = TypeVar('T', bound=IMessage)
 
+class _ScrollClientOnInit:
+    pass
 
 class StreamClient:
-    def __init__(self, stream: 'Stream', last_id: str|None):
-        self.stream = stream
+    def __init__(self, stream: 'Stream', last_id: str|None, name: str|None = None, debug: bool = False):
+        self._stream = stream
         self.last_id = last_id
+        self.name = name
+        self.debug = debug
+
+    def with_name(self, new_name: str) -> 'StreamClient':
+        self.name = new_name
+        return self
+
+    def with_debug(self) -> 'StreamClient':
+        self.debug = True
+        return self
+
 
     def pull(self, count: int|None = None) -> list[IMessage]:
-        data = self.stream.get(self.last_id, count)
+        data = self._stream.get(self.last_id, count)
         if len(data) > 0:
             self.last_id = data[-1].envelop.id
+            if self.debug:
+                logger.info(f"Client {self.name} pulled {len(data)} messages and is now at {self.last_id}\t"+' '.join(f'{m.envelop.id}/{type(m).__name__}' for m in data))
         return data
 
     def put(self, message: IMessage) -> IMessage:
-        self.stream.put(message)
+        self._stream.put(message)
+        if self.debug:
+            logger.info(f"Client {self.name} pushed {message.envelop.id}/{type(message).__name__}")
         return message
 
-    def clone(self) -> 'StreamClient':
-        return StreamClient(self.stream, self.last_id)
-
+    def clone(self, new_name: str|None = None) -> 'StreamClient':
+        return StreamClient(self._stream, self.last_id, self.name if new_name is None else new_name, self.debug)
 
     def wait_for_confirmation(self, message: IMessage, _type: Type[T] = IMessage, time_limit_in_seconds: float|None = None) -> T:
-        client = self.stream.create_client(message.envelop.id)
+        client = self._stream.create_client(message.envelop.id)
         begin = time.monotonic()
         collected_so_far = []
         while True:
@@ -55,13 +73,22 @@ class StreamClient:
             collected_so_far.extend(result)
             yield from result
             if time_limit_in_seconds is not None and (time.monotonic() - begin) > time_limit_in_seconds:
-                raise ValueError(f"Time limit exceed. Collected so far:\n{collected_so_far}")
+                if len(collected_so_far) == 0:
+                    report = "NO MESSAGES RECEIVED"
+                else:
+                    report = ThreadCollection.just_print(collected_so_far, True)
+                raise ValueError(f"Time limit exceed. Collected so far:\n\n{report}")
             time.sleep(0.01)
 
     def query(self, time_limit_in_seconds: float|None = None) -> Queryable[IMessage]:
         return Query.en(self._query(time_limit_in_seconds))
 
+    def scroll_to_end(self) -> 'StreamClient':
+        self.last_id = self._stream.get_last_message_id()
+        return self
 
+    def initialize(self):
+        self._stream.ready()
 
 
 
@@ -77,6 +104,10 @@ class Stream(ABC):
 
     @abstractmethod
     def ready(self):
+        pass
+
+    @abstractmethod
+    def get_last_message_id(self) -> str|None:
         pass
 
     def create_client(self, last_id: str|None = None) -> StreamClient:

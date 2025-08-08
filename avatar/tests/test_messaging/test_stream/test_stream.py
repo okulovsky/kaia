@@ -36,10 +36,9 @@ class TestStreamTestCase(unittest.TestCase):
     def test_stream_client_pull(self):
         e1 = TestMessage()
         e2 = TestMessage()
-        self.stream.put(e1)
-        self.stream.put(e2)
-
         client = self.stream.create_client()
+        client.put(e1)
+        client.put(e2)
         pulled = client.pull()
         self.assertEqual([e1, e2], pulled)
 

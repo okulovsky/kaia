@@ -11,7 +11,7 @@ class FileCacheComponent(IAvatarComponent):
     def __init__(self, folder: Path):
         self.folder = folder
 
-    def setup_server(self, app: flask.Flask):
+    def setup_server(self, app: IAvatarComponent.App, address: str):
         os.makedirs(self.folder, exist_ok=True)
         app.add_url_rule('/file-cache/upload/<file_name>', view_func=self.file_cache_upload, methods=['POST'])
         app.add_url_rule('/file-cache/download/<file_name>', view_func=self.file_cache_download, methods=['GET'])

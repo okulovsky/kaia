@@ -1,4 +1,5 @@
 import os
+import shutil
 import uuid
 
 import numpy as np
@@ -64,6 +65,7 @@ class TestSpeaker:
         bts = wav_processor.frames_to_wav_bytes(resulting_frames)
         os.makedirs(path.parent, exist_ok=True)
         FileIO.write_bytes(bts, path)
+        self.parts = []
         return path
 
     def to_brain_box(self):
@@ -71,6 +73,12 @@ class TestSpeaker:
         fname = str(uuid.uuid4())+'.wav'
         self.api.upload(fname, path)
         return fname
+
+    def to_file(self, path: Path):
+        src_path = self._produce_file()
+        shutil.move(src_path, path)
+
+
 
 
 

@@ -64,18 +64,16 @@ export class ChatHandler {
       case 'from_user': p.classList.add('right'); break;
       case 'to_user':   p.classList.add('left');  break;
       case 'system':
-        p.classList.add('center');
-        p.style.fontStyle = 'italic';
+        p.classList.add('system');
         break;
       case 'error':
-        p.classList.add('left');
-        p.style.fontFamily = 'monospace';
+        p.classList.add('error');
         break;
       default:
         p.classList.add('left');
     }
 
-    if (avatarId) {
+    if (avatarId && (type === 'from_user' || type === 'to_user')) {
       p.style.backgroundImage = `url('${this.baseUrl}${avatarId}')`;
     }
 

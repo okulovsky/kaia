@@ -13,7 +13,7 @@ class AudioChunksComponent(IAvatarComponent):
         self.folder = folder
         self.audio_chunks = {}
 
-    def setup_server(self, app: flask.Flask):
+    def setup_server(self, app: IAvatarComponent.App, address: str):
         app.add_url_rule('/audio-chunks/start', view_func=self.audio_chunks_start, methods=['POST'])
         app.add_url_rule('/audio-chunks/end', view_func=self.audio_chunks_end, methods=['POST'])
 

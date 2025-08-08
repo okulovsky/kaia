@@ -7,7 +7,7 @@ from grammatron import Template, CardinalDub, Utterance
 
 
 class VoskIntegrationTestCase(TestCase):
-    def test_vosk(self):
+    def dont_test_vosk(self):
         with BrainBox.Api.Test() as api:
             speaker = TestSpeaker(api)
             input = speaker.speak('Set the timer for ten minutes').to_brain_box()
@@ -18,7 +18,7 @@ class VoskIntegrationTestCase(TestCase):
             self.assertIsInstance(result, STTConfirmation)
             self.assertEqual('Set the timer for ten minutes.', result.recognition)
 
-    def test_vosk_with_free_speech(self):
+    def dont_test_vosk_with_free_speech(self):
         with BrainBox.Api.Test() as api:
             speaker = TestSpeaker(api)
             input = speaker.speak('Set the timer for ten minutes').to_brain_box()

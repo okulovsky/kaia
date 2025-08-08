@@ -1,7 +1,12 @@
+import os
+
 from foundation_kaia.marshalling import Api, TestApi
 from .messaging_api import MessagingAPI
 from .components import FileCacheApi
+from .messaging_component import MessagingComponent
 from .server import AvatarServerSettings, AvatarServer
+from foundation_kaia.misc import Loc
+
 
 class AvatarApi(Api):
     def __init__(self, address):
@@ -15,6 +20,20 @@ class AvatarApi(Api):
     def file_cache(self):
         return FileCacheApi(self.address)
 
+
     class Test(TestApi['AvatarApi']):
-        def __init__(self, settings: AvatarServerSettings):
+        def __init__(self, settings: AvatarServerSettings|None = None):
+            self.temp_db_path = None
+            if settings is None:
+                self.temp_db_path = Loc.temp_folder/'avatar_test_database'
+                settings = AvatarServerSettings(
+                    (
+                        MessagingComponent(self.temp_db_path),
+                    )
+                )
             super().__init__(lambda z: AvatarApi(z), AvatarServer(settings))
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            super().__exit__(exc_type, exc_val, exc_tb)
+            if self.temp_db_path is not None:
+                os.unlink(self.temp_db_path)

@@ -1,3 +1,3 @@
 from .rhasspy_training import IntentsPack
 from .stt import *
-from .stt_service import STTService, OpenMicCommand
+from .stt_service import STTService

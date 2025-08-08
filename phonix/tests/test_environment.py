@@ -2,11 +2,12 @@ from typing import Any
 from phonix.daemon import (
     PhonixDeamon, FakeInput, FakeOutput,
     PorcupineWakeWordUnit, SilenceMarginUnit, TooLongOpenMicUnit,
-    RecordingUnit, LevelReportingUnit, FileFolderGetter,
-    RecordingApi
+    RecordingUnit, LevelReportingUnit, FolderFileRetriever
 )
+from phonix.components import PhonixApi
 from dataclasses import dataclass
 from avatar.messaging import TestStream, StreamClient
+from avatar.server import AvatarStream
 from threading import Thread
 from pathlib import Path
 from foundation_kaia.misc import Loc
@@ -14,9 +15,9 @@ from foundation_kaia.misc import Loc
 
 @dataclass
 class TestEnvironment:
-    recording_server: RecordingApi
+    api: PhonixApi
     daemon: PhonixDeamon
-    recording_api_test_environment: RecordingApi.Test
+    recording_api_test_environment: PhonixApi.Test
     client: StreamClient
     thread: Thread
     folder_holder: Any
@@ -36,16 +37,16 @@ class PhonixTestEnvironmentFactory:
     def __enter__(self):
         if self.with_recording_server:
             folder_holder = Loc.create_test_folder()
-            recording_api_test = RecordingApi.Test(folder_holder.__enter__())
+            recording_api_test = PhonixApi.Test(folder_holder.__enter__())
             api = recording_api_test.__enter__()
             getter = api.file_cache.download
+            client = AvatarStream(api).create_client(None)
         else:
             folder_holder = None
             recording_api_test = None
             api = None
-            getter = FileFolderGetter(Path(__file__).parent/'files')
-
-        client = TestStream().create_client()
+            getter = FolderFileRetriever(Path(__file__).parent/'files')
+            client = TestStream().create_client(None)
 
         silence_unit = SilenceMarginUnit(0.05, 1)
         if not self.level_reporting:

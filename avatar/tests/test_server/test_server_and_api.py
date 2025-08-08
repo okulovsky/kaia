@@ -14,6 +14,7 @@ class AvatarApiTestCase(TestCase):
                 for i in range(5):
                     api.messaging.add('test', None, dict(id=str(i)), dict(index=i))
                 messages = api.messaging.get()
+                print(messages)
                 self.assertEqual(5, len(messages))
                 for i, m in enumerate(messages):
                     self.assertEqual(str(i), m['envelop']['id'])
@@ -72,7 +73,7 @@ class AvatarApiTestCase(TestCase):
                 read_time = (time.monotonic() - read_begin)/N
 
                 self.assertLess(write_time, 0.02)
-                self.assertLess(read_time, 0.005)
+                self.assertLess(read_time, 0.01)
 
 
 

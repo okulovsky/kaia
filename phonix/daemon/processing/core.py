@@ -7,9 +7,10 @@ from ..inputs import MicData
 
 class MicState(Enum):
     Standby = 0
-    Open = 1
-    Recording = 2
-    Sending = 3
+    Opening = 1
+    Open = 2
+    Recording = 3
+    Sending = 4
 
 @dataclass
 class State:
@@ -21,6 +22,7 @@ class UnitInput:
     state: State
     mic_data: MicData
     client: StreamClient
+    open_mic_requested: bool
 
 class IUnit(ABC):
     @abstractmethod
@@ -37,7 +39,6 @@ class SystemSoundType(Enum):
 @dataclass
 class SystemSoundCommand(IMessage):
     sound: SystemSoundType
-
     Type = SystemSoundType
 
 

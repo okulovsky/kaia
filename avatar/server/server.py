@@ -2,12 +2,13 @@ import flask
 from foundation_kaia.marshalling import Server
 from dataclasses import dataclass
 from .components import IAvatarComponent
-
+import logging
 
 @dataclass
 class AvatarServerSettings:
     components: tuple[IAvatarComponent, ...]
     port: int = 13002
+    hide_logs: bool = True
 
 
 class AvatarServer(Server):
@@ -18,14 +19,23 @@ class AvatarServer(Server):
     def __call__(self):
         app = flask.Flask("AvatarServer", static_folder=None, static_url_path=None)
 
-        import logging
-        logging.getLogger('werkzeug').disabled = True
+        if self.settings.hide_logs:
+            logging.getLogger('werkzeug').disabled = True
 
+        av_app = IAvatarComponent.App(app)
         for component in self.settings.components:
-            component.setup_server(app)
+            component.setup_server(av_app, f'127.0.0.1:{self.settings.port}')
+
+        self.toc = av_app.toc
 
         self.bind_heartbeat(app)
-
+        app.add_url_rule('/', view_func=self.index, methods=['GET'])
         app.run('0.0.0.0', self.settings.port)
 
+    def index(self):
+        html = '<html><body>'
+        for record in self.toc:
+            html+=f'<a href="{record.url}">{record.title}</a><br/>'
+        html+="</body></html>"
+        return html
 

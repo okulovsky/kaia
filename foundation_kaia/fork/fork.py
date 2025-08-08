@@ -54,3 +54,10 @@ class Fork:
             self.exception_raised = True
             self.process.terminate()
             self.process.wait()
+
+    def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.terminate()

@@ -8,9 +8,6 @@ class PyAudioInput(IAudioInput):
                  chunk: int = 512,
                  channels: int = 1,
                  ):
-        import pyaudio
-        self.FORMAT = pyaudio.paInt16
-        self.pyaudio = pyaudio.PyAudio()
         self.device = device
         self.rate = rate
         self.chunk = chunk
@@ -19,6 +16,9 @@ class PyAudioInput(IAudioInput):
 
 
     def start(self):
+        import pyaudio
+        self.FORMAT = pyaudio.paInt16
+        self.pyaudio = pyaudio.PyAudio()
         self.stream = self.pyaudio.open(
             format=self.FORMAT,
             channels=self.channels,

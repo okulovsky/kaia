@@ -1,5 +1,5 @@
 from avatar.server import AvatarApi, AvatarServerSettings
-from avatar.server.components import FileCacheComponent, StaticPathsComponent
+from avatar.server.components import FileCacheComponent, StaticPathsComponent, MainComponent
 from unittest import TestCase
 import requests
 from foundation_kaia.misc import Loc
@@ -20,8 +20,9 @@ class AvatarServerExternals(TestCase):
 
     def test_custom_index(self):
         text =  'text'
-        with AvatarApi.Test(AvatarServerSettings((), index_page=text)) as api:
-            result = requests.get(f'http://{api.address}')
+        settings = AvatarServerSettings((MainComponent(text),))
+        with AvatarApi.Test(settings) as api:
+            result = requests.get(f'http://{api.address}/main')
             result.raise_for_status()
             self.assertEqual(text, result.text)
 

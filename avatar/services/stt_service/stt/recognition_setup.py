@@ -18,7 +18,7 @@ class RecognitionContext:
     command: STTCommand
     rhasspy_handlers: dict[str, RhasspyHandler] = field(default_factory=dict)
 
-class IRecognitionSetup(ABC):
+class IRecognitionSetup(IMessage, ABC):
     @abstractmethod
     def create_task(self, context: RecognitionContext) -> BrainBox.ITask:
         pass

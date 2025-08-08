@@ -68,3 +68,8 @@ class TestStream(Stream):
             if count is None:
                 return list(self.messages[start:])
             return list(self.messages[start:start + count])
+
+    def get_last_message_id(self) -> str|None:
+        if len(self.messages) == 0:
+            return None
+        return self.messages[-1].envelop.id

@@ -5,17 +5,20 @@ from avatar.services import WakeWordEvent
 from unittest import TestCase
 from pathlib import Path
 from yo_fluq import Query, FileIO
+from foundation_kaia.misc import Loc
 
 def check(file):
+    if isinstance(file, str):
+        file = Path(__file__).parent.parent.parent / 'files' / file
     input = FakeInput()
-    input.set_sample(FileIO.read_bytes(Path(__file__).parent.parent.parent / 'files'/file))
+    input.set_sample(FileIO.read_bytes(file))
     porcupine = PorcupineWakeWordUnit()
-    client = TestStream().create_client()
+    client = TestStream().create_client(None)
     clone_client = client.clone()
     result = []
     while not input.is_buffer_empty():
         data = input.read()
-        result.append(porcupine.process(UnitInput(State(MicState.Standby), data, client)))
+        result.append(porcupine.process(UnitInput(State(MicState.Standby), data, client, False)))
     return result, clone_client.pull()
 
 
@@ -23,7 +26,7 @@ class PorcupineTestCase(TestCase):
     def test_porcupine_positive(self):
         states, messages = check('computer.wav')
         not_null = Query.en(states).where(lambda z: z is not None).single()
-        self.assertEqual(MicState.Open, not_null.mic_state)
+        self.assertEqual(MicState.Opening, not_null.mic_state)
         self.assertEqual(2, len(messages))
         self.assertIsInstance(messages[0], WakeWordEvent)
         self.assertEqual('computer', messages[0].word)
@@ -34,6 +37,10 @@ class PorcupineTestCase(TestCase):
         states, messages = check('sandwich.wav')
         self.assertEqual({None}, set(states))
         self.assertEqual(0, len(messages))
+
+    def test_porcupine_1(self):
+        states, messages = check(Loc.temp_folder/'mic_recording-1.wav')
+        print([i for i,s in enumerate(states) if s is not None])
 
 
 

@@ -1,0 +1,180 @@
+/* screen-wide settings */
+
+body {
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', Helvetica, sans-serif;
+    font-weight: normal;
+    color: #fdfdfd;
+    padding: 0px;
+    margin: 0px;
+    background: rgba(20, 20, 20, 1);
+}
+
+#content {
+    width: 100%;
+    min-width: 1024px;
+
+    /* border: 2px solid black; */
+    margin: 0px auto 0px auto;
+
+    display: block;
+    overflow-y: scroll;
+    background-color: bisque;
+    scrollbar-width: none;
+}
+
+/* Image, overlay and separator */
+#image{
+    float:left;
+    position: fixed;
+    left: 0px;
+    overflow: hidden;
+    height:100%;
+    width:56.3vw;
+ 
+}
+
+#overlay {
+  position: absolute;
+  top: 5%;
+  left: 5%;
+  width: 90%;
+  height: 90%;
+  display: none;
+  background: rgba(255, 0, 0, 0.5);
+  z-index: 10;
+
+  gap: 5px;
+}
+
+.grid-button {
+  width: 100%;
+  height: 100%;
+  font-size: 16px;
+}
+
+
+#image img{
+    width: inherit;
+}
+
+#chat_separator {
+    height: 100%;
+    /* border: 1px solid red;  */
+    width: 20px;
+    position: absolute;
+    right: 10px;
+    top: 0px;
+    min-height: 768px;
+    overflow: hidden;
+    background-image: linear-gradient(to right, rgba(20, 20, 20, 0), rgb(20, 20, 20));
+}
+
+/* Chat-related styles */
+
+#chat {
+    /* border: 1px solid #a77; */
+    height: 100%;
+    width: 43.7vw;
+    background: rgba(20, 20, 20, 1);
+    position: fixed;
+    right:0px;
+    top:0px;
+    padding: 0px 10px 0px 0px;
+    overflow-y: scroll;
+    scrollbar-width: none;
+    scroll-snap-align: end;
+    overscroll-behavior-y: contain;
+    scroll-snap-type: y proximity;
+    user-select: none;
+}
+
+#chat p {
+    /* border: 1px solid #7a7;  */
+    min-height: 4.6vw;
+    background-repeat: no-repeat;
+    background-size: 5vw;
+    font-size: 1.4vw;
+    line-height: 1.5;
+    margin: 6px 0px 4px 6px;
+    overflow: hidden;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    border-radius: 8px;
+    background-color: rgb(255 255 255 / 10%);
+}
+
+#chat p.left {
+    background-position: top left 7px;
+    padding-left:6vw;
+    background-image: url(unknown.png);
+}
+
+#chat p.right {
+    background-position: top right 7px;
+    padding-right:6vw;
+    text-align: right;
+    background-image: url(unknown.png);
+}
+
+#chat p.error {
+    min-height: 4.6vw;
+    background-repeat: no-repeat;
+    padding: 8px;
+    font-size: 1.4vw;
+    line-height: 1;
+    margin: 6px 0px 4px 6px;
+    overflow: hidden;
+    border-radius: 8px;
+    background-color: rgba(255, 0, 0, 0.308);
+    text-align:justify;
+    font-family: monospace;
+}
+
+#chat p.system {
+    text-align: center;
+    font-style: italic;
+    display: flex;
+    align-items: center;      /* вертикальное выравнивание по середине */
+    justify-content: center;  /* горизонтальное выравнивание по середине */
+    font-style: italic;
+}
+
+/* Control panel */
+
+/* Панель системных кнопок */
+#system-panel {
+  position: absolute;
+  bottom: 0;             /* «прикреплена» к низу контейнера */
+  left: 50%;             /* центр по горизонтали */
+  transform: translate(-50%, 100%); /* смещена вниз за пределы контейнера */
+  transition: transform 0.3s ease-in-out;
+
+  display: grid;
+  grid-template-columns: repeat(10, auto);
+  grid-gap: 1.3vw;
+  padding: 1vw;
+  /* фон и размеры — подберите под дизайн */
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 0.5vw;
+  z-index: 9999;
+}
+
+/* Когда панель открыта */
+#system-panel.open {
+  transform: translate(-50%, 0);   /* возвращаем на место */
+}
+
+/* Кнопки */
+.system-btn {
+  background: #fff;
+  border: none;
+  border-radius: 0.5vw;
+  padding: 0.5vw;
+  font-size: 1.4vw;
+  cursor: pointer;
+  transition: transform 0.1s ease-in-out;
+}
+
+.system-btn:active {
+  transform: scale(0.95);
+}
