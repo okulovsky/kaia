@@ -1,7 +1,7 @@
 import webbrowser
 from avatar.server import AvatarServerSettings, AvatarApi, AvatarStream, MessagingComponent
 from avatar.server.components import MainComponent, StaticPathsComponent, TypeScriptComponent
-from avatar.services import ChatCommand, ImageCommand, ButtonGrid, InitializationEvent
+from avatar.services import ChatCommand, ImageCommand, ButtonGridCommand, InitializationEvent
 from kaia.app.avatar_server_app_settings import create_aliases
 from pathlib import Path
 from yo_fluq import FileIO

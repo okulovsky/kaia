@@ -6,16 +6,36 @@ from datetime import datetime
 from pathlib import Path
 from unittest import TestCase
 from avatar.utils import slice
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
+class SeleniumDriver:
+    def __init__(self, api, headless: bool = True):
+        self.api = api
+        self.headless = headless
+
+    def __enter__(self):
+        opts = Options()
+        if self.headless:
+            opts.add_argument("--headless")
+        opts.add_argument("--disable-gpu")
+        driver = webdriver.Chrome(options=opts)
+        driver.get(f'http://{self.api.address}/main')
+        self.driver = driver
+        return driver
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.driver.quit()
 
 
 class Helper:
-    def __init__(self, folder, tc: TestCase):
+    def __init__(self, folder, tc: TestCase, recompile_ts: bool = False):
         settings = KaiaAppSettings()
         settings.brainbox.deciders_files_in_kaia_working_folder = False
         settings.avatar_processor.timer_event_span_in_seconds = None
         settings.avatar_processor.initialization_event_at_startup = False
+        settings.avatar_server.compile_scripts = recompile_ts
         settings.phonix.in_unit_test_environment = True
         settings.phonix.supress_reports = True
         settings.brainbox.deciders_files_in_kaia_working_folder = False
@@ -27,7 +47,7 @@ class Helper:
 
 
     def upload(self, name):
-        return self.app.avatar_api.file_cache.upload(FileIO.read_bytes(Path(__file__).parent / 'files' / (name + '.wav')))
+        return self.app.avatar_api.file_cache.upload(FileIO.read_bytes(Path(__file__).parent / 'test_app/files' / (name + '.wav')))
 
     def process(self, q):
         def _():

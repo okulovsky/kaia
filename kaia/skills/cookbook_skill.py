@@ -1,4 +1,4 @@
-from kaia import IKaiaSkill, ButtonPressedEvent, ButtonGrid, World, Listen, Return
+from kaia import IKaiaSkill, ButtonPressedEvent, ButtonGridCommand, World, Listen, Return
 from grammatron import *
 from .notification_skill import NotificationRegister, NotificationInfo
 from dataclasses import dataclass
@@ -143,7 +143,7 @@ class CookBookSkill(IKaiaSkill):
         input: Utterance = yield
         if input in CookBookIntents.recipe:
             yield from self.run_recipe(input.get_field())
-        builder = ButtonGrid.Builder(4)
+        builder = ButtonGridCommand.Builder(4)
         for recipe in self.recipes:
             builder.add(recipe.dish, dict(dish=recipe.dish))
         builder.add('CANCEL', dict(action='cancel'))

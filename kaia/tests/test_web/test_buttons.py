@@ -7,12 +7,12 @@ import base64
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from avatar.services import ButtonGrid, ButtonPressedEvent
+from avatar.services import ButtonGridCommand, ButtonPressedEvent
 from kaia.tests.test_web.environment import TestEnvironmentFactory
 
 
 
-class ButtonGridHandlerTestCase(TestCase):
+class ButtonGridCommandHandlerTestCase(TestCase):
     def test_button_clicks_send_events(self):
         with TestEnvironmentFactory(HTML, aliases=dict(ButtonPressedEvent=ButtonPressedEvent)) as env:
             client = env.client
@@ -20,7 +20,7 @@ class ButtonGridHandlerTestCase(TestCase):
             address = f'http://{env.api.address}'
 
             # 1) build a 2x2 grid: two clickable, one disabled
-            builder = ButtonGrid.Builder(column_count=2)
+            builder = ButtonGridCommand.Builder(column_count=2)
             builder.add("Yes",  "yes_feedback")
             builder.add("No",   "no_feedback")
             builder.add("Skip", None)            # this button will be disabled
@@ -64,14 +64,14 @@ class ButtonGridHandlerTestCase(TestCase):
 
 HTML = '''<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><title>ButtonGrid Test</title></head>
+<head><meta charset="UTF-8"><title>ButtonGridCommand Test</title></head>
 <body>
   <button id="processBtn">Start</button>
   <div id="buttonOverlay"></div>
   <script type="module">
     import { AvatarClient }      from '/scripts/client.js';
     import { Dispatcher }        from '/scripts/dispatcher.js';
-    import { ButtonGridHandler } from '/scripts/button-grid-handler.js';
+    import { ButtonGridCommandHandler } from '/scripts/button-grid-command-handler.js';
 
     const startBtn  = document.getElementById('processBtn');
     const overlay   = document.getElementById('buttonOverlay');
@@ -79,7 +79,7 @@ HTML = '''<!DOCTYPE html>
     startBtn.addEventListener('click', () => {
       const client     = new AvatarClient(window.location.origin, 'default');
       const dispatcher = new Dispatcher(client, 1);
-      new ButtonGridHandler(dispatcher, overlay, client);
+      new ButtonGridCommandHandler(dispatcher, overlay, client);
       dispatcher.start();
     });
   </script>

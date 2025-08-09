@@ -13,7 +13,7 @@ from yo_fluq import FileIO
 
 
 @dataclass
-class SessionSectionStart(IMessage):
+class ServerStartedEvent(IMessage):
     pass
 
 
@@ -49,7 +49,7 @@ class AvatarServerAppSettings(IAppInitializer):
     def bind_app(self, app: 'KaiaApp'):
         PORT = 13002
 
-        start_message = SessionSectionStart()
+        start_message = ServerStartedEvent()
         start_message_id = start_message.envelop.id
 
         components = [

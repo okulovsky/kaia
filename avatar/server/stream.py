@@ -29,7 +29,11 @@ class AvatarStream(Stream):
         for record in records:
             _type = get_type_by_full_name(record['message_type'])
             message = Format.from_json(record['payload'], _type)
-            message._envelop = Format.from_json(record['envelop'], Envelop)
+            envelop: Envelop = Format.from_json(record['envelop'], Envelop)
+            if envelop.timestamp is not None and envelop.timestamp.tzinfo is not None:
+                envelop.timestamp = envelop.timestamp.astimezone().replace(tzinfo=None)
+            message._envelop = envelop
+
             messages.append(message)
         return messages
 

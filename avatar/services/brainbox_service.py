@@ -51,5 +51,4 @@ class BrainBoxService(AvatarService):
     @message_handler
     def initialize(self, initialization: InitializationEvent):
         if self.api is not None and self.setup is not None:
-            for controller_setup in self.setup.controllers:
-                self.api.controller_api.setup(controller_setup)
+            self.api.controller_api.setup(self.setup)

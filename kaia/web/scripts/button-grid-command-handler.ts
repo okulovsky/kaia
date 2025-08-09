@@ -9,8 +9,8 @@ import { Message }        from './message.js';
  * laying out buttons in a CSS grid.  Buttons whose `button_feedback` is null
  * are disabled; others, when clicked, send a ButtonPressedEvent back to the server.
  */
-export class ButtonGridHandler {
-  private suffix = '/ButtonGrid';
+export class ButtonGridCommandHandler {
+  private suffix = '/ButtonGridCommand';
 
   /**
    * @param dispatcher  your Dispatcher instance

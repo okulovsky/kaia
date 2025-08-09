@@ -38,7 +38,7 @@ HTML = '''<!DOCTYPE html>
   <script type="module">
     import { AvatarClient } from '/scripts/client.js';
     import { Dispatcher }     from '/scripts/dispatcher.js';
-    import { ImageCommandHandler } from '/scripts/image-handler.js';
+    import { ImageCommandHandler } from '/scripts/image-command-handler.js';
 
     const btn       = document.getElementById('processBtn');
     const imgEl     = document.getElementById('preview');

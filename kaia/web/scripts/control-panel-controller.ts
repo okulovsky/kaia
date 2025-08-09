@@ -1,7 +1,7 @@
 import { AvatarClient }   from './client.js';
 import { Message }        from './message.js';
 
-export class SystemButtonController {
+export class ControlPanelController {
   private trigger: HTMLDivElement;
   private panel: HTMLDivElement;
   private overlay: HTMLDivElement;
@@ -44,7 +44,7 @@ export class SystemButtonController {
 
   private requestButtons(): void {
       console.log('buttons requested')
-      const eventMsg = new Message('ButtonGrid');
+      const eventMsg = new Message('ButtonGridCommand');
       eventMsg.payload = {elements: [{text: 'button 1', row: 0, column: 0}, {text: 'button 2', row: 1, column: 1}]};
       console.log(this.client)
       this.client.addMessage(eventMsg);

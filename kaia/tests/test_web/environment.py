@@ -7,6 +7,7 @@ from avatar.server import AvatarServerSettings, AvatarApi, MessagingComponent, A
 from avatar.server.components import TypeScriptComponent, MainComponent
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from kaia.tests.helper import Helper, SeleniumDriver
 
 @dataclass
 class TestEnvironment:
@@ -47,21 +48,10 @@ class TestEnvironmentFactory:
 
         # 3) AvatarApi.Test
         api = self._stack.enter_context(AvatarApi.Test(settings))
-
-
-        # 4) client
         client = AvatarStream(api).create_client()
 
-        # 5) selenium driver
-        opts = Options()
-        if self.headless:
-            opts.add_argument("--headless")
-        opts.add_argument("--disable-gpu")
-        driver = webdriver.Chrome(options=opts)
-        self._stack.callback(driver.quit)
-
-        # 6) open the page once
-        driver.get(f'http://{api.address}/main')
+        # 4) client
+        driver = self._stack.enter_context(SeleniumDriver(api, self.headless))
 
         return TestEnvironment(
             api=api,

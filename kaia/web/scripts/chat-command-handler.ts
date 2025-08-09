@@ -8,7 +8,7 @@ import { Message }    from './message.js';
  * and renders them into a chat container, plus enables
  * click‑and‑drag scrolling.
  */
-export class ChatHandler {
+export class ChatCommandHandler {
   private suffix = '/ChatCommand';
 
   /**

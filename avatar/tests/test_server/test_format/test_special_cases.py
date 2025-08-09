@@ -1,7 +1,7 @@
 from unittest import TestCase
 from avatar.messaging import Confirmation, Envelop
 from avatar.server.format import Format
-from avatar.services import PlayableTextMessage, TextEvent, TextInfo, ButtonGrid, IntentsPack, STTService, BrainBoxService
+from avatar.services import PlayableTextMessage, TextEvent, TextInfo, ButtonGridCommand, IntentsPack, STTService, BrainBoxService
 from pprint import pprint
 from brainbox.deciders import EmptyDecider
 from brainbox import BrainBox
@@ -30,8 +30,8 @@ class SpecialCasesSerializationTestCase(TestCase):
 
 
     def test_button_grid(self):
-        msg = ButtonGrid.Builder().add('test1','test1').add('test2', 'test2').to_grid()
-        result = Format.to_json(msg, ButtonGrid)
+        msg = ButtonGridCommand.Builder().add('test1','test1').add('test2', 'test2').to_grid()
+        result = Format.to_json(msg, ButtonGridCommand)
         self.assertIsInstance(result['elements'], list)
         self.assertNotIn('@base64', result['elements'][0])
 

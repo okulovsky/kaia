@@ -1,5 +1,5 @@
 from .avatar_processor_app_settings import AvatarProcessorAppSettings
-from .avatar_server_app_settings import AvatarServerAppSettings
+from .avatar_server_app_settings import AvatarServerAppSettings, ServerStartedEvent
 from .brainbox_app_settings import BrainboxAppSettings
 from .kaia_app_settings import KaiaAppSettings
 from .phonix_app_settings import PhonixAppSettings

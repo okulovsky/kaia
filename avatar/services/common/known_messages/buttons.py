@@ -12,13 +12,13 @@ class Button:
     column_span: int|None = None
 
 
-class ButtonGridBuilder:
+class ButtonGridCommandBuilder:
     def __init__(self, column_count: int = 4):
         self.index = 0
         self.elements = []
         self.column_count = column_count
 
-    def add(self, name: str, payload: Any) -> 'ButtonGridBuilder':
+    def add(self, name: str, payload: Any) -> 'ButtonGridCommandBuilder':
         self.elements.append(Button(
             name,
             self.index // self.column_count,
@@ -29,19 +29,19 @@ class ButtonGridBuilder:
         return self
 
     def to_grid(self):
-        return ButtonGrid(tuple(self.elements))
+        return ButtonGridCommand(tuple(self.elements))
 
 @dataclass
-class ButtonGrid(IMessage):
+class ButtonGridCommand(IMessage):
     elements: tuple[Button,...]|None = None
 
 
     Button = Button
-    Builder = ButtonGridBuilder
+    Builder = ButtonGridCommandBuilder
 
     @staticmethod
     def empty():
-        return ButtonGrid()
+        return ButtonGridCommand()
 
 
 @dataclass

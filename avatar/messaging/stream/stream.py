@@ -65,7 +65,7 @@ class StreamClient:
         self.put(message)
         return self.wait_for_confirmation(message, _type, time_limit_in_seconds)
 
-    def _query(self, time_limit_in_seconds: float|None = None):
+    def _query(self, time_limit_in_seconds: float|None = None, no_exception: bool = False):
         begin = time.monotonic()
         collected_so_far = []
         while True:
@@ -73,15 +73,21 @@ class StreamClient:
             collected_so_far.extend(result)
             yield from result
             if time_limit_in_seconds is not None and (time.monotonic() - begin) > time_limit_in_seconds:
-                if len(collected_so_far) == 0:
-                    report = "NO MESSAGES RECEIVED"
+                if no_exception:
+                    return
                 else:
-                    report = ThreadCollection.just_print(collected_so_far, True)
-                raise ValueError(f"Time limit exceed. Collected so far:\n\n{report}")
+                    if len(collected_so_far) == 0:
+                        report = "NO MESSAGES RECEIVED"
+                    else:
+                        try:
+                            report = ThreadCollection.just_print(collected_so_far, True)
+                        except:
+                            report = 'Errors when generating the report'
+                    raise ValueError(f"Time limit exceed. Collected so far:\n\n{report}")
             time.sleep(0.01)
 
-    def query(self, time_limit_in_seconds: float|None = None) -> Queryable[IMessage]:
-        return Query.en(self._query(time_limit_in_seconds))
+    def query(self, time_limit_in_seconds: float|None = None, no_exception: bool = False) -> Queryable[IMessage]:
+        return Query.en(self._query(time_limit_in_seconds, no_exception))
 
     def scroll_to_end(self) -> 'StreamClient':
         self.last_id = self._stream.get_last_message_id()

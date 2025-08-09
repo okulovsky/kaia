@@ -1,7 +1,7 @@
 from unittest import TestCase
 from foundation_kaia.misc import Loc
 from avatar.services import *
-from kaia.tests.test_app.helper import Helper
+from kaia.tests.helper import Helper
 from avatar.messaging.amenities import ThreadCollection
 from yo_fluq import Query
 
@@ -12,7 +12,6 @@ class FacelessTestCase(TestCase):
         with Loc.create_test_folder(dont_delete=True) as folder:
             helper = Helper(folder, self)
             with helper.app.get_fork_app(None):
-
                 helper.init()
 
                 for i in range(3):

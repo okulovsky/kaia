@@ -20,10 +20,11 @@
   <script type="module">
     import { AvatarClient }             from '/scripts/client.js';
     import { Dispatcher }               from '/scripts/dispatcher.js';
-    import { ChatHandler }              from '/scripts/chat-handler.js';
-    import { ImageCommandHandler }      from '/scripts/image-handler.js';
-    import { ButtonGridHandler }        from '/scripts/button-grid-handler.js';
-    import { SystemButtonController }   from '/scripts/control-panel.js';
+    import { ChatCommandHandler }       from '/scripts/chat-command-handler.js';
+    import { ImageCommandHandler }      from '/scripts/image-command-handler.js';
+    import { ButtonGridCommandHandler } from '/scripts/button-grid-command-handler.js';
+    import { ServerStartedEventHandler }  from '/scripts/server-started-event-handler.js'
+    import { ControlPanelController }   from '/scripts/control-panel-controller.js';
     import { Message }                  from '/scripts/message.js';
 
     const chatDiv     = document.getElementById('chat');
@@ -32,18 +33,18 @@
     const panelDiv    = document.getElementById('system-panel');
 
     const client      = new AvatarClient(window.location.origin, 'default');
-    initMessage = new Message('InitializationEvent');
-    client.put(initMessage);
+    const initMessage = new Message('InitializationEvent');
+    client.addMessage(initMessage);
     client.lastMessageId = initMessage.envelop.id;
 
     const dispatcher  = new Dispatcher(client, 1);
 
-    new ChatHandler(dispatcher, chatDiv, window.location.origin);
+    new ChatCommandHandler(dispatcher, chatDiv, window.location.origin);
     new ImageCommandHandler(dispatcher, imageDiv);
-    new ButtonGridHandler(dispatcher, overlayDiv, client);
+    new ButtonGridCommandHandler(dispatcher, overlayDiv, client);
+    new ServerStartedEventHandler(dispatcher);
 
-    new SystemButtonController(imageDiv, panelDiv, overlayDiv, client);
-
+    new ControlPanelController(imageDiv, panelDiv, overlayDiv, client);
     dispatcher.start();
   </script>
 </body>
