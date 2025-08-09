@@ -2,7 +2,7 @@ from __future__ import annotations
 from unittest import TestCase
 from pstats import FunctionProfile
 from dataclasses import dataclass
-from avatar.server.format.dataclass_formatter import DataClassFormatter
+from avatar.server.messaging_component.format.dataclass_formatter import DataClassFormatter
 from datetime import datetime
 
 @dataclass

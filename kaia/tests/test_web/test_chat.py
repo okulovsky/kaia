@@ -12,7 +12,7 @@ from kaia.tests.test_web.environment import TestEnvironmentFactory
 class ChatHandlerTestCase(TestCase):
     def test_chat_handler_renders_different_types(self):
         # Arrange: set up test environment
-        with TestEnvironmentFactory(HTML) as env:
+        with TestEnvironmentFactory(HTML, headless=True) as env:
             client = env.client
             driver = env.driver
             addr   = f'http://{env.api.address}'
@@ -70,13 +70,13 @@ HTML = '''<!DOCTYPE html>
   <script type="module">
     import { AvatarClient } from '/scripts/client.js';
     import { Dispatcher }   from '/scripts/dispatcher.js';
-    import { ChatHandler }  from '/scripts/chat-handler.js';
+    import { ChatCommandHandler }  from '/scripts/chat-command-handler.js';
     const btn       = document.getElementById('processBtn');
     const chatDiv   = document.getElementById('chat');
     btn.addEventListener('click', () => {
       const client     = new AvatarClient(window.location.origin, 'default');
       const dispatcher = new Dispatcher(client, 1);
-      new ChatHandler(dispatcher, chatDiv, window.location.origin);
+      new ChatCommandHandler(dispatcher, chatDiv, window.location.origin);
       dispatcher.start();
     });
   </script>

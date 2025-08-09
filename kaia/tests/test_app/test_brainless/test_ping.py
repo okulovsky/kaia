@@ -38,7 +38,6 @@ class PingBrainlessTestCase(TestCase):
             with app.get_fork_app(None):
                 app.avatar_api.wait()
                 client = app.create_avatar_client()
-                client.query(5).take(9).foreach(print)
 
                 utterance = client.put(UtteranceEvent(PingIntents.question()))
                 self.assertIsInstance(client.pull()[0], UtteranceEvent)

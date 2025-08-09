@@ -36,8 +36,6 @@ class KaiaDriver:
         logger.info("Interpreter (re)created")
 
 
-
-
     def _trim(self, obj):
         return str(obj)[:100]
 

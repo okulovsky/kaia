@@ -1,8 +1,8 @@
 from unittest import TestCase
-from avatar.server.format.custom_formatters import *
-from avatar.server.format.dataclass_formatter import *
-from avatar.server.format.default_formatter import *
-from avatar.server.format import Format
+from avatar.server.messaging_component.format.custom_formatters import *
+from avatar.server.messaging_component.format.dataclass_formatter import *
+from avatar.server.messaging_component.format.default_formatter import *
+from avatar.server.messaging_component.format import Format
 
 class TestToFormatter(TestCase):
     def test_primitive_types(self):

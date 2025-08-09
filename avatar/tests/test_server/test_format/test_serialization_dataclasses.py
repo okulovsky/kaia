@@ -2,7 +2,7 @@ from typing import Optional
 from dataclasses import dataclass
 from pstats import FunctionProfile
 from unittest import TestCase
-from avatar.server.format import Format
+from avatar.server.messaging_component.format import Format
 import json
 from pprint import pprint
 

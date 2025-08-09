@@ -146,7 +146,7 @@ class PhonixMonitoring:
         fig.update_layout(
             title='Phonix status',
             margin=dict(l=40, r=20, t=40, b=40),
-            height=800
+            autosize=True
         )
 
         return fig

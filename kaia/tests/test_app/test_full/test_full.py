@@ -17,7 +17,7 @@ class FullTestCase(TestCase):
             with helper.app.get_fork_app(None):
                 helper.init()
                 helper.client.put(ChatCommand("Test"))
-                with SeleniumDriver(helper.app.avatar_api, False) as driver:
+                with SeleniumDriver(helper.app.avatar_api, True) as driver:
                     WebDriverWait(driver, 10).until(
                         EC.presence_of_element_located((By.CSS_SELECTOR, "#chat p"))
                     )

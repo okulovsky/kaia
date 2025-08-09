@@ -1,7 +1,7 @@
 import os
 
 from foundation_kaia.marshalling import Api, TestApi
-from .messaging_api import MessagingAPI
+from .messaging_component import MessagingAPI
 from .components import FileCacheApi
 from .messaging_component import MessagingComponent
 from .server import AvatarServerSettings, AvatarServer

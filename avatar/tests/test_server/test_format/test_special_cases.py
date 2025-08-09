@@ -1,6 +1,6 @@
 from unittest import TestCase
 from avatar.messaging import Confirmation, Envelop
-from avatar.server.format import Format
+from avatar.server.messaging_component.format import Format
 from avatar.services import PlayableTextMessage, TextEvent, TextInfo, ButtonGridCommand, IntentsPack, STTService, BrainBoxService
 from pprint import pprint
 from brainbox.deciders import EmptyDecider

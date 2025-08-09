@@ -1,7 +1,7 @@
 import json
 from typing import Optional, Union
 from unittest import TestCase
-from avatar.server.format import Format
+from avatar.server.messaging_component.format import Format
 from dataclasses import dataclass
 
 

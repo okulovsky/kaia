@@ -8,7 +8,7 @@ from foundation_kaia.fork import Fork
 from foundation_kaia.misc import Loc
 
 if __name__ == '__main__':
-    port = 13000
+    port = 13002
     api = AvatarApi(f'127.0.0.1:{port}')
     stream = AvatarStream(api)
     recording_api = PhonixApi(f'127.0.0.1:{port}')

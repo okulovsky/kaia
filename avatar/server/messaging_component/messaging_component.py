@@ -1,14 +1,14 @@
 import os
 import flask
-from .components import IAvatarComponent
+from ..components import IAvatarComponent
 from pathlib import Path
 from .message_record import MessageRecord, Base
 from sqlalchemy import create_engine, asc
 from sqlalchemy.orm import sessionmaker
-from .naming import get_full_name_by_type
 import uuid
 from foundation_kaia.misc import Loc
-from ..messaging import IMessage
+from ...messaging import IMessage
+from .message_format import MessageFormat, get_full_name_by_type
 
 class MessagingComponent(IAvatarComponent):
     def __init__(self,
@@ -35,10 +35,9 @@ class MessagingComponent(IAvatarComponent):
         app.add_url_rule('/messages/get', view_func=self.messages_get, methods=['GET'])
         app.add_url_rule('/messages/last', view_func=self.messages_last, methods=['GET'])
         if self.session_to_initialization_messages is not None:
-            from .stream import AvatarStream
             for session, messages in self.session_to_initialization_messages.items():
                 for message in messages:
-                    js = AvatarStream.to_json(message, session)
+                    js = MessageFormat.to_json(message, session)
                     self._add_message(js)
 
     def _add_message(self, data):
