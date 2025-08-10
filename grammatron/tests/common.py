@@ -1,7 +1,7 @@
 from typing import *
 from grammatron import *
 from unittest import TestCase
-from yo_fluq_ds import *
+from yo_fluq import *
 
 
 def run_regex_integration_test(tc: TestCase,

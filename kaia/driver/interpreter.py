@@ -1,7 +1,7 @@
 from typing import Type
 from eaglesong.core import IAutomaton, Interpreter, primitives as prim
 from avatar.messaging import IMessage, StreamClient
-from avatar.services import ChatCommand, UtteranceSequenceCommand, TextCommand
+from avatar.daemon import ChatCommand, UtteranceSequenceCommand, TextCommand
 from grammatron import Utterance, UtterancesSequence
 
 

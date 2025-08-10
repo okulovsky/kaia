@@ -1,5 +1,5 @@
 from kaia.app import KaiaApp, KaiaAppSettings
-from avatar.services import *
+from avatar.daemon import *
 from phonix.daemon import SoundLevelReport, SilenceLevelReport, SystemSoundCommand, MicStateChangeReport
 from yo_fluq import Query, FileIO
 from datetime import datetime

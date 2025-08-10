@@ -1,4 +1,10 @@
-from typing import Union, Self, Iterable
+from typing import Union, Iterable
+
+try:
+    from typing import Self
+except:
+    Self = 'IMessage'
+
 from dataclasses import dataclass, field
 from copy import copy
 from uuid import uuid4

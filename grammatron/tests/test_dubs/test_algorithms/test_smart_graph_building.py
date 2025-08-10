@@ -1,10 +1,12 @@
 from grammatron import *
-from unittest import TestCase
-
-import matplotlib.pyplot as plt
+from unittest import TestCase, skipIf
 import networkx as nx
+import os
+
+
 
 def draw_graph(graph):
+    import matplotlib.pyplot as plt
     pos = nx.circular_layout(graph)
 
     # Не рисуем лейблы узлов, только сами узлы
@@ -24,6 +26,7 @@ def draw_graph(graph):
     plt.close()
 
 class SmartGraphBuildingTestCase(TestCase):
+    @skipIf("TOX_ENV_DIR" in os.environ, "Test not supported in Tox")
     def test_smart_building(self):
         options = ['пятый', 'пятая', 'пятое', 'пятого','пятому','пятом']
         template = Template(f'{OptionsDub(options).as_variable("options")}')

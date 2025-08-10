@@ -16,6 +16,7 @@ class PhonixMonitoringComponent(IAvatarComponent):
         self.monitoring.data.extend(self.client.pull())
         figure = self.monitoring.create_figure(self.monitoring.data, datetime.now())
         io = BytesIO()
+
         figure.write_image(io, width=1000, height=600)
 
         return flask.Response(

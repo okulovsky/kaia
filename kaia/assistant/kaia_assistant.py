@@ -2,7 +2,7 @@ from typing import *
 from .kaia_skill import IKaiaSkill
 from eaglesong.core import Automaton, ContextRequest, AutomatonExit, Listen, Return
 from grammatron import Template
-from avatar.services import IntentsPack, ChatCommand
+from avatar.daemon import IntentsPack, ChatCommand
 from dataclasses import dataclass, field
 import traceback
 from datetime import datetime

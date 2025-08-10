@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from unittest import TestCase
-from avatar.services.common.content_manager import DataClassDataProvider, ContentManager
+from avatar.daemon.common.content_manager import DataClassDataProvider, ContentManager
 
 @dataclass
 class Record:

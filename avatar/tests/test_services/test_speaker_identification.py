@@ -1,6 +1,6 @@
 from unittest import TestCase
 from avatar.messaging import *
-from avatar.services import SpeakerIdentificationService, BrainBoxService, State, SoundEvent
+from avatar.daemon import SpeakerIdentificationService, BrainBoxService, State, SoundEvent
 from yo_fluq import Query
 
 

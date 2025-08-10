@@ -7,7 +7,7 @@ import base64
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from avatar.services import ButtonGridCommand, ButtonPressedEvent
+from avatar.daemon import ButtonGridCommand, ButtonPressedEvent
 from kaia.tests.test_web.environment import TestEnvironmentFactory
 
 

@@ -1,5 +1,5 @@
 from avatar.messaging import TestStream, AvatarProcessor, IMessage, Confirmation
-from avatar.services import SoundInjectionCommand, WakeWordEvent, SoundConfirmation, SoundEvent, SoundCommand
+from avatar.daemon import SoundInjectionCommand, WakeWordEvent, SoundConfirmation, SoundEvent, SoundCommand
 from phonix.daemon import *
 from unittest import TestCase
 from yo_fluq import FileIO

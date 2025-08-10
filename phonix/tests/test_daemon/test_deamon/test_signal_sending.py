@@ -2,6 +2,7 @@ from phonix.tests.test_daemon.test_deamon.common import *
 from phonix.tests.test_daemon.test_deamon.audio_segmentation import Segment
 from pathlib import Path
 from avatar.messaging.amenities import ThreadCollection
+import os
 
 
 class SignalSendingTestCase(TestCase):
@@ -37,7 +38,8 @@ class SignalSendingTestCase(TestCase):
             isinstance(q[12], Confirmation)
             isinstance(q[13], SoundConfirmation)
 
-            FileIO.write_bytes(api.api.get_snapshot(), Path(__file__).parent / 'diagram_1.png')
+            if "TOX_ENV_DIR" not in os.environ:
+                FileIO.write_bytes(api.api.get_snapshot(), Path(__file__).parent / 'diagram_1.png')
 
             ThreadCollection.just_print(q)
 

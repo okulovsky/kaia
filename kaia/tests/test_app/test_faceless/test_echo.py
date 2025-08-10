@@ -1,6 +1,6 @@
 from unittest import TestCase
 from foundation_kaia.misc import Loc
-from avatar.services import *
+from avatar.daemon import *
 from kaia.tests.helper import Helper
 from avatar.messaging.amenities import ThreadCollection
 from yo_fluq import Query

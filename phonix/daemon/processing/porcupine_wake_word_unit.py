@@ -1,6 +1,6 @@
 from avatar.messaging import StreamClient
 from .core import IUnit, State, MicState, SystemSoundCommand, SystemSoundType
-from avatar.services import WakeWordEvent
+from avatar.daemon import WakeWordEvent
 
 import pvporcupine
 

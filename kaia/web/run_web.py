@@ -1,7 +1,7 @@
 import webbrowser
 from avatar.server import AvatarServerSettings, AvatarApi, AvatarStream, MessagingComponent
 from avatar.server.components import MainComponent, StaticPathsComponent, TypeScriptComponent
-from avatar.services import ChatCommand, ImageCommand, ButtonGridCommand, InitializationEvent
+from avatar.daemon import ChatCommand, ImageCommand, ButtonGridCommand, InitializationEvent
 from kaia.app.avatar_server_app_settings import create_aliases
 from pathlib import Path
 from yo_fluq import FileIO
@@ -30,5 +30,10 @@ if __name__ == '__main__':
                     client.put(ImageCommand.from_file(Path(__file__).parent / 'image.png'))
                     for element in ChatCommand.MessageType:
                         client.put(ChatCommand(element.name, element, element.name, '/static/unknown.png'))
+                    client.put(ButtonGridCommand(elements=(
+                        ButtonGridCommand.Button("Caption", 0, 0, column_span=4),
+                        ButtonGridCommand.Button("Button 1", 1, 1, button_feedback='test 1'),
+                        ButtonGridCommand.Button("Button 2", 2, 2, button_feedback='test 2'),
+                    )))
 
 

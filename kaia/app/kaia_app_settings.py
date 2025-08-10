@@ -3,14 +3,14 @@ from kaia.assistant import KaiaAssistant, IKaiaSkill
 from kaia.driver import KaiaDriver, DefaultKaiaInputTransformer, KaiaContext
 from pathlib import Path
 from yo_fluq import FileIO
-from avatar.services import ChatCommand, SoundCommand
+from avatar.daemon import ChatCommand, SoundCommand
 from .app import KaiaApp, IAppInitializer
 from .avatar_processor_app_settings import characters
 from dataclasses import dataclass
 from grammatron import Template, TemplatesCollection
 from avatar.server import AvatarApi
 from loguru import logger
-from avatar.services import STTService
+from avatar.daemon import STTService
 
 class CommonIntents(TemplatesCollection):
     stop = Template('Stop','Cancel')
@@ -78,10 +78,6 @@ class AssistantFactory:
         assistant.raise_exceptions = False
         help.assistant = assistant
         assistant.additional_intents.extend(CommonIntents.get_templates())
-
-        logger.info("Sending Rhasspy Train Command")
-        packs = assistant.get_intents()
-        context.get_client().put(STTService.RhasspyTrainingCommand(packs))
 
         return assistant
 

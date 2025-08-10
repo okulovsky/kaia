@@ -1,7 +1,7 @@
 from kaia.driver import *
 from eaglesong import Listen, Automaton, Return, Terminate
 from grammatron import Template, Utterance, TemplatesCollection
-from avatar.services import TextEvent, ChatCommand, UtteranceSequenceCommand
+from avatar.daemon import TextEvent, ChatCommand, UtteranceSequenceCommand
 from avatar.messaging import TestStream, IMessage
 from unittest import TestCase
 from typing import cast

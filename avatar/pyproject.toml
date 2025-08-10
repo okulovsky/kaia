@@ -3,8 +3,8 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "kaia-grammatron"
-description = "Library that allows you to define structured utterances"
+name = "kaia-avatar"
+description = "Web-server and services that incapsulates the character's representation to a user"
 version = "4.0.0"
 readme = 'README.md'
 requires-python = ">=3.10, <4.0"
@@ -17,14 +17,12 @@ authors = [
 dependencies = [
     "yo_fluq",
     "kaia-foundation",
-    "numpy",
-    "pandas",
-    "num2words",
-    "networkx",
-    "regex",
-    "inflect",
-    "lemminflect",
-    "pymorphy3"
+    "kaia-brainbox",
+    "kaia-eaglesong",
+    "kaia-grammatron",
+    "flask",
+    "loguru",
+    "nltk"
 ]
 
 classifiers = [
@@ -47,7 +45,7 @@ dev = [
 ]
 
 [project.urls]
-repository = "https://github.com/okulovsky/kaia/tree/main/grammatron"
+repository = "https://github.com/okulovsky/kaia/tree/main/avatar"
 
 [tool.setuptools.packages.find]
 where = ["."]

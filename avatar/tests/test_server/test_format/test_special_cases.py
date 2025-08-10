@@ -1,7 +1,7 @@
 from unittest import TestCase
 from avatar.messaging import Confirmation, Envelop
 from avatar.server.messaging_component.format import Format
-from avatar.services import PlayableTextMessage, TextEvent, TextInfo, ButtonGridCommand, IntentsPack, STTService, BrainBoxService
+from avatar.daemon import PlayableTextMessage, TextEvent, TextInfo, ButtonGridCommand, IntentsPack, STTService, BrainBoxService
 from pprint import pprint
 from brainbox.deciders import EmptyDecider
 from brainbox import BrainBox
@@ -14,7 +14,7 @@ class SpecialCasesSerializationTestCase(TestCase):
 
     def test_tuple(self):
         env: Envelop = Format.from_json({'confirmation_for': ['123'], 'id' : 'x'}, Envelop)
-        self.assertEquals(('123',), env.confirmation_for)
+        self.assertEqual(('123',), env.confirmation_for)
 
     def test_datetime(self):
         msg = Envelop()

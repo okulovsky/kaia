@@ -33,25 +33,6 @@ body {
  
 }
 
-#overlay {
-  position: absolute;
-  top: 5%;
-  left: 5%;
-  width: 90%;
-  height: 90%;
-  display: none;
-  background: rgba(255, 0, 0, 0.5);
-  z-index: 10;
-
-  gap: 5px;
-}
-
-.grid-button {
-  width: 100%;
-  height: 100%;
-  font-size: 16px;
-}
-
 
 #image img{
     width: inherit;
@@ -67,6 +48,67 @@ body {
     min-height: 768px;
     overflow: hidden;
     background-image: linear-gradient(to right, rgba(20, 20, 20, 0), rgb(20, 20, 20));
+}
+
+/* button grid */
+
+#overlay {
+  position: absolute;        /* позиция относительно родительского контейнера */
+  top: 12px;                  /* небольшой отступ сверху */
+  left: 0;
+  width: 90%;                 /* 90% ширины родителя */
+  margin: 0 auto;             /* центрирование по горизонтали */
+
+  height: auto;               /* подгон по содержимому */
+  max-height: 90%;            /* ограничение, чтобы не выходило за родителя */
+  overflow: auto;             /* скролл при переполнении */
+
+  display: none;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10;
+  gap: 5px;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+/* База (как было) */
+.grid-button {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  color: #fff;
+  font-size: 30px;
+  line-height: 1.2;
+  border: none;
+  transition: background-color 120ms ease, transform 60ms ease, box-shadow 120ms ease;
+}
+
+.grid-button:not(:disabled) {
+  border: 2px solid #fff;
+  cursor: pointer;
+}
+
+/* Hover — легкая “вуаль” белого */
+.grid-button:not(:disabled):hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Active — чуть плотнее и еле-заметный нажатый эффект */
+.grid-button:not(:disabled):active {
+  background-color: rgba(255, 255, 255, 0.30);
+  transform: translateY(1px);
+}
+
+/* Фокус клавиатурой — белое свечение, чтобы было видно, где фокус */
+.grid-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.6);
+}
+
+/* Неактивные — без фона/рамки при ховере */
+.grid-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7; /* если хочешь визуально отличить */
 }
 
 /* Chat-related styles */
@@ -150,7 +192,7 @@ body {
   transition: transform 0.3s ease-in-out;
 
   display: grid;
-  grid-template-columns: repeat(10, auto);
+  grid-template-columns: repeat(4, auto);
   grid-gap: 1.3vw;
   padding: 1vw;
   /* фон и размеры — подберите под дизайн */

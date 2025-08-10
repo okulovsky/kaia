@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from avatar.messaging import IMessage, TimerEvent
-from avatar.services import UtteranceEvent, TextEvent
+from avatar.daemon import UtteranceEvent, TextEvent
 from typing import Any
 
 

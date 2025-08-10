@@ -1,9 +1,9 @@
 from avatar.messaging import *
-from avatar.services import ParaphraseService, ParaphraseRecord, State, StateToUtterancesApplicationService
+from avatar.daemon import ParaphraseService, ParaphraseRecord, State, StateToUtterancesApplicationService
 from unittest import TestCase
 from grammatron import Template, Utterance
-from avatar.services.common.content_manager import ContentManager, DataClassDataProvider
-from avatar.services.common import UtteranceSequenceCommand, PlayableTextMessage
+from avatar.daemon.common.content_manager import ContentManager, DataClassDataProvider
+from avatar.daemon.common import UtteranceSequenceCommand, PlayableTextMessage
 
 
 def test(proc: AvatarProcessor, utterance: Utterance) -> str:

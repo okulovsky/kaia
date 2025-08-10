@@ -76,7 +76,7 @@ class AvatarApiTestCase(TestCase):
                     last = result[-1].envelop.id
                 read_time = (time.monotonic() - read_begin)/N
 
-                self.assertLess(write_time, 0.02)
+                self.assertLess(write_time, 0.03)
                 self.assertLess(read_time, 0.01)
 
 

@@ -1,7 +1,7 @@
 from phonix.daemon.processing import PorcupineWakeWordUnit, UnitInput, MicState, State, SystemSoundCommand, SystemSoundType
 from phonix.daemon.inputs import FakeInput
 from avatar.messaging import TestStream
-from avatar.services import WakeWordEvent
+from avatar.daemon import WakeWordEvent
 from unittest import TestCase
 from pathlib import Path
 from yo_fluq import Query, FileIO
@@ -37,10 +37,6 @@ class PorcupineTestCase(TestCase):
         states, messages = check('sandwich.wav')
         self.assertEqual({None}, set(states))
         self.assertEqual(0, len(messages))
-
-    def test_porcupine_1(self):
-        states, messages = check(Loc.temp_folder/'mic_recording-1.wav')
-        print([i for i,s in enumerate(states) if s is not None])
 
 
 

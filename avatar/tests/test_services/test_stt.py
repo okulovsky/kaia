@@ -1,5 +1,5 @@
 from unittest import TestCase
-from avatar.services import BrainBoxService, STTService, WhisperRecognitionSetup, VoskRecognitionSetup, IntentsPack, RhasspyRecognitionSetup
+from avatar.daemon import BrainBoxService, STTService, WhisperRecognitionSetup, VoskRecognitionSetup, IntentsPack, RhasspyRecognitionSetup
 from avatar.messaging import *
 import jsonpickle
 from grammatron import Template, TemplatesCollection

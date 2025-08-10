@@ -3,8 +3,8 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "kaia-grammatron"
-description = "Library that allows you to define structured utterances"
+name = "kaia-phonix"
+description = "Audioservice for avatar, working with pyaudio and porcupine"
 version = "4.0.0"
 readme = 'README.md'
 requires-python = ">=3.10, <4.0"
@@ -17,14 +17,15 @@ authors = [
 dependencies = [
     "yo_fluq",
     "kaia-foundation",
-    "numpy",
-    "pandas",
-    "num2words",
-    "networkx",
-    "regex",
-    "inflect",
-    "lemminflect",
-    "pymorphy3"
+    "kaia-brainbox",
+    "kaia-eaglesong",
+    "kaia-grammatron",
+    "kaia-avatar",
+    "pyaudio",
+    "plotly",
+    "dash",
+    "scipy",
+    "pvporcupine==1.9.5"
 ]
 
 classifiers = [
@@ -47,7 +48,13 @@ dev = [
 ]
 
 [project.urls]
-repository = "https://github.com/okulovsky/kaia/tree/main/grammatron"
+repository = "https://github.com/okulovsky/kaia/tree/main/phonix"
 
 [tool.setuptools.packages.find]
 where = ["."]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-data]
+phonix = ["daemon/daemon/files/*", "tests/files/*"]

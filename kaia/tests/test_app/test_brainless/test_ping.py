@@ -1,7 +1,7 @@
 from kaia.app import KaiaAppSettings
 from unittest import TestCase
 from foundation_kaia.misc import Loc
-from avatar.services import UtteranceEvent, ChatCommand
+from avatar.daemon import UtteranceEvent, ChatCommand
 from kaia.skills.ping import PingIntents
 from avatar.utils import slice
 

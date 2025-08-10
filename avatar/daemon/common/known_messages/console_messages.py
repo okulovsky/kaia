@@ -1,7 +1,7 @@
 from typing import *
 from ....messaging import IMessage
 from dataclasses import dataclass
-from enum import StrEnum
+from enum import Enum
 from pathlib import Path
 import base64
 
@@ -26,7 +26,7 @@ class SoundConfirmation(IMessage):
 class WakeWordEvent(IMessage):
     word: str|None = None
 
-class ChatMessageType(StrEnum):
+class ChatMessageType(Enum):
     from_user = 'from_user'
     to_user = 'to_user'
     system = 'system'

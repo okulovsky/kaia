@@ -4,7 +4,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from avatar.services import ChatCommand, ChatMessageType
+from avatar.daemon import ChatCommand, ChatMessageType
 from kaia.tests.test_web.environment import TestEnvironmentFactory
 
 

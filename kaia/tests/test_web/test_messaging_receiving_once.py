@@ -35,8 +35,6 @@ class MessagingTestCase(TestCase):
             )
             self.assertEqual(count_display.text, 'Count: 1')
 
-            print('HERE')
-
             # Second click: no new messages
             count_btn.click()
             WebDriverWait(env.driver, 100).until(

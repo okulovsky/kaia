@@ -1,5 +1,5 @@
 from .core import IUnit, State, MicState, UnitInput, SystemSoundType, SystemSoundCommand
-from avatar.services import SoundEvent
+from avatar.daemon import SoundEvent
 from uuid import uuid4
 from .sound_buffer import SoundBuffer
 

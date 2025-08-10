@@ -1,7 +1,7 @@
 import time
 from unittest import TestCase
 from foundation_kaia.misc import Loc
-from avatar.services import *
+from avatar.daemon import *
 from kaia.tests.helper import Helper, SeleniumDriver
 from kaia.app import ServerStartedEvent
 from selenium.webdriver.support.ui import WebDriverWait

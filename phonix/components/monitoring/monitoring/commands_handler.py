@@ -1,7 +1,7 @@
 import datetime
 from avatar.messaging import IMessage
 from ....daemon import SoundPlayStarted
-from avatar.services import SoundConfirmation
+from avatar.daemon import SoundConfirmation
 
 
 

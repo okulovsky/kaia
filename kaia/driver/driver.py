@@ -2,14 +2,14 @@ from typing import Type
 import time
 from typing import Callable, Any
 from avatar.messaging import StreamClient
-from avatar.services import UtteranceSequenceCommand, TextCommand
+from avatar.daemon import UtteranceSequenceCommand, TextCommand, STTService
 from loguru import logger
 from .context import KaiaContext
 from eaglesong import Automaton
 from .interpreter import KaiaInterpreter
 from .input_transformer import IKaiaInputTransformer
 import traceback
-from avatar.services import ChatCommand, InitializationEvent
+from avatar.daemon import ChatCommand, InitializationEvent
 from threading import Thread
 from ..assistant import KaiaAssistant
 
@@ -26,10 +26,15 @@ class KaiaDriver:
         self.input_transformer = input_transformer
         self.expect_confirmations_for_types = expect_confirmations_for_types
         self.interpreter: KaiaInterpreter|None = None
+        self.rhasspy_training_is_done: bool = False
 
     def initialize(self):
         context = KaiaContext(self.client)
         assistant = self.assistant_factory(context)
+        if isinstance(assistant, KaiaAssistant) and not self.rhasspy_training_is_done:
+            logger.info("Sending Rhasspy Train Command")
+            packs = assistant.get_intents()
+            context.get_client().put(STTService.RhasspyTrainingCommand(packs))
 
         automaton = Automaton(assistant, context)
         self.interpreter = KaiaInterpreter(self.client, automaton, self.expect_confirmations_for_types)

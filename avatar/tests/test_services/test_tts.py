@@ -1,6 +1,6 @@
 from unittest import TestCase
-from avatar.services.common.known_messages import TextInfo
-from avatar.services import MockSoundService, BrainBoxService, TTSService, Confirmation
+from avatar.daemon.common.known_messages import TextInfo
+from avatar.daemon import MockSoundService, BrainBoxService, TTSService, Confirmation
 from avatar.messaging import AvatarProcessor, TestStream, ThreadCollection
 
 class VoiceoverServiceTestCase(TestCase):

@@ -1,6 +1,6 @@
 import unittest
 from avatar.messaging.rules.rule_collection_utils import get_annotated_output_type
-from avatar.services.common.known_messages import (PlayableTextMessage, UtteranceSequenceCommand)
+from avatar.daemon.common.known_messages import (PlayableTextMessage, UtteranceSequenceCommand)
 from typing import *
 
 class TestGetAnnotatedOutputType(unittest.TestCase):

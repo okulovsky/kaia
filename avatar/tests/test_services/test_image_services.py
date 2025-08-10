@@ -1,7 +1,7 @@
 from avatar.messaging import *
-from avatar.services import ImageService, State
-from avatar.services.common.content_manager import MediaLibraryManager, MediaLibrary
-from avatar.services.common.known_messages import ChatCommand
+from avatar.daemon import ImageService, State
+from avatar.daemon.common.content_manager import MediaLibraryManager, MediaLibrary
+from avatar.daemon.common.known_messages import ChatCommand
 from unittest import TestCase
 
 def record_to_description(r: MediaLibrary.Record):

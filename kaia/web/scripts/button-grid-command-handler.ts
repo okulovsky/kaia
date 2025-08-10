@@ -48,12 +48,12 @@ export class ButtonGridCommandHandler {
     Object.assign(this.container.style, {
       display: 'grid',
       gridTemplateColumns: `repeat(${colCount}, 1fr)`,
-      gap: '8px'
     });
 
     // render each button
     for (const el of elements) {
       const btn = document.createElement('button');
+      btn.classList.add('grid-button');
       btn.textContent = String(el.text);
 
       // grid position

@@ -1,5 +1,5 @@
 from unittest import TestCase
-from avatar.services.common.content_manager.strategies import get_random_weighed_element
+from avatar.daemon.common.content_manager.strategies import get_random_weighed_element
 import pandas as pd
 
 class RandomWeightedElementTestCase(TestCase):

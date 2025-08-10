@@ -16,10 +16,8 @@ export class ControlPanelController {
     this.client = client;
 
     this.addButton('↺', () => location.reload());
-    this.addButton('🎚', () => this.requestButtons());
     this.addButton('📊', () => this.loadPageInOverlay('/phonix-monitor/'));
     this.addButton('🗗', () => this.toggleOverlay());
-    this.addButton('⤓', () => {});
     this.addButton('❌',  () => window.close());
 
     this.panel.innerHTML = '';
@@ -40,14 +38,6 @@ export class ControlPanelController {
       this.hidePanel();
     });
     this.buttons.push(btn);
-  }
-
-  private requestButtons(): void {
-      console.log('buttons requested')
-      const eventMsg = new Message('ButtonGridCommand');
-      eventMsg.payload = {elements: [{text: 'button 1', row: 0, column: 0}, {text: 'button 2', row: 1, column: 1}]};
-      console.log(this.client)
-      this.client.addMessage(eventMsg);
   }
 
 private async loadPageInOverlay(url: string): Promise<void> {

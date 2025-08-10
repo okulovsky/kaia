@@ -1,4 +1,4 @@
-from avatar.services import SoundCommand, UtteranceEvent, PlayableTextMessage, TextInfo, TextEvent
+from avatar.daemon import SoundCommand, UtteranceEvent, PlayableTextMessage, TextInfo, TextEvent
 from avatar.server import AvatarApi, AvatarServerSettings, AvatarStream, MessagingComponent
 from unittest import TestCase
 from foundation_kaia.misc import Loc

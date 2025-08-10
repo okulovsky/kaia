@@ -1,7 +1,7 @@
 from brainbox import BrainBox
 from brainbox.utils import TestSpeaker
 from unittest import TestCase
-from avatar.services.stt_service.stt import WhisperRecognitionSetup, RecognitionContext, STTCommand, STTConfirmation
+from avatar.daemon.stt_service.stt import WhisperRecognitionSetup, RecognitionContext, STTCommand, STTConfirmation
 from grammatron import Template, CardinalDub, Utterance
 
 

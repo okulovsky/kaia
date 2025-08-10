@@ -1,7 +1,7 @@
 from typing import *
 from abc import ABC, abstractmethod
 from grammatron import Template, Utterance, TemplatesCollection
-from avatar.services import IntentsPack
+from avatar.daemon import IntentsPack
 from enum import Enum
 
 class IKaiaSkill(ABC):

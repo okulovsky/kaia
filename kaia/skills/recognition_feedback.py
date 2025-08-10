@@ -2,7 +2,7 @@ from typing import cast
 from kaia import World, SingleLineKaiaSkill, KaiaContext
 from grammatron import *
 from eaglesong import ContextRequest
-from avatar.services import SpeakerIdentificationService
+from avatar.daemon import SpeakerIdentificationService
 
 USER = VariableDub('user')
 

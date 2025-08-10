@@ -3,7 +3,7 @@ from __future__ import annotations
 import threading
 import time
 from avatar.messaging import StreamClient
-from avatar.services import SoundInjectionCommand, SoundCommand, SoundConfirmation, OpenMicCommand
+from avatar.daemon import SoundInjectionCommand, SoundCommand, SoundConfirmation, OpenMicCommand
 
 from ..processing import IUnit, SystemSoundCommand, SystemSoundType, State, UnitInput
 from ..outputs import IAudioOutput

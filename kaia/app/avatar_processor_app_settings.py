@@ -3,8 +3,8 @@ from brainbox import BrainBox
 from brainbox.framework import ControllersSetup
 from .app import KaiaApp, IAppInitializer
 from avatar.messaging import AvatarProcessor
-from avatar import services as s
-from avatar.services.common import content_manager as cm, AvatarService
+from avatar import daemon as s
+from avatar.daemon.common import content_manager as cm, AvatarService
 import inspect
 from brainbox.deciders import Piper, RhasspyKaldi, Whisper, Resemblyzer
 from pathlib import Path

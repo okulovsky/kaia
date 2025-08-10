@@ -1,8 +1,8 @@
 import datetime
 
 from avatar.messaging import *
-from avatar.services import NarrationService, State, ImageService
-from avatar.services.common.known_messages import UtteranceSequenceCommand
+from avatar.daemon import NarrationService, State, ImageService
+from avatar.daemon.common.known_messages import UtteranceSequenceCommand
 from unittest import TestCase
 
 characters = ('c0', 'c1', 'c2')

@@ -32,7 +32,7 @@ def find_subclasses_in_package(base_class: type, package_name: str) -> list[type
 
 def create_aliases():
     all_subclasses = []
-    for pkg in ["avatar.messaging", "avatar.services", "kaia"]:
+    for pkg in ["avatar.messaging", "avatar.daemon", "kaia"]:
         all_subclasses.extend(find_subclasses_in_package(IMessage, pkg))
     return {c.__name__: c for c in all_subclasses}
 

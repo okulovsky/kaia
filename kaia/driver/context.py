@@ -1,5 +1,5 @@
 from avatar.messaging import StreamClient
-from avatar.services import NarrationService, State
+from avatar.daemon import NarrationService, State
 
 class KaiaContext:
     def __init__(self, client: StreamClient):

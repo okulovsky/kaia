@@ -2,7 +2,7 @@ import datetime
 import plotly.graph_objs as go
 from avatar.messaging import IMessage
 from ....daemon import SoundLevelReport, MicStateChangeReport, SoundPlayStarted, SilenceLevelReport
-from avatar.services import SoundConfirmation
+from avatar.daemon import SoundConfirmation
 from .sound_level_handler import SoundLevelHandler
 from .silence_level_handler import SilenceLevelHandler
 from .states_handler import StatesHandler
