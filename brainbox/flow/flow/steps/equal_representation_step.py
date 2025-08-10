@@ -9,21 +9,27 @@ class AbstractRepresentationStep(IStep, ABC):
     count: int
     item_to_category: Callable[[Any], Any]
     item_filter: Optional[Callable[[Any], bool]] = None
+    item_to_count: Optional[Callable[[Any], int]] = None
 
     def _add_item_to_dict(self, item, d):
         category = self.item_to_category(item)
-        d[category] = d.get(category, 0) + 1
+        if self.item_to_count is None:
+            delta = 1
+        else:
+            delta = self.item_to_count(item)
+        d[category] = d.get(category, 0) + delta
 
-    def process(self, history, current):
+    def process(self, history: list, current: list) -> tuple[list, dict]:
         if len(current) <= self.count:
-            return current
-        categories_count = {}
-        for item in history:
-            if self.item_filter is not None and not self.item_filter(item):
-                continue
-            self._add_item_to_dict(item, categories_count)
+            selected = current
+        else:
+            categories_count = {}
+            for item in history:
+                if self.item_filter is not None and not self.item_filter(item):
+                    continue
+                self._add_item_to_dict(item, categories_count)
+            selected = self.select(current, categories_count)
 
-        selected = self.select(current, categories_count)
         categories_count = {}
         for item in selected:
             self._add_item_to_dict(item, categories_count)

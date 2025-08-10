@@ -1,8 +1,7 @@
 from typing import *
-from eaglesong.templates import *
-from kaia.kaia import SingleLineKaiaSkill
+from grammatron import *
+from kaia import SingleLineKaiaSkill, World
 from datetime import datetime
-from avatar import World
 
 class TimeIntents(TemplatesCollection):
     question = Template(
@@ -10,12 +9,12 @@ class TimeIntents(TemplatesCollection):
         'What is the time?'
     )
 
-HOURS = TemplateVariable('hours')
-MINUTES = TemplateVariable('minutes')
+HOURS = VariableDub('hours')
+MINUTES = VariableDub('minutes')
 
 class TimeReplies(TemplatesCollection):
     answer = (
-        Template(f'It is {HOURS} {PluralAgreement("hours").as_variable()} and {MINUTES} {PluralAgreement("minutes").as_variable()}.')
+        Template(f'It is {PluralAgreement(HOURS, "hour")} and {PluralAgreement(MINUTES, "minute")}.')
         .no_paraphrasing()
     )
 

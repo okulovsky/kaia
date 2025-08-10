@@ -4,13 +4,27 @@ import traceback
 from pathlib import Path
 from .steps import IStepFactory, IStep
 from yo_fluq import *
+import dill
+
+def write_dill(obj, path):
+    with open(path, 'wb') as f:
+        dill.dump(obj, f)
+
+def read_dill(path):
+    with open(path, 'rb') as f:
+        return dill.load(f)
+
 
 class Flow:
     def __init__(self,
                  folder: Path|str,
                  steps: list[IStep|IStepFactory]|None = None,
+                 prehistory: list|None = None
                  ):
         self.folder = Path(folder)
+        if prehistory is None:
+            prehistory = []
+        self.prehistory = prehistory
         if steps is not None:
             self.steps = []
             for i, s in enumerate(steps):
@@ -36,10 +50,10 @@ class Flow:
             full = None
             short = None
             try:
-                full = stage.process(history, current)
+                full = stage.process(self.prehistory+history, current)
                 short = stage.shorten(full)
                 report = dict(index=stage_index, name=name, input=current, full_output=full, short_output=short, error = None)
-                FileIO.write_pickle(report, self.folder/f'fulls/{iteration_index}_{stage_index}')
+                write_dill(report, self.folder/f'fulls/{iteration_index}_{stage_index}')
                 summary = stage.summarize(full)
                 if summary is not None:
                     summary = f' ({summary})'
@@ -50,10 +64,10 @@ class Flow:
             except:
                 print()
                 report = dict(index=stage_index, name=name, input=current, full_output=full, short_output=short, error=traceback.format_exc())
-                FileIO.write_pickle(report, self.folder / f'fulls/{iteration_index}_{stage_index}')
+                write_dill(report, self.folder / f'fulls/{iteration_index}_{stage_index}')
                 raise
 
-        FileIO.write_pickle(current, self.folder / f'results/{iteration_index}')
+        write_dill(current, self.folder / f'results/{iteration_index}')
         return current
 
 
@@ -61,7 +75,7 @@ class Flow:
         os.makedirs(self.folder / 'fulls', exist_ok=True)
         os.makedirs(self.folder / 'results', exist_ok=True)
         existing_files = Query.folder(self.folder/'results').to_list()
-        existing = Query.en(existing_files).select_many(FileIO.read_pickle).to_list()
+        existing = Query.en(existing_files).select_many(read_dill).to_list()
         print(f'TOTAL {len(existing)}')
         if len(existing_files) == 0:
             existing_index = -1
@@ -85,9 +99,9 @@ class Flow:
 
 
     def read_flatten(self):
-        return Query.folder(self.folder/'results').where(lambda z: z.is_file()).order_by(lambda z: int(z.name)).select_many(FileIO.read_pickle).to_list()
+        return Query.folder(self.folder/'results').where(lambda z: z.is_file()).order_by(lambda z: int(z.name)).select_many(read_dill).to_list()
 
     def read_debug_report(self, iteration: int, stage: int):
-        return FileIO.read_pickle(self.folder/f'fulls/{iteration}_{stage}')
+        return read_dill(self.folder/f'fulls/{iteration}_{stage}')
 
 

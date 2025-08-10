@@ -1,3 +1,24 @@
+4.0.0
+    - EVERYTHING has changed
+    - Grammatron is now hosting templates
+      - templates are much better, much more logical
+      - templates better support flective languages (e.g. Russian).
+      - fuzzy-search algorithm is implemented, Kleene-star cunstructions can be parsed on the Whisper- or VOSK outputs
+    - Avatar is now a center of the whole system
+      - The middleware that converts code to a character, encapsulating voice, image, personality
+      - Defines messaging bus, and all interaction between frontend and backend is done through the bus
+      - Avatar server hosts the bus, as well as auxiliary functionality for the web-based frontend
+      - Avatar daemon processes some of the messages, turning text to sounds and sounds to text
+    - Phonix daemon now does audio control on Python
+      - the use case is a smart speaker without screen, e.g. on Raspberry Pie
+      - Phonix utilizes pyaudio and porcupine to emit the events in the Avatar bus
+      - Phonix also plays the audio command from the bus
+    - Kaia is now exactly what the name suggests - Kitchen Assistant
+      - The driver that adopts Avatar's bus to the eaglesong flow
+      - The way skills are orchestrated to work together
+      - Several self-contained (i.e. not requiring internet connection) skills
+      - A simple frontend that DOES NOT support microphone yet. The development of the web-based frontend with a supported audio is ongoing in https://github.com/toplenboren/0-latency-voice-uploader/
+
 3.7.2.
     - audio_control is fixed, now diagnostics methods work as they should
     - buttons fully work (but are a bit ugly). Cookbook skill now demonstrates buttons as well

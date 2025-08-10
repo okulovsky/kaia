@@ -1,26 +1,25 @@
 from eaglesong.core import Return
 from typing import *
-from eaglesong.templates import *
-from kaia.kaia import SingleLineKaiaSkill
+from grammatron import *
+from kaia import SingleLineKaiaSkill, World
 from datetime import datetime
 from .notification_skill import NotificationRegister, NotificationInfo
-from avatar import World
 
 
 
-DURATION = TemplateVariable(
+DURATION = VariableDub(
     'duration',
     TimedeltaDub(0,2),
     'the duration of the timer'
 )
 
-INDEX = TemplateVariable(
+INDEX = VariableDub(
     'index',
     OrdinalDub(1,10),
     'when several timers are used, the index of the timer, so `first`, `second`, etc up to `tenth`.'
 )
 
-AMOUNT = TemplateVariable(
+AMOUNT = VariableDub(
     'amount',
     CardinalDub(1,10),
     "the amount of currently active timers"
@@ -79,7 +78,7 @@ class TimerReplies(TemplatesCollection):
     )
 
     you_have = Template(
-        f"You have {AMOUNT} {PluralAgreement('amount','timer').as_variable()}",
+        f"You have {PluralAgreement(AMOUNT, 'timer')}",
     ).context(
         reply_to=TimerIntents.how_much_timers
     )

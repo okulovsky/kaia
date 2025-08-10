@@ -1,5 +1,6 @@
-from kaia.kaia import SingleLineKaiaSkill, KaiaLog
-from eaglesong.templates import *
+from kaia import SingleLineKaiaSkill, ErrorAnnouncement
+from loguru import logger
+from grammatron import *
 
 class LogFeedbackIntents(TemplatesCollection):
     report = Template("Something is wrong", "You're misbehaving")
@@ -12,6 +13,6 @@ class LogFeedbackSkill(SingleLineKaiaSkill):
         super().__init__(LogFeedbackIntents, LogFeedbackReplies)
 
     def run(self):
-        input: Utterance = yield
-        KaiaLog.write('VocalFeedback', str(dict(intent=input.template.name)))
+        logger.error('Error reported by user')
+        yield ErrorAnnouncement()
         yield LogFeedbackReplies.answer.utter()

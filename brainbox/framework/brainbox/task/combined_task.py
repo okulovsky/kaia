@@ -8,6 +8,13 @@ class BrainBoxCombinedTask(IBrainBoxTask):
     resulting_task: IBrainBoxTask
     intermediate_tasks: Tuple[IBrainBoxTask, ...] = ()
 
+    def __post_init__(self):
+        if not isinstance(self.resulting_task, IBrainBoxTask):
+            raise TypeError("resulting_task must be a brain box task")
+        for t in self.intermediate_tasks:
+            if not isinstance(t, IBrainBoxTask):
+                raise TypeError("all the intermediate tassk must be brain box tasks")
+
     def create_jobs(self) -> list[Job]:
         jobs = IBrainBoxTask.to_all_jobs(self.intermediate_tasks)
         if self.resulting_task is not None:

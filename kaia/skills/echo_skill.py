@@ -1,8 +1,8 @@
 from typing import *
-from ..kaia import IKaiaSkill, OpenMic
-from eaglesong.templates import Template, Utterance, TemplatesCollection
+from kaia import IKaiaSkill, OpenMicCommand, WhisperRecognitionSetup, World
+from grammatron import Template, Utterance, TemplatesCollection
 from eaglesong import Listen
-from avatar import RecognitionSettings, World
+
 
 
 class EchoIntents(TemplatesCollection):
@@ -49,11 +49,9 @@ class EchoSkill(IKaiaSkill):
 
     def run(self):
         yield "Say anything and I will repeat"
-        s = (
-            yield Listen()
-            .store(RecognitionSettings(RecognitionSettings.NLU.Whisper))
-            .store(OpenMic())
-        )
+        yield OpenMicCommand()
+        yield WhisperRecognitionSetup()
+        s = yield Listen()
         yield s
 
 

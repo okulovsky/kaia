@@ -1,18 +1,16 @@
-from kaia.kaia import IKaiaSkill, ButtonPressedEvent, Overlay
-from eaglesong.templates import *
-from avatar import World
+from kaia import IKaiaSkill, ButtonPressedEvent, ButtonGridCommand, World, Listen, Return
+from grammatron import *
 from .notification_skill import NotificationRegister, NotificationInfo
 from dataclasses import dataclass
 from yo_fluq import *
 from datetime import datetime, timedelta
-from eaglesong import Listen, Return
 
-DISH = TemplateVariable(
+DISH = VariableDub(
     "dish",
     description="one of the dish in the cookbook"
 )
 
-MINUTES = TemplateVariable(
+MINUTES = VariableDub(
     "minutes",
     description="the duration of the set timer, in minutes"
 )
@@ -23,8 +21,6 @@ class CookBookIntents(TemplatesCollection):
     next_step = Template("Next step")
     cancel = Template("Cancel the recipe")
     what_to_cook = Template("What do you want to cook?")
-
-
 
 class CookBookReplies(TemplatesCollection):
     no_recipe = (
@@ -38,12 +34,12 @@ class CookBookReplies(TemplatesCollection):
     )
 
     timer_set = (
-        Template(f"I'll call you in {MINUTES} minutes")
+        Template(f"I'll call you in {PluralAgreement(MINUTES, 'minutes')}")
         .context(f"{World.character} guides {World.user} through recipe, and now it's time to wait. {World.character} sets timer and says {World.character.pronoun} will call {World.user} when the time is right.")
     )
 
     timer_is_busy = (
-        Template(f"You need to wait for the timer. {MINUTES} minutes remaining")
+        Template(f"You need to wait for the timer. {PluralAgreement(MINUTES, 'minute')} remaining")
         .context(f"{World.user} is asking what is the next step in the recipe, but currently {World.user} needs to wait for the timer to finish the previous step, and {World.character} informs {World.user.pronoun} about this fact.")
     )
 
@@ -88,7 +84,7 @@ class CookBookSkill(IKaiaSkill):
         return IKaiaSkill.Type.MultiLine
 
     def get_intents(self) -> Iterable[Template]:
-        template = CookBookIntents.recipe.substitute(dish=OptionsDub([r.dish for r in self.recipes]))
+        template = CookBookIntents.recipe.substitute(dish=VariableDub(DISH.name, OptionsDub([r.dish for r in self.recipes])))
         return CookBookIntents.get_templates(template)
 
     def get_replies(self) -> Iterable[Template]:
@@ -147,7 +143,7 @@ class CookBookSkill(IKaiaSkill):
         input: Utterance = yield
         if input in CookBookIntents.recipe:
             yield from self.run_recipe(input.get_field())
-        builder = Overlay.GridBuilder(4)
+        builder = ButtonGridCommand.Builder(4)
         for recipe in self.recipes:
             builder.add(recipe.dish, dict(dish=recipe.dish))
         builder.add('CANCEL', dict(action='cancel'))

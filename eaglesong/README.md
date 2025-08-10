@@ -1,7 +1,6 @@
 # Table of contents
 
 * [eaglesong](#eaglesong)
-* [eaglesong.templates](#eaglesong.templates)
 * [eaglesong demo](#eaglesong-demo)
   * [Echobot: Introduction](#echobot:-introduction)
   * [Questionnaire: Calling other functions](#questionnaire:-calling-other-functions)
@@ -55,60 +54,6 @@ After that, simply run each file and enjoy the bot.
 If you don't wish to do it, the Appendix to this readme will contain the source code of the examples with the explanations.
 
 `eaglesong` also offer elegant method to test the conversation flows, written in this fashion. To see how, consult `tests/test_demo/` folder.
-
-# eaglesong.templates
-
-Templates are the way to define the utterances of the chatbot __or__ the user, 
-and convert them into text, or parse from texts. 
-
-The template can be defined like this:
-
-```python
-from eaglesong.templates import TemplateVariable, Template, CardinalDub
-
-DURATION = TemplateVariable("duration", CardinalDub(0,100))
-template = Template(f"Set the timer for {DURATION} minutes")
-
-utterance = template(20)
-
-utterance.to_str() #produces "Set the timer for twenty minutes"
-
-template.parse("Set the timer for twenty minutes") #produces {'duration': 20}
-```
-
-Templates and utterances are very comfy to use in skill design and in tests writing,
-they are well-integrated with `eaglesong` infrastructure. 
-I also like the simple way to define the templates.
-
-Templates additionally allow:
-* to build a regexp for a string to parse
-* to build a datastructure for Rhasspy INI-file that is converted to a graph and then fed to Kaldi for voice recognition
-
-Templates are very useful, but they were one of the first subsystems designed for Kaia
-and I'm not particularly proud of the way they are implemented. 
-
-The biggest issue is an overenginered algorithm that builds regexps, ini-files and all that.
-Essentially, template is defined as a regular expression without iteration 
-(because iterations are not compatible with Kaldi),
-and these algorithms are implemeted as subclasses of a generic `Walker` 
-that walks depth-first over the regular expression. While effective, 
-it's hard to read and modify, and I think there must be a better way to write it.
-
-The second problem is globalization: the current implementation suggests
-that for each language new `CardinalDub` (also DatetimeDub, etc) must be defined,
-and also the whole new set of templates. It would be much better if Dubs accept
-the language as an argument for to_str/parsing, and the Template would be defined like:
-
-```python
-Template(
-    en=f"Set the timer for {DURATION} minutes",
-    de=f"Stelle den Timer auf {DURATION} Minuten"
-)
-```
-
-At some point, I hope to rework the templates completely to address
-these issues.
-
 
 # eaglesong demo
 

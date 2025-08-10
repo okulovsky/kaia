@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "kaia-eaglesong"
 description = "Library that allows you to define the chatbot's logic"
-version = "3.7.3"
+version = "4.0.0"
 readme = 'README.md'
 requires-python = ">=3.10, <4.0"
 license = "LGPL-3.0-or-later"
@@ -22,7 +22,10 @@ dependencies = [
     "pandas",
     "num2words",
     "networkx",
-    "regex"
+    "regex",
+    "inflect",
+    "lemminflect",
+    "pymorphy3"
 ]
 
 classifiers = [

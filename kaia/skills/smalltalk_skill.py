@@ -1,6 +1,6 @@
 from typing import *
-from kaia.kaia import SingleLineKaiaSkill
-from eaglesong.templates import TemplatesCollection, Utterance
+from kaia import SingleLineKaiaSkill
+from grammatron import TemplatesCollection, Utterance
 
 
 class SmalltalkSkill(SingleLineKaiaSkill):

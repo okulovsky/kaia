@@ -1,6 +1,5 @@
 from typing import *
-from kaia.kaia import IKaiaSkill, TimerTick, Feedback
-from kaia.kaia.translators import VolumeCommand
+from kaia import IKaiaSkill, TimerEvent, Feedback, VolumeCommand
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from eaglesong.core import Return, Listen
@@ -59,9 +58,9 @@ class NotificationSkill(IKaiaSkill):
 
 
     def should_start(self, input) -> bool:
-        if not isinstance(input, TimerTick):
+        if not isinstance(input, TimerEvent):
             return False
-        return self._find_notification(input.current_time) is not None
+        return self._find_notification(input.time) is not None
 
     def should_proceed(self, input) -> bool:
         return True
@@ -79,8 +78,8 @@ class NotificationSkill(IKaiaSkill):
 
         while True:
             input = yield
-            if isinstance(input, TimerTick):
-                current_time = input.current_time
+            if isinstance(input, TimerEvent):
+                current_time = input.time
                 if (
                     self.pause_between_alarms_in_seconds is None
                     or last_time_audio_sent is None

@@ -1,12 +1,13 @@
-from home.deployment.kaia.assistant import create_assistant
 from home.content.characters import *
-from development.paraphrasing.paraphrase_case import ParaphraseInfo, ParaphraseCase
-from brainbox import BrainBox
+from chara.paraphrasing import JinjaModel, ParaphraseCase
 from unittest import TestCase
-from eaglesong.templates import *
+from grammatron import *
+from avatar.dubbing_service.paraphrase_service import ParaphraseService, ParaphraseServiceSettings
+from avatar.media_library_manager import NewContentStrategy, ContentManager, DataClassDataProvider, ExactTagMatcher
+from avatar.state import WorldFields, State
 
-INDEX = TemplateVariable("index", OrdinalDub(10))
-DURATION = TemplateVariable("duration", CardinalDub(100))
+INDEX = VariableDub("index", OrdinalDub(10))
+DURATION = VariableDub("duration", CardinalDub(100))
 
 class Templates(TemplatesCollection):
     two_varialbes = Template(
@@ -21,7 +22,7 @@ bob = Character("Bob", Character.Gender.Feminine, "Bob is Bob")
 class TemplateRestorationTestCase(TestCase):
     def test_template_restoration(self):
         template = Templates.two_varialbes
-        infos = ParaphraseInfo.parse_from_template(template)
+        infos = JinjaModel.parse_from_template(template)
         self.assertEqual(1, len(infos))
         case = ParaphraseCase(
             infos[0],
@@ -29,5 +30,24 @@ class TemplateRestorationTestCase(TestCase):
             character = bob,
         )
         s = "Got ya, the {index} timer for {duration} is ticking"
-        new_template = case.info.restore_template(s)
-        self.assertListEqual([s], new_template.string_templates)
+        record = case.create_paraphrase_record(s)
+        self.assertEqual(
+            'Template: Got ya, the {index} timer for {duration} is ticking',
+            str(record.template)
+        )
+
+        paraphrase_strategy = NewContentStrategy()
+
+        paraphrase_manager = ContentManager(
+            paraphrase_strategy,
+            DataClassDataProvider([record]),
+            None,
+            ExactTagMatcher.SubsetFactory(WorldFields.character, WorldFields.user)
+        )
+
+        paraphrase_service = ParaphraseService(ParaphraseServiceSettings(paraphrase_manager))
+
+        ut = template.utter(index=5, duration=20)
+        result = paraphrase_service.paraphrase(ut, {WorldFields.character:bob.name, WorldFields.user: alice.name})
+        print(result.utterances[0])
+

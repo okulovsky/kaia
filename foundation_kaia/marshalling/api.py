@@ -22,8 +22,9 @@ class Api:
         ApiUtils.check_address(address)
         self.address = address
 
-        for meta in type(self).__api_endpoints__:
-            setattr(self, meta.name, ApiBinding(address, meta))
+        if hasattr(type(self), '__api_endpoints__'):
+            for meta in type(self).__api_endpoints__:
+                setattr(self, meta.name, ApiBinding(address, meta))
 
 
     def wait(self, max_time_in_seconds=10):

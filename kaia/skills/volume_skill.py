@@ -1,7 +1,5 @@
-from avatar import World
-from eaglesong.templates import *
-from kaia.kaia import SingleLineKaiaSkill
-from kaia.kaia.translators import VolumeCommand
+from kaia import World, SingleLineKaiaSkill, VolumeCommand
+from grammatron import *
 
 class VolumeIntents(TemplatesCollection):
     increase = Template(

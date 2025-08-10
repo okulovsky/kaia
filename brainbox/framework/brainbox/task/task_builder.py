@@ -74,7 +74,6 @@ class BrainBoxTaskBuilder:
         self._decider_parameter = parameter
 
 
-
     def __call__(self, *args, **kwargs) -> BrainBoxTaskBuilderResult:
         method = self._method
         if method is None:

@@ -1,10 +1,9 @@
 from typing import *
-from eaglesong.core import Return
-from kaia.kaia import SingleLineKaiaSkill
-from eaglesong.templates import *
+from kaia import Return, SingleLineKaiaSkill, World
+from grammatron import *
 from datetime import date, timedelta, datetime
 from enum import Enum
-from avatar import World
+
 
 class RelativeDay(Enum):
     Today = 0
@@ -23,18 +22,18 @@ class Weekdays(Enum):
     Saturday = 5
     Sunday = 6
 
-DELTA = TemplateVariable(
+DELTA = VariableDub(
     "delta",
     description="The day relative to today, e.g. the word `yesterday` or `day after tomorrow`",
     dub = OptionsDub(RelativeDay)
 )
 
-DATE = TemplateVariable(
+DATE = VariableDub(
     "date",
     description="The full date of the day"
 )
 
-WEEKDAY = TemplateVariable(
+WEEKDAY = VariableDub(
     "weekday",
     description="The weekday, e.g. the word `Monday` or `Thursday`"
 )
@@ -55,7 +54,6 @@ class DateReplies(TemplatesCollection):
             reply_to=DateIntents.question
         )
     )
-
 
 
 class DateSkill(SingleLineKaiaSkill):

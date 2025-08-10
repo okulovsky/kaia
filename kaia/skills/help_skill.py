@@ -1,6 +1,6 @@
 from typing import *
-from kaia.kaia import KaiaAssistant, SingleLineKaiaSkill, Message
-from eaglesong.templates import *
+from kaia import KaiaAssistant, SingleLineKaiaSkill, ChatCommand
+from grammatron import *
 
 class HelpIntents(TemplatesCollection):
     help = Template("What can you do?")
@@ -24,7 +24,7 @@ class HelpSkill(SingleLineKaiaSkill):
             commands = ', '.join(template for intent in skill.get_intents() for template in intent.string_templates)
             reply.append(f'{skill.get_name()}: {commands}')
             reply.append('')
-        yield Message(Message.Type.ToUser, '\n'.join(reply))
+        yield ChatCommand('\n'.join(reply), ChatCommand.MessageType.to_user)
         yield HelpReplies.help.utter()
 
 

@@ -1,8 +1,7 @@
 from typing import *
-from eaglesong.templates import *
-from kaia.kaia import SingleLineKaiaSkill
+from grammatron import *
+from kaia import SingleLineKaiaSkill, World
 from datetime import datetime
-from avatar import World
 
 class PingIntents(TemplatesCollection):
     question = Template(

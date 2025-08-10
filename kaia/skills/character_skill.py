@@ -1,16 +1,13 @@
-import random
 from typing import *
-from eaglesong.templates import *
-from kaia.kaia import SingleLineKaiaSkill, KaiaContext
-from avatar import World, WorldFields
-from eaglesong import ContextRequest
+from grammatron import *
+from kaia import SingleLineKaiaSkill, World, ContextRequest, NarrationService
 
-CHARACTER_LIST = TemplateVariable(
+CHARACTER_LIST = VariableDub(
     'character_list',
     description="List of all the characters available"
 )
 
-CHARACTER = TemplateVariable(
+CHARACTER = VariableDub(
     'character',
 )
 
@@ -41,34 +38,26 @@ class ChangeCharacterReplies(TemplatesCollection):
     )
 
 
-
-
-
-
-
 class ChangeCharacterSkill(SingleLineKaiaSkill):
     def __init__(self,
                  characters_list: Iterable[str]
                  ):
         self.characters_list = tuple(characters_list)
         change_character = ChangeCharacterIntents.change_character.substitute(
-            character=OptionsDub(self.characters_list))
+            character=VariableDub(CHARACTER.name, OptionsDub(self.characters_list))
+        )
         templates = ChangeCharacterIntents.get_templates(change_character)
         super().__init__(templates, ChangeCharacterReplies)
 
-
     def run(self):
         input: Utterance = yield
-        context: KaiaContext = yield ContextRequest()
         if input in ChangeCharacterIntents.all_characters:
             lst = ', '.join(self.characters_list)
             yield ChangeCharacterReplies.all_characters.utter(character_list=lst)
         if input in ChangeCharacterIntents.change_character:
             value = input.value.get('character', None)
-            if value is None:
-                yield from context.avatar_api.narration_randomize_character()
-            else:
-                yield from context.avatar_api.state_change({WorldFields.character: value})
+            NarrationService.ChangeCharacterCommand(value)
+
 
 
 

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Kaia - Kitchen AI Assistant</title>
+  <link rel="stylesheet" href="/static/index.css">
+</head>
+
+<body>
+  <div id="content">
+    <div id="image">
+      <img id="main_image" src="static/style/image.png" alt="main image">
+      <div id="overlay"></div>
+      <div id="chat_separator">&nbsp;</div>
+      <div id="system-panel"></div>
+    </div>
+    <div id="chat"></div>
+  </div>
+
+  <script type="module">
+    import { AvatarClient }             from '/scripts/client.js';
+    import { Dispatcher }               from '/scripts/dispatcher.js';
+    import { ChatCommandHandler }       from '/scripts/chat-command-handler.js';
+    import { ImageCommandHandler }      from '/scripts/image-command-handler.js';
+    import { ButtonGridCommandHandler } from '/scripts/button-grid-command-handler.js';
+    import { ServerStartedEventHandler }  from '/scripts/server-started-event-handler.js'
+    import { ControlPanelController }   from '/scripts/control-panel-controller.js';
+    import { Message }                  from '/scripts/message.js';
+
+    const chatDiv     = document.getElementById('chat');
+    const imageDiv    = document.getElementById('main_image');
+    const overlayDiv  = document.getElementById('overlay');
+    const panelDiv    = document.getElementById('system-panel');
+
+    const client      = new AvatarClient(window.location.origin, 'default');
+    const initMessage = new Message('InitializationEvent');
+    client.addMessage(initMessage);
+    client.lastMessageId = initMessage.envelop.id;
+
+    const dispatcher  = new Dispatcher(client, 1);
+
+    new ChatCommandHandler(dispatcher, chatDiv, window.location.origin);
+    new ImageCommandHandler(dispatcher, imageDiv);
+    new ButtonGridCommandHandler(dispatcher, overlayDiv, client);
+    new ServerStartedEventHandler(dispatcher);
+
+    new ControlPanelController(imageDiv, panelDiv, overlayDiv, client);
+    dispatcher.start();
+  </script>
+</body>
+</html>

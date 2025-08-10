@@ -1,11 +1,8 @@
-import random
 from typing import *
-from eaglesong.templates import *
-from kaia.kaia import SingleLineKaiaSkill, KaiaContext
-from avatar import World, WorldFields
-from eaglesong import ContextRequest
+from grammatron import *
+from kaia import KaiaContext, ContextRequest, World, NarrationService, State, SingleLineKaiaSkill
 
-ACTIVITY = TemplateVariable("activity", description=f"Activity {World.character} can be doing")
+ACTIVITY = VariableDub("activity", description=f"Activity {World.character} can be doing")
 
 class ActivityIntents(TemplatesCollection):
     change_activity = Template("Change activity", "Do something else")
@@ -29,25 +26,22 @@ class ActivityReplies(TemplatesCollection):
     )
 
 
-
-
-
 class ActivitySkill(SingleLineKaiaSkill):
     def __init__(self):
         super().__init__(ActivityIntents, ActivityReplies)
 
     def run(self):
         input: Utterance = yield
-        context: KaiaContext = yield ContextRequest()
+        context = yield ContextRequest()
+        context = cast(KaiaContext, context)
         if input in ActivityIntents.change_activity:
-            yield from context.avatar_api.narration_randomize_activity()
-            activity = context.avatar_api.state_get().get(WorldFields.activity, None)
-            if activity is not None:
-                yield ActivityReplies.activity_changed(activity)
+            state = context.get_client().run_synchronously(NarrationService.ChangeActivityCommand(), State, 1)
+            if state.activity is not None:
+                yield ActivityReplies.activity_changed(state.activity)
         if input in ActivityIntents.activity_request:
-            activity = context.avatar_api.state_get().get(WorldFields.activity, None)
-            if activity is not None:
-                yield ActivityReplies.current_activity(activity)
+            state = context.get_state()
+            if state.activity is not None:
+                yield ActivityReplies.current_activity(state.activity)
 
 
 

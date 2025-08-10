@@ -1,16 +1,39 @@
-from .interface import IAvatarApi
-from .server import AvatarServer, AvatarService
-from foundation_kaia.marshalling import Api, bind_to_api, TestApi
-from .state_change import StateChange
+import os
 
-@bind_to_api(AvatarService)
-class AvatarApi(Api, IAvatarApi):
-    def __init__(self, address: str):
+from foundation_kaia.marshalling import Api, TestApi
+from .messaging_component import MessagingAPI
+from .components import FileCacheApi
+from .messaging_component import MessagingComponent
+from .server import AvatarServerSettings, AvatarServer
+from foundation_kaia.misc import Loc
+
+
+class AvatarApi(Api):
+    def __init__(self, address):
         super().__init__(address)
 
-    class Test(TestApi['AvatarApi']):
-        def __init__(self, settings):
-            super().__init__(AvatarApi, AvatarServer(settings))
+    @property
+    def messaging(self):
+        return MessagingAPI(self.address)
 
-    def push_state(self, change):
-        return StateChange(self, change)
+    @property
+    def file_cache(self):
+        return FileCacheApi(self.address)
+
+
+    class Test(TestApi['AvatarApi']):
+        def __init__(self, settings: AvatarServerSettings|None = None):
+            self.temp_db_path = None
+            if settings is None:
+                self.temp_db_path = Loc.temp_folder/'avatar_test_database'
+                settings = AvatarServerSettings(
+                    (
+                        MessagingComponent(self.temp_db_path),
+                    )
+                )
+            super().__init__(lambda z: AvatarApi(z), AvatarServer(settings))
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            super().__exit__(exc_type, exc_val, exc_tb)
+            if self.temp_db_path is not None:
+                os.unlink(self.temp_db_path)
