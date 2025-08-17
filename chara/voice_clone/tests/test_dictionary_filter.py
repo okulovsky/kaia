@@ -1,7 +1,7 @@
 from unittest import TestCase
 from chara.voice_clone.sentences.corpus_filter.dictionary_filter import DictionaryFilter
 from chara.tools import Language
-from kaia.common import Loc
+from foundation_kaia.misc import Loc
 from yo_fluq import *
 
 class DictionaryFilterTestCase(TestCase):

@@ -3,7 +3,7 @@ from grammatron import (
     Template, TemplateDub, SequenceDub, VariableDub, IDub, ConstantDub,
     ISubSequenceDub, PluralAgreement, DubParameters, IPluralAgreement, GrammarAdoptableDub
 )
-from avatar.dubbing_service.paraphrase_service import ParaphraseRecord
+from avatar.daemon.paraphrase_service import ParaphraseRecord
 import re
 from collections import OrderedDict
 
