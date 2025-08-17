@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import subprocess
 import shutil
@@ -16,7 +17,7 @@ class TypeScriptComponent(IAvatarComponent):
     def compile(self):
         TS_DIR = self.ts_path
         TSC_JS = TS_DIR / "node_modules" / "typescript" / "lib" / "tsc.js"
-        shutil.rmtree(TS_DIR / 'dist', ignore_errors=True)
+        shutil.rmtree(TS_DIR / 'compiled', ignore_errors=True)
         NODE = subprocess.check_output(
             ['bash', '-ic', 'which node'],
             text=True
@@ -39,8 +40,10 @@ class TypeScriptComponent(IAvatarComponent):
             )
             js.write_text(new)
 
+        os.rename(TS_DIR/'dist', TS_DIR/'compiled')
+
     def get_typescript_file(self, path):
-        return flask.send_from_directory(self.ts_path/'dist', path)
+        return flask.send_from_directory(self.ts_path/'compiled', path)
 
 
     def setup_server(self, app: IAvatarComponent.App, address: str):
