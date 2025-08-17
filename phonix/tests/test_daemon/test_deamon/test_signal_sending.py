@@ -8,6 +8,7 @@ import os
 class SignalSendingTestCase(TestCase):
     def test_signal_sending(self):
         with PhonixTestEnvironmentFactory(with_recording_server=True) as api:
+            api.api.init_monitor()
             fname = api.api.file_cache.upload(FileIO.read_bytes(PATH / 'computer_and_signal.wav'))
             api.client.put(SoundInjectionCommand(fname))
 

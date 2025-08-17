@@ -15,8 +15,8 @@ class SilenceLevelReport(IMessage):
 class SilenceMarginUnit(IUnit):
     def __init__(self,
                  silence_level: float,
-                 silence_length_in_seconds: float,
-                 time_between_silence_level_reports_in_seconds: float|None = 0.05
+                 silence_length_in_seconds: float = 1,
+                 time_between_silence_level_reports_in_seconds: float|None = 1
                  ):
         self.silence_level = silence_level
         self.silence_length_in_seconds = silence_length_in_seconds
@@ -40,6 +40,10 @@ class SilenceMarginUnit(IUnit):
         if self.buffer is None:
             self.buffer = SoundBuffer(self.silence_length_in_seconds)
         self.buffer.add(input.mic_data)
+
+        if not self.buffer.is_full:
+            return
+
         level = self.get_level()
 
         if input.state.mic_state == MicState.Opening:

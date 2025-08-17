@@ -1,4 +1,4 @@
-from avatar.messaging import TestStream, AvatarProcessor, IMessage, Confirmation
+from avatar.messaging import TestStream, AvatarDaemon, IMessage, Confirmation
 from avatar.daemon import SoundInjectionCommand, WakeWordEvent, SoundConfirmation, SoundEvent, SoundCommand
 from phonix.daemon import *
 from unittest import TestCase

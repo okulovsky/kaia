@@ -3,12 +3,13 @@ from __future__ import annotations
 import threading
 import time
 from avatar.messaging import StreamClient
-from avatar.daemon import SoundInjectionCommand, SoundCommand, SoundConfirmation, OpenMicCommand
+from avatar.daemon import SoundInjectionCommand, SoundCommand, SoundConfirmation, OpenMicCommand, VolumeCommand
 
 from ..processing import IUnit, SystemSoundCommand, SystemSoundType, State, UnitInput
 from ..outputs import IAudioOutput
 from ..inputs import IAudioInput, FakeInput
 from .events import *
+from .volume import VolumeController
 from pathlib import Path
 from yo_fluq import FileIO
 
@@ -24,7 +25,6 @@ class PhonixDeamon:
                  system_sounds: dict[SystemSoundType, bytes],
                 ):
         self.client = client
-
         self.file_retriever = file_retriever
         self.input: IAudioInput = input
         self.output = output
@@ -34,6 +34,7 @@ class PhonixDeamon:
         self.confirm_on_injection_finishes: IMessage|None = None
         self.state = State(MicState.Standby)
         self._termination_requested = threading.Event()
+        self.volume_controller: VolumeController|None = None
 
 
     def __getstate__(self):
@@ -75,7 +76,10 @@ class PhonixDeamon:
         if isinstance(message, SystemSoundCommand):
             if message.sound in self.system_sounds:
                 self.start_playing(self.system_sounds[message.sound], message, SoundPlayStarted(message.sound.name).as_reply_to(message))
-
+        if isinstance(message, VolumeCommand):
+            if self.volume_controller is None:
+                self.volume_controller = VolumeController()
+            self.volume_controller.set(message.value)
 
 
     def iteration(self):

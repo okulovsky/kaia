@@ -47,6 +47,7 @@ class PhonixTestEnvironmentFactory:
             api = None
             getter = FolderFileRetriever(Path(__file__).parent/'files')
             client = TestStream().create_client(None)
+        client.initialize()
 
         silence_unit = SilenceMarginUnit(0.05, 1)
         if not self.level_reporting:

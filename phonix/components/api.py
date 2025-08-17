@@ -19,10 +19,15 @@ class PhonixApi(AvatarApi):
         )
         return request
 
+
     def get_snapshot(self):
         reply = requests.get(f'http://{self.address}/phonix-monitor/screenshot')
         reply.raise_for_status()
         return reply.content
+
+    def init_monitor(self):
+        reply = requests.post(f'http://{self.address}/phonix-monitor/init')
+        reply.raise_for_status()
 
     @staticmethod
     def get_file_framerate(input_file_name):
@@ -35,7 +40,7 @@ class PhonixApi(AvatarApi):
         def __init__(self, folder):
             settings = AvatarServerSettings((
                 PhonixRecordingComponent(folder),
-                PhonixMonitoringComponent(),
+                PhonixMonitoringComponent(folder),
                 FileCacheComponent(folder),
                 MessagingComponent()
             ))

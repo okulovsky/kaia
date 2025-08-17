@@ -13,7 +13,7 @@ from plotly.subplots import make_subplots
 
 
 class PhonixMonitoring:
-    def __init__(self, data_generator, time_window: int = 50):
+    def __init__(self, data_generator, time_window: int = 15):
         self.data_generator = data_generator
         self.time_window = time_window
         self.data: list[IMessage] = []
@@ -42,9 +42,9 @@ class PhonixMonitoring:
         for item in data:
             relative_time = (item.envelop.timestamp-now).total_seconds()
             if isinstance(item, SoundLevelReport):
-                first_relative = (item.begin_timestamp - now).total_seconds()
-                for record in item.levels:
-                    levels.add(first_relative+record.delta, record.value)
+                start_relative = (item.begin_timestamp - now).total_seconds()
+                end_relative = (item.end_timestamp - now).total_seconds()
+                levels.add(start_relative, end_relative, item.levels)
             if isinstance(item, SilenceLevelReport):
                 silence.add(relative_time, item.silence_level)
             elif isinstance(item, MicStateChangeReport):
