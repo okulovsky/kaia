@@ -1,6 +1,7 @@
 from typing import Optional, Callable, Union
 from .common import IMessage, State, ChatCommand, message_handler, ImageCommand, Confirmation, AvatarService
 from .common.content_manager import MediaLibraryManager, MediaLibrary
+from ..server import AvatarApi
 from dataclasses import dataclass
 import base64
 
@@ -33,33 +34,39 @@ class ImageService(AvatarService):
     RestoreImageCommand = RestoreImageCommand
     ImageDescriptionCommand = ImageDescriptionCommand
 
-
     def __init__(self,
                  state: State,
+                 api: AvatarApi|None,
                  media_library_manager: MediaLibraryManager,
                  record_to_description: Optional[Callable[[MediaLibrary.Record], str]] = None
                  ):
         self.state = state
+        self.api = api
         self.media_library_manager = media_library_manager
         self.record_to_description = record_to_description
         self.last_image_record: MediaLibrary.Record|None = None
+        self.empty_image_uploaded: bool = False
 
     def requires_brainbox(self):
         return False
 
     def _get_image_command(self, message: IMessage):
+        if self.api is not None:
+            self.api.file_cache.upload(self.last_image_record.get_content(), self.last_image_record.filename)
         return ImageCommand(
-            base64.b64encode(self.last_image_record.get_content()).decode('ascii'),
+            self.last_image_record.filename,
             self.last_image_record.tags,
-            self.last_image_record.filename
         ).as_propagation_confirmation_to(message)
 
     def _get_empty_image(self, message: IMessage):
-        return ImageCommand(base64.b64encode(_empty_image).decode('ascii')).as_propagation_confirmation_to(message)
+        if self.api is not None and not self.empty_image_uploaded:
+            self.api.file_cache.upload(_empty_image, 'empty_image.png')
+        return ImageCommand('empty_image.png').as_propagation_confirmation_to(message)
 
     @message_handler
     def new_image(self, message: NewImageCommand) -> ImageCommand:
         record = self.media_library_manager.match().weak(self.state.__dict__).find_content()
+
         if record is None:
             return self._get_empty_image(message)
         self.last_image_record = record

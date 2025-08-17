@@ -6,7 +6,7 @@ from avatar.daemon.common.content_manager import ContentManager, DataClassDataPr
 from avatar.daemon.common import UtteranceSequenceCommand, PlayableTextMessage
 
 
-def test(proc: AvatarProcessor, utterance: Utterance) -> str:
+def test(proc: AvatarDaemon, utterance: Utterance) -> str:
     proc.client.put(UtteranceSequenceCommand(utterance))
     messages = proc.debug_and_stop_by_empty_queue().messages
     m = messages[-1]
@@ -38,14 +38,9 @@ class ParaphraseTestCase(TestCase):
         manager = ContentManager(DataClassDataProvider(records))
 
         state = State(character='character_0', language='en')
-        proc = AvatarProcessor(TestStream().create_client())
+        proc = AvatarDaemon(TestStream().create_client())
         proc.rules.bind(StateToUtterancesApplicationService(state))
-        proc.rules.add(
-            ParaphraseService(state, manager),
-            RuleConnector(
-                PlayableTextMessage,
-                exclude_publisher_prefixes=('ParaphraseService',))
-        )
+        proc.rules.bind(ParaphraseService(state, manager), BindingSettings().bind_type(PlayableTextMessage).to_all_except(ParaphraseService))
 
         m = test(proc, templates[0].utter())
         self.assertEqual('Test_1/character_0/0.', m)
@@ -59,34 +54,4 @@ class ParaphraseTestCase(TestCase):
         state.character = 'character_1'
         m = test(proc, templates[0].utter())
         self.assertEqual('Test_1/character_1/0.', m)
-
-
-
-    def no_test(self):
-
-
-        preview = api.dub(templates[0].utter())
-        self.assertEqual('Test_1/character_0/0.', preview.full_text)
-
-        preview = api.dub(templates[0]())
-        self.assertEqual('Test_1/character_0/1.', preview.full_text)
-
-        preview = api.dub(templates[1].utter())
-        self.assertEqual('Test_2/character_0/0.', preview.full_text)
-
-        api.state_change({WorldFields.character: 'character_1'})
-        preview = api.dub(templates[0].utter())
-        self.assertEqual('Test_1/character_1/0.', preview.full_text)
-
-        api.state_change({'mood': 'sad'})
-        preview = api.dub(templates[0].utter())
-        self.assertEqual('Test_1/character_1/1.', preview.full_text)
-
-        api.state_change({WorldFields.character:'character_2'})
-        preview = api.dub(templates[0].utter())
-        self.assertEqual('Original text 1.', preview.full_text)
-
-
-
-
 

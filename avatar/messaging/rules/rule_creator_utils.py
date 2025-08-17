@@ -57,4 +57,4 @@ def get_annotated_output_type(handler):
     result = unroll_output_type(ret)
     if len(result) == 0:
         return None
-    return result
+    return tuple(result)

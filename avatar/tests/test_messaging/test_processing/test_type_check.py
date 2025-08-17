@@ -18,10 +18,11 @@ class TestWrongOutputType(unittest.TestCase):
         client = stream.create_client()
         client.put(InMessage(content="bad"))
 
-        processor = AvatarProcessor(client)
-        processor.rules.add(function, input=InMessage, outputs=(InMessage,))
+        processor = AvatarDaemon(client)
+
 
         with self.assertRaises(Exception) as cm:
+            processor.rules.bind(function)
             processor.debug_and_stop_by_count(1)
 
         if expected_exception is not None:
@@ -47,7 +48,7 @@ class TestWrongOutputType(unittest.TestCase):
     def test_handler_wrong_signature(self):
         def handler_wrong_signature() -> InMessage:
             return InMessage("test")
-        self.check(handler_wrong_signature, 'takes 0 positional arguments but 1 was given')
+        self.check(handler_wrong_signature, 'Callable must have exactly one argument (excluding self/cls)')
 
 
 

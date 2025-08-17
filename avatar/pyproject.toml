@@ -22,7 +22,6 @@ dependencies = [
     "kaia-grammatron",
     "flask",
     "loguru",
-    "nltk"
 ]
 
 classifiers = [

@@ -1,5 +1,5 @@
 import unittest
-from avatar.messaging.rules.rule_collection_utils import get_annotated_output_type
+from avatar.messaging.rules.rule_creator import get_annotated_output_type
 from avatar.daemon.common.known_messages import (PlayableTextMessage, UtteranceSequenceCommand)
 from typing import *
 
@@ -12,7 +12,7 @@ class TestGetAnnotatedOutputType(unittest.TestCase):
     def test_simple_annotation(self):
         def handler() -> int:
             pass
-        self.assertEqual([int], get_annotated_output_type(handler))
+        self.assertEqual((int,), get_annotated_output_type(handler))
 
     def test_union_annotation(self):
         def handler() -> Union[int, str]:

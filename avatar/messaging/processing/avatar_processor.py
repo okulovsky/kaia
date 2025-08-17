@@ -9,6 +9,7 @@ import queue
 from .filters import *
 from dataclasses import dataclass
 from datetime import datetime
+from threading import Thread
 
 @dataclass
 class AvatarDebugReport:
@@ -29,7 +30,7 @@ class ExceptionEvent(IMessage):
 
 
 
-class AvatarProcessor:
+class AvatarDaemon:
     def __init__(self,
                  client: StreamClient,
                  time_tick_interval_in_seconds: float|None = None,
@@ -117,6 +118,9 @@ class AvatarProcessor:
 
     def __call__(self):
         self.run()
+
+    def run_in_thread(self):
+        Thread(target=self.run, daemon=True).start()
 
     def debug(self, messages, filters: list[IProcessingFilter]) -> AvatarDebugReport:
         for message in messages:

@@ -42,7 +42,7 @@ class SpeakerIdentificationService(AvatarService):
 
 
 
-    @message_handler
+    @message_handler.with_call(BrainBoxService.Command, BrainBoxService.Confirmation)
     def analyze(self, message: SoundEvent) -> None:
         command = BrainBoxService.Command(
             BrainBox.Task
@@ -59,7 +59,7 @@ class SpeakerIdentificationService(AvatarService):
 
 
 
-    @message_handler
+    @message_handler.with_call(BrainBoxService.Command, BrainBoxService.Confirmation)
     def train(self, message: SpeakerIdentificationTrain) -> SpeakerIdentificationTrainConfirmation:
         prereqs = []
         for event, speaker in self.buffer:

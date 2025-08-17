@@ -8,7 +8,7 @@ from .stt_service import STTService, RhasspyRecognitionSetup, VoskRecognitionSet
 from .speaker_identification_service import SpeakerIdentificationService
 from .mock_sound_service import MockSoundService
 from .state_to_utterances_application_service import StateToUtterancesApplicationService
-from .mock_sound_service import MockSoundService
+from .mock_sound_service import MockSoundService, MockVoiceoverService
 from .volume_control_service import VolumeControlService
 from .chat_service import ChatService
 from .stt_integration_service import STTIntegrationService

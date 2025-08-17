@@ -2,7 +2,7 @@ import unittest
 import asyncio
 import time
 from dataclasses import dataclass
-from avatar.messaging import AvatarProcessor, Rule, IMessage, TestStream
+from avatar.messaging import AvatarDaemon, Rule, IMessage, TestStream, BindingSettings
 
 
 @dataclass
@@ -42,12 +42,11 @@ class TestStreamProcessor(unittest.TestCase):
         for m in messages:
             client.put(m)
 
-        processor = AvatarProcessor(
+        processor = AvatarDaemon(
             client,
         )
         for f in functions:
-            processor.rules.add(f, is_asynchronous=asynchronous)
-
+            processor.rules.bind(f, BindingSettings().asynchronous(asynchronous))
 
         result = processor.debug_and_stop_by_count(len(functions)*messages_count)
         return result.duration
@@ -60,10 +59,12 @@ class TestStreamProcessor(unittest.TestCase):
     def test_sequencial_handler(self):
         h = Handlers1()
         delta = self.check([h.handler_1_1, h.handler_1_2])
+        print(delta)
         self.assertTrue(0.4<=delta<=0.5)
 
     def test_parallel_handlers(self):
         delta = self.check([Handlers1().handler_1_1, Handlers2().handler_2_1])
+        print(delta)
         self.assertTrue(0.2 <= delta <= 0.3)
 
     def test_splitted_objects_parallelism(self):

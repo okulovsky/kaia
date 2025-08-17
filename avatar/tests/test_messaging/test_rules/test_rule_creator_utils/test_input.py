@@ -1,6 +1,6 @@
 import unittest
 import inspect
-from avatar.messaging.rules.rule_collection import get_single_argument_type
+from avatar.messaging.rules.rule_creator_utils import get_single_argument_type
 
 class TestGetSingleArgumentType(unittest.TestCase):
 

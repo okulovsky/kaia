@@ -6,6 +6,7 @@ from .components import FileCacheApi
 from .messaging_component import MessagingComponent
 from .server import AvatarServerSettings, AvatarServer
 from foundation_kaia.misc import Loc
+from contextlib import ExitStack
 
 
 class AvatarApi(Api):
@@ -31,6 +32,7 @@ class AvatarApi(Api):
                         MessagingComponent(self.temp_db_path),
                     )
                 )
+
             super().__init__(lambda z: AvatarApi(z), AvatarServer(settings))
 
         def __exit__(self, exc_type, exc_val, exc_tb):

@@ -5,7 +5,7 @@ from ..stream import StreamClient, IMessage
 from ..rules import Rule
 from .rule_processor import RuleProcessor
 from .processing_event import ProcessingEvent
-from .service import IService
+from ..rules import IService
 
 
 class RuleGroupProcessor:

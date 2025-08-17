@@ -7,7 +7,7 @@ from grammatron import Template, TemplatesCollection
 
 class STTTestCase(TestCase):
     def test_stt(self):
-        proc = AvatarProcessor(TestStream().create_client())
+        proc = AvatarDaemon(TestStream().create_client())
         proc.rules.bind(STTService(WhisperRecognitionSetup()))
         proc.rules.bind(BrainBoxService(STTService.brain_box_mock))
 
@@ -22,7 +22,7 @@ class STTTestCase(TestCase):
 
 
     def test_stt_request(self):
-        proc = AvatarProcessor(TestStream().create_client())
+        proc = AvatarDaemon(TestStream().create_client())
         proc.rules.bind(STTService(WhisperRecognitionSetup()))
         proc.rules.bind(BrainBoxService(STTService.brain_box_mock))
 
@@ -41,7 +41,7 @@ class STTTestCase(TestCase):
         self.assertEqual('whisper', message_2.recognition)
 
     def test_stt_kaldi_no_training(self):
-        proc = AvatarProcessor(TestStream().create_client())
+        proc = AvatarDaemon(TestStream().create_client())
         proc.rules.bind(STTService(RhasspyRecognitionSetup('test_1')))
         proc.rules.bind(BrainBoxService(STTService.brain_box_mock))
 
@@ -60,7 +60,7 @@ class STTTestCase(TestCase):
             IntentsPack('test_2', tuple(Collection2.get_templates()), {}, 'en')
         ]
 
-        proc = AvatarProcessor(TestStream().create_client())
+        proc = AvatarDaemon(TestStream().create_client())
         stt = STTService(RhasspyRecognitionSetup('test_2'))
         proc.rules.bind(stt)
         proc.rules.bind(BrainBoxService(STTService.brain_box_mock))

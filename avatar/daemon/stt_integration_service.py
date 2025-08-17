@@ -6,8 +6,8 @@ class STTIntegrationService(AvatarService):
     def __init__(self, state: State):
         self.state = state
 
-    @message_handler
-    def on_sound_event(self, event: SoundEvent):
+    @message_handler.with_call(STTService.Command, STTService.Confirmation)
+    def on_sound_event(self, event: SoundEvent) -> UtteranceEvent|TextEvent:
         command = STTService.Command(
             file = event.file_id,
             language = self.state.language
