@@ -1,7 +1,5 @@
-from typing import *
 from grammatron import *
 from kaia import SingleLineKaiaSkill, ImageService, World
-from brainbox import File
 
 class ChangeImageIntents(TemplatesCollection):
     change_image = Template("Change image")
@@ -23,7 +21,6 @@ class ChangeImageReplies(TemplatesCollection):
 class ChangeImageSkill(SingleLineKaiaSkill):
     def __init__(self):
         super().__init__(ChangeImageIntents, ChangeImageReplies)
-        self.last_image: Optional[File] = None
 
     def run(self):
         input: Utterance = yield

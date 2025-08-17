@@ -44,6 +44,7 @@ class AvatarServerAppSettings(IAppInitializer):
     compile_scripts: bool = False
     add_chunks_component: bool = False
     add_phonix_component: bool = True
+    hide_logs: bool = True
 
 
     def bind_app(self, app: 'KaiaApp'):
@@ -69,13 +70,14 @@ class AvatarServerAppSettings(IAppInitializer):
 
         if self.add_phonix_component:
             components.append(PhonixRecordingComponent(app.brainbox_cache_folder))
-            components.append(PhonixMonitoringComponent())
+            components.append(PhonixMonitoringComponent(app.brainbox_cache_folder))
         if self.add_chunks_component:
             components.append(AudioChunksComponent(app.brainbox_cache_folder))
             
         settings = AvatarServerSettings(
             tuple(components),
-            port=PORT
+            PORT,
+            self.hide_logs
         )
         app.avatar_api = AvatarApi(f'127.0.0.1:{PORT}')
         app._avatar_client = AvatarStream(app.avatar_api).create_client(start_message_id)

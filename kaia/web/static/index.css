@@ -52,16 +52,17 @@ body {
 
 /* button grid */
 
-#overlay {
-  position: absolute;        /* позиция относительно родительского контейнера */
-  top: 12px;                  /* небольшой отступ сверху */
+#overlay.overlay-top {
+  position: absolute;
+  top: 12px;
   left: 0;
-  width: 90%;                 /* 90% ширины родителя */
-  margin: 0 auto;             /* центрирование по горизонтали */
+  right: 0;              /* центрирование */
+  width: 90%;
+  margin: 0 auto;
 
-  height: auto;               /* подгон по содержимому */
-  max-height: 90%;            /* ограничение, чтобы не выходило за родителя */
-  overflow: auto;             /* скролл при переполнении */
+  height: auto;
+  max-height: 90%;
+  overflow: auto;
 
   display: none;
   background: rgba(0, 0, 0, 0.5);
@@ -71,7 +72,34 @@ body {
   box-sizing: border-box;
 }
 
-/* База (как было) */
+/* Почти полноэкранный оверлей */
+#overlay.overlay-full {
+  position: absolute;
+  top: 5vh;          /* отступ сверху 5% экрана */
+  left: 0;
+  right: 0;          /* центрирование */
+  width: 90%;
+  margin: 0 auto;
+
+  height: 90vh;      /* 90% высоты экрана — не схлопнется */
+  overflow: hidden;
+
+  display: block;    /* делаем видимым по режиму */
+  background: rgba(0,0,0,0.5);
+  z-index: 10;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* iframe внутри полноэкранного */
+#overlay.overlay-full > iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+/* Buttons */
 .grid-button {
   width: 100%;
   height: 100%;

@@ -5,7 +5,7 @@ import { AvatarClient }   from './client.js';
 import { Message }        from './message.js';
 
 /**
- * Renders a ButtonGrid (suffix '/ButtonGrid') into a container DIV,
+ * Renders a ButtonGrid (suffix '/ButtonGrid') into a overlay DIV,
  * laying out buttons in a CSS grid.  Buttons whose `button_feedback` is null
  * are disabled; others, when clicked, send a ButtonPressedEvent back to the server.
  */
@@ -14,12 +14,12 @@ export class ButtonGridCommandHandler {
 
   /**
    * @param dispatcher  your Dispatcher instance
-   * @param container   the DIV where buttons go
+   * @param overlay   the DIV where buttons go
    * @param client      AvatarClient used to send ButtonPressedEvent
    */
   constructor(
     dispatcher: Dispatcher,
-    private container: HTMLElement,
+    private overlay: HTMLElement,
     private client: AvatarClient
   ) {
     dispatcher.subscribe(this.suffix, this.handle.bind(this));
@@ -29,23 +29,24 @@ export class ButtonGridCommandHandler {
     const payload: any = msg.payload;
     const elements: any[] | null = payload.elements ?? null;
 
-    // hide the container if no grid
+    // hide the overlay if no grid
     if (!elements) {
-      this.container.style.display = 'none';
+      this.overlay.style.display = 'none';
       return;
     }
 
     // show & clear
-    this.container.style.display = '';
-    this.container.innerHTML = '';
-
+    this.overlay.className = '';              // убираем все классы
+    this.overlay.classList.add('overlay-top'); // ставим нужный
+    this.overlay.style.display = '';
+    this.overlay.innerHTML = '';
     // compute number of columns
     const colCount = elements.reduce((max, el) => {
       const span = el.column_span ?? 1;
       return Math.max(max, el.column + span);
     }, 0);
 
-    Object.assign(this.container.style, {
+    Object.assign(this.overlay.style, {
       display: 'grid',
       gridTemplateColumns: `repeat(${colCount}, 1fr)`,
     });
@@ -74,7 +75,7 @@ export class ButtonGridCommandHandler {
         });
       }
 
-      this.container.appendChild(btn);
+      this.overlay.appendChild(btn);
     }
   }
 }

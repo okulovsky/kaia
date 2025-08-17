@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from avatar.messaging import AvatarProcessor, StreamClient
+from avatar.messaging import AvatarDaemon, StreamClient
 from avatar.server import AvatarServer, AvatarApi
 from brainbox import BrainBoxServer, BrainBoxApi
 from phonix.components import PhonixApi
@@ -20,6 +20,7 @@ class KaiaApp:
     session_id: str = 'default'
 
 
+
     brainbox_server: BrainBoxServer|None = None
     brainbox_api: BrainBoxApi|None = None
     custom_brainbox_cache_folder: Path|None = None
@@ -33,7 +34,7 @@ class KaiaApp:
 
     avatar_api: AvatarApi|None = None
     avatar_server: AvatarServer|None = None
-    avatar_processor: AvatarProcessor|None = None
+    avatar_processor: AvatarDaemon|None = None
 
     _avatar_client: StreamClient|None = None
 

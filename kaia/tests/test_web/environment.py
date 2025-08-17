@@ -4,10 +4,9 @@ from dataclasses import dataclass
 from foundation_kaia.misc import Loc
 from avatar.messaging import StreamClient
 from avatar.server import AvatarServerSettings, AvatarApi, MessagingComponent, AvatarStream
-from avatar.server.components import TypeScriptComponent, MainComponent
+from avatar.server.components import TypeScriptComponent, MainComponent, FileCacheComponent
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from kaia.tests.helper import Helper, SeleniumDriver
+from kaia.tests.helper import SeleniumDriver
 
 @dataclass
 class TestEnvironment:
@@ -35,12 +34,15 @@ class TestEnvironmentFactory:
         web_folder = Loc.root_folder / 'kaia' / 'web'
         assert web_folder.exists()
 
+        cache_folder = self._stack.enter_context(Loc.create_test_folder())
+
         PORT = 13002
         settings = AvatarServerSettings(
             (
                 TypeScriptComponent(web_folder / 'scripts', True),
                 MessagingComponent(db_path, self.aliases),
-                MainComponent(self.html, f'127.0.0.1:{PORT}')
+                MainComponent(self.html, f'127.0.0.1:{PORT}'),
+                FileCacheComponent(cache_folder)
             ),
             PORT,
             False

@@ -43,8 +43,10 @@ export class ControlPanelController {
 private async loadPageInOverlay(url: string): Promise<void> {
   // 1) Показываем оверлей (жёстко указываем display),
   //    очищаем содержимое
-  this.overlay.style.display = 'block';
-  this.overlay.innerHTML = '';
+    this.overlay.className = '';              // убираем все классы
+    this.overlay.classList.add('overlay-full'); // ставим нужный
+    this.overlay.style.display = '';
+    this.overlay.innerHTML = '';
 
   try {
     // 2) Проверяем доступность URL методом HEAD

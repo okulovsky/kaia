@@ -2,7 +2,7 @@ from typing import *
 from .kaia_skill import IKaiaSkill
 from eaglesong.core import Automaton, ContextRequest, AutomatonExit, Listen, Return
 from grammatron import Template
-from avatar.daemon import IntentsPack, ChatCommand
+from avatar.daemon import IntentsPack, ChatCommand, NarrationService, State
 from dataclasses import dataclass, field
 import traceback
 from datetime import datetime
@@ -10,6 +10,7 @@ from .automaton_not_found_skill import AutomatonNotFoundSkill
 from .exception_in_skill import ExceptionHandledSkill
 from .feedback import Feedback
 from loguru import logger
+from .context import KaiaContext
 
 
 @dataclass
@@ -46,26 +47,19 @@ class KaiaAssistant:
     def __init__(self,
                  skills: Iterable[IKaiaSkill],
                  automaton_not_found_skill: IKaiaSkill| None = None,
-                 additional_intents: Optional[Iterable[Template]] = None,
-                 additional_replies: Optional[Iterable[Template]] = None,
                  exception_in_skill: Optional[IKaiaSkill] = None,
-                 max_history_length = 20,
                  datetime_factory: Callable[[], datetime] = datetime.now,
                  raise_exception: bool = False,
                  custom_words_in_core_intents: dict[str, str] = None,
                  default_language: str = 'en',
-                 language_change_callback: Callable[[str], None] = None
                  ):
         self.skills = tuple(skills)
         self.active_skills: list[ActiveSkill] = []
-        self.history: list[AssistantHistoryItem] = []
-        self.max_history_length = max_history_length
         self.datetime_factory = datetime_factory
         self.raise_exceptions = raise_exception
         self.custom_words_in_core_intents = custom_words_in_core_intents
         self.default_language = default_language
-        self.language_change_callback = language_change_callback
-
+        self.current_language = default_language
         self.all_skills = tuple(skills)
 
         self.automaton_not_found_skill = self._check_special_skill(
@@ -79,9 +73,8 @@ class KaiaAssistant:
             'exception_in_skill'
         )
 
-        self.additional_intents = [] if additional_intents is None else list(additional_intents)
-        self.additional_replies = [] if additional_replies is None else list(additional_replies)
-
+        self.additional_intents = []
+        self.additional_replies = []
 
     def _check_special_skill(self, skill, default, field):
         result = default
@@ -125,7 +118,7 @@ class KaiaAssistant:
 
         for skill in reversed(self.active_skills):
             if skill.skill.should_proceed(input):
-                logger.info('Continuation: {input} continues {skill.skill.get_name()}')
+                logger.info(f'Continuation: `{input}` continues `{skill.skill.get_name()}`')
                 return skill
 
         choosen_skill = None
@@ -133,7 +126,7 @@ class KaiaAssistant:
             if not skill.should_start(input):
                 continue
             choosen_skill = skill
-            logger.info('Initiation: {input} initiates {skill.get_name()}')
+            logger.info(f'Initiation: `{input}` initiates `{skill.get_name()}`')
             break
 
         if choosen_skill is None:
@@ -150,16 +143,30 @@ class KaiaAssistant:
     def _remove_active_skill(self, active_skill):
         self.active_skills = [a for a in self.active_skills if a != active_skill]
 
-    def _one_step(self, input, context):
-        history_item = AssistantHistoryItem(self.datetime_factory(), input)
-        self.history.append(history_item)
-        self.history = self.history[-self.max_history_length:]
-        active_skill = self._get_automaton(input, context)
+
+    def _fix_language(self, active_skill, context: KaiaContext):
         language = active_skill.skill.get_language()
-        if language is None:
-            language = self.default_language
-        if language is not None and self.language_change_callback is not None:
-            self.language_change_callback(language)
+        if language.type == IKaiaSkill.Language.Type.self_managed:
+            return
+        target_language = None
+        if language.type == IKaiaSkill.Language.Type.default:
+            target_language = self.default_language
+        elif language.type == IKaiaSkill.Language.Type.specific:
+            target_language = language.language
+        if target_language is not None:
+            if self.current_language is None or self.current_language != target_language:
+                if context is not None:
+                    state = context.get_client().run_synchronously(NarrationService.LanguageRequest(target_language), State)
+                    self.current_language = state.language
+                else:
+                    self.current_language = target_language
+
+
+    def _one_step(self, input, context:KaiaContext):
+        history_item = AssistantHistoryItem(self.datetime_factory(), input)
+        active_skill = self._get_automaton(input, context)
+
+        self._fix_language(active_skill, context)
 
         try:
             while True:

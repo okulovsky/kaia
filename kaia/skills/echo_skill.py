@@ -1,7 +1,7 @@
 from typing import *
-from kaia import IKaiaSkill, OpenMicCommand, WhisperRecognitionSetup, World
+from kaia import KaiaSkillBase, World, WhisperOpenMicListen
 from grammatron import Template, Utterance, TemplatesCollection
-from eaglesong import Listen
+
 
 
 
@@ -19,10 +19,10 @@ class EchoReplies(TemplatesCollection):
     )
 
 
-class EchoSkill(IKaiaSkill):
+class EchoSkill(KaiaSkillBase):
     def __init__(self,
                  ):
-        pass
+        super().__init__(EchoIntents, EchoReplies)
 
     def should_start(self, input) -> False:
         if not isinstance(input, Utterance):
@@ -34,24 +34,9 @@ class EchoSkill(IKaiaSkill):
     def should_proceed(self, input) -> False:
         return isinstance(input, str)
 
-
-    def get_type(self) -> 'IKaiaSkill.Type':
-        return IKaiaSkill.Type.MultiLine
-
-    def get_name(self) -> str:
-        return 'Echo'
-
-    def get_intents(self) -> Iterable[Template]:
-        return [EchoIntents.echo]
-
-    def get_runner(self):
-        return self.run
-
     def run(self):
-        yield "Say anything and I will repeat"
-        yield OpenMicCommand()
-        yield WhisperRecognitionSetup()
-        s = yield Listen()
+        yield EchoReplies.echo_request()
+        s = yield WhisperOpenMicListen()
         yield s
 
 

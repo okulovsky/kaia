@@ -3,6 +3,7 @@ from foundation_kaia.misc import Loc
 from avatar.daemon import *
 from kaia.tests.helper import Helper
 from avatar.messaging.amenities import ThreadCollection
+from phonix.daemon import MicStateChangeReport, MicState
 from yo_fluq import Query
 
 
@@ -26,8 +27,9 @@ class FacelessTestCase(TestCase):
 
                 addition = c.query(3).take(2).to_list()
                 self.assertEqual(2, len(addition))
-                self.assertIsInstance(addition[0], OpenMicCommand)
-                self.assertIsInstance(addition[1], WhisperRecognitionSetup)
+                self.assertIsInstance(addition[0], WhisperRecognitionSetup)
+                self.assertIsInstance(addition[1], OpenMicCommand)
+                c.query(3).take_while(lambda z: not isinstance(z, MicStateChangeReport) or z.state!=MicState.Open).to_list()
 
                 c = helper.say('make_me_a_sandwich')
                 result = helper.parse_reaction(UtteranceSequenceCommand)

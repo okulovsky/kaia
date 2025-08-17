@@ -1,4 +1,4 @@
-from kaia import IKaiaSkill, ButtonPressedEvent, ButtonGridCommand, World, Listen, Return
+from kaia import KaiaSkillBase, ButtonPressedEvent, ButtonGridCommand, World, Listen, Return
 from grammatron import *
 from .notification_skill import NotificationRegister, NotificationInfo
 from dataclasses import dataclass
@@ -68,7 +68,7 @@ class Recipe:
 class CookBookContinuation:
     pass
 
-class CookBookSkill(IKaiaSkill):
+class CookBookSkill(KaiaSkillBase):
     def __init__(self,
                  register: NotificationRegister,
                  recipes: list[Recipe],
@@ -76,22 +76,13 @@ class CookBookSkill(IKaiaSkill):
         self.recipes = recipes
         self.notification_register = register
         self.datetime_factory = datetime_factory if datetime_factory is not None else datetime.now
-
-    def get_runner(self):
-        return self.run
-
-    def get_type(self) -> 'IKaiaSkill.Type':
-        return IKaiaSkill.Type.MultiLine
-
-    def get_intents(self) -> Iterable[Template]:
-        template = CookBookIntents.recipe.substitute(dish=VariableDub(DISH.name, OptionsDub([r.dish for r in self.recipes])))
-        return CookBookIntents.get_templates(template)
-
-    def get_replies(self) -> Iterable[Template]:
-        return CookBookReplies.get_templates()
-
-    def get_name(self) -> str:
-        return type(self).__name__
+        template = CookBookIntents.recipe.substitute(
+            dish=VariableDub(DISH.name, OptionsDub([r.dish for r in self.recipes]))
+        )
+        super().__init__(
+            CookBookIntents.get_templates(template),
+            CookBookReplies,
+        )
 
     def should_start(self, input) -> bool:
         if isinstance(input, Utterance):
