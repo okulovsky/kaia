@@ -1,3 +1,28 @@
+4.0.1
+    Avatar:
+        - Images are passed by file_id, not by base64, to decrease the size of db
+        - Typing is improved; The tool to draw a graph of the assembled system is added
+        - Binding of rules is improved: you can easily setup service to ignore the outputs of particular publisher, or to accept only them
+    Chara:
+        - Paraphrase is operational again
+    Eaglesong:
+        - Listens are simplified, they just carry the payload now
+    Foundation:
+        - Loc now reads the environment.env file in / on startup
+    Grammatron:
+        - Grammatron now contains a skeleton to parse Template to TemplateDubs to Sequences
+    Kaia
+        - app is now better configurable
+        - cleanup in assistant, not-used features are removed
+        - the skills are fixed, all of them are now with the proper unit tests
+    Phonix
+        - many small experiment-driven improvements
+        - monitoring component now shows file list as well
+        - volume is now also processed by phonix (tested at Linux only)
+    General:
+        - project's requirements are updated
+
+
 4.0.0
     - EVERYTHING has changed
     - Grammatron is now hosting templates
