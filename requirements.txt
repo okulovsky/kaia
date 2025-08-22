@@ -35,3 +35,4 @@ yo_fluq_ds
 selenium
 kaleido
 graphviz
+tomli_w
