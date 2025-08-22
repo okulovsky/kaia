@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from avatar.messaging import AvatarDaemon, StreamClient
+from avatar.messaging import AvatarDaemon, StreamClient, IStreamClient
 from avatar.server import AvatarServer, AvatarApi
 from brainbox import BrainBoxServer, BrainBoxApi
 from phonix.components import PhonixApi
@@ -37,6 +37,9 @@ class KaiaApp:
     avatar_processor: AvatarDaemon|None = None
 
     _avatar_client: StreamClient|None = None
+    avatar_reporting_client: IStreamClient|None = None
+
+
 
     def create_avatar_client(self) -> StreamClient|None:
         if self._avatar_client is None:

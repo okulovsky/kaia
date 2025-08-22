@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from avatar.messaging import IMessage, TimerEvent
-from avatar.daemon import UtteranceEvent, TextEvent
+from avatar.daemon import UtteranceEvent, TextEvent, ButtonPressedEvent
 from typing import Any
 
 
@@ -21,6 +21,8 @@ class DefaultKaiaInputTransformer(IKaiaInputTransformer):
         if isinstance(input, TextEvent):
             return input.text
         if self.allow_timer and isinstance(input, TimerEvent):
+            return input
+        if isinstance(input, ButtonPressedEvent):
             return input
         return None
 

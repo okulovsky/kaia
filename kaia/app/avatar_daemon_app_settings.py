@@ -39,6 +39,7 @@ class AvatarDaemonAppSettings(IAppInitializer):
     paraphrases_path: Path|None = None
     paraphrases_feedback_path: Path = None
     initialize_volume: bool = False
+    report_to_session: str|None = None
 
 
 
@@ -86,7 +87,7 @@ class AvatarDaemonAppSettings(IAppInitializer):
             self.characters,
             self.activity,
             self.greetings_command,
-            60
+            30*60
         )
 
     def create_state_to_utterances_application(self, app: KaiaApp, state: s.State):
@@ -137,14 +138,22 @@ class AvatarDaemonAppSettings(IAppInitializer):
         if app.brainbox_api is None:
             return s.MockVoiceoverService()
 
+    def create_sound_command_unblocker(self, app: KaiaApp, state: s.State):
+        return s.SoundPlayUnblockerService()
+
     def new_state(self):
         return s.State(character=self.characters[0], language='en')
 
     def bind_app(self, app: KaiaApp):
+        reporting_stream = None
+        if self.report_to_session is not None:
+            reporting_stream = app.avatar_api.create_messaging_stream(self.report_to_session).create_client().as_asyncronous()
+
         proc = AvatarDaemon(
             app.create_avatar_client(),
             self.timer_event_span_in_seconds,
-            self.error_events
+            self.error_events,
+            reporting_stream
         )
         state = self.new_state()
 

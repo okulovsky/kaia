@@ -19,9 +19,14 @@ class KaiaAppSettings:
 
     def create_app(self, working_folder: Path):
         app = KaiaApp(working_folder)
+        self.bind_app(app)
+        return app
+
+
+    def bind_app(self, app: KaiaApp):
         for s in [self.brainbox, self.avatar_server, self.avatar_processor, self.kaia, self.phonix]:
             if s is not None:
                 s.bind_app(app)
-        return app
+
 
 
