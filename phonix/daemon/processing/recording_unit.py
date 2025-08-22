@@ -34,8 +34,8 @@ class RecordingUnit(IUnit):
             if self.api is not None:
                 self.current_request.send()
                 self.current_request = None
-            incoming_data.client.put(SystemSoundCommand(SystemSoundCommand.Type.confirmation))
-            incoming_data.client.put(SoundEvent(self.current_file_name))
+            incoming_data.send_message(SystemSoundCommand(SystemSoundCommand.Type.confirmation))
+            incoming_data.send_message(SoundEvent(self.current_file_name))
             self.current_file_name = None
             return State(MicState.Standby)
         else:

@@ -27,11 +27,12 @@ class LevelReportingUnit(IUnit):
         self.buffer.add(input.mic_data)
         if self.buffer.is_full:
             level = np.mean(np.abs(self.buffer.buffer)) / np.iinfo(np.int16).max
+            input.monitor.on_level(level)
             self.current_report.levels.append(level)
             self.buffer.clear()
         if delta > self.time_between_reports_in_seconds:
             self.current_report.end_timestamp = datetime.now()
-            input.client.put(self.current_report)
+            input.send_message(self.current_report)
             self.current_report = SoundLevelReport(datetime.now())
 
 

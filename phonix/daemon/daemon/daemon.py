@@ -2,17 +2,25 @@ from __future__ import annotations
 
 import threading
 import time
-from avatar.messaging import StreamClient
+from avatar.messaging import StreamClient, IStreamClient
 from avatar.daemon import SoundInjectionCommand, SoundCommand, SoundConfirmation, OpenMicCommand, VolumeCommand
 
-from ..processing import IUnit, SystemSoundCommand, SystemSoundType, State, UnitInput
+from ..processing import IUnit, SystemSoundCommand, SystemSoundType, State, UnitInput, IMonitor
 from ..outputs import IAudioOutput
 from ..inputs import IAudioInput, FakeInput
 from .events import *
 from .volume import VolumeController
 from pathlib import Path
 from yo_fluq import FileIO
+from .console_monitor import ConsoleMonitor
+import traceback
 
+
+REQUIRED_TYPES = (
+    SoundCommand, SoundInjectionCommand,
+    SystemSoundCommand, VolumeCommand,
+    OpenMicCommand
+)
 
 
 class PhonixDeamon:
@@ -23,18 +31,30 @@ class PhonixDeamon:
                  output: IAudioOutput,
                  units: list[IUnit],
                  system_sounds: dict[SystemSoundType, bytes],
+                 silent: bool = True,
+                 tolerate_exceptions: bool = False,
+                 async_messaging: bool = False
                 ):
-        self.client = client
+        client= client.with_types(*REQUIRED_TYPES)
+        self.client: IStreamClient = client
+        if async_messaging:
+            self.client = client.as_asyncronous()
+
         self.file_retriever = file_retriever
         self.input: IAudioInput = input
         self.output = output
-        self.units = [(self.client.clone(), unit) for unit in units]
+        self.units = list(units)
         self.system_sounds = system_sounds
         self.confirm_on_play_finishes: List[IMessage,...]|None = None
         self.confirm_on_injection_finishes: IMessage|None = None
         self.state = State(MicState.Standby)
         self._termination_requested = threading.Event()
         self.volume_controller: VolumeController|None = None
+        self.monitor = IMonitor()
+        if not silent:
+            self.monitor = ConsoleMonitor()
+        self.tolerate_exceptions = tolerate_exceptions
+
 
 
     def __getstate__(self):
@@ -81,9 +101,11 @@ class PhonixDeamon:
                 self.volume_controller = VolumeController()
             self.volume_controller.set(message.value)
 
+        
+
 
     def iteration(self):
-        messages = self.client.pull()
+        messages = self.client.pull_all()
 
         open_mic_requested = False
         for message in messages:
@@ -101,15 +123,19 @@ class PhonixDeamon:
 
         mic_data = self.input.read()
 
-        for client, unit in self.units:
-            input = UnitInput(self.state, mic_data, client, open_mic_requested)
+        messages_tuple = tuple(messages)
+        for unit in self.units:
+            input = UnitInput(self.state, mic_data, messages_tuple, open_mic_requested, self.monitor, self.client.put)
             state_change = unit.process(input)
             if state_change is not None:
                 self.state = state_change
                 self.client.put(MicStateChangeReport(state_change.mic_state))
+                input.monitor.on_state_change(state_change)
 
-    def run(self):
+    def _run_attempt(self):
+        print("Connecting to avatar...")
         self.client.initialize()
+        print("OK")
         self.input.start()
         try:
             while not self._termination_requested.is_set():
@@ -118,6 +144,19 @@ class PhonixDeamon:
         finally:
             self.input.stop()
 
+    def run(self):
+        if not self.tolerate_exceptions:
+            self._run_attempt()
+        else:
+            while True:
+                try:
+                    self._run_attempt()
+                except KeyboardInterrupt:
+                    return
+                except:
+                    print(f"\nException:\n{traceback.format_exc()}")
+                    print("Continuing")
+                time.sleep(1)
 
     def run_in_thread(self):
         threading.Thread(target=self.run, daemon=True).start()

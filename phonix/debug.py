@@ -5,6 +5,7 @@ from phonix.app import PhonixAppSettings
 
 if __name__ == '__main__':
     settings = PhonixAppSettings()
+    settings.silent = False
     api = settings.create_avatar_api()
     daemon = settings.create_daemon()
     server = settings.create_debug_avatar_server()

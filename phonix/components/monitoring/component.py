@@ -1,13 +1,27 @@
 from .monitoring import create_dash_app, PhonixMonitoring
 from avatar.server import IAvatarComponent, AvatarStream, AvatarApi
-from avatar.daemon import SoundEvent
+from avatar.daemon import SoundEvent, SoundConfirmation
 from avatar.messaging import StreamClient
 from datetime import datetime
 from io import BytesIO
 import flask
 from yo_fluq import FileIO
-
 from pathlib import Path
+import time
+from ...daemon import (
+    SoundLevelReport, SilenceLevelReport,
+    MicStateChangeReport, SoundPlayStarted
+)
+
+
+
+REQUIRED_TYPES = (
+    SoundLevelReport,
+    SilenceLevelReport,
+    MicStateChangeReport,
+    SoundPlayStarted,
+    SoundConfirmation
+)
 
 class PhonixMonitoringComponent(IAvatarComponent):
     def __init__(self, folder: Path):
@@ -16,18 +30,25 @@ class PhonixMonitoringComponent(IAvatarComponent):
         self.address: str|None = None
         self.monitoring: PhonixMonitoring|None = None
         self.files = []
+        self.last_update: float|None = None
 
     def init_monitor(self):
         self.client = AvatarStream(AvatarApi(self.address)).create_client()
+        self.client = self.client.with_types(*REQUIRED_TYPES)
         self.client.initialize()
-        self.client.scroll_to_end()
         return "OK"
 
     def update_data(self, data):
         if self.client is None:
             self.init_monitor()
-
-        messages = self.client.pull()
+        now = time.monotonic()
+        if self.last_update is None or now - self.last_update > 20:
+            data.clear()
+            self.files.clear()
+            messages = self.client.pull_tail(100)
+        else:
+            messages = self.client.pull()
+        self.last_update = now
         data.extend(messages)
         for m in messages:
             if isinstance(m, SoundEvent):
@@ -56,7 +77,7 @@ class PhonixMonitoringComponent(IAvatarComponent):
         return FILES_HTML
 
     def files_list(self):
-        return flask.jsonify(self.files)
+        return flask.jsonify(list(reversed(self.files)))
 
     def audio(self, file_id):
         wav_bytes = FileIO.read_bytes(self.folder/file_id)

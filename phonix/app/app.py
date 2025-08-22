@@ -11,6 +11,9 @@ class PhonixAppSettings:
     avatar_ip_address: str = '127.0.0.1'
     avatar_port: int = 13002
     silence_margin_length: float = 1.0
+    silent: bool = True
+    tolerate_errors: bool = False
+    async_messaging: bool = True
 
     def create_avatar_api(self) -> AvatarApi:
         avatar_address =  f'{self.avatar_ip_address}:{self.avatar_port}'
@@ -20,9 +23,11 @@ class PhonixAppSettings:
     def create_daemon(self):
         api = self.create_avatar_api()
         stream = AvatarStream(api)
+        client = stream.create_client()
+        client.scroll_to_end()
         recording_api = PhonixApi(api.address)
         daemon = PhonixDeamon(
-            stream.create_client(),
+            client,
             AvatarFileRetriever(api),
             PyAudioInput(),
             PyAudioOutput(),
@@ -33,7 +38,10 @@ class PhonixAppSettings:
                 TooLongOpenMicUnit(15),
                 LevelReportingUnit()
             ],
-            PhonixDeamon.get_default_system_sounds()
+            PhonixDeamon.get_default_system_sounds(),
+            self.silent,
+            self.tolerate_errors,
+            self.async_messaging
         )
         return  daemon
 

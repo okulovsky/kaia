@@ -1,4 +1,4 @@
-from .core import IUnit, State, MicState, UnitInput, SystemSoundType, SystemSoundCommand
+from .core import IUnit, State, MicState, UnitInput, SystemSoundType, SystemSoundCommand, IMonitor
 from .porcupine_wake_word_unit import PorcupineWakeWordUnit
 from .recording_unit import RecordingUnit
 from .silence_margin_unit import SilenceMarginUnit, SilenceLevelReport

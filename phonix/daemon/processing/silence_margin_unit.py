@@ -31,7 +31,8 @@ class SilenceMarginUnit(IUnit):
         t = time.monotonic()
         if self.time_between_silence_level_reports_in_seconds is not None:
             if t - self.last_silence_report_time > self.time_between_silence_level_reports_in_seconds:
-                input.client.put(SilenceLevelReport(self.silence_level))
+                input.send_message(SilenceLevelReport(self.silence_level))
+                input.monitor.on_silence_level(self.silence_level)
                 self.last_silence_report_time = t
 
         if input.state.mic_state not in [MicState.Opening, MicState.Open, MicState.Recording]:
