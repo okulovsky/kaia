@@ -1,3 +1,23 @@
+4.0.2
+    Fixes so it works on my kitchen
+    Avatar
+        Sound unblocking service
+        Graph building
+        Avatar deamon can now report processing events to a separate client
+        Async client & tail requests
+        Type constaints on client
+        All messaging requests are now POST
+    Grammatron
+        Draft for documentation
+    Kaia
+        Small changes
+        Avatar debug container and tests
+    Phonix
+        Optimization: async client and type filtration so it works on slow systems
+        Running via pypi package
+
+
+
 4.0.1
     Avatar:
         - Images are passed by file_id, not by base64, to decrease the size of db
