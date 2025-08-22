@@ -85,11 +85,12 @@ def render_rules_graph(builder: GraphBuilder, rankdir: str = "LR") -> Any:
     # --- edges ---
     for edge in builder.edges:
         if edge.edge_type == EdgeType.output:
-            style, color, dir_attr = "solid", "black", "forward"
+            style, color, dir_attr = "dotted", "black", "forward"
+
         elif edge.edge_type == EdgeType.call:
             style, color, dir_attr = "solid", "black", "both"   # bidirectional
         else:  # EdgeType.external
-            style, color, dir_attr = "dotted", "gray", "forward"
+            style, color, dir_attr = "solid", "black", "forward"
 
         g.edge(
             _node_id(edge.from_node),

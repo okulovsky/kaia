@@ -6,7 +6,7 @@ from .components import FileCacheApi
 from .messaging_component import MessagingComponent
 from .server import AvatarServerSettings, AvatarServer
 from foundation_kaia.misc import Loc
-from contextlib import ExitStack
+from ..messaging import Stream
 
 
 class AvatarApi(Api):
@@ -20,6 +20,10 @@ class AvatarApi(Api):
     @property
     def file_cache(self):
         return FileCacheApi(self.address)
+
+    def create_messaging_stream(self, session: str = 'default') -> Stream:
+        from .messaging_component import AvatarStream
+        return AvatarStream(self, session)
 
 
     class Test(TestApi['AvatarApi']):

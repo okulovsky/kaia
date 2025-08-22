@@ -36,8 +36,24 @@ class Edge:
     message_type: type|None = None
 
 class GraphBuilder:
-    def __init__(self, rules: Iterable[Rule]):
-        self.rules = list(rules)
+    def __init__(self,
+                 rules: Iterable[Rule],
+                 always_incoming: tuple[type,...] = (),
+                 always_outgoing: tuple[type,...] = (),
+                 exclude_services: tuple[str,...] = ()
+                 ):
+        self.rules = []
+        for r in rules:
+            include = True
+            for ex in exclude_services:
+                if r.name.startswith(ex):
+                    include = False
+                    break
+            if include:
+                self.rules.append(r)
+
+        self.always_incoming = always_incoming
+        self.always_outgoing = always_outgoing
         self.rule_nodes: list[RuleNode] = []
         self.external_sources: dict[type, Node] = defaultdict(Node)
         self.external_destinations: dict[type, Node] = defaultdict(Node)
@@ -73,7 +89,7 @@ class GraphBuilder:
 
         for node in self.rule_nodes:
             if node.connector.type is not None:
-                if node.input_edge_count == 0:
+                if node.input_edge_count == 0 or node.connector.type in self.always_incoming:
                     self.edges.append(Edge(
                         EdgeType.external,
                         self.external_sources[node.connector.type],
@@ -82,7 +98,7 @@ class GraphBuilder:
                     ))
 
             for message_type, count in node.output_edge_count.items():
-                if count == 0:
+                if count == 0 or message_type in self.always_outgoing:
                     self.edges.append(Edge(
                         EdgeType.external,
                         node,

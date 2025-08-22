@@ -13,3 +13,4 @@ from .volume_control_service import VolumeControlService
 from .chat_service import ChatService
 from .stt_integration_service import STTIntegrationService
 from .tts_integration_service import TTSIntegrationService
+from .sound_command_unblocker_service import SoundPlayUnblockerService

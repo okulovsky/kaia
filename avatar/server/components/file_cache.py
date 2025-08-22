@@ -1,3 +1,5 @@
+import traceback
+
 from .avatar_component import IAvatarComponent
 from pathlib import Path
 import os
@@ -19,17 +21,23 @@ class FileCacheComponent(IAvatarComponent):
 
 
     def file_cache_upload(self, file_name: str):
-        with open(self.folder/file_name, 'wb') as file:
-            uploaded_file = flask.request.files['content']  # Use the field name from the client
-            file.write(uploaded_file.read())
-        return 'OK'
+        try:
+            with open(self.folder/file_name, 'wb') as file:
+                uploaded_file = flask.request.files['content']  # Use the field name from the client
+                file.write(uploaded_file.read())
+            return 'OK'
+        except:
+            return traceback.format_exc(), 500
 
     def file_cache_download(self, file_name: str):
-        with open(self.folder / file_name, 'rb') as file:
-            return flask.send_file(
-                io.BytesIO(file.read()),
-                mimetype='application/octet-stream'
-            )
+        try:
+            with open(self.folder / file_name, 'rb') as file:
+                return flask.send_file(
+                    io.BytesIO(file.read()),
+                    mimetype='application/octet-stream'
+                )
+        except:
+            return traceback.format_exc(), 500
 
 
 class FileCacheApi:
@@ -37,7 +45,7 @@ class FileCacheApi:
         ApiUtils.check_address(address)
         self.address = address
 
-    def download(self, file_name: str):
+    def download(self, file_name: str) -> bytes:
         response = requests.get(f'http://{self.address}/file-cache/download/{file_name}')
         if response.status_code!=200:
             raise ValueError(response.text)

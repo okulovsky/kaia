@@ -14,11 +14,10 @@ class ProcessingEventType(Enum):
 
 
 @dataclass
-class ProcessingEvent:
+class ProcessingEvent(IMessage):
     type: ProcessingEventType
     message: IMessage
-    rule: Rule|None = None
-    raw_output: Any = None
+    rule_name: str|None = None
     parsed_output: Any = None
     exception: str | None = None
     timestamp: datetime = field(default_factory=datetime.now)

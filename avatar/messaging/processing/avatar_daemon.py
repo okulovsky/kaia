@@ -3,7 +3,7 @@ import threading
 import time
 from collections import defaultdict
 from .rule_group_processor import RuleGroupProcessor
-from ..stream import StreamClient, IMessage
+from ..stream import StreamClient, IStreamClient
 from ..rules import RulesCollection
 import queue
 from .filters import *
@@ -34,7 +34,8 @@ class AvatarDaemon:
     def __init__(self,
                  client: StreamClient,
                  time_tick_interval_in_seconds: float|None = None,
-                 add_error_events: bool = False
+                 add_error_events: bool = False,
+                 reporting_client: IStreamClient|None = None
                  ):
         self.client = client
         self.rules = RulesCollection()
@@ -42,6 +43,7 @@ class AvatarDaemon:
         self.time_tick_interval_in_seconds = time_tick_interval_in_seconds
         self.last_time_tick: TimerEvent|None = None
         self.add_error_events = add_error_events
+        self.reporting_client = reporting_client
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -60,6 +62,9 @@ class AvatarDaemon:
             filters = []
 
         self.client.initialize()
+        if self.reporting_client is not None:
+            self.reporting_client.initialize()
+
         # Group rules by host_object
         grouped = defaultdict(list)
         for rule in self.rules.rules:
@@ -101,11 +106,10 @@ class AvatarDaemon:
                         exit = True
                 while not self._event_queue.empty():
                     event: ProcessingEvent = self._event_queue.get()
+                    if self.reporting_client is not None:
+                        self.reporting_client.put(event)
                     if self.add_error_events and event.type == ProcessingEvent.Type.Error:
-                        name = None
-                        if event.rule is not None:
-                            name = event.rule.name
-                        self.client.put(ExceptionEvent(name, event.exception))
+                        self.client.put(ExceptionEvent(event.rule_name, event.exception))
                     for filter in filters:
                         if filter.should_stop_on_event(event):
                             exit = True
