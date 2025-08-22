@@ -48,14 +48,7 @@ class MessageFoundFilter(IProcessingFilter):
 
 class PrintingFilter(IProcessingFilter):
     def should_stop_on_event(self, ev: ProcessingEvent):
-        if ev.rule is not None:
-            if ev.rule.host_object is not None:
-                host = type(ev.rule.host_object).__name__
-            else:
-                host = 'NO HOST'
-        else:
-            host = ''
-        print(f"{ev.timestamp} {ev.type} {type(ev.message).__name__} {host}")
+        print(f"{ev.timestamp} {ev.type} {type(ev.message).__name__} {ev.rule_name}")
         return False
 
 

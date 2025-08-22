@@ -5,7 +5,7 @@ from ..stream import StreamClient, IMessage
 from ..rules import Rule
 from .rule_processor import RuleProcessor
 from .processing_event import ProcessingEvent
-from .service import IService
+from ..rules import IService
 
 
 class RuleGroupProcessor:
@@ -45,7 +45,7 @@ class RuleGroupProcessor:
                 if not rule.input.check_incoming(message):
                     continue
 
-                self._event_queue.put(ProcessingEvent(ProcessingEvent.Type.Accepted, message, rule))
+                self._event_queue.put(ProcessingEvent(ProcessingEvent.Type.Accepted, message, rule.name))
 
                 runner = RuleProcessor(message, self._event_queue, self.client, rule)
                 if rule.asynchronous:

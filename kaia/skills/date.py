@@ -30,11 +30,13 @@ DELTA = VariableDub(
 
 DATE = VariableDub(
     "date",
+    dub=DateDub(),
     description="The full date of the day"
 )
 
 WEEKDAY = VariableDub(
     "weekday",
+    OptionsDub(Weekdays),
     description="The weekday, e.g. the word `Monday` or `Thursday`"
 )
 

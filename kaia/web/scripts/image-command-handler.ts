@@ -22,7 +22,9 @@ export class ImageCommandHandler {
   }
 
   private async handle(msg: Message): Promise<void> {
-    const b64 = msg.payload.base_64;
-    this.imgEl.src = `data:image/png;base64,${b64}`;
+    const fileId: string = msg.payload.file_id;
+    const url = `/file-cache/download/${encodeURIComponent(fileId)}`;
+    this.imgEl.src = url;
+    return;
   }
 }

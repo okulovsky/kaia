@@ -14,7 +14,7 @@ class TooLongOpenMicUnit(IUnit):
             if self.opening_time is None:
                 self.opening_time = datetime.now()
             elif (datetime.now()-self.opening_time).total_seconds() > self.open_mic_time_limit_in_seconds:
-                incoming_data.client.put(SystemSoundCommand(SystemSoundCommand.Type.error))
+                incoming_data.send_message(SystemSoundCommand(SystemSoundCommand.Type.error))
                 return State(MicState.Standby)
 
 

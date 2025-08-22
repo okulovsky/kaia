@@ -61,7 +61,7 @@ class RuleProcessor:
 
         except:
             tb = traceback.format_exc()
-            self.event_queue.put(ProcessingEvent(ProcessingEvent.Type.Error, self.message, self.rule, raw_result, parsed_result, tb))
+            self.event_queue.put(ProcessingEvent(ProcessingEvent.Type.Error, self.message, self.rule.name, parsed_result, tb))
             return
 
-        self.event_queue.put(ProcessingEvent(ProcessingEvent.Type.Finished, self.message, self.rule, raw_result, parsed_result))
+        self.event_queue.put(ProcessingEvent(ProcessingEvent.Type.Finished, self.message, self.rule.name, parsed_result))

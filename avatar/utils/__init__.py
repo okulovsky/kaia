@@ -1,3 +1,5 @@
+from .test_time_factory import TestTimeFactory
+
 def slice(condition, hit_count: int = 1):
     def _(q):
         hits = 0

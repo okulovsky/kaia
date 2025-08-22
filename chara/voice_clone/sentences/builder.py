@@ -1,7 +1,7 @@
 import os
 import shutil
 from pathlib import Path
-from kaia.common import Loc
+from foundation_kaia.misc import Loc
 from .corpus_filter import ICorpusFilter
 from brainbox import BrainBox
 from brainbox.deciders import EspeakPhonemizer, Collector

@@ -39,7 +39,7 @@ class BrainBoxService(AvatarService):
         return True
 
     @message_handler
-    def execute(self, input: BrainBoxServiceCommand):
+    def execute(self, input: BrainBoxServiceCommand) -> BrainBoxServiceConfirmation:
         try:
             result = self.api_call(input.task)
             reply: IMessage = BrainBoxServiceConfirmation(result, None)
@@ -49,6 +49,6 @@ class BrainBoxService(AvatarService):
             return reply.as_confirmation_for(input)
 
     @message_handler
-    def initialize(self, initialization: InitializationEvent):
+    def initialize(self, initialization: InitializationEvent) -> None:
         if self.api is not None and self.setup is not None:
             self.api.controller_api.setup(self.setup)

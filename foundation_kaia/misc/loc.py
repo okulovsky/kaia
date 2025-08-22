@@ -3,6 +3,7 @@ from pathlib import Path
 import shutil
 from uuid import uuid4
 import os
+from dotenv import load_dotenv
 
 class TempFile:
     def __init__(self, path: Path, dont_delete: bool):
@@ -45,6 +46,7 @@ class Locator:
         if root_path is None:
             root_path = Path(__file__).parent.parent.parent
         self._root_path = root_path
+        load_dotenv(self._root_path/'environment.env')
 
     def _make_and_return(self, path) -> Path:
         os.makedirs(path, exist_ok=True)

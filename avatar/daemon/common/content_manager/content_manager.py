@@ -14,6 +14,7 @@ class Matcher(Generic[TRecord]):
         self.feedback_provider = feedback_provider
         self.matchers: list[ITagMatcher] = []
         self.strategy = strategy
+        self.debug = False
 
     def weak(self, tags: dict[str, Any]) -> 'Matcher[TRecord]':
         self.matchers.append(TagMatcher(False, tags))
@@ -27,11 +28,14 @@ class Matcher(Generic[TRecord]):
         records = self.data_provider.get_records()
 
         filtered_records = []
-        for record in records:
+        for index, record in enumerate(records):
             skip = False
             for matcher in self.matchers:
-                if not matcher.match(record.tags):
+                comparison = matcher.match(record.tags)
+                if comparison is not None:
                     skip = True
+                    if self.debug:
+                        print(f'TAG MATCHER: At #{index} {comparison}  {record}')
                     break
             if not skip:
                 filtered_records.append(record)

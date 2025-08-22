@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 import flask
 from dataclasses import dataclass, field
 
+
 @dataclass
 class AvatarTocRecord:
     url: str
@@ -28,6 +29,8 @@ class AvatarApp:
     def add_link(self, url: str, caption: str):
         if caption is not None:
             self.toc.append(AvatarTocRecord(url, caption))
+
+
 
 
 class IAvatarComponent(ABC):

@@ -18,19 +18,13 @@ class Terminate(AutomatonExit):
 T = TypeVar('T')
 
 class Listen:
-    def __init__(self):
-        self._payload: dict[Type, Any] = {}
+    def __init__(self, *payload: Any):
+        self._payload = list(payload)
 
-    def __getitem__(self, type: Type[T]) -> T:
-        return self._payload[type]
-
-    def store(self, value: Any) -> 'Listen':
-        self._payload[type(value)] = value
+    def store(self, item) -> 'Listen':
+        self._payload.append(item)
         return self
 
-    def get(self, type: Type):
-        return self._payload[type]
-
-    def __contains__(self, item: Type):
-        return item in self._payload
+    def get_payload(self):
+        return self._payload
 

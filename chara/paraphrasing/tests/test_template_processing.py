@@ -1,10 +1,10 @@
-from home.content.characters import *
 from chara.paraphrasing import JinjaModel, ParaphraseCase
 from unittest import TestCase
 from grammatron import *
-from avatar.dubbing_service.paraphrase_service import ParaphraseService, ParaphraseServiceSettings
-from avatar.media_library_manager import NewContentStrategy, ContentManager, DataClassDataProvider, ExactTagMatcher
-from avatar.state import WorldFields, State
+from avatar.daemon import Character, ParaphraseService, State, PlayableTextMessage, TextInfo, UtteranceSequenceCommand
+from avatar.daemon.common.content_manager import ContentManager, DataClassDataProvider
+
+
 
 INDEX = VariableDub("index", OrdinalDub(10))
 DURATION = VariableDub("duration", CardinalDub(100))
@@ -28,6 +28,7 @@ class TemplateRestorationTestCase(TestCase):
             infos[0],
             user = alice,
             character = bob,
+            language='en'
         )
         s = "Got ya, the {index} timer for {duration} is ticking"
         record = case.create_paraphrase_record(s)
@@ -36,18 +37,29 @@ class TemplateRestorationTestCase(TestCase):
             str(record.template)
         )
 
-        paraphrase_strategy = NewContentStrategy()
-
         paraphrase_manager = ContentManager(
-            paraphrase_strategy,
             DataClassDataProvider([record]),
-            None,
-            ExactTagMatcher.SubsetFactory(WorldFields.character, WorldFields.user)
         )
 
-        paraphrase_service = ParaphraseService(ParaphraseServiceSettings(paraphrase_manager))
+        state = State()
+        paraphrase_service = ParaphraseService(state, paraphrase_manager)
 
         ut = template.utter(index=5, duration=20)
-        result = paraphrase_service.paraphrase(ut, {WorldFields.character:bob.name, WorldFields.user: alice.name})
-        print(result.utterances[0])
+
+        message = PlayableTextMessage(
+            UtteranceSequenceCommand(ut),
+            TextInfo(
+                bob.name,
+                'en'
+            )
+        )
+        state.character = bob.name
+        state.user = alice.name
+
+        result = paraphrase_service.paraphrase(message)
+        self.assertEqual(
+            'Got ya, the fifth timer for twenty is ticking.',
+            result.text.get_text(True, 'en')
+        )
+
 

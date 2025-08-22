@@ -1,4 +1,4 @@
-from avatar import Character, ParaphraseRecord
+from avatar.daemon import Character, ParaphraseRecord
 from brainbox.flow import JinjaPrompter, Prompter
 from dataclasses import dataclass
 from .jinja_model import JinjaModel
@@ -14,6 +14,7 @@ class ParaphraseCase:
     character: Character
     user: Character
     relationship: Prompter|None = None
+    language: str = 'en'
 
     pre_existing_templates_count: int = 0
     answer: str|None = None
@@ -41,6 +42,7 @@ class ParaphraseCase:
             template,
             self.model.template.template.get_name(),
             self.model.template.variables_tag,
+            self.language,
             self.character.name,
             self.user.name,
         )

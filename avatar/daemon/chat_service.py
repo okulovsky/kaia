@@ -1,4 +1,4 @@
-from .common import AvatarService, message_handler, PlayableTextMessage, State, ChatCommand, UtteranceEvent, TextEvent
+from .common import AvatarService, message_handler, PlayableTextMessage, State, ChatCommand, UtteranceEvent, ExceptionEvent, TextEvent
 from grammatron import DubParameters
 from typing import *
 
@@ -37,6 +37,19 @@ class ChatService(AvatarService):
         )
 
     @message_handler
-    def handle_from_user(self, message: UtteranceEvent):
+    def on_utterance_event(self, message: UtteranceEvent) -> ChatCommand:
         return self._get_message_from_user(message.utterance.to_str(DubParameters(False, self.state.language)))
+
+
+    @message_handler
+    def on_text_event(self, message: TextEvent) -> ChatCommand:
+        return self._get_message_from_user(message.text)
+
+
+    @message_handler
+    def handle_exception(self, message: ExceptionEvent) -> ChatCommand:
+        return ChatCommand(
+            f"Exception at {message.source}\n\n{message.traceback}",
+            ChatCommand.MessageType.error,
+        )
 

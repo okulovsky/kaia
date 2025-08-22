@@ -1,13 +1,43 @@
+from dataclasses import dataclass
 from typing import *
 from abc import ABC, abstractmethod
 from grammatron import Template, Utterance, TemplatesCollection
 from avatar.daemon import IntentsPack
 from enum import Enum
 
+class KaiaSkillLanguageSettingsType(Enum):
+    default = 0
+    specific = 1
+    self_managed = 2
+
+@dataclass
+class KaiaSkillLanguageSettings:
+    Type = KaiaSkillLanguageSettingsType
+    type: KaiaSkillLanguageSettingsType = KaiaSkillLanguageSettingsType.default
+    language: str|None = None
+
+    @staticmethod
+    def default():
+        return KaiaSkillLanguageSettings(KaiaSkillLanguageSettingsType.default)
+
+    @staticmethod
+    def specific(language: str):
+        return KaiaSkillLanguageSettings(KaiaSkillLanguageSettingsType.specific, language)
+
+    @staticmethod
+    def self_managed():
+        return KaiaSkillLanguageSettings(KaiaSkillLanguageSettingsType.self_managed)
+
+
+
+
+
 class IKaiaSkill(ABC):
     class Type(Enum):
         SingleLine = 0
         MultiLine = 1
+
+    Language = KaiaSkillLanguageSettings
 
 
     @abstractmethod
@@ -36,8 +66,8 @@ class IKaiaSkill(ABC):
 
     ACCEPTS_ANY_LANGUAGE = 'ANY_LANGUAGE'
 
-    def get_language(self) -> str|None:
-        return None
+    def get_language(self) -> KaiaSkillLanguageSettings:
+        return IKaiaSkill.Language.default()
 
     def get_extended_intents_packs(self) -> Iterable[IntentsPack]:
         return []

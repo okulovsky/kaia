@@ -3,4 +3,4 @@ from ....messaging import IMessage
 
 @dataclass
 class ErrorAnnouncement(IMessage):
-    pass
+    content: str|None = None

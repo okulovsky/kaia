@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from foundation_kaia.prompters import IPrompter
-from avatar import Character, ParaphraseRecord
+from avatar.daemon import Character, ParaphraseRecord
 from grammatron import Template
 from typing import Iterable
 from .paraphrase_case import ParaphraseCase
@@ -18,6 +18,7 @@ class ParaphraseSetup:
     characters: Iterable[Character]
     user_to_character_to_relationship: dict[str, dict[str, str]]|None
     relationship: dict[str, IPrompter]|None
+    language: str = 'en'
 
     def _create_cases(self) -> list[ParaphraseCase]:
         result = []
@@ -34,7 +35,8 @@ class ParaphraseSetup:
                             model,
                             character,
                             user,
-                            relationship
+                            relationship,
+                            self.language
                         ))
         return result
 

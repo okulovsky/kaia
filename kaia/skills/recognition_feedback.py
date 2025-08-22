@@ -22,7 +22,7 @@ class RecognitionFeedbackAnswers(TemplatesCollection):
     sorry = (
         Template("Sorry I misrecognized you")
         .context(
-            f"{World.character} confused {World.user} with someone else and now apoligizes for the error",
+            f"{World.character} confused {World.user} with someone else and now apologizes for the error",
             reply_to=RecognitionFeedbackIntents.misrecognition
         )
     )

@@ -1,7 +1,7 @@
 from dash import Dash, dcc, html
 from dash.dependencies import Input, Output
 
-def create_dash_app(plot_interface, route_prefix='/phonix-monitor/'):
+def create_dash_app(plot_interface, route_prefix):
     dash_app = Dash(__name__, routes_pathname_prefix=route_prefix)
 
     dash_app.layout = html.Div(

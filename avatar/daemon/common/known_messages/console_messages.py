@@ -44,17 +44,8 @@ class ChatCommand(IMessage):
 
 @dataclass
 class ImageCommand(IMessage):
-    base_64: str
+    file_id: str
     metadata: Any = None
-    file_id: str|None = None
-
-    @staticmethod
-    def from_file(path: str | Path) -> "ImageCommand":
-        path = Path(path)
-        with path.open("rb") as f:
-            data = f.read()
-            encoded = base64.b64encode(data).decode("utf-8")
-        return ImageCommand(base_64=encoded, metadata={"path": str(path)})
 
 
 

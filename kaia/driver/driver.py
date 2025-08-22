@@ -2,9 +2,9 @@ from typing import Type
 import time
 from typing import Callable, Any
 from avatar.messaging import StreamClient
-from avatar.daemon import UtteranceSequenceCommand, TextCommand, STTService
+from avatar.daemon import UtteranceSequenceCommand, TextCommand, STTService, TimerEvent
 from loguru import logger
-from .context import KaiaContext
+from ..assistant import KaiaContext
 from eaglesong import Automaton
 from .interpreter import KaiaInterpreter
 from .input_transformer import IKaiaInputTransformer
@@ -12,6 +12,7 @@ import traceback
 from avatar.daemon import ChatCommand, InitializationEvent
 from threading import Thread
 from ..assistant import KaiaAssistant
+from phonix.daemon import SoundLevelReport, SilenceLevelReport
 
 
 class KaiaDriver:
@@ -19,7 +20,8 @@ class KaiaDriver:
                  assistant_factory: Callable[[KaiaContext],Any],
                  client: StreamClient,
                  input_transformer: IKaiaInputTransformer|None = None,
-                 expect_confirmations_for_types: tuple[Type,...] = (UtteranceSequenceCommand, TextCommand)
+                 expect_confirmations_for_types: tuple[Type,...] = (UtteranceSequenceCommand, TextCommand),
+                 silent_types: tuple[type,...] = (SoundLevelReport, SilenceLevelReport, TimerEvent),
                  ):
         self.assistant_factory = assistant_factory
         self.client = client
@@ -27,6 +29,7 @@ class KaiaDriver:
         self.expect_confirmations_for_types = expect_confirmations_for_types
         self.interpreter: KaiaInterpreter|None = None
         self.rhasspy_training_is_done: bool = False
+        self.silent_types = silent_types
 
     def initialize(self):
         context = KaiaContext(self.client)
@@ -45,7 +48,8 @@ class KaiaDriver:
         return str(obj)[:100]
 
     def process(self, message):
-        logger.info(f"Processing message {self._trim(message)}")
+        if not isinstance(message, self.silent_types):
+            logger.info(f"Processing message {self._trim(message)}")
 
         if self.interpreter is None:
             logger.info("Interpreter is not created, creating")
@@ -61,7 +65,8 @@ class KaiaDriver:
         else:
             item = message
         try:
-            logger.info(f"Item to interpreter: {self._trim(item)}")
+            if not isinstance(message, self.silent_types):
+                logger.info(f"Item to interpreter: {self._trim(item)}")
             self.interpreter.process(message, item)
         except:
             err = traceback.format_exc()

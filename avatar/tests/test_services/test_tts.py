@@ -1,7 +1,7 @@
 from unittest import TestCase
 from avatar.daemon.common.known_messages import TextInfo
 from avatar.daemon import MockSoundService, BrainBoxService, TTSService, Confirmation
-from avatar.messaging import AvatarProcessor, TestStream, ThreadCollection
+from avatar.messaging import AvatarDaemon, TestStream, ThreadCollection
 
 class VoiceoverServiceTestCase(TestCase):
     def test_voiceover(self):
@@ -11,7 +11,7 @@ class VoiceoverServiceTestCase(TestCase):
 
         client = TestStream().create_client()
         client.put(TTSService.Command(('a','b'), TextInfo('x','y')))
-        app = AvatarProcessor(client)
+        app = AvatarDaemon(client)
         app.rules.bind(voiceover_service)
         app.rules.bind(brainbox_service)
         app.rules.bind(sound_processor)

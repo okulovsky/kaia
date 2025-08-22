@@ -27,7 +27,11 @@ class KaiaInterpreter(Interpreter):
         self.handle_type(Utterance, self._process_str_or_utterance)
         self.handle_type(UtterancesSequence, self._process_str_or_utterance)
 
-    def _process_listen(self, response):
+    def _process_listen(self, response: prim.Listen):
+        for element in response.get_payload():
+            if not isinstance(element, IMessage):
+                raise ValueError(f"All payload in Listen must be IMessage, but was {type(element)}")
+            self.client.put(element)
         return Interpreter.interrupt_cycle()
 
     def _process_return(self, response):

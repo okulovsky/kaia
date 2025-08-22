@@ -6,7 +6,7 @@ from yo_fluq import Query
 
 class SpeakerIdentificationTestCase(TestCase):
     def test_speaker_identification(self):
-        proc = AvatarProcessor(TestStream().create_client())
+        proc = AvatarDaemon(TestStream().create_client())
         state = State()
         proc.rules.bind(SpeakerIdentificationService(state,'test'))
         proc.rules.bind(BrainBoxService(SpeakerIdentificationService.brain_box_mock))
@@ -18,7 +18,7 @@ class SpeakerIdentificationTestCase(TestCase):
     def run_identification_retrain(self,
                                    target_speaker, speakers: list[str]
                                    ) -> tuple[BrainBoxService.Command, SpeakerIdentificationService.TrainConfirmation]:
-        proc = AvatarProcessor(TestStream().create_client())
+        proc = AvatarDaemon(TestStream().create_client())
         state = State()
         proc.rules.bind(SpeakerIdentificationService(state,'test_model'))
         proc.rules.bind(BrainBoxService(SpeakerIdentificationService.brain_box_mock))

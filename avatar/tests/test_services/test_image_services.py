@@ -32,8 +32,8 @@ class ImageServiceTestCase(TestCase):
 
 
         self.state = State(character='c0', activity='a0')
-        proc = AvatarProcessor(TestStream().create_client())
-        proc.rules.bind(ImageService(self.state, self.manager, record_to_description))
+        proc = AvatarDaemon(TestStream().create_client())
+        proc.rules.bind(ImageService(self.state, None, self.manager, record_to_description))
         self.proc = proc
 
 

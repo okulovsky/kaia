@@ -16,16 +16,17 @@ class VolumeExternalCommand(IMessage):
 class VolumeControlService(AvatarService):
     Command = VolumeExternalCommand
 
-    def __init__(self, default_value: float = 0.1):
+    def __init__(self, default_value: float = 0.1, initialize_volume: bool = True):
         self.current_value: float | None = None
         self.stash: dict[str, float] = {}
         self.default_value = default_value
+        self.initialize_volume = initialize_volume
 
     def requires_brainbox(self):
         return False
 
     @message_handler
-    def process_volume_command(self, cmd: VolumeExternalCommand):
+    def process_volume_command(self, cmd: VolumeExternalCommand) -> VolumeCommand:
         if self.current_value is None:
             self.current_value = self.default_value
 
@@ -47,12 +48,13 @@ class VolumeControlService(AvatarService):
             yield VolumeCommand(new_value)
 
     @message_handler
-    def catch_current_volume(self, cmd: VolumeCommand):
+    def catch_current_volume(self, cmd: VolumeCommand) -> None:
         self.current_value = cmd.value
 
     @message_handler
-    def initialize(self, cmd: InitializationEvent):
-        return VolumeCommand(self.default_value)
+    def initialize(self, cmd: InitializationEvent) -> VolumeCommand|None:
+        if self.initialize_volume:
+            return VolumeCommand(self.default_value)
 
 
 

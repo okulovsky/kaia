@@ -58,15 +58,19 @@ export class AvatarClient {
    */
   async getMessages(count?: number): Promise<Message[]> {
     const url = new URL(`${this.baseUrl}/messages/get`);
-    url.searchParams.set('session', this.session);
-    if (this.lastMessageId) {
-      url.searchParams.set('last_message_id', this.lastMessageId);
-    }
-    if (count != null) {
-      url.searchParams.set('count', String(count));
-    }
+    const body = {
+      session: this.session,
+      last_message_id: this.lastMessageId,
+      count: count
+    };
 
-    const resp = await fetch(url.toString(), { method: 'GET' });
+    const resp = await fetch(
+        url.toString(),
+        {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
     if (!resp.ok) {
       throw new Error(`getMessages failed: ${resp.status} ${resp.statusText}`);
     }
@@ -98,9 +102,18 @@ export class AvatarClient {
    */
   async scrollToEnd(): Promise<void> {
     const url = new URL(`${this.baseUrl}/messages/last`);
-    url.searchParams.set('session', this.session);
+    const body = {
+      session: this.session,
+    };
 
-    const resp = await fetch(url.toString(), { method: 'GET' });
+    const resp = await fetch(
+        url.toString(),
+        {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+
     if (!resp.ok) {
       throw new Error(`scroll_to_end failed: ${resp.status} ${resp.statusText}`);
     }

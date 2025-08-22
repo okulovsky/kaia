@@ -52,7 +52,7 @@ class TTSService(AvatarService):
         self.queue.start_tracking(output)
         return tuple(output)
 
-    def start_playing(self):
+    def start_playing(self) -> Tuple[SoundCommand,...]:
         while self.queue.get_processed_head_length() > 0:
             element = self.queue.deque()
             if element.confirmation.result is None:
@@ -64,9 +64,9 @@ class TTSService(AvatarService):
         return ()
 
     @message_handler
-    def brainbox_finished(self, message: BrainBoxService.Confirmation[SoundCommand]):
+    def brainbox_finished(self, message: BrainBoxService.Confirmation[SoundCommand]) -> Tuple[SoundCommand,...]:
         if not isinstance(message.result, SoundCommand):
-            return
+            return ()
         self.queue.track(message)
         if self.playing is None:
             return self.start_playing()
@@ -74,9 +74,9 @@ class TTSService(AvatarService):
             return ()
 
     @message_handler
-    def play_finished(self, message: SoundConfirmation):
+    def play_finished(self, message: SoundConfirmation) -> tuple[SoundCommand|Confirmation,...]:
         if self.playing is None or not message.is_confirmation_of(self.playing.sound_message_id):
-            return
+            return ()
         is_last = True
         for element in self.queue.queue:
             if element.command.metadata['source_message_id'] == self.playing.source_message_id:
@@ -89,7 +89,7 @@ class TTSService(AvatarService):
 
         self.playing = None
         result.extend(self.start_playing())
-        return result
+        return tuple(result)
 
     class MockTaskFactory(TTSTaskFactory):
         def create_task(self, s: str, settings: TextInfo) -> BrainBox.ITask:

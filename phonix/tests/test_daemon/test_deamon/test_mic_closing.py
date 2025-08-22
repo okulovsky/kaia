@@ -1,4 +1,5 @@
 from phonix.tests.test_daemon.test_deamon.common import *
+from pprint import pprint
 
 class MicClosingTestCase(TestCase):
     def test_wake_word_then_silence(self):
@@ -9,11 +10,12 @@ class MicClosingTestCase(TestCase):
             wake_word_epoch = api.client.query(1).feed(slice(lambda z: z.is_confirmation_of(injection)))
             q = api.client.query(1).feed(slice(lambda z: isinstance(z, SoundConfirmation)))
 
-            print(q)
+            pprint(q)
 
-            self.assertEqual(4, len(q))
-            self.assertIsInstance(q[0], SystemSoundCommand)
-            self.assertIsInstance(q[1], MicStateChangeReport)
-            self.assertIsInstance(q[2], SoundPlayStarted)
-            self.assertIsInstance(q[3], SoundConfirmation)
+            self.assertEqual(5, len(q))
+            self.assertIsInstance(q[0], MicStateChangeReport)
+            self.assertIsInstance(q[1], SystemSoundCommand)
+            self.assertIsInstance(q[2], MicStateChangeReport)
+            self.assertIsInstance(q[3], SoundPlayStarted)
+            self.assertIsInstance(q[4], SoundConfirmation)
 

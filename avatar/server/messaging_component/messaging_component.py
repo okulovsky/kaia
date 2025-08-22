@@ -1,14 +1,18 @@
 import os
+import traceback
+
 import flask
 from ..components import IAvatarComponent
 from pathlib import Path
 from .message_record import MessageRecord, Base
-from sqlalchemy import create_engine, asc
+from sqlalchemy import create_engine, asc, or_
 from sqlalchemy.orm import sessionmaker
 import uuid
 from foundation_kaia.misc import Loc
 from ...messaging import IMessage
 from .message_format import MessageFormat, get_full_name_by_type
+
+import  importlib, pkgutil, inspect
 
 class MessagingComponent(IAvatarComponent):
     def __init__(self,
@@ -32,8 +36,9 @@ class MessagingComponent(IAvatarComponent):
         Base.metadata.create_all(self.engine)
         self.Session = sessionmaker(bind=self.engine, future=True)
         app.add_url_rule('/messages/add', view_func=self.messages_add, methods=['POST'])
-        app.add_url_rule('/messages/get', view_func=self.messages_get, methods=['GET'])
-        app.add_url_rule('/messages/last', view_func=self.messages_last, methods=['GET'])
+        app.add_url_rule('/messages/get', view_func=self.messages_get, methods=['POST'])
+        app.add_url_rule('/messages/last', view_func=self.messages_last, methods=['POST'])
+        app.add_url_rule('/messages/tail', view_func=self.messages_tail, methods=['POST'])
         if self.session_to_initialization_messages is not None:
             for session, messages in self.session_to_initialization_messages.items():
                 for message in messages:
@@ -67,62 +72,120 @@ class MessagingComponent(IAvatarComponent):
 
 
     def messages_add(self):
-        data = flask.request.get_json(force=True)
         try:
-            self._add_message(data)
-        except ValueError as ex:
-            return flask.jsonify({'error': ex.args[0]})
-        return "OK"
+            data = flask.request.get_json(force=True)
+            try:
+                self._add_message(data)
+            except ValueError as ex:
+                return flask.jsonify({'error': ex.args[0]})
+            return "OK"
+        except:
+            return traceback.format_exc(), 500
 
 
     def messages_last(self):
-        session_param = flask.request.args.get('session', default=None, type=str)
+        try:
+            session = flask.request.json.get('session', None)
+            with self.Session() as db:
+                q = db.query(MessageRecord)
+                if session is not None:
+                    q = q.filter(MessageRecord.session == session)
+                last_message = (
+                    q
+                    .order_by(MessageRecord.id.desc())
+                    .first()
+                )
+                id = None if last_message is None else last_message.message_id
+                return flask.jsonify({'id': id})
+        except:
+            return traceback.format_exc(), 500
 
-        with self.Session() as db:
-            q = db.query(MessageRecord)
 
-            if session_param is not None:
-                q = q.filter(MessageRecord.session == session_param)
 
-            last_message = (
-                q
-                .order_by(MessageRecord.id.desc())
-                .first()
-            )
+    def _get_type_filters(self, types: list[str]|None):
+        if types is None or len(types) == 0:
+            return None
+        return or_(*[MessageRecord.message_type.like(f"%{suf}") for suf in types])
 
-            id = None if last_message is None else last_message.message_id
-            return flask.jsonify({'id': id})
+    def messages_tail(self):
+        try:
+            session = flask.request.json.get('session', None)
+            count = flask.request.json.get('count', None)
+            types = flask.request.json.get('types', None)
+
+            with self.Session() as db:
+                q = db.query(MessageRecord)
+                if session is not None:
+                    q = q.filter(MessageRecord.session == session)
+                type_filter = self._get_type_filters(types)
+                if type_filter is not None:
+                    q = q.filter(type_filter)
+
+                results = (
+                    q.order_by(MessageRecord.id.desc())
+                    .limit(count)
+                    .all()
+                )
+
+                return flask.jsonify([msg.to_dict() for msg in reversed(results)]), 200
+
+        except Exception:
+            return traceback.format_exc(), 500
 
 
     def messages_get(self):
-        session_param = flask.request.args.get('session', default=None, type=str)
-        last_message_id = flask.request.args.get('last_message_id', default=None, type=str)
-        count = flask.request.args.get('count', default=None, type=int)
+        try:
+            session = flask.request.json.get('session', None)
+            count = flask.request.json.get('count', None)
+            last_message_id = flask.request.json.get('last_message_id', None)
+            types = flask.request.json.get('types', None)
 
-        with self.Session() as db:
-            q = db.query(MessageRecord)
+            with self.Session() as db:
+                q = db.query(MessageRecord)
+                if session is not None:
+                    q = q.filter(MessageRecord.session == session)
+                if last_message_id is not None:
+                    last = (
+                        db.query(MessageRecord)
+                        .filter(MessageRecord.message_id == last_message_id)
+                        .first()
+                    )
+                    if last:
+                        q = q.filter(MessageRecord.id > last.id)
+                    else:
+                        return flask.jsonify({'error': 'last_message_id not found'}), 400
+                type_filter = self._get_type_filters(types)
 
-            if session_param is not None:
-                q = q.filter(MessageRecord.session == session_param)
+                if type_filter is not None:
+                    q = q.filter(type_filter)
 
-            if last_message_id is not None:
-                last = (
-                    db.query(MessageRecord)
-                    .filter(MessageRecord.message_id == last_message_id)
-                    .first()
-                )
-                if last:
-                    q = q.filter(MessageRecord.id > last.id)
-                else:
-                    return flask.jsonify({'error': 'last_message_id not found'}), 400
+                q = q.order_by(asc(MessageRecord.id))
+                if count is not None:
+                    q = q.limit(count)
 
-            q = q.order_by(asc(MessageRecord.id))
+                results = q.all()
+                return flask.jsonify([msg.to_dict() for msg in results]), 200
+        except:
+            return traceback.format_exc(), 500
 
-            if count is not None:
-                q = q.limit(count)
-
-            results = q.all()
-            return flask.jsonify([msg.to_dict() for msg in results]), 200
+    @staticmethod
+    def create_aliases(*namespaces):
+        all_subclasses = []
+        for pkg in namespaces:
+            all_subclasses.extend(find_subclasses_in_package(IMessage, pkg))
+        return {c.__name__: c for c in all_subclasses}
 
 
 
+def find_subclasses_in_package(base_class: type, package_name: str) -> list[type]:
+    subclasses = []
+    package = importlib.import_module(package_name)
+    for _, module_name, is_pkg in pkgutil.walk_packages(package.__path__, package.__name__ + "."):
+        try:
+            module = importlib.import_module(module_name)
+        except Exception:
+            continue  # Пропускаем модули, которые не удаётся импортировать
+        for name, obj in inspect.getmembers(module, inspect.isclass):
+            if issubclass(obj, base_class) and obj is not base_class:
+                subclasses.append(obj)
+    return subclasses

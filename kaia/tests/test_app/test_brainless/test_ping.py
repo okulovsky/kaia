@@ -3,20 +3,15 @@ from unittest import TestCase
 from foundation_kaia.misc import Loc
 from avatar.daemon import UtteranceEvent, ChatCommand
 from kaia.skills.ping import PingIntents
-from avatar.utils import slice
+from kaia.tests.helper import Helper
 
 
 class PingBrainlessTestCase(TestCase):
     def test_ping(self):
-        settings = KaiaAppSettings()
-        settings.brainbox = None
-        settings.phonix = None
-        settings.avatar_processor.initialization_event_at_startup = False
-        settings.avatar_processor.timer_event_span_in_seconds = None
         with Loc.create_test_folder() as folder:
-            app = settings.create_app(folder)
-            with app.get_fork_app(None):
-                client = app.create_avatar_client()
+            helper = Helper(folder, self, brainless=True)
+            with helper.app.get_fork_app(None):
+                client = helper.app.create_avatar_client()
                 client.initialize()
                 client.put(UtteranceEvent(PingIntents.question()))
 
@@ -27,17 +22,13 @@ class PingBrainlessTestCase(TestCase):
                 self.assertEqual("Sure, I'm listening.", result[1].text)
                 self.assertEqual(ChatCommand.MessageType.to_user, result[1].type)
 
-    def test_ping_with_initialization(self):
-        settings = KaiaAppSettings()
-        settings.brainbox = None
-        settings.phonix = None
-        settings.avatar_processor.timer_event_span_in_seconds = None
 
+    def test_ping_with_initialization(self):
         with Loc.create_test_folder() as folder:
-            app = settings.create_app(folder)
-            with app.get_fork_app(None):
-                app.avatar_api.wait()
-                client = app.create_avatar_client()
+            helper = Helper(folder, self, brainless=True)
+            with helper.app.get_fork_app(None):
+                client = helper.app.create_avatar_client()
+                client.initialize()
 
                 utterance = client.put(UtteranceEvent(PingIntents.question()))
                 self.assertIsInstance(client.pull()[0], UtteranceEvent)

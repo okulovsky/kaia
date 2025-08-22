@@ -14,6 +14,7 @@ class PhonixAppSettings(IAppInitializer):
     max_open_mic_time_in_seconds: float = 15
     in_unit_test_environment: bool = False
     supress_reports: bool = False
+    async_messaging: bool = False
 
     def bind_app(self, app: 'KaiaApp'):
         if self.in_unit_test_environment:
@@ -50,6 +51,7 @@ class PhonixAppSettings(IAppInitializer):
             output,
             units,
             d.PhonixDeamon.get_default_system_sounds() if not self.in_unit_test_environment else {},
+            async_messaging=self.async_messaging
         )
 
         app.phonix_daemon = daemon

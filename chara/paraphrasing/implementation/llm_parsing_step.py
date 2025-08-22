@@ -1,6 +1,7 @@
 from brainbox.flow import IStep, BulletPointParser
 from typing import cast
 from .paraphrase_case import ParaphraseCase
+import traceback
 
 class LLMParsingStep(IStep):
     def process(self, history, current):
@@ -13,6 +14,7 @@ class LLMParsingStep(IStep):
                         templates.append(item.create_paraphrase_record(s))
                     except:
                         print(f"Parsing failed at `{s}`, template `{item.model.template.sequence}`")
+                        print(traceback.format_exc())
             except:
                 pass
             item = cast(ParaphraseCase, item)

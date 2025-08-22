@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from brainbox import BrainBox
 import jsonpickle
 
+
 @dataclass
 class STTRhasspyTrainingCommand(IMessage):
     intent_packs: list[IntentsPack]
@@ -28,10 +29,10 @@ class STTService(AvatarService):
         return True
 
     @message_handler
-    def setup(self, message: IRecognitionSetup):
+    def setup(self, message: IRecognitionSetup) -> None:
         self.requested_setup = message
 
-    @message_handler
+    @message_handler.with_call(BrainBoxService.Command, BrainBoxService.Confirmation)
     def recognize(self, sound: STTCommand) -> STTConfirmation:
         if sound.setup is not None:
             setup = sound.setup
@@ -53,7 +54,7 @@ class STTService(AvatarService):
 
 
     @message_handler
-    def train_rhasspy(self, message: STTRhasspyTrainingCommand):
+    def train_rhasspy(self, message: STTRhasspyTrainingCommand) -> BrainBoxService.Command:
         for pack in message.intent_packs:
             self.handlers[pack.name] = RhasspyHandler(pack.templates)
         task = RhasspyRecognitionSetup.create_training_task(message.intent_packs)

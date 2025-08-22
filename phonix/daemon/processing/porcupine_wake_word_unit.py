@@ -17,7 +17,9 @@ class PorcupineWakeWordUnit(IUnit):
         keyword_index = self.porcupine.process(data.mic_data.buffer)
         if keyword_index < 0 and not data.open_mic_requested:
             return None
-        data.client.put(WakeWordEvent(self.keyword))
-        data.client.put(SystemSoundCommand(SystemSoundType.opening))
+        if keyword_index >= 0:
+            data.send_message(WakeWordEvent(self.keyword))
+
+        data.send_message(SystemSoundCommand(SystemSoundType.opening))
         return State(MicState.Opening)
 

@@ -50,7 +50,7 @@ class TestStream(Stream):
                 self.id_to_index = {msg.envelop.id: idx for idx, msg in enumerate(self.messages)}
 
 
-    def get(self, last_id: Optional[str] = None, count: Optional[int] = None) -> List[IMessage]:
+    def get(self, last_id: Optional[str] = None, count: Optional[int] = None, types: tuple[type,...]|None = None) -> List[IMessage]:
         """
         Retrieve messages after the given last_id. Returns up to 'count' messages,
         or all remaining if count is None.
@@ -66,8 +66,22 @@ class TestStream(Stream):
 
             # Slice messages and return a new list
             if count is None:
-                return list(self.messages[start:])
-            return list(self.messages[start:start + count])
+                base = self.messages[start:]
+            else:
+                base = self.messages[start:start + count]
+
+            if types is None:
+                return base
+            else:
+                return [m for m in base if isinstance(m, types)]
+
+
+    def get_tail(self, count: int, types: tuple[type,...]|None = None) -> list[IMessage]:
+        with self._lock:
+            base = self.messages[-count:]
+            if types is None:
+                return base
+            return [m for m in base if isinstance(m, types)]
 
     def get_last_message_id(self) -> str|None:
         if len(self.messages) == 0:

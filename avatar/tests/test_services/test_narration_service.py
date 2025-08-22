@@ -10,7 +10,7 @@ activities = ('a0', 'a1', 'a2')
 
 class NarrationTestCase(TestCase):
     def setUp(self):
-        self.proc = AvatarProcessor(TestStream().create_client())
+        self.proc = AvatarDaemon(TestStream().create_client())
         self.state = State(character='c1', activity='a1')
         self.proc.rules.bind(NarrationService(
             self.state,
@@ -25,7 +25,7 @@ class NarrationTestCase(TestCase):
         m = self.proc.debug_and_stop_by_empty_queue(NarrationService.ChangeCharacterCommand()).messages
         self.assertEqual(4, len(m))
         self.assertEqual('c0', self.state.character)
-        self.assertEqual('a1', self.state.activity)
+        self.assertEqual('a0', self.state.activity)
         self.assertIsInstance(m[1], ImageService.NewImageCommand)
         self.assertIsInstance(m[2], UtteranceSequenceCommand)
 
@@ -35,7 +35,7 @@ class NarrationTestCase(TestCase):
         print(m)
         self.assertEqual(4, len(m))
         self.assertEqual('c2', self.state.character)
-        self.assertEqual('a1', self.state.activity)
+        self.assertEqual('a0', self.state.activity)
         self.assertIsInstance(m[1], ImageService.NewImageCommand)
         self.assertIsInstance(m[2], UtteranceSequenceCommand)
 

@@ -56,7 +56,7 @@ class ChangeCharacterSkill(SingleLineKaiaSkill):
             yield ChangeCharacterReplies.all_characters.utter(character_list=lst)
         if input in ChangeCharacterIntents.change_character:
             value = input.value.get('character', None)
-            NarrationService.ChangeCharacterCommand(value)
+            yield NarrationService.ChangeCharacterCommand(value)
 
 
 

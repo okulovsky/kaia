@@ -1,4 +1,5 @@
 from kaia import World, SingleLineKaiaSkill, VolumeCommand
+from kaia import VolumeControlService
 from grammatron import *
 
 class VolumeIntents(TemplatesCollection):
@@ -25,8 +26,8 @@ class VolumeSkill(SingleLineKaiaSkill):
     def run(self):
         input: Utterance = yield
         if input in VolumeIntents.increase:
-            yield VolumeCommand(relative_value=self.delta)
+            yield VolumeControlService.Command(relative_value=self.delta)
             yield VolumeReplies.sound_check.utter()
         if input in VolumeIntents.decrease:
-            yield VolumeCommand(relative_value=-self.delta)
+            yield VolumeControlService.Command(relative_value=-self.delta)
             yield VolumeReplies.sound_check.utter()

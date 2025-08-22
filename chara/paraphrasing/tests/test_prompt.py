@@ -1,6 +1,6 @@
-from chara.paraphrasing import JinjaModel, ParaphraseCase
+from chara.paraphrasing.implementation import JinjaModel, ParaphraseCase
 from grammatron import *
-from avatar import Character, World
+from avatar.daemon import Character, World
 from foundation_kaia.prompters import Prompter
 from unittest import TestCase
 
@@ -29,17 +29,18 @@ class TemplateToParaphraseTestCase(TestCase):
     def test_with_variable(self):
         s = run(Template(f"The answer is {CardinalDub(10).as_variable('variable')}"))
         self.assertIn('Where', s)
-        self.assertIn('* #1.  Variable `variable`.', s)
+        self.assertIn('* {variable}.  Variable `variable`.', s)
 
     def test_with_variable_and_description(self):
         v = VariableDub("variable", CardinalDub(), "my description")
         s = run(Template(f"The answer is {v}"))
-        self.assertIn('* #1.  Variable `variable`: my description.', s)
+        self.assertIn('* {variable}.  Variable `variable`: my description.', s)
 
 
     def test_with_variable_and_plural(self):
-        s = run(Template(f"The answer is {PluralAgreement(CardinalDub(10).as_variable('variable'), 'variable')}"))
-        self.assertIn('* #1. Variable `variable`. Then, word `variable` is added in a grammatically correct form.', s)
+        s = run(Template(f"The answer is {PluralAgreement(CardinalDub(10).as_variable('count'), 'variable')}"))
+
+        self.assertIn('* {count/variable}. Variable `count`. Then, word `variable` is added in a grammatically correct form.', s)
 
     def test_with_context(self):
         t = Template(f"Yes").context(f'{World.character} agrees with {World.user}')
@@ -60,7 +61,7 @@ class TemplateToParaphraseTestCase(TestCase):
     def test_restoration(self):
         template = Template(f"The answer is {PluralAgreement(CardinalDub(10).as_variable('variable'),'variable')}")
         info = JinjaModel.parse_from_template(template)[0]
-        s = "It's #1! That's the answer"
+        s = "It's {variable/variable}! That's the answer"
         new_template = info.template.restore_template(s)
         self.assertEqual("It's one variable! That's the answer", new_template.to_str(dict(variable=1)))
         self.assertEqual("It's two variables! That's the answer", new_template.to_str(dict(variable=2)))

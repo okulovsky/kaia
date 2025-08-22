@@ -1,4 +1,4 @@
-from phonix.daemon.processing import PorcupineWakeWordUnit, UnitInput, MicState, State, SystemSoundCommand, SystemSoundType
+from phonix.daemon.processing import PorcupineWakeWordUnit, UnitInput, MicState, State, SystemSoundCommand, SystemSoundType, IMonitor
 from phonix.daemon.inputs import FakeInput
 from avatar.messaging import TestStream
 from avatar.daemon import WakeWordEvent
@@ -18,7 +18,14 @@ def check(file):
     result = []
     while not input.is_buffer_empty():
         data = input.read()
-        result.append(porcupine.process(UnitInput(State(MicState.Standby), data, client, False)))
+        result.append(porcupine.process(UnitInput(
+            State(MicState.Standby),
+            data,
+            (),
+            False,
+            IMonitor(),
+            client.put
+        )))
     return result, clone_client.pull()
 
 

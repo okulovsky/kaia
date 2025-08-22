@@ -30,16 +30,23 @@ class SeleniumDriver:
 
 
 class Helper:
-    def __init__(self, folder, tc: TestCase, recompile_ts: bool = False):
+    def __init__(self, folder, tc: TestCase, recompile_ts: bool = False, brainless: bool = False):
         settings = KaiaAppSettings()
-        settings.brainbox.deciders_files_in_kaia_working_folder = False
-        settings.avatar_processor.timer_event_span_in_seconds = None
-        settings.avatar_processor.initialization_event_at_startup = False
-        settings.avatar_server.compile_scripts = recompile_ts
-        settings.phonix.in_unit_test_environment = True
-        settings.phonix.supress_reports = True
-        settings.brainbox.deciders_files_in_kaia_working_folder = False
 
+        if brainless:
+            settings.brainbox = None
+            settings.phonix = None
+            settings.avatar_processor.timer_event_span_in_seconds = None
+        else:
+            settings.brainbox.deciders_files_in_kaia_working_folder = False
+            settings.avatar_processor.timer_event_span_in_seconds = None
+            settings.avatar_processor.initialization_event_at_startup = False
+            settings.avatar_server.compile_scripts = recompile_ts
+            settings.phonix.in_unit_test_environment = True
+            settings.phonix.supress_reports = True
+            settings.brainbox.deciders_files_in_kaia_working_folder = False
+
+        self.settings = settings
         self.app = settings.create_app(folder)
         self.tc = tc
         self.client = self.app.create_avatar_client()
@@ -85,14 +92,14 @@ class Helper:
     def wakeword(self):
         self.say('computer')
         msg = self.client.pull(1)[0]
-        wakeup = self.client.query(5).feed(self.process).feed(slice(lambda z: z.is_confirmation_of(msg)))
+        wakeup = self.client.query(5).feed(self.process).feed(slice(lambda z: isinstance(z, MicStateChangeReport), 2))
 
         self.tc.assertEqual(5, len(wakeup))
         self.tc.assertIsInstance(wakeup[0], WakeWordEvent)
         self.tc.assertIsInstance(wakeup[1], SystemSoundCommand)
         self.tc.assertIsInstance(wakeup[2], MicStateChangeReport)
-        self.tc.assertIsInstance(wakeup[3], MicStateChangeReport)
-        self.tc.assertIsInstance(wakeup[4], Confirmation)
+        self.tc.assertIsInstance(wakeup[3], Confirmation)
+        self.tc.assertIsInstance(wakeup[4], MicStateChangeReport)
 
     def parse_reaction(self, expected_command: Type):
         response = []

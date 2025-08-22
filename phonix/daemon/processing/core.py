@@ -4,6 +4,8 @@ from datetime import datetime
 from avatar.messaging import StreamClient, IMessage
 from abc import ABC, abstractmethod
 from ..inputs import MicData
+from typing import Callable
+
 
 class MicState(Enum):
     Standby = 0
@@ -17,12 +19,27 @@ class State:
     mic_state: MicState
     update_time: datetime = field(default_factory=datetime.now)
 
+
+class IMonitor:
+    def on_level(self, level: float):
+        pass
+
+    def on_silence_level(self, silence_level: float):
+        pass
+
+    def on_state_change(self, new_state: State):
+        pass
+
+
 @dataclass
 class UnitInput:
     state: State
     mic_data: MicData
-    client: StreamClient
+    received_messages: tuple[IMessage,...]
     open_mic_requested: bool
+    monitor: IMonitor
+    send_message: Callable[[IMessage],None]
+
 
 class IUnit(ABC):
     @abstractmethod

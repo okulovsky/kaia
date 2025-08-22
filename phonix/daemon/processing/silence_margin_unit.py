@@ -15,8 +15,8 @@ class SilenceLevelReport(IMessage):
 class SilenceMarginUnit(IUnit):
     def __init__(self,
                  silence_level: float,
-                 silence_length_in_seconds: float,
-                 time_between_silence_level_reports_in_seconds: float|None = 0.05
+                 silence_length_in_seconds: float = 1,
+                 time_between_silence_level_reports_in_seconds: float|None = 1
                  ):
         self.silence_level = silence_level
         self.silence_length_in_seconds = silence_length_in_seconds
@@ -31,7 +31,8 @@ class SilenceMarginUnit(IUnit):
         t = time.monotonic()
         if self.time_between_silence_level_reports_in_seconds is not None:
             if t - self.last_silence_report_time > self.time_between_silence_level_reports_in_seconds:
-                input.client.put(SilenceLevelReport(self.silence_level))
+                input.send_message(SilenceLevelReport(self.silence_level))
+                input.monitor.on_silence_level(self.silence_level)
                 self.last_silence_report_time = t
 
         if input.state.mic_state not in [MicState.Opening, MicState.Open, MicState.Recording]:
@@ -40,6 +41,10 @@ class SilenceMarginUnit(IUnit):
         if self.buffer is None:
             self.buffer = SoundBuffer(self.silence_length_in_seconds)
         self.buffer.add(input.mic_data)
+
+        if not self.buffer.is_full:
+            return
+
         level = self.get_level()
 
         if input.state.mic_state == MicState.Opening:
