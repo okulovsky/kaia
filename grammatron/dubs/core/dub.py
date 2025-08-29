@@ -105,7 +105,7 @@ class IDub(ABC):
 
     def __del__(self):
         uid = id(self)
-        if uid in DubGlobalCache.cache:
+        if DubGlobalCache is not None and DubGlobalCache.cache is not None and uid in DubGlobalCache.cache:
             del DubGlobalCache.cache[uid]
 
     def as_variable(self, name: str):

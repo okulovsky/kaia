@@ -68,3 +68,7 @@ class OpenMicCommand(IMessage):
 @dataclass
 class InitializationEvent(IMessage):
     pass
+
+@dataclass
+class ImageEvent(IMessage):
+    file_id: str

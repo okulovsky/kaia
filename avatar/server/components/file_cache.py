@@ -21,23 +21,17 @@ class FileCacheComponent(IAvatarComponent):
 
 
     def file_cache_upload(self, file_name: str):
-        try:
-            with open(self.folder/file_name, 'wb') as file:
-                uploaded_file = flask.request.files['content']  # Use the field name from the client
-                file.write(uploaded_file.read())
-            return 'OK'
-        except:
-            return traceback.format_exc(), 500
+        with open(self.folder/file_name, 'wb') as file:
+            uploaded_file = flask.request.files['content']  # Use the field name from the client
+            file.write(uploaded_file.read())
+        return 'OK'
 
     def file_cache_download(self, file_name: str):
-        try:
-            with open(self.folder / file_name, 'rb') as file:
-                return flask.send_file(
-                    io.BytesIO(file.read()),
-                    mimetype='application/octet-stream'
-                )
-        except:
-            return traceback.format_exc(), 500
+        with open(self.folder / file_name, 'rb') as file:
+            return flask.send_file(
+                io.BytesIO(file.read()),
+                mimetype='application/octet-stream'
+            )
 
 
 class FileCacheApi:

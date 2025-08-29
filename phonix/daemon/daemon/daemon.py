@@ -35,10 +35,9 @@ class PhonixDeamon:
                  tolerate_exceptions: bool = False,
                  async_messaging: bool = False
                 ):
-        client= client.with_types(*REQUIRED_TYPES)
-        self.client: IStreamClient = client
-        if async_messaging:
-            self.client = client.as_asyncronous()
+        self.base_client = client
+        self.async_messaging = async_messaging
+        self.client: IStreamClient|None = None
 
         self.file_retriever = file_retriever
         self.input: IAudioInput = input
@@ -54,6 +53,7 @@ class PhonixDeamon:
         if not silent:
             self.monitor = ConsoleMonitor()
         self.tolerate_exceptions = tolerate_exceptions
+
 
 
 
@@ -132,8 +132,15 @@ class PhonixDeamon:
                 self.client.put(MicStateChangeReport(state_change.mic_state))
                 input.monitor.on_state_change(state_change)
 
-    def _run_attempt(self):
+    def _run_attempt(self, scroll_to_end_when_initializing):
         print("Connecting to avatar...")
+        client= self.base_client.clone().with_types(*REQUIRED_TYPES)
+        if scroll_to_end_when_initializing:
+            client.scroll_to_end()
+        if self.async_messaging:
+            self.client = client.as_asyncronous()
+        else:
+            self.client = client
         self.client.initialize()
         print("OK")
         self.input.start()
@@ -146,11 +153,11 @@ class PhonixDeamon:
 
     def run(self):
         if not self.tolerate_exceptions:
-            self._run_attempt()
+            self._run_attempt(False)
         else:
             while True:
                 try:
-                    self._run_attempt()
+                    self._run_attempt(True)
                 except KeyboardInterrupt:
                     return
                 except:

@@ -21,10 +21,7 @@ class MainComponent(IAvatarComponent):
         app.add_url_rule('/main', view_func=self.main, methods=['GET'], caption="Main page")
 
     def main(self):
-        try:
-            text = self.text
-            if self.base_url is not None:
-                text = text.replace('#base_url', self.base_url)
-            return text
-        except:
-            return traceback.format_exc(), 500
+        text = self.text
+        if self.base_url is not None:
+            text = text.replace('#base_url', self.base_url)
+        return text

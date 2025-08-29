@@ -6,10 +6,15 @@ from datetime import datetime
 from .notification_skill import NotificationRegister, NotificationInfo
 
 
-
-DURATION = VariableDub(
+DURATION_INPUT = VariableDub(
     'duration',
-    TimedeltaDub(0,2),
+    TimedeltaDub(True, True, False),
+    'the duration of the timer'
+)
+
+DURATION_OUTPUT = VariableDub(
+    'duration',
+    TimedeltaDub(True, True, True),
     'the duration of the timer'
 )
 
@@ -27,8 +32,7 @@ AMOUNT = VariableDub(
 
 class TimerIntents(TemplatesCollection):
     set_the_timer = Template(
-        f'Set the timer for {DURATION}',
-        f'Set the {INDEX} timer for {DURATION}',
+        f'Set the timer for {DURATION_INPUT}',
     )
     cancel_the_timer = Template(
         'Cancel the timer',
@@ -37,13 +41,16 @@ class TimerIntents(TemplatesCollection):
     how_much_timers = Template(
         'How much timers do I have?'
     )
+    how_much_time_left = Template(
+        "How much time left?"
+    )
 
 
 class TimerReplies(TemplatesCollection):
     timer_is_set = (
         Template(
-            f'The timer for {DURATION} is set',
-            f'{INDEX} timer for {DURATION} is set',
+            f'The timer for {DURATION_OUTPUT} is set',
+            f'{INDEX} timer for {DURATION_OUTPUT} is set',
         ).context(
             f'{World.user} asks to set the timer, and {World.character} agrees'
         )
@@ -84,7 +91,8 @@ class TimerReplies(TemplatesCollection):
     )
 
     timer_description = Template(
-        f'The {INDEX} timer has {DURATION}',
+        f'The {INDEX} timer has {DURATION_OUTPUT}',
+        f'The timer has {DURATION_OUTPUT}'
     ).context(
         f'{World.user} asks about the remaining time on the timer, and {World.character} replies'
     )
@@ -95,59 +103,77 @@ class TimerSkill(SingleLineKaiaSkill):
                  register: Optional[NotificationRegister] = None,
                  datetime_factory: Callable[[], datetime] = datetime.now):
         self.datetime_factory = datetime_factory
-        self.timers : Dict[str, NotificationInfo] = register.instances if register is not None else {}
+        self.timers : Dict[int, NotificationInfo] = register.instances if register is not None else {}
         super().__init__(
             TimerIntents,
             TimerReplies,
         )
 
+    def _set_timer(self, input: Utterance):
+        duration = input.value['duration']
+        timer_info = NotificationInfo(self.datetime_factory(), duration)
+        index = 1
+        for index in range(1, 10):
+            if index not in self.timers:
+                break
+        self.timers[index] = timer_info
+        if index == 1:
+            yield TimerReplies.timer_is_set.utter(duration=duration)
+        else:
+            yield TimerReplies.timer_is_set.utter(duration=duration, index=index)
+
+
+    def _cancel_timer(self, input: Utterance):
+        if len(self.timers) == 1:
+            del self.timers[list(self.timers)[0]]
+            yield TimerReplies.timer_is_cancelled.utter()
+            return
+        elif len(self.timers) == 0:
+            yield TimerReplies.no_timers()
+            return
+
+        if 'index' not in input.value:
+            yield TimerReplies.which_timer_error.utter(amount=len(self.timers))
+            return
+        index = input.value['index']
+        if index not in self.timers:
+            yield TimerReplies.no_such_timer.utter(index=index)
+        else:
+            del self.timers[index]
+            yield TimerReplies.timer_is_cancelled.utter(index=index)
+
+    def _get_remaining_time(self, index: int):
+        info = self.timers[index]
+        return info.duration - (self.datetime_factory() - info.start)
+
+    def _describe_timers(self):
+        utterances = [TimerReplies.you_have.utter(amount=len(self.timers))]
+        for index in sorted(self.timers):
+            utterances.append(TimerReplies.timer_description.utter(index=index, duration=self._get_remaining_time(index)))
+        yield UtterancesSequence(*utterances)
+
+
     def run(self):
         input: Utterance = yield
 
         if input in TimerIntents.set_the_timer:
-            duration = input.value['duration']
-            timer_info = NotificationInfo(self.datetime_factory(), duration)
-            if 'index' in input.value:
-                index = input.value['index']
-            elif len(self.timers):
-                index = max(self.timers) + 1
-            else:
-                index = 1
-            self.timers[index] = timer_info
-            if index == 1:
-                yield TimerReplies.timer_is_set.utter(duration=duration)
-            else:
-                yield TimerReplies.timer_is_set.utter(duration=duration, index = index)
-
-        if input in TimerIntents.cancel_the_timer:
-            if 'index' in input.value:
-                index = input.value['index']
-            else:
-                if len(self.timers) == 1:
-                    index = max(self.timers)
-                else:
-                    yield TimerReplies.which_timer_error.utter(amount=len(self.timers))
-                    raise Return()
-            if index not in self.timers:
-                if len(self.timers) != 0:
-                    yield TimerReplies.no_such_timer.utter(index=index)
-                else:
-                    yield TimerReplies.no_timers.utter()
-            del self.timers[index]
+            yield from self._set_timer(input)
+        elif input in TimerIntents.cancel_the_timer:
+            yield from self._cancel_timer(input)
+        elif input in TimerIntents.how_much_time_left:
             if len(self.timers) == 0:
-                yield TimerReplies.timer_is_cancelled.utter()
+                yield TimerReplies.no_timers()
+            elif len(self.timers) == 1:
+                index = list(self.timers)[0]
+                yield TimerReplies.timer_description(duration = self._get_remaining_time(index))
             else:
-                yield TimerReplies.timer_is_cancelled.utter(index = index)
+                yield from self._describe_timers()
+        elif input in TimerIntents.how_much_timers:
+            yield from self._describe_timers()
 
-        if input in TimerIntents.how_much_timers:
-            if len(self.timers) == 0:
-                yield TimerReplies.no_timers.utter()
-            else:
-                utterances = [TimerReplies.you_have.utter(amount=len(self.timers))]
-                for index in sorted(self.timers):
-                    info = self.timers[index]
-                    utterances.append(TimerReplies.timer_description.utter(index=index, duration = info.duration - (self.datetime_factory() - info.start)))
-                yield UtterancesSequence(*utterances)
+
+
+
 
 
 

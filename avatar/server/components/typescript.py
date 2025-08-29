@@ -29,7 +29,7 @@ class TypeScriptComponent(IAvatarComponent):
             '-p', str(TS_DIR)
         ], cwd=str(TS_DIR), check=True)
 
-        for js in (TS_DIR / 'dist').glob("*.js"):
+        for js in (TS_DIR / 'compiled').glob("**/*.js"):
             text = js.read_text()
             # this regex finds:  import … from './something';
             # and turns it into     import … from './something.js';
@@ -40,7 +40,6 @@ class TypeScriptComponent(IAvatarComponent):
             )
             js.write_text(new)
 
-        os.rename(TS_DIR/'dist', TS_DIR/'compiled')
 
     def get_typescript_file(self, path):
         return flask.send_from_directory(self.ts_path/'compiled', path)

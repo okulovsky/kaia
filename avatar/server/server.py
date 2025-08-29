@@ -3,6 +3,11 @@ from foundation_kaia.marshalling import Server
 from dataclasses import dataclass
 from .components import IAvatarComponent
 import logging
+import traceback
+
+def handle_exception(e):
+    tb = traceback.format_exc()
+    return flask.Response(tb, status=500, mimetype="text/plain")
 
 @dataclass
 class AvatarServerSettings:
@@ -18,6 +23,7 @@ class AvatarServer(Server):
 
     def __call__(self):
         app = flask.Flask("AvatarServer", static_folder=None, static_url_path=None)
+        app.register_error_handler(Exception, handle_exception)
 
         if self.settings.hide_logs:
             logging.getLogger('werkzeug').disabled = True

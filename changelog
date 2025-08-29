@@ -1,3 +1,11 @@
+4.0.3
+    Avatar:
+        Better error processing in server
+        You can now exclude certain types from `get` and `tail`
+    Bugfixing:
+        Kaia skills, Kaia driver, Phonix
+    Kaia:
+        WebCam Images processing available in the frontend.
 4.0.2
     Fixes so it works on my kitchen
     Avatar

@@ -2,7 +2,7 @@ from typing import Type
 import time
 from typing import Callable, Any
 from avatar.messaging import StreamClient
-from avatar.daemon import UtteranceSequenceCommand, TextCommand, STTService, TimerEvent
+from avatar.daemon import UtteranceSequenceCommand, TextCommand, STTService, TimerEvent, SoundCommand
 from loguru import logger
 from ..assistant import KaiaContext
 from eaglesong import Automaton
@@ -20,7 +20,7 @@ class KaiaDriver:
                  assistant_factory: Callable[[KaiaContext],Any],
                  client: StreamClient,
                  input_transformer: IKaiaInputTransformer|None = None,
-                 expect_confirmations_for_types: tuple[Type,...] = (UtteranceSequenceCommand, TextCommand),
+                 expect_confirmations_for_types: tuple[Type,...] = (UtteranceSequenceCommand, TextCommand, SoundCommand),
                  silent_types: tuple[type,...] = (SoundLevelReport, SilenceLevelReport, TimerEvent),
                  ):
         self.assistant_factory = assistant_factory

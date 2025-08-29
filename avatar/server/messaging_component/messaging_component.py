@@ -5,7 +5,7 @@ import flask
 from ..components import IAvatarComponent
 from pathlib import Path
 from .message_record import MessageRecord, Base
-from sqlalchemy import create_engine, asc, or_
+from sqlalchemy import create_engine, asc, or_, and_
 from sqlalchemy.orm import sessionmaker
 import uuid
 from foundation_kaia.misc import Loc
@@ -72,33 +72,24 @@ class MessagingComponent(IAvatarComponent):
 
 
     def messages_add(self):
-        try:
-            data = flask.request.get_json(force=True)
-            try:
-                self._add_message(data)
-            except ValueError as ex:
-                return flask.jsonify({'error': ex.args[0]})
-            return "OK"
-        except:
-            return traceback.format_exc(), 500
+        data = flask.request.get_json(force=True)
+        self._add_message(data)
+        return "OK"
 
 
     def messages_last(self):
-        try:
-            session = flask.request.json.get('session', None)
-            with self.Session() as db:
-                q = db.query(MessageRecord)
-                if session is not None:
-                    q = q.filter(MessageRecord.session == session)
-                last_message = (
-                    q
-                    .order_by(MessageRecord.id.desc())
-                    .first()
-                )
-                id = None if last_message is None else last_message.message_id
-                return flask.jsonify({'id': id})
-        except:
-            return traceback.format_exc(), 500
+        session = flask.request.json.get('session', None)
+        with self.Session() as db:
+            q = db.query(MessageRecord)
+            if session is not None:
+                q = q.filter(MessageRecord.session == session)
+            last_message = (
+                q
+                .order_by(MessageRecord.id.desc())
+                .first()
+            )
+            id = None if last_message is None else last_message.message_id
+            return flask.jsonify({'id': id})
 
 
 
@@ -107,66 +98,67 @@ class MessagingComponent(IAvatarComponent):
             return None
         return or_(*[MessageRecord.message_type.like(f"%{suf}") for suf in types])
 
+    def _get_except_type_filters(self, except_types: list[str]|None):
+        if except_types is None or len(except_types) == 0:
+            return None
+        return and_(*[~MessageRecord.message_type.like(f"%{suf}") for suf in except_types])
+
+    def _get_query_essentials(self, db, session: str|None, types: list[str]|None, except_types: list[str]|None):
+        q = db.query(MessageRecord)
+        if session is not None:
+            q = q.filter(MessageRecord.session == session)
+        type_filter = self._get_type_filters(types)
+        if type_filter is not None:
+            q = q.filter(type_filter)
+        except_type_filter = self._get_except_type_filters(except_types)
+        if except_type_filter is not None:
+            q = q.filter(except_type_filter)
+        return q
+
     def messages_tail(self):
-        try:
-            session = flask.request.json.get('session', None)
-            count = flask.request.json.get('count', None)
-            types = flask.request.json.get('types', None)
+        session = flask.request.json.get('session', None)
+        count = flask.request.json.get('count', None)
+        types = flask.request.json.get('types', None)
+        except_types = flask.request.json.get('except_types', None)
 
-            with self.Session() as db:
-                q = db.query(MessageRecord)
-                if session is not None:
-                    q = q.filter(MessageRecord.session == session)
-                type_filter = self._get_type_filters(types)
-                if type_filter is not None:
-                    q = q.filter(type_filter)
+        with self.Session() as db:
+            q = self._get_query_essentials(db, session, types, except_types)
+            results = (
+                q.order_by(MessageRecord.id.desc())
+                .limit(count)
+                .all()
+            )
+            return flask.jsonify([msg.to_dict() for msg in reversed(results)]), 200
 
-                results = (
-                    q.order_by(MessageRecord.id.desc())
-                    .limit(count)
-                    .all()
-                )
-
-                return flask.jsonify([msg.to_dict() for msg in reversed(results)]), 200
-
-        except Exception:
-            return traceback.format_exc(), 500
 
 
     def messages_get(self):
-        try:
-            session = flask.request.json.get('session', None)
-            count = flask.request.json.get('count', None)
-            last_message_id = flask.request.json.get('last_message_id', None)
-            types = flask.request.json.get('types', None)
+        session = flask.request.json.get('session', None)
+        count = flask.request.json.get('count', None)
+        last_message_id = flask.request.json.get('last_message_id', None)
+        types = flask.request.json.get('types', None)
+        except_types = flask.request.json.get('except_types', None)
 
-            with self.Session() as db:
-                q = db.query(MessageRecord)
-                if session is not None:
-                    q = q.filter(MessageRecord.session == session)
-                if last_message_id is not None:
-                    last = (
-                        db.query(MessageRecord)
-                        .filter(MessageRecord.message_id == last_message_id)
-                        .first()
-                    )
-                    if last:
-                        q = q.filter(MessageRecord.id > last.id)
-                    else:
-                        return flask.jsonify({'error': 'last_message_id not found'}), 400
-                type_filter = self._get_type_filters(types)
+        with self.Session() as db:
+            q = self._get_query_essentials(db, session, types, except_types)
+            if last_message_id is not None:
+                last = (
+                    db.query(MessageRecord)
+                    .filter(MessageRecord.message_id == last_message_id)
+                    .first()
+                )
+                if last:
+                    q = q.filter(MessageRecord.id > last.id)
+                else:
+                    return flask.jsonify({'error': 'last_message_id not found'}), 400
 
-                if type_filter is not None:
-                    q = q.filter(type_filter)
+            q = q.order_by(asc(MessageRecord.id))
+            if count is not None:
+                q = q.limit(count)
 
-                q = q.order_by(asc(MessageRecord.id))
-                if count is not None:
-                    q = q.limit(count)
+            results = q.all()
+            return flask.jsonify([msg.to_dict() for msg in results]), 200
 
-                results = q.all()
-                return flask.jsonify([msg.to_dict() for msg in results]), 200
-        except:
-            return traceback.format_exc(), 500
 
     @staticmethod
     def create_aliases(*namespaces):

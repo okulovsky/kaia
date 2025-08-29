@@ -134,17 +134,19 @@ class CookBookSkill(KaiaSkillBase):
         input: Utterance = yield
         if input in CookBookIntents.recipe:
             yield from self.run_recipe(input.get_field())
-        builder = ButtonGridCommand.Builder(4)
-        for recipe in self.recipes:
-            builder.add(recipe.dish, dict(dish=recipe.dish))
-        builder.add('CANCEL', dict(action='cancel'))
-        yield builder.to_overlay()
-        button_pressed = yield Listen()
-        if not isinstance(button_pressed, ButtonPressedEvent):
-            yield CookBookReplies.recipe_is_cancelled()
-        if 'action' in button_pressed.button_feedback and button_pressed.button_feedback['action']=='cancel':
-            yield CookBookReplies.recipe_is_cancelled()
-        yield from self.run_recipe(button_pressed.button_feedback['dish'])
+            return
+        elif input in CookBookIntents.recipe_book:
+            builder = ButtonGridCommand.Builder(4)
+            for recipe in self.recipes:
+                builder.add(recipe.dish, dict(dish=recipe.dish))
+            builder.add('CANCEL', dict(action='cancel'))
+            yield builder.to_grid()
+            button_pressed = yield Listen()
+            if not isinstance(button_pressed, ButtonPressedEvent):
+                yield CookBookReplies.recipe_is_cancelled()
+            if 'action' in button_pressed.button_feedback and button_pressed.button_feedback['action']=='cancel':
+                yield CookBookReplies.recipe_is_cancelled()
+            yield from self.run_recipe(button_pressed.button_feedback['dish'])
 
 
 

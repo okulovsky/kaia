@@ -13,6 +13,7 @@ class DockerIOImageSource(IImageSource):
         self.docker_url = docker_url
         self.login = login
         self.password = password
+        self.version = 'latest'
 
     def _auth_command(self) -> list:
         return ['docker', 'login', self.docker_url, '--username', self.login, '--password', self.password]
@@ -21,7 +22,7 @@ class DockerIOImageSource(IImageSource):
         return self.name
 
     def get_remote_name(self):
-        return f'{self.docker_url}/{self.name}:latest'
+        return f'{self.docker_url}/{self.name}:{self.version}'
 
     def push(self, executor: IExecutor):
         executor.execute(['docker', 'tag', self.name, self.get_remote_name()])

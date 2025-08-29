@@ -22,7 +22,6 @@ class RuleProcessor:
 
 
     def run(self):
-        raw_result = None
         parsed_result = None
 
         try:

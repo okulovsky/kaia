@@ -6,13 +6,26 @@ export class ControlPanelController {
         this.panel = panel;
         this.overlay = overlay;
         this.client = client;
-        this.addButton('↺', () => location.reload());
+        this.panel.innerHTML = '';
         this.addButton('📊', () => this.loadPageInOverlay('/phonix-monitor/'));
+        this.addButton('↺', () => location.reload());
         this.addButton('🗗', () => this.toggleOverlay());
         this.addButton('❌', () => window.close());
-        this.panel.innerHTML = '';
-        this.buttons.forEach(btn => { this.panel.appendChild(btn); });
         this.trigger.addEventListener('click', () => this.togglePanel());
+    }
+    addDebugPanel(label, panel) {
+        this.addButton(label, () => this.startPanel(panel));
+    }
+    startOverlay() {
+        this.overlay.className = ''; // убираем все классы
+        this.overlay.classList.add('overlay-full'); // ставим нужный
+        this.overlay.style.display = '';
+        this.overlay.innerHTML = '';
+    }
+    startPanel(panel) {
+        this.startOverlay();
+        panel.setPanel(this.overlay);
+        panel.start();
     }
     addButton(label, onClick) {
         const btn = document.createElement('button');
@@ -22,15 +35,10 @@ export class ControlPanelController {
             onClick();
             this.hidePanel();
         });
-        this.buttons.push(btn);
+        this.panel.appendChild(btn);
     }
     async loadPageInOverlay(url) {
-        // 1) Показываем оверлей (жёстко указываем display),
-        //    очищаем содержимое
-        this.overlay.className = ''; // убираем все классы
-        this.overlay.classList.add('overlay-full'); // ставим нужный
-        this.overlay.style.display = '';
-        this.overlay.innerHTML = '';
+        this.startOverlay();
         try {
             // 2) Проверяем доступность URL методом HEAD
             const response = await fetch(url, { method: 'HEAD' });

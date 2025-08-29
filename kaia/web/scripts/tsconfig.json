@@ -3,9 +3,10 @@
     "target": "es2020",
     "module": "es2020",
     "rootDir": ".",
-    "outDir": "dist",
+    "outDir": "compiled",
     "strict": true,
     "esModuleInterop": true
   },
-  "include": ["*.ts"]
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules", "compiled"]
 }
