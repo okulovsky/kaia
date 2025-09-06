@@ -7,6 +7,7 @@ def _intents_decorator(_cls):
         if isinstance(obj, Template):
             name = _cls.__module__+'.'+_cls.__name__+'.'+field
             obj._name = name
+            obj._custom_name = True
     return _cls
 
 

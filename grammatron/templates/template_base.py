@@ -21,6 +21,7 @@ class TemplateBase(Generic[TDub]):
         self._context: TemplateContext = TemplateContext()
         self._paraphrasing_allowed: bool|None = None
         self._type = _type
+        self._custom_name: bool = False
 
     def clone(self: TSelf) -> TSelf:
         template = deepcopy(self)
@@ -29,6 +30,7 @@ class TemplateBase(Generic[TDub]):
     def with_name(self: TSelf, name: str) -> TSelf:
         obj = self.clone()
         obj._name = name
+        obj._custom_name = True
         return obj
 
     @property
@@ -113,7 +115,7 @@ class TemplateBase(Generic[TDub]):
             return True
         if not isinstance(other, TemplateBase):
             return False
-        if self.get_name() is not None and other.get_name() is not None and self.get_name() == other.get_name():
+        if self._custom_name and other._custom_name and self.get_name() == other.get_name():
             return True
         return False
 

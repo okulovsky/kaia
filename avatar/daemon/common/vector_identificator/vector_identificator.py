@@ -3,11 +3,20 @@ from pathlib import Path
 from brainbox.framework import FileLike
 from typing import Callable
 from yo_fluq import FileIO
-from sklearn.metrics.pairwise import cosine_distances
 import numpy as np
 import pandas as pd
 from .straregies import IStrategy
 from dataclasses import dataclass
+
+def cosine_distances(X, Y):
+    X = np.array(X, dtype=float)
+    Y = np.array(Y, dtype=float)
+
+    X_norm = X / np.linalg.norm(X, axis=1, keepdims=True)
+    Y_norm = Y / np.linalg.norm(Y, axis=1, keepdims=True)
+
+    sim = np.dot(X_norm, Y_norm.T)
+    return 1.0 - sim
 
 @dataclass
 class VectorIdentificatorSettings:
