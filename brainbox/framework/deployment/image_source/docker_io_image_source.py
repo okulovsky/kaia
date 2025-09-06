@@ -25,6 +25,7 @@ class DockerIOImageSource(IImageSource):
         return f'{self.docker_url}/{self.name}:{self.version}'
 
     def push(self, executor: IExecutor):
+        print(f'Remote name: {self.get_remote_name()}')
         executor.execute(['docker', 'tag', self.name, self.get_remote_name()])
         executor.execute(self._auth_command())
         executor.execute(['docker', 'push', self.get_remote_name()])

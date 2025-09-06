@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from ..daemon import TimerEvent
+from ..daemon import TickEvent
 
 class TestTimeFactory:
     def __init__(self, current:datetime = None):
@@ -16,7 +16,7 @@ class TestTimeFactory:
         return self
 
     def event(self):
-        return TimerEvent(self._current)
+        return TickEvent(self._current)
 
     def current(self):
         return self._current

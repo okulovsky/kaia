@@ -9,9 +9,6 @@ from avatar.server import AvatarApi
 from .avatar_daemon_app_settings import CHARACTERS
 from typing import Callable
 
-class CommonIntents(TemplatesCollection):
-    stop = Template('Stop','Cancel')
-
 
 class AssistantFactory:
     def __init__(self, avatar_api: AvatarApi):
@@ -85,7 +82,6 @@ class AssistantFactory:
         assistant = KaiaAssistant(self.skills)
         assistant.raise_exceptions = False
         help.assistant = assistant
-        assistant.additional_intents.extend(CommonIntents.get_templates())
 
         return assistant
 

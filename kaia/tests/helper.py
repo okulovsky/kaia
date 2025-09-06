@@ -71,7 +71,7 @@ class Helper:
 
     def init(self):
         self.client.initialize()
-        self.client.put(TimerEvent(datetime.now()))
+        self.client.put(TickEvent(datetime.now()))
         kaldi_training = (
             self.client
             .query(5)
@@ -80,7 +80,7 @@ class Helper:
         )
 
         self.tc.assertEqual(4, len(kaldi_training))
-        self.tc.assertIsInstance(kaldi_training[0], TimerEvent)
+        self.tc.assertIsInstance(kaldi_training[0], TickEvent)
         self.tc.assertIsInstance(kaldi_training[1], STTService.RhasspyTrainingCommand)
         self.tc.assertIsInstance(kaldi_training[2], BrainBoxService.Command)
         self.tc.assertIsInstance(kaldi_training[3], BrainBoxService.Confirmation)

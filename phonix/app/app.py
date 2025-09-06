@@ -14,6 +14,7 @@ class PhonixAppSettings:
     silent: bool = True
     tolerate_errors: bool = False
     async_messaging: bool = True
+    output_backend: str = 'PyAudio'
 
     def create_avatar_api(self) -> AvatarApi:
         avatar_address =  f'{self.avatar_ip_address}:{self.avatar_port}'
@@ -30,7 +31,7 @@ class PhonixAppSettings:
             client,
             AvatarFileRetriever(api),
             PyAudioInput(),
-            PyAudioOutput(),
+            SoxAudioOutput() if self.output_backend == 'Sox' else PyAudioOutput(),
             [
                 PorcupineWakeWordUnit(),
                 SilenceMarginUnit(self.silence_level, self.silence_margin_length),

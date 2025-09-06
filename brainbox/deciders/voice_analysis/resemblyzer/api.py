@@ -45,6 +45,18 @@ class Resemblyzer(DockerWebServiceApi[ResemblyzerSettings, ResemblyzerController
             raise ValueError(f"Resemblyzer threw an error\n{reply.text}")
         return reply.json()
 
+    def vector(self, file:FileLike.Type):
+        with FileLike(file, self.cache_folder) as file:
+            reply = requests.post(
+                f'http://{self.address}/vector',
+                files = (
+                    ('file', file),
+                )
+            )
+            if reply.status_code != 200:
+                raise ValueError(f"Resemblyzer threw an error\n{reply.text}")
+            return reply.json()
+
     @staticmethod
     def upload_dataset_file(model: str, split: str, speaker: str, file: FileLike.Type) -> ResourcePrerequisite:
         fname = FileLike.get_name(file, True)

@@ -25,7 +25,8 @@ class SmallImageBuilder(IImageBuilder):
                  copy_to_code_path: dict[Path, str]|None = None,
                  write_to_code_path: dict[str, str]|None = None,
                  reset_code_folder: bool = False,
-                 build_command: Optional[Iterable[str]] = None
+                 build_command: Optional[Iterable[str]] = None,
+                 docker_ignore:tuple[str,...]|None = ('**/__pycache__/', '**/*.pyc', '**/*.pyo')
     ):
         self.code_path = code_path
         self.docker_template = docker_template
@@ -35,6 +36,7 @@ class SmallImageBuilder(IImageBuilder):
         self.reset_code_folder = reset_code_folder
         self.write_to_code_path = write_to_code_path
         self.build_command = build_command
+        self.docker_ignore = docker_ignore
 
     ADD_USER_PLACEHOLDER = 'add_user'
 
@@ -105,6 +107,11 @@ class SmallImageBuilder(IImageBuilder):
             for target_str_path, content in self.write_to_code_path.items():
                 target = self._create_target_file(target_str_path)
                 FileIO.write_text(content, target)
+
+        if self.docker_ignore is not None:
+            with open(self.code_path/'.dockerignore', 'w', encoding='utf-8') as file:
+                for line in self.docker_ignore:
+                    file.write(line+"\n")
 
 
 

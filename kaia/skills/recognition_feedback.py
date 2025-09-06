@@ -29,7 +29,7 @@ class RecognitionFeedbackAnswers(TemplatesCollection):
 
 class RecognitionFeedbackSkill(SingleLineKaiaSkill):
     def __init__(self, users: list[str]):
-        substitution = RecognitionFeedbackIntents.misrecognition.substitute(**{USER.name: VariableDub(USER.name, OptionsDub(users))})
+        substitution = RecognitionFeedbackIntents.misrecognition.substitute(**{USER.name: OptionsDub(users)})
         intents = RecognitionFeedbackIntents.get_templates(substitution)
         super().__init__(intents, RecognitionFeedbackAnswers)
 

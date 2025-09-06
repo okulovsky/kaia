@@ -61,6 +61,15 @@ class EveryDayRepetition(IRepetition):
         return True
 
 
+class YearlyRepetition(IRepetition):
+    def __init__(self, date: date):
+        self.date = date
+
+    def accepts_date(self, date: date) -> bool:
+        return date.month == self.date.month and date.day == self.date.day
+
+
+
 class CombinedRepetition(IRepetition):
     def __init__(self, repetitions: Iterable[IRepetition]):
         self.repetitions = tuple(repetitions)

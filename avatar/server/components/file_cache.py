@@ -17,6 +17,8 @@ class FileCacheComponent(IAvatarComponent):
         os.makedirs(self.folder, exist_ok=True)
         app.add_url_rule('/file-cache/upload/<file_name>', view_func=self.file_cache_upload, methods=['POST'])
         app.add_url_rule('/file-cache/download/<file_name>', view_func=self.file_cache_download, methods=['GET'])
+        app.add_url_rule('/file-cache/list', view_func=self.file_cache_list, methods=['GET'])
+        app.add_url_rule('/file-cache/delete/<file_name>', view_func=self.file_cache_delete, methods=['POST'])
 
 
 
@@ -32,6 +34,23 @@ class FileCacheComponent(IAvatarComponent):
                 io.BytesIO(file.read()),
                 mimetype='application/octet-stream'
             )
+
+    def file_cache_delete(self, file_name: str):
+        os.unlink(self.folder/file_name)
+        return 'OK'
+
+    def file_cache_list(self):
+        suffix = flask.request.args.get('suffix',None)
+        prefix = flask.request.args.get('prefix',None)
+        result = []
+        for f in os.listdir(self.folder):
+            if prefix is not None and not f.startswith(prefix):
+                continue
+            if suffix is not None and not f.endswith(suffix):
+                continue
+            result.append(f)
+        return flask.jsonify(result)
+
 
 
 class FileCacheApi:
@@ -57,3 +76,21 @@ class FileCacheApi:
         if response.status_code!=200:
             raise ValueError(response.text)
         return file_name
+
+
+
+    def list(self, prefix: str | None = None, suffix: str | None = None) -> list[str]:
+        params = {}
+        if prefix is not None:
+            params["prefix"] = prefix
+        if suffix is not None:
+            params["suffix"] = suffix
+        resp = requests.get(f"http://{self.address}/file-cache/list", params=params)
+        if resp.status_code!=200:
+            raise ValueError(resp.text)
+        return resp.json()
+
+    def delete(self, file_name: str):
+        resp = requests.post(f"http://{self.address}/file-cache/delete/{file_name}")
+        if resp.status_code != 200:
+            raise ValueError(resp.text)

@@ -1,20 +1,24 @@
-import { WebCamHandler }   from './web-cam-handler.js';
+import { WebCamHandlerBase }   from './web-cam-handler-base.js';
 
 // Панель, которая подписывается на detector.onFrame и рисует два <img> в переданном div.
 export class WebCamHandlerDebugger {
-  private detector: WebCamHandler;
+  private detector: WebCamHandlerBase;
   private panel?: HTMLDivElement;
   private _imgCurrent: HTMLImageElement;
   private _imgDiff: HTMLImageElement;
   private _observer?: MutationObserver;
   private _active = false;
 
-  constructor(detector: WebCamHandler) {
+
+
+
+  constructor(detector: WebCamHandlerBase) {
     this.detector = detector;
     this._imgCurrent = document.createElement('img');
     this._imgCurrent.style.maxWidth = '50%';
     this._imgDiff = document.createElement('img');
     this._imgDiff.style.maxWidth = '50%';
+
   }
 
   setPanel(panel: HTMLDivElement) {

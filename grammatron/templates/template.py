@@ -29,12 +29,15 @@ def _create_dub(args, kwargs, factory):
     return LanguageDispatchDub(**templates)
 
 
+
+
 class Template(TemplateBase[LanguageDispatchDub[TemplateDub]]):
     def __init__(self, *args: str, **kwargs: str):
         self._args = args
         self._kwargs = kwargs
         self._type = None
         super().__init__(_create_dub(args, kwargs, DictTemplateDub))
+        self._name = self.__str__()
 
     def get_language_to_sequences(self) -> dict[str,tuple[SequenceDub,...]]:
         return {language: dub.sequences for language, dub in self.dub.dispatch.items()}
@@ -47,7 +50,7 @@ class Template(TemplateBase[LanguageDispatchDub[TemplateDub]]):
         return obj
 
 
-    def substitute(self, **new_dubs: VariableDub) -> 'Template':
+    def substitute(self, **new_dubs: IDub) -> 'Template':
         obj = self.clone()
 
         language_to_new_sequences = {}

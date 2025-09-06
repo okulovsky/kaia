@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import *
 from abc import ABC, abstractmethod
-from grammatron import Template, Utterance, TemplatesCollection
+from grammatron import Template, Utterance, TemplatesCollection, TemplateBase
 from avatar.daemon import IntentsPack
 from enum import Enum
 
@@ -55,7 +55,7 @@ class IKaiaSkill(ABC):
     def get_intents(self) -> Iterable[Template]:
         return []
 
-    def get_replies(self) -> Iterable[Template]:
+    def get_replies(self) -> Iterable[TemplateBase]:
         return []
 
     def should_start(self, input) -> bool:
@@ -115,7 +115,7 @@ class KaiaSkillBase(IKaiaSkill):
     def get_intents(self) -> Iterable[Template]:
         return self._intents
 
-    def get_replies(self) -> Iterable[Template]:
+    def get_replies(self) -> Iterable[TemplateBase]:
         return self._dubs
 
     def get_type(self) -> 'IKaiaSkill.Type':

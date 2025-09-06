@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, JSON, Index
+from sqlalchemy import Column, Integer, String, JSON, Index, UniqueConstraint
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
@@ -8,6 +8,7 @@ class MessageRecord(Base):
     __table_args__ = (
         # индекс по message_id для быстрого поиска
         Index('ix_message_records_message_id', 'message_id'),
+        UniqueConstraint('message_id', name='uq_message_records_message_id'),
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True)

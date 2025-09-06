@@ -21,6 +21,7 @@ class ResemblyzerServer:
         app.add_url_rule('/train/<model>', view_func=self.train, methods=['POST'])
         app.add_url_rule('/classify/<model>', view_func=self.classify, methods=['POST'])
         app.add_url_rule('/distances/<model>', view_func=self.distances, methods=['POST'])
+        app.add_url_rule('/vector', view_func=self.vector, methods=['POST'])
         app.add_url_rule('/', view_func=self.index, methods=['GET'])
         app.run('0.0.0.0',8084)
 
@@ -37,6 +38,14 @@ class ResemblyzerServer:
         embedding = self.wav_processor.get_encoding(path)
         os.unlink(path)
         return embedding
+
+    def vector(self):
+        try:
+            embedding = self._get_embedding()
+            return flask.jsonify(dict(vector=[float(e) for e in embedding]))
+        except:
+            return traceback.format_exc(), 500
+
 
     def classify(self, model: str):
         try:

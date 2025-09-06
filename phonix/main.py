@@ -9,6 +9,7 @@ if __name__ == '__main__':
     parser.add_argument('-q', '--quiet', default='False', help="If True, will show the current state and mic level in the console")
     parser.add_argument('-t', '--tolerate-errors', default='True', help="If True, will try to continue after exceptions indefinitely (production mode)")
     parser.add_argument('-a', '--async-messaging', default='True', help="If True, messaging processing is decoupled from ")
+    parser.add_argument('-o', '--output-backend', default='PyAudio', help='Backends for the output: PyAudio or Sox')
 
     args = parser.parse_args()
 
@@ -20,7 +21,9 @@ if __name__ == '__main__':
         int(args.port),
         float(args.silence_margin_length),
         bool(args.quiet),
-        bool(args.tolerate_errors)
+        bool(args.tolerate_errors),
+        args.output_backend,
+
     )
     daemon = settings.create_daemon()
 

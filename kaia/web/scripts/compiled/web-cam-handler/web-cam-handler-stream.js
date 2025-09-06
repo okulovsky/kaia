@@ -1,10 +1,9 @@
 import { WebCamHandlerSettings } from './web-cam-handler-settings.js';
 import { Message } from '../message.js';
-export class WebCamHandler {
-    setOnFrame(cb) {
-        this._onFrame = cb;
-    }
+import { WebCamHandlerBase } from './web-cam-handler-base.js';
+export class WebCamHandlerStream extends WebCamHandlerBase {
     constructor(client, baseUrl) {
+        super();
         this.settings = new WebCamHandlerSettings();
         this.client = client;
         this.baseUrl = baseUrl;
@@ -17,35 +16,57 @@ export class WebCamHandler {
         _diffCanvas.width = this.settings.width;
         _diffCanvas.height = this.settings.height;
         this._diffCanvas = _diffCanvas;
-        // This library can launch webcam automatically if the video element is not provided
-        if (this.settings.shouldLaunchWebcam === true) {
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices
-                    .getUserMedia({ video: true, audio: false })
-                    .then((stream) => {
-                    this.videoElement.srcObject = stream;
-                    this.videoElement.play();
-                })
-                    .catch((err) => {
-                    console.error(`An error occurred while accessing webcam: ${err}`);
-                });
-            }
-            else {
-                console.error("MediaDevices API not available in this environment.");
-            }
-        }
         this._isStreaming = false;
     }
-    start() {
-        const video = this.videoElement;
-        video.addEventListener('canplay', (_ev) => {
-            if (!this._isStreaming) {
+    async start() {
+        if (!navigator.mediaDevices?.getUserMedia) {
+            console.error('MediaDevices API not available in this environment.');
+            return;
+        }
+        const constraints = {
+            video: {
+                width: { ideal: this.settings.width },
+                height: { ideal: this.settings.height },
+            },
+            audio: false,
+        };
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            const track = stream.getVideoTracks()[0];
+            // (не вызываем второй getUserMedia для капабилити)
+            const caps = track.getCapabilities?.();
+            const sets = track.getSettings?.();
+            console.log('Capabilities:', caps);
+            console.log('Current settings:', sets);
+            this.videoElement.autoplay = true;
+            this.videoElement.muted = true;
+            this.videoElement.playsInline = true;
+            this.videoElement.srcObject = stream;
+            // --- ВАЖНО: готовим старт до play(), и делаем fallback ---
+            const startProcessing = () => {
+                if (this._isStreaming)
+                    return;
                 this._isStreaming = true;
-                if (this.settings.takePictureIntervalMs > 0) {
-                    setInterval(() => this.takeNextPictureAndDetectMovement(), this.settings.takePictureIntervalMs);
+                if (this.settings.pictureAnalysisIntervalMs > 0) {
+                    setInterval(() => this.takeNextPictureAndDetectMovement(), this.settings.pictureAnalysisIntervalMs);
                 }
+            };
+            this.videoElement.addEventListener('canplay', startProcessing, { once: true });
+            const playPromise = this.videoElement.play();
+            if (playPromise && typeof playPromise.catch === 'function') {
+                playPromise.catch(() => { });
             }
-        });
+            // fallback: если событие уже было до подписки
+            if (this.videoElement.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+                startProcessing();
+            }
+            // прижимаем fps после старта (если поддерживается)
+            // await track.applyConstraints({ frameRate: this.settings.framePerSecond }).catch(() => {});
+        }
+        catch (err) {
+            console.error('getUserMedia failed:', err);
+            return;
+        }
     }
     takeNextPictureAndDetectMovement() {
         // stashing current image in the diff and getting data

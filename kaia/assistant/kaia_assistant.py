@@ -2,7 +2,7 @@ from typing import *
 from .kaia_skill import IKaiaSkill
 from eaglesong.core import Automaton, ContextRequest, AutomatonExit, Listen, Return
 from grammatron import Template
-from avatar.daemon import IntentsPack, ChatCommand, NarrationService, State
+from avatar.daemon import IntentsPack, ChatCommand, NarrationService, State, BackendIdleReport
 from dataclasses import dataclass, field
 import traceback
 from datetime import datetime
@@ -11,7 +11,7 @@ from .exception_in_skill import ExceptionHandledSkill
 from .feedback import Feedback
 from loguru import logger
 from .context import KaiaContext
-
+from .common_intents import CommonIntents
 
 @dataclass
 class ActiveSkill:
@@ -73,7 +73,7 @@ class KaiaAssistant:
             'exception_in_skill'
         )
 
-        self.additional_intents = []
+        self.additional_intents = [CommonIntents.stop]
         self.additional_replies = []
 
     def _check_special_skill(self, skill, default, field):
@@ -115,7 +115,6 @@ class KaiaAssistant:
 
 
     def _get_automaton(self, input, context) -> ActiveSkill:
-
         for skill in reversed(self.active_skills):
             if skill.skill.should_proceed(input):
                 logger.info(f'Continuation: `{input}` continues `{skill.skill.get_name()}`')
@@ -201,6 +200,7 @@ class KaiaAssistant:
             if returned is not None:
                 input = returned
             else:
+                yield BackendIdleReport(len(self.active_skills) == 0)
                 input = yield listen
 
 
