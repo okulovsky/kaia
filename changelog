@@ -1,3 +1,28 @@
+4.0.4
+    Kaia can now detect faces on images and run personalized notifications
+    Avatar:
+        TimerEvent -> TickEvent
+        UserWalkIn service
+        VectorIdentificator now works for SpeakerIdentification
+        Small fixes and improvements
+    Brainbox:
+        - InsightFace is imlemented
+        - Representation is refactored in flow, MinimalRepresentation is added
+        - Small improvements in deployment
+    Chara:
+        - code to set up the face identification (notebook is missing)
+        - Paraphrases are improved. Notebook for paraphrases is added
+    Foundation Kaia:
+        - Yearly repetitions
+    Grammatron:
+        - Template now has a default name set to its content
+    Phonix:
+        - Sox output is supported (works better at Raspberry pie)
+    Kaia:
+        - Tinkering in Assistant
+        -  WalkIn skill, not-yet-official WorkoutSkill
+        - WebCam support in JS
+
 4.0.3
     Avatar:
         Better error processing in server
