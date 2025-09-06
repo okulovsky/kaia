@@ -79,6 +79,19 @@ class AvatarApiTestCase(TestCase):
                 self.assertLess(write_time, 0.03)
                 self.assertLess(read_time, 0.01)
 
+    def test_exception_on_non_unique(self):
+        with Loc.create_test_file() as file_name:
+            settings = AvatarServerSettings(components=(
+                MessagingComponent(file_name),
+            ))
+            with AvatarApi.Test(settings) as api:
+                message = GenericMessage(dict())
+                api.messaging.add('test', message)
+                with self.assertRaises(Exception):
+                    api.messaging.add('test', message)
+
+
+
 
 
 

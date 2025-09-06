@@ -1,5 +1,5 @@
 from typing import Iterable
-from .common import AvatarService, SoundCommand, SoundConfirmation, TimerEvent, message_handler
+from .common import AvatarService, SoundCommand, SoundConfirmation, TickEvent, message_handler
 import time
 
 class SoundPlayUnblockerService(AvatarService):
@@ -18,7 +18,7 @@ class SoundPlayUnblockerService(AvatarService):
                 del self.message_id_to_time[id]
 
     @message_handler
-    def on_tick(self, tick: TimerEvent) -> Iterable[SoundConfirmation]:
+    def on_tick(self, tick: TickEvent) -> Iterable[SoundConfirmation]:
         now = time.monotonic()
         for id, tm in list(self.message_id_to_time.items()):
             if now - tm > self.time_limit_in_seconds:

@@ -1,0 +1,2 @@
+from .vector_identificator import VectorIdentificator, VectorIdentificatorSettings
+from .straregies import IStrategy, BestOfStrategy

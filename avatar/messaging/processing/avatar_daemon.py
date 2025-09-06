@@ -17,7 +17,7 @@ class AvatarDebugReport:
     duration: float
 
 @dataclass
-class TimerEvent(IMessage):
+class TickEvent(IMessage):
     time: datetime
 
 
@@ -41,7 +41,7 @@ class AvatarDaemon:
         self.rules = RulesCollection()
         self._stop_flag = threading.Event()
         self.time_tick_interval_in_seconds = time_tick_interval_in_seconds
-        self.last_time_tick: TimerEvent|None = None
+        self.last_time_tick: TickEvent|None = None
         self.add_error_events = add_error_events
         self.reporting_client = reporting_client
 
@@ -91,7 +91,7 @@ class AvatarDaemon:
                 if self.time_tick_interval_in_seconds is not None:
                     current = datetime.now()
                     if self.last_time_tick is None or (current - self.last_time_tick.time).total_seconds() > self.time_tick_interval_in_seconds:
-                        self.last_time_tick = TimerEvent(current)
+                        self.last_time_tick = TickEvent(current)
                         self.client.put(self.last_time_tick)
 
                 messages = self.client.pull()

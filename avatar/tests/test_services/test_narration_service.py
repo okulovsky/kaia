@@ -55,24 +55,24 @@ class NarrationTestCase(TestCase):
 
     def test_time_ticks(self):
         d = datetime.datetime.now()
-        m = self.proc.debug_and_stop_by_empty_queue(TimerEvent(d)).messages
+        m = self.proc.debug_and_stop_by_empty_queue(TickEvent(d)).messages
         self.assertEqual(1, len(m))
         self.assertEqual('a1', self.state.activity)
 
-        m = self.proc.debug_and_stop_by_empty_queue(TimerEvent(d+datetime.timedelta(seconds=1))).messages
+        m = self.proc.debug_and_stop_by_empty_queue(TickEvent(d+datetime.timedelta(seconds=1))).messages
         self.assertEqual(1, len(m))
         self.assertEqual('a1', self.state.activity)
 
-        m = self.proc.debug_and_stop_by_empty_queue(TimerEvent(d+datetime.timedelta(seconds=59))).messages
+        m = self.proc.debug_and_stop_by_empty_queue(TickEvent(d+datetime.timedelta(seconds=59))).messages
         self.assertEqual(1, len(m))
         self.assertEqual('a1', self.state.activity)
 
-        m = self.proc.debug_and_stop_by_empty_queue(TimerEvent(d+datetime.timedelta(seconds=60))).messages
+        m = self.proc.debug_and_stop_by_empty_queue(TickEvent(d+datetime.timedelta(seconds=60))).messages
         self.assertEqual(3, len(m))
         self.assertEqual('a0', self.state.activity)
         self.assertIsInstance(m[1], ImageService.NewImageCommand)
 
-        m = self.proc.debug_and_stop_by_empty_queue(TimerEvent(d+datetime.timedelta(seconds=120))).messages
+        m = self.proc.debug_and_stop_by_empty_queue(TickEvent(d+datetime.timedelta(seconds=120))).messages
         self.assertEqual(3, len(m))
         self.assertEqual('a1', self.state.activity)
         self.assertIsInstance(m[1], ImageService.NewImageCommand)

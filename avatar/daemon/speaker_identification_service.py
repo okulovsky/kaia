@@ -1,11 +1,13 @@
-import jsonpickle
-
-from brainbox import BrainBox, CombinedPrerequisite, IPrerequisite, BrainBoxApi
+from brainbox import BrainBox
 from brainbox.deciders import Resemblyzer
-from .common import SoundEvent, IMessage, message_handler, IService, State, AvatarService
+from .common import SoundEvent, IMessage, message_handler, State, AvatarService, InitializationEvent
+from .common.vector_identificator import VectorIdentificator, VectorIdentificatorSettings
 from .brainbox_service import BrainBoxService
 from dataclasses import dataclass
-from typing import cast
+from pathlib import Path
+from brainbox.framework import FileLike
+from ..server import AvatarApi
+from yo_fluq import FileIO
 
 @dataclass
 class SpeakerIdentificationTrain(IMessage):
@@ -15,19 +17,6 @@ class SpeakerIdentificationTrain(IMessage):
 class SpeakerIdentificationTrainConfirmation(IMessage):
     admit_errors: bool
 
-@dataclass
-class SpeakerIdentificationTrainingPrerequisite(IPrerequisite):
-    model: str
-    true_speaker: str
-    file: str
-
-    def execute(self, api: BrainBoxApi):
-        Resemblyzer.upload_dataset_file(
-            self.model,
-            'train',
-            self.true_speaker,
-            api.open_file(self.file)
-        ).execute(api)
 
 
 class SpeakerIdentificationService(AvatarService):
@@ -35,54 +24,46 @@ class SpeakerIdentificationService(AvatarService):
     TrainConfirmation = SpeakerIdentificationTrainConfirmation
 
 
-    def __init__(self, state: State, resemblyzer_model: str):
+    def __init__(self, state: State, settings: VectorIdentificatorSettings, api: AvatarApi):
         self.state = state
-        self.resemblyzer_model = resemblyzer_model
+        self.vector_identificator = VectorIdentificator(settings, self.sample_to_vector, api.file_cache.download)
         self.buffer: list[tuple[SoundEvent,str]] = []
 
 
-
-    @message_handler.with_call(BrainBoxService.Command, BrainBoxService.Confirmation)
-    def analyze(self, message: SoundEvent) -> None:
+    def sample_to_vector(self, file: FileLike.Type):
         command = BrainBoxService.Command(
             BrainBox.Task
-            .call(Resemblyzer).distances(file=message.file_id, model=self.resemblyzer_model)
-            .to_task(id=message.file_id.split('.')[0] + '.resemblyzer'),
-            dict(source_message_id=message.envelop.id)
+            .call(Resemblyzer).vector(file)
+            .to_task()
         )
-        result = self.client.run_synchronously(command, BrainBoxService.Confirmation)
-        speaker = result.result
-        if result is not None:
+        return self.client.run_synchronously(command, BrainBoxService.Confirmation).result['vector']
+
+    @message_handler.with_call(BrainBoxService.Command, BrainBoxService.Confirmation)
+    def on_sound_event(self, message: SoundEvent) -> None:
+        speaker = self.vector_identificator.analyze(message.file_id)
+        if speaker is not None:
             self.state.user = speaker
             self.buffer.append((message,speaker))
             self.buffer = self.buffer[-2:]
 
-
+    @message_handler.with_call(BrainBoxService.Command, BrainBoxService.Confirmation)
+    def on_initialize(self, message: InitializationEvent):
+        self.vector_identificator.initialize()
 
     @message_handler.with_call(BrainBoxService.Command, BrainBoxService.Confirmation)
     def train(self, message: SpeakerIdentificationTrain) -> SpeakerIdentificationTrainConfirmation:
-        prereqs = []
+        count = 0
         for event, speaker in self.buffer:
             if speaker == message.true_speaker:
                 continue
-            prereqs.append(SpeakerIdentificationTrainingPrerequisite(self.resemblyzer_model, message.true_speaker, event.file_id))
-        if len(prereqs) == 0:
-            return SpeakerIdentificationTrainConfirmation(False)
-        self.state.user = message.true_speaker
-        train_task = BrainBox.Task.call(Resemblyzer).train(self.resemblyzer_model)
-        pack = BrainBox.ExtendedTask(train_task, prerequisite=CombinedPrerequisite(prereqs))
-        self.client.run_synchronously(BrainBoxService.Command(pack), BrainBoxService.Confirmation)
-        return SpeakerIdentificationTrainConfirmation(True)
+            self.vector_identificator.add_sample(message.true_speaker, event.file_id)
+            count += 1
 
-    @staticmethod
-    def brain_box_mock(task: BrainBox.ITask):
-        jobs = task.create_jobs()
-        if len(jobs)!=1:
-            raise ValueError("Expected 1 job")
-        job = jobs[0]
-        if job.method == 'train':
-            return 'OK'
-        return job.arguments['file'].split(' ')[0]
+        if count == 0:
+            return SpeakerIdentificationTrainConfirmation(False).as_confirmation_for(message)
+        self.vector_identificator.initialize()
+        return SpeakerIdentificationTrainConfirmation(True).as_confirmation_for(message)
+
 
     def requires_brainbox(self):
         return True

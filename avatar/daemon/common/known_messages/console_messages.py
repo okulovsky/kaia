@@ -2,8 +2,6 @@ from typing import *
 from ....messaging import IMessage
 from dataclasses import dataclass
 from enum import Enum
-from pathlib import Path
-import base64
 
 @dataclass
 class SoundEvent(IMessage):

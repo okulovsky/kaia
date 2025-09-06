@@ -19,6 +19,7 @@ class BrainBoxServiceConfirmation(IMessage, Generic[TResult]):
     error: Any
 
 
+
 class BrainBoxService(AvatarService):
     Command = BrainBoxServiceCommand
     Confirmation = BrainBoxServiceConfirmation

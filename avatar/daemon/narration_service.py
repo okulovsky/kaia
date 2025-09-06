@@ -1,5 +1,5 @@
 from typing import *
-from .common import IMessage, State, message_handler, TimerEvent, InitializationEvent, AvatarService, TextCommand, UtteranceSequenceCommand
+from .common import IMessage, State, message_handler, TickEvent, InitializationEvent, AvatarService, TextCommand, UtteranceSequenceCommand
 from dataclasses import dataclass
 import numpy as np
 from datetime import datetime
@@ -98,7 +98,7 @@ class NarrationService(AvatarService):
             yield self.state.with_new_envelop().as_confirmation_for(message)
 
     @message_handler
-    def on_tick(self, message: TimerEvent) -> Iterable[Union[NewImageCommand, State]]:
+    def on_tick(self, message: TickEvent) -> Iterable[Union[NewImageCommand, State]]:
         self.current_time = message.time
         if (self.current_time - self.last_update_time).total_seconds() < self.time_between_images_in_seconds:
             return ()

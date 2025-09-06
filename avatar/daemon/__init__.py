@@ -14,3 +14,4 @@ from .chat_service import ChatService
 from .stt_integration_service import STTIntegrationService
 from .tts_integration_service import TTSIntegrationService
 from .sound_command_unblocker_service import SoundPlayUnblockerService
+from .user_walk_in_service import UserWalkInService
