@@ -1,6 +1,6 @@
 export class WebCamHandlerSettings {
-  /** How often to sample the video (ms). */
-  takePictureIntervalMs: number = 1000;
+  /** How often the picture is analyzed (framePerSecond cannot be less that 1, so if you need fewer analyses, use this) */
+  pictureAnalysisIntervalMs: number = 1000;
 
   /** Frame width in pixels. */
   width: number = 320;

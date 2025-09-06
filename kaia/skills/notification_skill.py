@@ -1,6 +1,6 @@
 from typing import *
-from kaia import IKaiaSkill, TimerEvent, Feedback, VolumeCommand
-from avatar.daemon import VolumeControlService
+from kaia import IKaiaSkill, TickEvent, Feedback, VolumeCommand
+from avatar.daemon import VolumeControlService, IMessage
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from eaglesong.core import Return, Listen
@@ -19,8 +19,8 @@ class NotificationInfo:
 
 @dataclass
 class NotificationRegister:
-    notification_signals: Tuple[Any,...]
-    exit_signals: Optional[Tuple[Any,...]] = None
+    notification_signals: Tuple[IMessage,...]
+    exit_signals: Optional[Tuple[IMessage,...]] = None
     instances: Dict[str, NotificationInfo] = field(default_factory=lambda: {})
 
 
@@ -59,7 +59,7 @@ class NotificationSkill(IKaiaSkill):
 
 
     def should_start(self, input) -> bool:
-        if not isinstance(input, TimerEvent):
+        if not isinstance(input, TickEvent):
             return False
         return self._find_notification(input.time) is not None
 
@@ -79,7 +79,7 @@ class NotificationSkill(IKaiaSkill):
 
         while True:
             input = yield
-            if isinstance(input, TimerEvent):
+            if isinstance(input, TickEvent):
                 current_time = input.time
                 if (
                     self.pause_between_alarms_in_seconds is None
@@ -87,7 +87,7 @@ class NotificationSkill(IKaiaSkill):
                     or (current_time-last_time_audio_sent).total_seconds() >= self.pause_between_alarms_in_seconds
                 ):
                     for item in active_notification.register.notification_signals:
-                        yield item
+                        yield item.with_new_envelop()
                     last_time_audio_sent = current_time
                     if self.volume_delta is not None:
                         stash_to = 'before_notification' if first_notification else None
@@ -97,7 +97,7 @@ class NotificationSkill(IKaiaSkill):
             else:
                 if active_notification.register.exit_signals is not None:
                     for item in active_notification.register.exit_signals:
-                        yield item
+                        yield item.with_new_envelop()
                 del active_notification.register.instances[active_notification.name]
                 if self.volume_delta is not None and not first_notification:
                     yield VolumeControlService.Command(restore_from='before_notification')

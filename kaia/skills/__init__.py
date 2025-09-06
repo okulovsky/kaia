@@ -13,3 +13,4 @@ from .echo_skill import EchoSkill
 from .ping import PingSkill
 from .recognition_feedback import RecognitionFeedbackSkill
 from .cookbook_skill import CookBookSkill, Recipe
+from .walk_in_skill import WalkInSkill, WalkInAnnouncement

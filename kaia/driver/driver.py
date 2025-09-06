@@ -2,7 +2,7 @@ from typing import Type
 import time
 from typing import Callable, Any
 from avatar.messaging import StreamClient
-from avatar.daemon import UtteranceSequenceCommand, TextCommand, STTService, TimerEvent, SoundCommand
+from avatar.daemon import UtteranceSequenceCommand, TextCommand, STTService, TickEvent, SoundCommand, BackendIdleReport
 from loguru import logger
 from ..assistant import KaiaContext
 from eaglesong import Automaton
@@ -15,13 +15,15 @@ from ..assistant import KaiaAssistant
 from phonix.daemon import SoundLevelReport, SilenceLevelReport
 
 
+
+
 class KaiaDriver:
     def __init__(self,
                  assistant_factory: Callable[[KaiaContext],Any],
                  client: StreamClient,
                  input_transformer: IKaiaInputTransformer|None = None,
                  expect_confirmations_for_types: tuple[Type,...] = (UtteranceSequenceCommand, TextCommand, SoundCommand),
-                 silent_types: tuple[type,...] = (SoundLevelReport, SilenceLevelReport, TimerEvent),
+                 silent_types: tuple[type,...]|None = None,
                  ):
         self.assistant_factory = assistant_factory
         self.client = client
@@ -29,7 +31,11 @@ class KaiaDriver:
         self.expect_confirmations_for_types = expect_confirmations_for_types
         self.interpreter: KaiaInterpreter|None = None
         self.rhasspy_training_is_done: bool = False
+        if silent_types is None:
+            silent_types = KaiaDriver.DEFAULT_SILENT_TYPES
         self.silent_types = silent_types
+
+    DEFAULT_SILENT_TYPES = (SoundLevelReport, SilenceLevelReport, TickEvent, BackendIdleReport)
 
     def initialize(self):
         context = KaiaContext(self.client)

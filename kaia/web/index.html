@@ -26,7 +26,7 @@
     import { ServerStartedEventHandler }  from '/scripts/server-started-event-handler.js'
     import { ControlPanelController }   from '/scripts/control-panel-controller.js';
     import { Message }                  from '/scripts/message.js';
-    import { WebCamHandler, WebCamHandlerDebugger } from './scripts/web-cam-handler/index.js';
+    import { WebCamHandlerSnapshot, WebCamHandlerStream, WebCamHandlerDebugger } from './scripts/web-cam-handler/index.js';
 
     const chatDiv     = document.getElementById('chat');
     const imageDiv    = document.getElementById('main_image');
@@ -46,10 +46,10 @@
     new ServerStartedEventHandler(dispatcher);
 
     const controlPanel = new ControlPanelController(imageDiv, panelDiv, overlayDiv, client);
-    //const webCamHandler = new WebCamHandler(client, window.location.origin);
-    //webCamHandler.start()
-    //const webCamHandlerDebugger = new WebCamHandlerDebugger(webCamHandler);
-    //controlPanel.addDebugPanel('📷', webCamHandlerDebugger);
+    const webCamHandler = new WebCamHandlerStream(client, window.location.origin);
+    await webCamHandler.start()
+    const webCamHandlerDebugger = new WebCamHandlerDebugger(webCamHandler);
+    controlPanel.addDebugPanel('📷', webCamHandlerDebugger);
 
     dispatcher.start();
   </script>

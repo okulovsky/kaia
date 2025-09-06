@@ -44,7 +44,7 @@ class ChangeCharacterSkill(SingleLineKaiaSkill):
                  ):
         self.characters_list = tuple(characters_list)
         change_character = ChangeCharacterIntents.change_character.substitute(
-            character=VariableDub(CHARACTER.name, OptionsDub(self.characters_list))
+            character=OptionsDub(self.characters_list)
         )
         templates = ChangeCharacterIntents.get_templates(change_character)
         super().__init__(templates, ChangeCharacterReplies)

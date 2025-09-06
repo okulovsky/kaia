@@ -4,6 +4,7 @@ from .notification_skill import NotificationRegister, NotificationInfo
 from dataclasses import dataclass
 from yo_fluq import *
 from datetime import datetime, timedelta
+from ..assistant import CommonIntents
 
 DISH = VariableDub(
     "dish",
@@ -19,7 +20,6 @@ class CookBookIntents(TemplatesCollection):
     recipe_book = Template("Recipe book")
     recipe = Template(f"How to cook {DISH}")
     next_step = Template("Next step")
-    cancel = Template("Cancel the recipe")
     what_to_cook = Template("What do you want to cook?")
 
 class CookBookReplies(TemplatesCollection):
@@ -40,12 +40,12 @@ class CookBookReplies(TemplatesCollection):
 
     timer_is_busy = (
         Template(f"You need to wait for the timer. {PluralAgreement(MINUTES, 'minute')} remaining")
-        .context(f"{World.user} is asking what is the next step in the recipe, but currently {World.user} needs to wait for the timer to finish the previous step, and {World.character} informs {World.user.pronoun} about this fact.")
+        .context(f"{World.user} is asking what is the next step in the recipe, but currently {World.user} needs to wait for the timer to finish the previous step, and {World.character} informs {World.user.pronoun.objective} about this fact.")
     )
 
     recipe_is_cancelled = (
         Template(f"The recipe is cancelled.")
-        .context(reply_to=CookBookIntents.cancel)
+        .context(f"{World.user} requested to stop the recipe")
     )
 
 @dataclass
@@ -77,7 +77,7 @@ class CookBookSkill(KaiaSkillBase):
         self.notification_register = register
         self.datetime_factory = datetime_factory if datetime_factory is not None else datetime.now
         template = CookBookIntents.recipe.substitute(
-            dish=VariableDub(DISH.name, OptionsDub([r.dish for r in self.recipes]))
+            dish=OptionsDub([r.dish for r in self.recipes])
         )
         super().__init__(
             CookBookIntents.get_templates(template),
@@ -94,7 +94,7 @@ class CookBookSkill(KaiaSkillBase):
         if isinstance(input, Utterance):
             if input in CookBookIntents.next_step:
                 return True
-            if input in CookBookIntents.cancel:
+            if input in CommonIntents.stop:
                 return True
         if isinstance(input, CookBookContinuation):
             return True
@@ -124,7 +124,7 @@ class CookBookSkill(KaiaSkillBase):
                 self.notification_register.instances['cookbook'] = info
                 yield
             response = yield Listen()
-            if response in CookBookIntents.cancel:
+            if response in CommonIntents.stop:
                 if 'cookbook' in self.notification_register.instances:
                     del self.notification_register.instances['cookbook']
                 yield CookBookReplies.recipe_is_cancelled()

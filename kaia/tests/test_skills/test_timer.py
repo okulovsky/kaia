@@ -4,7 +4,7 @@ from eaglesong.core import Automaton, Scenario
 from kaia.skills.timer_skill import TimerSkill, TimerReplies, TimerIntents
 from kaia.skills.notification_skill import NotificationSkill, NotificationRegister
 from kaia import KaiaAssistant
-from avatar.daemon import TimerEvent
+from avatar.daemon import TickEvent
 from avatar.utils import TestTimeFactory
 
 

@@ -1,7 +1,7 @@
 export class WebCamHandlerSettings {
     constructor(init) {
-        /** How often to sample the video (ms). */
-        this.takePictureIntervalMs = 1000;
+        /** How often the picture is analyzed (framePerSecond cannot be less that 1, so if you need fewer analyses, use this) */
+        this.pictureAnalysisIntervalMs = 1000;
         /** Frame width in pixels. */
         this.width = 320;
         /** Frame height in pixels. */
