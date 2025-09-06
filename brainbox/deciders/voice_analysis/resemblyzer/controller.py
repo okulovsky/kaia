@@ -71,6 +71,11 @@ class ResemblyzerController(DockerWebServiceController[ResemblyzerSettings], INo
         api.execute(BrainBoxTask.call(Resemblyzer).distances(first_file,model_name))
         yield TestReport.last_call(api).href('distances')
 
+        for record in media_library.records:
+            file = record.get_file()
+            result = api.execute(BrainBoxTask.call(Resemblyzer).vector(file))
+            yield TestReport.last_call(api).href('vectorization').with_comment('Getting a vector of a voice file without ')
+
 
 
 
