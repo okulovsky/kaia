@@ -62,7 +62,7 @@ class ParaphraseSetup:
             if tags in tags_to_case:
                 tags_to_case[tags].pre_existing_templates_count += 1
             if record.filename in feedback and 'seen' in feedback[record.filename]:
-                tags_to_case[tags].pre_existing_templates_count -= 0.5
+                tags_to_case[tags].pre_existing_templates_seen += 1
         return list(tags_to_case.values())
 
     def create_new_cases(self):
@@ -74,7 +74,7 @@ class ParaphraseSetup:
             return item.create_paraphrase_record(None).exact_match_values()
 
         def _item_to_count(item: ParaphraseCase):
-            return item.pre_existing_templates_count + len(item.result)
+            return item.pre_existing_templates_count - item.pre_existing_templates_seen + len(item.result)
 
         return SortedRepresentationStep(count, _item_to_category, item_to_count=_item_to_count)
 

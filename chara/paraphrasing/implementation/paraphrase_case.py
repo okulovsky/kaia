@@ -17,6 +17,7 @@ class ParaphraseCase:
     language: str = 'en'
 
     pre_existing_templates_count: int = 0
+    pre_existing_templates_seen: int = 0
     answer: str|None = None
     result: tuple[Template,...] = ()
 
