@@ -8,7 +8,7 @@ import traceback
 from datetime import datetime
 from .automaton_not_found_skill import AutomatonNotFoundSkill
 from .exception_in_skill import ExceptionHandledSkill
-from .feedback import Feedback
+from .feedback import Pushback
 from loguru import logger
 from .context import KaiaContext
 from .common_intents import CommonIntents
@@ -52,6 +52,7 @@ class KaiaAssistant:
                  raise_exception: bool = False,
                  custom_words_in_core_intents: dict[str, str] = None,
                  default_language: str = 'en',
+                 report_idle: bool = False,
                  ):
         self.skills = tuple(skills)
         self.active_skills: list[ActiveSkill] = []
@@ -60,6 +61,7 @@ class KaiaAssistant:
         self.custom_words_in_core_intents = custom_words_in_core_intents
         self.default_language = default_language
         self.current_language = default_language
+        self.report_idle = report_idle
         self.all_skills = tuple(skills)
 
         self.automaton_not_found_skill = self._check_special_skill(
@@ -174,7 +176,7 @@ class KaiaAssistant:
                     return (reply, None)
                 if isinstance(reply, AutomatonExit):
                     self._remove_active_skill(active_skill)
-                    if isinstance(reply, Return) and reply.value is not None and isinstance(reply.value, Feedback):
+                    if isinstance(reply, Return) and reply.value is not None and isinstance(reply.value, Pushback):
                         return None, reply.value.content
                     return Listen(), None
                 input = yield reply
@@ -200,7 +202,8 @@ class KaiaAssistant:
             if returned is not None:
                 input = returned
             else:
-                yield BackendIdleReport(len(self.active_skills) == 0)
+                if self.report_idle:
+                    yield BackendIdleReport(len(self.active_skills) == 0)
                 input = yield listen
 
 

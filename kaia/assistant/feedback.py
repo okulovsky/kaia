@@ -2,5 +2,5 @@ from typing import *
 from dataclasses import dataclass
 
 @dataclass
-class Feedback:
+class Pushback:
     content: Any

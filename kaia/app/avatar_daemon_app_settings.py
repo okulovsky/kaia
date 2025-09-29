@@ -34,10 +34,6 @@ class AvatarDaemonAppSettings(IAppInitializer):
     dub_task_factory: s.TTSService.TaskFactory = field(default_factory=DemoDubTaskFactory)
     speaker_to_image_url: Callable[[str], str] = _speaker_to_image_url
     greetings_command: Any = field(default_factory=_default_greetings)
-    image_library_path: Path = Path(__file__).parent/'files/image_library.zip'
-    image_library_feedback_path: Path = Path(__file__).parent / 'files/image_library_feedback.json'
-    paraphrases_path: Path|None = None
-    paraphrases_feedback_path: Path = None
     initialize_volume: bool = False
     report_to_session: str|None = None
 
@@ -65,15 +61,10 @@ class AvatarDaemonAppSettings(IAppInitializer):
             cm.NewContentStrategy(),
             cm.AnyContentStrategy(),
         )
-        image_manager = cm.MediaLibraryManager(
-            self.image_library_path,
-            self.image_library_feedback_path,
-            image_strategy,
-        )
         return s.ImageService(
             state,
             app.avatar_api,
-            image_manager,
+            image_strategy
         )
 
     def create_stt_service(self, app: KaiaApp, state: s.State):
@@ -102,19 +93,11 @@ class AvatarDaemonAppSettings(IAppInitializer):
         return s.VolumeControlService(initialize_volume=self.initialize_volume)
 
     def create_paraphrase_service(self, app: KaiaApp, state: s.State):
-        manager = None
-        if self.paraphrases_path is not None:
-            paraphrase_strategy = cm.SequentialStrategy(
-                cm.NewContentStrategy(),
-                cm.AnyContentStrategy()
-            )
-
-            manager = cm.ContentManager(
-                cm.DataClassDataProvider(FileIO.read_pickle(self.paraphrases_path)),
-                app.working_folder / 'avatar/paraphrases-feedback.json',
-                paraphrase_strategy,
-            )
-        service = s.ParaphraseService(state, manager)
+        strategy = cm.SequentialStrategy(
+            cm.NewContentStrategy(),
+            cm.AnyContentStrategy()
+        )
+        service = s.ParaphraseService(state, strategy)
         service.binding_settings.bind_type(s.PlayableTextMessage).to_all_except(s.ParaphraseService)
         return service
 
@@ -153,7 +136,8 @@ class AvatarDaemonAppSettings(IAppInitializer):
             app.create_avatar_client(),
             self.timer_event_span_in_seconds,
             self.error_events,
-            reporting_stream
+            reporting_stream,
+            app.avatar_resources_folder,
         )
         state = self.new_state()
 

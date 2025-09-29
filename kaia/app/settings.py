@@ -15,10 +15,12 @@ class KaiaAppSettings:
     avatar_server: AvatarServerAppSettings|None = field(default_factory=AvatarServerAppSettings)
     kaia: KaiaDriverSettings|None = field(default_factory=KaiaDriverSettings)
     phonix: PhonixAppSettings|None = field(default_factory=PhonixAppSettings)
+    custom_avatar_resources_folder: Path|None = None
 
 
     def create_app(self, working_folder: Path):
         app = KaiaApp(working_folder)
+        app.custom_avatar_resources_folder = self.custom_avatar_resources_folder
         self.bind_app(app)
         return app
 
