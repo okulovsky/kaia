@@ -1,5 +1,5 @@
 from typing import *
-from kaia import IKaiaSkill, TickEvent, Feedback, VolumeCommand
+from kaia import IKaiaSkill, TickEvent, Pushback, VolumeCommand
 from avatar.daemon import VolumeControlService, IMessage
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -9,7 +9,7 @@ from eaglesong.core import Return, Listen
 class NotificationInfo:
     start: datetime
     duration: timedelta
-    feedback_after: Any = None
+    pushback_after: Any = None
 
 
     @property
@@ -101,8 +101,8 @@ class NotificationSkill(IKaiaSkill):
                 del active_notification.register.instances[active_notification.name]
                 if self.volume_delta is not None and not first_notification:
                     yield VolumeControlService.Command(restore_from='before_notification')
-                if active_notification.info.feedback_after is not None:
-                    raise Return(Feedback(active_notification.info.feedback_after))
+                if active_notification.info.pushback_after is not None:
+                    raise Return(Pushback(active_notification.info.pushback_after))
                 else:
                     raise Return()
 

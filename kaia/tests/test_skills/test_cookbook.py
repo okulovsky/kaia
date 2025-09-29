@@ -5,6 +5,7 @@ from grammatron import Utterance
 from eaglesong import Scenario, Automaton
 from unittest import TestCase
 from avatar.utils import TestTimeFactory
+from avatar.daemon import ChatCommand
 
 def S(factory: TestTimeFactory):
     recipe = Recipe(
@@ -17,8 +18,8 @@ def S(factory: TestTimeFactory):
         ]
     )
     register = NotificationRegister(
-        ('alarm starts',),
-        ('alarm stops',),
+        (ChatCommand('alarm starts'),),
+        (ChatCommand('alarm stops'),),
     )
 
     assistant = KaiaAssistant(
@@ -46,8 +47,8 @@ class CookbookSkillTestCase(TestCase):
             .act_and_send(lambda: tf.shift(59).event())
             .check()
             .act_and_send(lambda: tf.shift(1).event())
-            .check('alarm starts')
+            .check(lambda z: z.text == 'alarm starts')
             .send('Stop')
-            .check('alarm stops', 'Enjoy your tea')
+            .check(lambda z: z.text == 'alarm stops', 'Enjoy your tea')
             .validate()
         )

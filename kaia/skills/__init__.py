@@ -14,3 +14,5 @@ from .ping import PingSkill
 from .recognition_feedback import RecognitionFeedbackSkill
 from .cookbook_skill import CookBookSkill, Recipe
 from .walk_in_skill import WalkInSkill, WalkInAnnouncement
+from .music_skill import IMusicPlayer, MusicSkill
+from .workout_skill import WorkoutSkill, Workout, Excercise

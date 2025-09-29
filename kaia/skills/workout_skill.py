@@ -6,9 +6,10 @@ from eaglesong import Listen, Return
 from typing import cast
 from yo_fluq import Query
 from datetime import timedelta
+from .music_skill import IMusicPlayer
 
 @dataclass
-class WorkoutItem:
+class Excercise:
     name: str
     duration_in_seconds: int
     rest_afterwards_in_seconds: int
@@ -16,7 +17,7 @@ class WorkoutItem:
 @dataclass
 class Workout:
     name: str
-    items: list[WorkoutItem]
+    items: list[Excercise]
 
 DURATION = VariableDub(
     'duration',
@@ -48,8 +49,9 @@ class WorkoutReplies(TemplatesCollection):
     cancelled = Template("The workout is cancelled").context(f"{World.user} requested to stop the workout routing thet {World.character} was running")
 
 class WorkoutSkill(KaiaSkillBase):
-    def __init__(self, workouts: list[Workout]):
+    def __init__(self, workouts: list[Workout], music: IMusicPlayer|None):
         self.workouts = workouts
+        self.music = music
         workout_names = [w.name for w in workouts]
         super().__init__(
             [WorkoutIntents.start.substitute(workout_name=OptionsDub(workout_names))],
@@ -86,6 +88,8 @@ class WorkoutSkill(KaiaSkillBase):
         if len(workout) != 1:
             yield WorkoutReplies.workout_not_found()
             return
+        if self.music is not None:
+            self.music.play()
         yield from self._wait(0)
         yield WorkoutReplies.starting(workout_name)
         for item in workout[0].items:
@@ -102,6 +106,8 @@ class WorkoutSkill(KaiaSkillBase):
                 yield WorkoutReplies.rest(item.rest_afterwards_in_seconds)
                 yield from self._wait(item.rest_afterwards_in_seconds)
         yield WorkoutReplies.done()
+        if self.music is not None:
+            self.music.stop()
 
 
 

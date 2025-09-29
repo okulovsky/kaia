@@ -4,14 +4,15 @@ from eaglesong.core import Automaton, Scenario
 from kaia.skills.timer_skill import TimerSkill, TimerReplies, TimerIntents
 from kaia.skills.notification_skill import NotificationSkill, NotificationRegister
 from kaia import KaiaAssistant
-from avatar.daemon import TickEvent
+from avatar.daemon import ChatCommand
 from avatar.utils import TestTimeFactory
+
 
 
 def _factory(dtf, beautification):
     register = NotificationRegister(
-        ('Alarm',),
-        ('Alarm cancelled',) if beautification else None
+        (ChatCommand('Alarm'),),
+        (ChatCommand('Alarm cancelled'),) if beautification else None
     )
     notification = NotificationSkill([register], 10 if beautification else None)
     timer = TimerSkill(register, dtf)
@@ -55,9 +56,9 @@ class TestDate(TestCase):
             .act_and_send(lambda: dtf.shift(4*60+59).event())
             .check()
             .act_and_send(lambda: dtf.shift(1).event())
-            .check("Alarm")
+            .check(lambda z: z.text=="Alarm")
             .act_and_send(lambda: dtf.shift(1).event())
-            .check("Alarm")
+            .check(lambda z: z.text=="Alarm")
             .send("Stop")
             .check()
             .act_and_send(lambda: dtf.event())
@@ -74,13 +75,13 @@ class TestDate(TestCase):
                 TimerReplies.timer_is_set.utter(duration=timedelta(minutes=1)),
             )
             .act_and_send(lambda: dtf.shift(60).event())
-            .check("Alarm")
+            .check(lambda z: z.text=="Alarm")
             .act_and_send(lambda: dtf.event())
             .check()
             .act_and_send(lambda: dtf.shift(10).event())
-            .check("Alarm")
+            .check(lambda z: z.text=="Alarm")
             .send("Stop")
-            .check("Alarm cancelled")
+            .check(lambda z: z.text=="Alarm cancelled")
             .validate()
         )
 

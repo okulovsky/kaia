@@ -8,6 +8,7 @@ from unittest import TestCase
 from avatar.utils import slice
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from foundation_kaia.misc import Loc
 
 
 class SeleniumDriver:
@@ -32,7 +33,7 @@ class SeleniumDriver:
 class Helper:
     def __init__(self, folder, tc: TestCase, recompile_ts: bool = False, brainless: bool = False):
         settings = KaiaAppSettings()
-
+        settings.custom_avatar_resources_folder = Loc.root_folder / 'kaia/app/files/avatar-resources'
         if brainless:
             settings.brainbox = None
             settings.phonix = None
@@ -48,6 +49,7 @@ class Helper:
 
         self.settings = settings
         self.app = settings.create_app(folder)
+
         self.tc = tc
         self.client = self.app.create_avatar_client()
 
