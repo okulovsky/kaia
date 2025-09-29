@@ -1,7 +1,7 @@
 from brainbox import BrainBox
 from brainbox.deciders import Resemblyzer
 from .common import SoundEvent, IMessage, message_handler, State, AvatarService, InitializationEvent
-from .common.vector_identificator import VectorIdentificator, VectorIdentificatorSettings
+from .common.vector_identificator import VectorIdentificator, IStrategy
 from .brainbox_service import BrainBoxService
 from dataclasses import dataclass
 from pathlib import Path
@@ -24,10 +24,27 @@ class SpeakerIdentificationService(AvatarService):
     TrainConfirmation = SpeakerIdentificationTrainConfirmation
 
 
-    def __init__(self, state: State, settings: VectorIdentificatorSettings, api: AvatarApi):
+    def __init__(self,
+                 state: State,
+                 api: AvatarApi,
+                 identification_strategy: IStrategy,
+                 ):
         self.state = state
-        self.vector_identificator = VectorIdentificator(settings, self.sample_to_vector, api.file_cache.download)
+        self.api = api
+        self.identification_strategy = identification_strategy
+
         self.buffer: list[tuple[SoundEvent,str]] = []
+        self.vector_identificator: VectorIdentificator|None = None
+
+    @message_handler.with_call(BrainBoxService.Command, BrainBoxService.Confirmation)
+    def on_initialize(self, message: InitializationEvent) -> None:
+        self.vector_identificator = VectorIdentificator(
+            self.resources_folder,
+            self.identification_strategy,
+            self.sample_to_vector,
+            self.api.file_cache.open
+        )
+        self.vector_identificator.initialize()
 
 
     def sample_to_vector(self, file: FileLike.Type):
@@ -46,9 +63,7 @@ class SpeakerIdentificationService(AvatarService):
             self.buffer.append((message,speaker))
             self.buffer = self.buffer[-2:]
 
-    @message_handler.with_call(BrainBoxService.Command, BrainBoxService.Confirmation)
-    def on_initialize(self, message: InitializationEvent):
-        self.vector_identificator.initialize()
+
 
     @message_handler.with_call(BrainBoxService.Command, BrainBoxService.Confirmation)
     def train(self, message: SpeakerIdentificationTrain) -> SpeakerIdentificationTrainConfirmation:

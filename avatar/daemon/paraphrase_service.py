@@ -1,9 +1,11 @@
+import os
 from typing import *
 from grammatron import Utterance, UtterancesSequence, TemplateDub, Template, DubParameters, LanguageDispatchDub
 from dataclasses import dataclass
-from .common.content_manager import ContentManager
-from .common import PlayableTextMessage, UtteranceSequenceCommand, TextInfo, State, AvatarService, message_handler
+from .common.content_manager import IContentStrategy, ContentManager, DataClassDataProvider
+from .common import PlayableTextMessage, UtteranceSequenceCommand, TextInfo, State, AvatarService, message_handler, InitializationEvent
 from copy import copy
+from yo_fluq import FileIO
 
 @dataclass
 class ParaphraseRecord:
@@ -25,9 +27,27 @@ class ParaphraseRecord:
 
 
 class ParaphraseService(AvatarService):
-    def __init__(self, state: State, paraphrases_content_manager: ContentManager[ParaphraseRecord]|None):
+    def __init__(self, state: State, content_strategy: IContentStrategy|None = None):
         self.state = state
-        self.paraphrases_content_manager = paraphrases_content_manager
+        self.content_strategy = content_strategy
+        self.paraphrases_content_manager: ContentManager|None = None
+
+
+    @message_handler
+    def on_initialize(self, message: InitializationEvent) -> None:
+        records = []
+        if not self.resources_folder.is_dir():
+            os.makedirs(self.resources_folder)
+        files = [file for file in os.listdir(self.resources_folder) if file.startswith('paraphrase') and file.endswith('.pkl')]
+        for file in sorted(files):
+            records+=FileIO.read_pickle(self.resources_folder/file)
+        feedback_file = self.resources_folder/'paraphrases-feedback.json'
+
+        self.paraphrases_content_manager = ContentManager(
+            DataClassDataProvider(records),
+            feedback_file,
+            self.content_strategy
+        )
 
     def _paraphrase_utterance(self, u: Utterance, info: TextInfo) -> Utterance:
         if self.paraphrases_content_manager is None:

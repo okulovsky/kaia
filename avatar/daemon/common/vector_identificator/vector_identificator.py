@@ -18,19 +18,16 @@ def cosine_distances(X, Y):
     sim = np.dot(X_norm, Y_norm.T)
     return 1.0 - sim
 
-@dataclass
-class VectorIdentificatorSettings:
-    folder: Path
-    strategy: IStrategy
-
 
 class VectorIdentificator:
     def __init__(self,
-                 settings: VectorIdentificatorSettings,
+                 folder: Path,
+                 strategy: IStrategy,
                  sample_to_vector: Callable[[FileLike.Type], list[float]],
                  content_retriever: Callable[[str], bytes]
                  ):
-        self.settings = settings
+        self.folder = folder
+        self.strategy = strategy
         self.sample_to_vector = sample_to_vector
         self.content_retriever = content_retriever
         self.df: pd.DataFrame|None = None
@@ -39,14 +36,14 @@ class VectorIdentificator:
 
 
     def initialize(self):
-        base_file = self.settings.folder/'base.json'
+        base_file = self.folder/'base.json'
         if not base_file.is_file():
             base = {}
         else:
             base = FileIO.read_json(base_file)
 
-        for class_name in os.listdir(self.settings.folder):
-            subfolder = self.settings.folder/class_name
+        for class_name in os.listdir(self.folder):
+            subfolder = self.folder/class_name
             if not subfolder.is_dir():
                 continue
             if class_name not in base:
@@ -76,14 +73,14 @@ class VectorIdentificator:
             return None
         distances = cosine_distances(self.df.values, np.array(vector).reshape(1, -1)).flatten()
         s = pd.Series(distances, self.df.index)
-        winner = self.settings.strategy.get_winner(s)
+        winner = self.strategy.get_winner(s)
         return winner
 
     def add_sample(self, class_name, filename: str):
         content = self.content_retriever(filename)
         FileIO.write_bytes(
             content,
-            self.settings.folder / class_name / filename
+            self.folder / class_name / filename
         )
 
 

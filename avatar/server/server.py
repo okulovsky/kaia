@@ -1,5 +1,6 @@
 import flask
 from foundation_kaia.marshalling import Server
+from foundation_kaia.web_utils import Component
 from dataclasses import dataclass
 from .components import IAvatarComponent
 import logging
@@ -11,7 +12,7 @@ def handle_exception(e):
 
 @dataclass
 class AvatarServerSettings:
-    components: tuple[IAvatarComponent, ...]
+    components: tuple[IAvatarComponent|Component, ...]
     port: int = 13002
     hide_logs: bool = True
 
@@ -30,7 +31,11 @@ class AvatarServer(Server):
 
         av_app = IAvatarComponent.App(app)
         for component in self.settings.components:
-            component.setup_server(av_app, f'127.0.0.1:{self.settings.port}')
+            if isinstance(component, IAvatarComponent):
+                component.setup_server(av_app, f'127.0.0.1:{self.settings.port}')
+            elif isinstance(component, Component):
+                component.register(app)
+
 
         self.toc = av_app.toc
 

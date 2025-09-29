@@ -2,11 +2,11 @@ import os
 
 from foundation_kaia.marshalling import Api, TestApi
 from .messaging_component import MessagingAPI
-from .components import FileCacheApi
 from .messaging_component import MessagingComponent
 from .server import AvatarServerSettings, AvatarServer
 from foundation_kaia.misc import Loc
 from ..messaging import Stream
+from foundation_kaia.web_utils.file_cache import FileCacheApi
 
 
 class AvatarApi(Api):
@@ -19,7 +19,10 @@ class AvatarApi(Api):
 
     @property
     def file_cache(self):
-        return FileCacheApi(self.address)
+        return FileCacheApi('http://'+self.address)
+
+    def resources(self, service: type):
+        return FileCacheApi('http://'+self.address, '/resources', service.__name__.split('.')[-1])
 
     def create_messaging_stream(self, session: str = 'default') -> Stream:
         from .messaging_component import AvatarStream

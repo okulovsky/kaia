@@ -1,6 +1,6 @@
 from typing import Optional, Callable, Union
-from .common import IMessage, State, ChatCommand, message_handler, ImageCommand, Confirmation, AvatarService
-from .common.content_manager import MediaLibraryManager, MediaLibrary
+from .common import IMessage, State, ChatCommand, message_handler, ImageCommand, Confirmation, AvatarService, InitializationEvent
+from .common.content_manager import MediaLibrary, IContentStrategy, MediaLibraryManager
 from ..server import AvatarApi
 from dataclasses import dataclass
 import base64
@@ -37,15 +37,26 @@ class ImageService(AvatarService):
     def __init__(self,
                  state: State,
                  api: AvatarApi|None,
-                 media_library_manager: MediaLibraryManager,
+                 strategy: IContentStrategy,
                  record_to_description: Optional[Callable[[MediaLibrary.Record], str]] = None
                  ):
         self.state = state
         self.api = api
-        self.media_library_manager = media_library_manager
+        self.strategy = strategy
         self.record_to_description = record_to_description
         self.last_image_record: MediaLibrary.Record|None = None
         self.empty_image_uploaded: bool = False
+        self.media_library_manager: MediaLibraryManager|None = None
+
+    @message_handler
+    def on_initialize(self, message: InitializationEvent) -> None:
+        path = self.resources_folder/'media_library.zip'
+        media_library = MediaLibrary.read(path)
+        self.media_library_manager = MediaLibraryManager(
+            media_library,
+            self.resources_folder/'images-feedback.json',
+            self.strategy
+        )
 
     def requires_brainbox(self):
         return False
