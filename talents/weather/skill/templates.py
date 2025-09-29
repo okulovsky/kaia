@@ -102,7 +102,7 @@ class Forecast:
     min_t: int
     max_t: int
     is_sunny: bool
-    precipitations: tuple[Precipitation,...]
+    precipitations: tuple[Precipitation,...]|None
 
 
 precipitation_template = DataclassTemplateDub(
@@ -113,7 +113,7 @@ precipitation_template = DataclassTemplateDub(
 
 PRECIPITATIONS = VariableDub(
     'precipitations',
-    ListDub(precipitation_template, word_if_empty='no precipitations'),
+    ListDub(precipitation_template),
     "the string describing the precipitations during the day, e.g. `rain at 16:00, drizzle from 17:00 to 19:00`"
 )
 
@@ -126,6 +126,7 @@ class WeatherReply(TemplatesCollection):
 
     forecast = Template(
         f"The temperature {TODAY} is between {MIN_TEMPERATURE} and {MAX_TEMPERATURE}, mostly {SUNNY}, {PRECIPITATIONS}.",
+        f"The temperature {TODAY} is between {MIN_TEMPERATURE} and {MAX_TEMPERATURE}, mostly {SUNNY}, no precipitations.",
     ).with_type(Forecast)
 
 
