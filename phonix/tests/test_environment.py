@@ -39,7 +39,7 @@ class PhonixTestEnvironmentFactory:
             folder_holder = Loc.create_test_folder()
             recording_api_test = PhonixApi.Test(folder_holder.__enter__())
             api = recording_api_test.__enter__()
-            getter = api.file_cache.download
+            getter = api.file_cache.open
             client = AvatarStream(api).create_client(None)
         else:
             folder_holder = None

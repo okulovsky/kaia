@@ -18,7 +18,7 @@ class StreamingTestCase(TestCase):
         input.set_sample(FileIO.read_bytes(file))
         input.start()
 
-        with Loc.create_test_folder() as folder:
+        with (Loc.create_test_folder() as folder):
             with PhonixApi.Test(folder) as api:
                 request = api.create_recording_request(file_id, input.current_sample_rate, [])
                 packages = []
@@ -28,7 +28,7 @@ class StreamingTestCase(TestCase):
                     request.add_wav_data(data.buffer)
 
                 request.send()
-                actual_bytes = api.file_cache.download(file_id)
+                actual_bytes = api.file_cache.open(file_id)
 
             buffer = BytesIO()
             writer = WavWriter(buffer, input.current_sample_rate)

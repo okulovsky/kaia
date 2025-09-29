@@ -30,4 +30,4 @@ class AvatarFileRetriever:
         self.api = api
 
     def __call__(self, file_id: str):
-        return self.api.file_cache.download(file_id)
+        return self.api.file_cache.open(file_id)
