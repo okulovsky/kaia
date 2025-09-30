@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "kaia-eaglesong"
 description = "Library that allows you to define the chatbot's logic"
-version = "4.0.4"
+version = "4.0.5"
 readme = 'README.md'
 requires-python = ">=3.10, <4.0"
 license = "LGPL-3.0-or-later"

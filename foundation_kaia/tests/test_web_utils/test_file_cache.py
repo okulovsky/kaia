@@ -59,9 +59,7 @@ class FileApiBlueprintTests(unittest.TestCase):
         self.assertEqual(out.read_text(encoding="utf-8"), "hello")
 
     def test_head_file(self):
-        h = self.api.head("a/x.txt")
-        self.assertEqual(h["status"], 200)
-        self.assertEqual(h["content_length"], 5)
+        self.assertTrue(self.api.is_file("a/x.txt"))
 
     def test_delete_file(self):
         self.api.upload(b"bye", "a/will_delete.bin")
@@ -95,11 +93,9 @@ class FileApiBlueprintTests(unittest.TestCase):
         self.assertIn(str(Path("sub") / "y.bin"), lst)
 
     def test_head_dir_exists_and_404(self):
-        ok = self.api.exists("a")
+        ok = self.api.is_folder("a")
         self.assertTrue(ok)
-        with self.assertRaises(ApiError) as ctx:
-            self.api.exists("no_such_dir")
-        self.assertIn("404", str(ctx.exception))
+        self.assertFalse(self.api.is_folder("no_such_dir"))
 
 
 

@@ -60,7 +60,8 @@ class Releaser:
         result = subprocess.call([to_execute, '-m', 'tox', '-rvv'], cwd=folder, env={**os.environ, "PYTHONPATH": ""})
         if result!=0:
             print(f"TESTS FAILED for {self.package_name}")
-            exit(0)
+            return False
+        return True
 
     def fix_toml_for_packaging(self, path):
         lines = []

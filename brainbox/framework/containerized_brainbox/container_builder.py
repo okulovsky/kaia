@@ -137,6 +137,8 @@ wcwidth==0.2.13
 Werkzeug==3.1.3
 widgetsnbextension==4.0.13
 yo_fluq_ds==2.0.5
+python-dotenv==1.1.1
+huggingface_hub
 """
 
 if __name__ == '__main__':

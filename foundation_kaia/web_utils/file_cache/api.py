@@ -76,7 +76,7 @@ class FileCacheApi:
         else:
             ApiError.check(resp)
 
-    def list(self, *, path: str = '/', prefix: Optional[str] = None, suffix: Optional[str] = None, recursive: bool = False) -> list[str]:
+    def list(self, path: str = '/', *, prefix: Optional[str] = None, suffix: Optional[str] = None, recursive: bool = False) -> list[str]:
         url = self._url_dir(path)
         params = {}
         if prefix is not None:

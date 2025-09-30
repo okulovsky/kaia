@@ -1,3 +1,17 @@
+4.0.5
+    Foundation
+        Added a blueprint for file-cache that can be used in resources and file-caches
+    Avatar
+        The services depending on external files are refactored and brought to the resource folder instead of folder settings
+    Chara
+        Improved decision on which templates to expand in paraphrasing
+    Grammatron
+        Test clarifying the behaviour of the tameplate with None value
+    Kaia
+        Adjusting to switch to the resource folders in Avatar
+        Music handling is extracted to the interface. Skills adjusted.
+    
+
 4.0.4
     Kaia can now detect faces on images and run personalized notifications
     Avatar:
