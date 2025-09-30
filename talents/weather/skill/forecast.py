@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 from .templates import Precipitation, Forecast
 from .settings import WeatherSettings
-
+from loguru import logger
 
 
 
@@ -56,7 +56,7 @@ def make_forecast(data, dt: datetime, settings: WeatherSettings):
     is_sunny = df.is_sunny.mean() > 0.5
 
     ps = _get_precipitation(df)
-    return Forecast(for_today, min_temperature, max_temperature, bool(is_sunny), tuple(ps))
+    return Forecast(for_today, min_temperature, max_temperature, bool(is_sunny), tuple(ps) if len(ps) > 0 else None)
 
 
 

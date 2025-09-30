@@ -79,7 +79,7 @@ class AssistantFactory:
         self.create_specific_skills()
         self.create_system_skills()
 
-        assistant = KaiaAssistant(self.skills)
+        assistant = KaiaAssistant(self.skills, report_idle=True)
         assistant.raise_exceptions = False
         help.assistant = assistant
 
@@ -92,5 +92,5 @@ class KaiaDriverSettings(IAppInitializer):
         app.kaia_driver = KaiaDriver(
             AssistantFactory(app.avatar_api).create_assistant,
             app.create_avatar_client(),
-            DefaultKaiaInputTransformer(True)
+            DefaultKaiaInputTransformer(True),
         )

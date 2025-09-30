@@ -15,7 +15,7 @@ export class ImageCommandHandler {
     }
     async handle(msg) {
         const fileId = msg.payload.file_id;
-        const url = `/file-cache/download/${encodeURIComponent(fileId)}`;
+        const url = `/file-cache/file/${encodeURIComponent(fileId)}`;
         this.imgEl.src = url;
         return;
     }

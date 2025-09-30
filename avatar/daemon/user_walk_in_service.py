@@ -1,5 +1,5 @@
 from .common import AvatarService, message_handler, BackendIdleReport, ImageEvent, State, IMessage, InitializationEvent
-from .common.vector_identificator import VectorIdentificator, VectorIdentificatorSettings
+from .common.vector_identificator import VectorIdentificator, IStrategy
 from .brainbox_service import BrainBoxService
 from brainbox import BrainBox
 from brainbox.deciders import InsightFace
@@ -7,6 +7,7 @@ from ..server import AvatarApi
 from dataclasses import dataclass
 from loguru import logger
 
+logger.disable(__name__)
 
 @dataclass
 class UserWalkInEvent(IMessage):
@@ -15,11 +16,30 @@ class UserWalkInEvent(IMessage):
 class UserWalkInService(AvatarService):
     Event = UserWalkInEvent
 
-    def __init__(self, state: State, settings: VectorIdentificatorSettings, api: AvatarApi, idle_time_in_seconds = 60):
-        self.first_idle: BackendIdleReport|None = None
-        self.vector_identificator = VectorIdentificator(settings, self.image_to_vector, api.file_cache.download)
-        self.idle_time_in_seconds = idle_time_in_seconds
+    def __init__(self,
+                 state: State,
+                 api: AvatarApi,
+                 identification_strategy: IStrategy,
+                 idle_time_in_seconds = 60,
+                 ):
         self.state = state
+        self.api = api
+        self.identification_strategy = identification_strategy
+        self.idle_time_in_seconds = idle_time_in_seconds
+
+        self.first_idle: BackendIdleReport|None = None
+        self.identificator: VectorIdentificator|None = None
+
+    @message_handler
+    def on_initialize(self, message: InitializationEvent) -> None:
+        self.identificator = VectorIdentificator(
+            self.resources_folder,
+            self.identification_strategy,
+            self.image_to_vector,
+            self.api.file_cache.open
+        )
+        self.identificator.initialize()
+
 
     def image_to_vector(self, file_id: str):
         task = BrainBox.Task.call(InsightFace).analyze(file_id)
@@ -50,18 +70,14 @@ class UserWalkInService(AvatarService):
         if delta < self.idle_time_in_seconds:
             logger.info(f'Not enough idle time, {delta} seconds of {self.idle_time_in_seconds}')
             return None
-        user = self.vector_identificator.analyze(message.file_id)
+        user = self.identificator.analyze(message.file_id)
         if user is None:
             logger.info("User is not recognized. Misconfigured service?")
             return None
         self.state.user = user
         yield UserWalkInEvent(user)
 
-    @message_handler
-    def on_initialize(self, message: InitializationEvent):
-        logger.info("UserWalkIn initializes")
-        self.vector_identificator.initialize()
-        logger.info("UserWalkIn initialized")
+
 
     def requires_brainbox(self):
         return True

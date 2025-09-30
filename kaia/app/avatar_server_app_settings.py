@@ -45,6 +45,7 @@ class AvatarServerAppSettings(IAppInitializer):
         components.append(StaticPathsComponent(static_folders))
         components.append(TypeScriptComponent(web_folder/'scripts', self.compile_scripts))
         components.append(MainComponent(FileIO.read_text(web_folder / 'index.html')))
+        components.append(ResourcesComponent(app.avatar_resources_folder))
 
         if self.add_phonix_component:
             components.append(PhonixRecordingComponent(app.brainbox_cache_folder))

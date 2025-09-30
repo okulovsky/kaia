@@ -22,13 +22,13 @@ class BrainBoxCommandTestCase(TestCase):
                 command = BrainBoxCommand[str](BrainBox.Task.call(FakeText)()).with_cache(filename)
                 command.execute(api)
                 command.execute(api)
-                self.assertEquals(1, len(api.summary()))
+                self.assertEqual(1, len(api.summary()))
 
                 command.add(api)
-                self.assertEquals(1, len(api.summary()))
+                self.assertEqual(1, len(api.summary()))
 
                 command.join(api)
-                self.assertEquals(1, len(api.summary()))
+                self.assertEqual(1, len(api.summary()))
 
 
 

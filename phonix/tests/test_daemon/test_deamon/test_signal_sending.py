@@ -13,7 +13,7 @@ class SignalSendingTestCase(TestCase):
             api.client.put(SoundInjectionCommand(fname))
 
             q = api.client.query(10).feed(slice(lambda z: isinstance(z, SoundEvent)))
-            recorded_file = api.api.file_cache.download(q[-1].file_id)
+            recorded_file = api.api.file_cache.open(q[-1].file_id)
 
             segments = Segment.analyze_wav(recorded_file, 100)
             target_segment = [s for s in segments if s.amplitude>0.7]

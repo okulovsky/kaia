@@ -31,6 +31,13 @@ class KaiaApp:
             return self.custom_brainbox_cache_folder
         return self.working_folder/'cache'
 
+    custom_avatar_resources_folder: Path | None = None
+
+    @property
+    def avatar_resources_folder(self) -> Path:
+        if self.custom_avatar_resources_folder is not None:
+            return self.custom_avatar_resources_folder
+        return self.working_folder/'avatar-resources'
 
     avatar_api: AvatarApi|None = None
     avatar_server: AvatarServer|None = None

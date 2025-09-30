@@ -52,7 +52,7 @@ class ContainerTestCase(TestCase):
                 api.file_cache.upload(b'123456', 'test')
                 self.assertEqual(
                     b'123456',
-                    api.file_cache.download('test')
+                    api.file_cache.open('test')
                 )
 
                 self.assertEqual(

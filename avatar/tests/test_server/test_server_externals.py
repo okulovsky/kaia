@@ -15,7 +15,7 @@ class AvatarServerExternals(TestCase):
                 content=b'123456'
                 api.file_cache.upload(content, 'test_file')
                 self.assertTrue( (cache_folder/'test_file').is_file() )
-                received_content = api.file_cache.download('test_file')
+                received_content = api.file_cache.open('test_file')
                 self.assertEqual(content, received_content)
 
     def test_custom_index(self):

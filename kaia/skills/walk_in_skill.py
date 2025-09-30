@@ -1,5 +1,5 @@
 from avatar.daemon import UserWalkInService, ChatCommand
-from kaia.assistant import SingleLineKaiaSkill, Feedback
+from kaia.assistant import SingleLineKaiaSkill, Pushback
 from typing import cast, Iterable, Callable, Optional
 from dataclasses import dataclass
 from foundation_kaia.misc.scheduled_time import IRepetition
@@ -7,7 +7,7 @@ from datetime import time, timedelta, datetime
 from grammatron import *
 from loguru import logger
 
-
+logger.disable(__name__)
 
 @dataclass
 class WalkInAnnouncement:
@@ -16,11 +16,12 @@ class WalkInAnnouncement:
     to_time: time
     repetition: IRepetition
     cooldown: timedelta
-    announcement: str|Template|Feedback|Utterance|Iterable[str|Template|Feedback|Utterance]
+    announcement: str|Template|Utterance|Iterable[str|Template|Utterance]
+    pushback: Pushback|None = None
 
-    def get_announcement(self) -> Iterable[str|Template|Feedback]:
+    def get_announcement(self) -> Iterable[str|Template|Utterance]:
         an = self.announcement
-        if isinstance(an, (str, Template, Feedback, Utterance)):
+        if isinstance(an, (str, Template, Utterance)):
             an = [an]
         else:
             an = list(an)
@@ -90,6 +91,6 @@ class WalkInSkill(SingleLineKaiaSkill):
                 logger.info(f'Announcement {announcement} accepted')
                 self.past_announcements.append(PastAnnouncement(event.envelop.timestamp, announcement))
                 yield from announcement.get_announcement()
-                break
+                return announcement.pushback
 
 

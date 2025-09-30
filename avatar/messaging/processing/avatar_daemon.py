@@ -10,6 +10,7 @@ from .filters import *
 from dataclasses import dataclass
 from datetime import datetime
 from threading import Thread
+from pathlib import Path
 
 @dataclass
 class AvatarDebugReport:
@@ -35,7 +36,8 @@ class AvatarDaemon:
                  client: StreamClient,
                  time_tick_interval_in_seconds: float|None = None,
                  add_error_events: bool = False,
-                 reporting_client: IStreamClient|None = None
+                 reporting_client: IStreamClient|None = None,
+                 working_folder: Path|None = None
                  ):
         self.client = client
         self.rules = RulesCollection()
@@ -44,6 +46,7 @@ class AvatarDaemon:
         self.last_time_tick: TickEvent|None = None
         self.add_error_events = add_error_events
         self.reporting_client = reporting_client
+        self.working_folder = working_folder
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -75,7 +78,7 @@ class AvatarDaemon:
 
         # Make RuleProcessors
         self.processors = [
-            RuleGroupProcessor(self.client, rules_for_host, self._event_queue)
+            RuleGroupProcessor(self.client, rules_for_host, self._event_queue, self.working_folder)
             for rules_for_host in grouped.values()
         ]
 

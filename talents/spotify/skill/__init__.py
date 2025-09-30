@@ -1,2 +1,2 @@
-from .skill import SpotifySkill
 from .spotify_handler import SpotifyHandler, Playlist
+from .spotify_playlist_player import SpotifyPlaylistPlayer

@@ -29,7 +29,7 @@ class BoilerplateOnDemandController(OnDemandDockerController[BoilerplateOnDemand
         from .api import BoilerplateOnDemand
 
         result = api.execute(BrainBoxTask.call(BoilerplateOnDemand).execute('test input'))
-        tc.assertEquals('output test input', result)
+        tc.assertEqual('output test input', result)
         yield TestReport.last_call(api).href('run')
 
 

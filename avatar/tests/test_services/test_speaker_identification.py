@@ -5,7 +5,7 @@ from avatar.messaging import *
 from avatar.daemon import SpeakerIdentificationService, BrainBoxService, State, SoundEvent, InitializationEvent
 from avatar.server import AvatarApi, AvatarStream, AvatarServerSettings, MessagingComponent
 from avatar.server.components import FileCacheComponent
-from avatar.daemon.common.vector_identificator import BestOfStrategy, VectorIdentificatorSettings
+from avatar.daemon.common.vector_identificator import BestOfStrategy
 from yo_fluq import Query
 from foundation_kaia.misc import Loc
 from pathlib import Path
@@ -35,8 +35,9 @@ class SpeakerIdentificationTestCase(TestCase):
                 prepare_folder(folder)
 
                 state = State()
-                service = SpeakerIdentificationService(state, VectorIdentificatorSettings(folder,  BestOfStrategy(4)), api)
-                service.vector_identificator.sample_to_vector = test_sample_to_vector
+                service = SpeakerIdentificationService(state, api, BestOfStrategy(4))
+                service.set_resources_folder(folder)
+                service.sample_to_vector = test_sample_to_vector
                 client = AvatarStream(api).create_client()
                 proc = AvatarDaemon(client.clone())
                 proc.rules.bind(service)
@@ -64,8 +65,9 @@ class SpeakerIdentificationTestCase(TestCase):
                     prepare_folder(folder)
 
                     state = State()
-                    service = SpeakerIdentificationService(state, VectorIdentificatorSettings(folder, BestOfStrategy(4)), api)
-                    service.vector_identificator.sample_to_vector = test_sample_to_vector
+                    service = SpeakerIdentificationService(state, api, BestOfStrategy(4))
+                    service.sample_to_vector = test_sample_to_vector
+                    service.set_resources_folder(folder)
                     client = AvatarStream(api).create_client()
                     proc = AvatarDaemon(client.clone())
                     proc.rules.bind(service)

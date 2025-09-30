@@ -137,7 +137,7 @@ start(): void {
 
     if (changedPixels > this.settings.threshold * this.settings.width * this.settings.height) {
       const fileName = `webcam_${crypto.randomUUID()}.png`;
-      const url = `${this.baseUrl}/file-cache/upload/${fileName}`;
+      const url = `${this.baseUrl}/file-cache/file/${fileName}`;
 
       this._currentCanvas.toBlob((blob) => {
         if (!blob) return;
@@ -145,7 +145,7 @@ start(): void {
         form.append('content', blob, `${fileName}.png`); // поле 'content', как в requests files=
 
         fetch(url, {
-          method: 'POST',
+          method: 'PUT',
           body: form, // multipart/form-data (заголовок ставит браузер)
         })
         .then(async (res) => {
