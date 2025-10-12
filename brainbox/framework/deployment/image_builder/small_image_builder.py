@@ -52,17 +52,22 @@ class SmallImageBuilder(IImageBuilder):
             deps = [list(element) for element in dependencies]
         return deps
 
+    @staticmethod
+    def create_dependency_command(dependencies):
+        template = (
+            'pip wheel --no-cache-dir --wheel-dir=/tmp/wheels {DEPS} && '  
+            'pip install --no-cache-dir --no-index --find-links=/tmp/wheels {DEPS} && '
+            'rm -rf /tmp/wheels'
+        )
+        return template.format(DEPS=' '.join(dependencies))
+
+
     def _convert_dependencies(self):
         if self.dependencies is None:
             return None
         result = []
         for line in self.dependencies:
-            template = (
-                'RUN pip wheel --no-cache-dir --wheel-dir=/tmp/wheels {DEPS} && '  
-                'pip install --no-cache-dir --no-index --find-links=/tmp/wheels {DEPS} && '
-                'rm -rf /tmp/wheels'
-            )
-            result.append(template.format(DEPS=' '.join(line)))
+            result.append('RUN '+SmallImageBuilder.create_dependency_command(line))
         return '\n\n'.join(result)
 
     def _create_target_file(self, target_str_path: str):

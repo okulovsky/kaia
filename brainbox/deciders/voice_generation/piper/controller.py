@@ -1,7 +1,7 @@
 from typing import Iterable
 from unittest import TestCase
 from ....framework import (
-    RunConfiguration, TestReport, SmallImageBuilder, IImageBuilder, DockerWebServiceController,
+    RunConfiguration, TestReport, BrainboxImageBuilder, IImageBuilder, DockerWebServiceController,
     BrainBoxApi, BrainBoxTask, INotebookableController, IModelDownloadingController, File, DownloadableModel
 )
 from .settings import PiperSettings
@@ -14,10 +14,12 @@ class PiperController(
     IModelDownloadingController
 ):
     def get_image_builder(self) -> IImageBuilder|None:
-        return SmallImageBuilder(
-            Path(__file__).parent/'container',
-            DOCKERFILE,
-            DEPENDENCIES.split('\n'),
+        return BrainboxImageBuilder(
+            Path(__file__).parent,
+            'lscr.io/linuxserver/piper:1.6.3',
+            ('python3', 'python3-pip', 'wget'),
+            install_requirements_as_root=True,
+            allow_arm64=True
         )
 
     def get_downloadable_model_type(self) -> type[DownloadableModel]:
@@ -35,6 +37,7 @@ class PiperController(
                 'models' : '/models',
                 'cache' : '/cache'
             },
+            dont_rm=True
         )
 
     def get_default_settings(self):
@@ -57,54 +60,3 @@ class PiperController(
 
 
 
-
-DOCKERFILE = f'''
-FROM lscr.io/linuxserver/piper:latest
-
-RUN apt-get update \
- && apt-get install -y python3 python3-pip \
- && apt-get install -y python3 python3-pip wget \
- && rm -rf /var/lib/apt/lists/*
-
-{{{SmallImageBuilder.PIP_INSTALL_PLACEHOLDER}}}
-
-{{{SmallImageBuilder.ADD_USER_PLACEHOLDER}}}
-
-WORKDIR /home/app
-
-
-COPY server.py server.py
-COPY main.py main.py
-
-ENTRYPOINT ["python3", "/home/app/main.py"]
-'''
-
-DEPENDENCIES = '''
-annotated-types==0.7.0
-anyio==4.8.0
-certifi==2024.12.14
-charset-normalizer==3.4.1
-click==8.1.8
-fastapi==0.115.6
-h11==0.14.0
-idna==3.10
-pydantic==2.10.5
-pydantic_core==2.27.2
-requests==2.32.3
-sniffio==1.3.1
-starlette==0.41.3
-typing_extensions==4.12.2
-urllib3==2.3.0
-uvicorn==0.34.0
-wheel==0.45.1
-wyoming==1.1.0
-wyoming-piper==1.4.0
-'''
-
-
-ORIGINAL_DEPENDENCIES = '''
-fastapi
-uvicorn
-pydantic
-requests
-'''

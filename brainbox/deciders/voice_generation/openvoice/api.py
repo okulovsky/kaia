@@ -17,7 +17,7 @@ class OpenVoice(DockerWebServiceApi[OpenVoiceSettings, OpenVoiceController]):
         if source_voice is not None:
             url+='/'+source_voice
         with FileLike(source, self.cache_folder) as stream:
-            reply = requests.post(url, files=(('file', stream),), timeout=30)
+            reply = requests.post(url, files=(('file', stream),))
         if reply.status_code != 200:
             raise ValueError(f"{reply.status_code}\n{reply.text}")
         

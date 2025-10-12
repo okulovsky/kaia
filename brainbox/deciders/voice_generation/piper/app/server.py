@@ -13,6 +13,7 @@ app = FastAPI()
 AUDIO_OUTPUT_DIR = Path('/cache')
 MODEL_DIR = Path("/models")
 
+
 class TTSRequest(BaseModel):
     text: str
     model: str
@@ -44,7 +45,7 @@ async def synthesize_text(request: TTSRequest):
         #If not, can we somehow preload this model to make it even faster?
         with open(text_filename,'w') as stream:
             stream.write(request.text)
-        command = [f'cat {text_filename} | /usr/share/piper/piper --model {model_path} --output_file {container_audio_path}']
+        command = [f'cat {text_filename} | /lsiopy/bin/piper --model {model_path} --output_file {container_audio_path}']
         for option in ['noise_scale', 'length_scale', 'noise_w','speaker']:
             value = getattr(request, option)
             if value is not None:
