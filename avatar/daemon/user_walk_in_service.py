@@ -52,12 +52,13 @@ class UserWalkInService(AvatarService):
 
     @message_handler
     def on_backend_idle_report(self, message: BackendIdleReport):
+        logger.info("BackendIdleReport received")
         if message.is_idle:
             if self.first_idle is None:
-                logger.info('Idle')
+                logger.info('State in WalkIn set to Idle')
                 self.first_idle = message
         else:
-            logger.info('Busy')
+            logger.info('State in WalkIn set to Busy')
             self.first_idle = None
 
     @message_handler.with_call(BrainBoxService.Command, BrainBoxService.Confirmation)
