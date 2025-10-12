@@ -32,7 +32,6 @@ class ResembleEnhanceController(
                 'outputs' : '/outputs',
                 'models' : '/home/app/.local/lib/python3.11/site-packages/resemble_enhance/model_repo'
             },
-            dont_rm=True
         )
 
     def get_notebook_configuration(self) -> RunConfiguration|None:

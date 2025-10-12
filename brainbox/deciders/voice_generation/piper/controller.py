@@ -37,7 +37,6 @@ class PiperController(
                 'models' : '/models',
                 'cache' : '/cache'
             },
-            dont_rm=True
         )
 
     def get_default_settings(self):

@@ -29,7 +29,7 @@ class HelloBrainBoxController(
         return RunConfiguration(
             parameter,
             publish_ports={self.connection_settings.port:8080},
-            command_line_arguments=['--setting', self.settings.setting, '--parameter', parameter]
+            command_line_arguments=['--setting', self.settings.setting, '--parameter', parameter],
         )
 
     def get_notebook_configuration(self) -> RunConfiguration|None:
