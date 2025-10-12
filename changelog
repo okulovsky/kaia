@@ -1,3 +1,10 @@
+4.0.6
+    Brainbox
+        Most services are now using a dockerfile templated by a data structure
+        Most services can now be build and run under ARM64 architecture, so, on new Mac
+    Avatar & Kaia Web
+        Fixes in web-cam/UserWalkIn integration
+
 4.0.5
     Foundation
         Added a blueprint for file-cache that can be used in resources and file-caches

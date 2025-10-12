@@ -51,6 +51,7 @@ if __name__ == '__main__':
         subprocess.call([sys.executable, '-m', 'notebook', '--allow-root', '--port', '8899', '--ip', '0.0.0.0', "--NotebookApp.token=''"], cwd='/repo')
         exit(0)
 
+
     tts = TextToSpeech()
     if args.install:
         exit(0)

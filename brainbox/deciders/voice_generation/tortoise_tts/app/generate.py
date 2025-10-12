@@ -1,3 +1,5 @@
+import os
+
 from tortoise.utils.audio import load_voices
 from torchaudio import save
 from uuid import uuid4
@@ -5,6 +7,12 @@ from tortoise.utils.wav2vec_alignment import Wav2VecAlignment
 import torch
 from uuid import uuid4
 
+def report_file_structure():
+    lines = []
+    for root, dirs, files in os.walk('/home/app'):
+        for file in files:
+            lines.append(os.path.join(root, file))
+    raise ValueError("\n".join(lines))
 
 class Generator:
     def __init__(self, tts):

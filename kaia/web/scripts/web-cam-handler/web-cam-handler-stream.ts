@@ -149,12 +149,9 @@ export class WebCamHandlerStream extends WebCamHandlerBase {
 
       this._currentCanvas.toBlob((blob) => {
         if (!blob) return;
-        const form = new FormData();
-        form.append('content', blob, `${fileName}.png`); // поле 'content', как в requests files=
-
         fetch(url, {
           method: 'PUT',
-          body: form, // multipart/form-data (заголовок ставит браузер)
+          body: blob, // multipart/form-data (заголовок ставит браузер)
         })
         .then(async (res) => {
           if (!res.ok) throw new Error(await res.text());

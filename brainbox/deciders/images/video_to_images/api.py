@@ -5,7 +5,7 @@ from .controller import VideoToImagesController
 from .settings import VideoToImagesSettings
 from yo_fluq import Query
 import json
-from .container.settings import AnalysisSettings
+from .app.settings import AnalysisSettings
 
 class VideoToImages(OnDemandDockerApi[VideoToImagesSettings, VideoToImagesController]):
     def __init__(self):

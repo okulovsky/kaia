@@ -33,7 +33,7 @@ class Releaser:
                     lines.append(line)
         return ''.join(lines)
 
-    def run_tox(self):
+    def run_tox(self) -> str|None:
         if self.tox_versions is None:
             raise ValueError(f"Cannot run tox, `tox_versions` are not set")
 
@@ -60,8 +60,8 @@ class Releaser:
         result = subprocess.call([to_execute, '-m', 'tox', '-rvv'], cwd=folder, env={**os.environ, "PYTHONPATH": ""})
         if result!=0:
             print(f"TESTS FAILED for {self.package_name}")
-            return False
-        return True
+            return self.package_name
+        return None
 
     def fix_toml_for_packaging(self, path):
         lines = []

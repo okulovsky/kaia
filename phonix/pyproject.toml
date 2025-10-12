@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "kaia-phonix"
 description = "Audioservice for avatar, working with pyaudio and porcupine"
-version = "4.0.5"
+version = "4.0.6"
 readme = 'README.md'
 requires-python = ">=3.10, <4.0"
 license = "LGPL-3.0-or-later"

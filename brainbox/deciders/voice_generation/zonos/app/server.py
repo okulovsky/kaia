@@ -45,11 +45,11 @@ class ZonosApp:
         return "OK"
 
     def train(self, speaker: str):
-        tmp_file = Path('temp.wav')
+        tmp_file = Path('/tmp/temp.wav')
         try:
             source_folder = Path(f'/voices/{speaker}/')
             paths = [source_folder / f for f in os.listdir(source_folder)]
-            concat_with_mpeg('files.tmp', tmp_file, paths)
+            concat_with_mpeg('/tmp/files.tmp', tmp_file, paths)
 
             speaker_model = self.model.train(tmp_file)
             with open(f'/speakers/{speaker}', 'wb') as file:
@@ -63,7 +63,7 @@ class ZonosApp:
                 os.unlink(tmp_file)
 
     def voiceover(self):
-        output_file = Path(__file__).parent/'output.wav'
+        output_file = Path('/tmp/output.wav')
         try:
             data: dict = flask.request.json
             speaker = data['speaker']

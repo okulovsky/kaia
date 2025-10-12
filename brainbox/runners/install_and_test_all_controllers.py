@@ -16,7 +16,6 @@ def make(exclude=(), include=(), start_with: str|None = None, install: bool = Tr
             print([z.name for z in target_containers])
             target_containers = Query.en(target_containers).skip_while(lambda z: z.name!=start_with).to_list()
 
-
         errors = {}
 
         for c in target_containers:
@@ -41,9 +40,13 @@ def make(exclude=(), include=(), start_with: str|None = None, install: bool = Tr
                 print("*" * 40)
                 print(error)
                 print("\n\n\n")
-            raise ValueError("Not all successfull")
+            raise ValueError("Not all successfull: "+ " ".join(errors))
 
 
 
 if __name__ == '__main__':
-    make()
+    make(
+        exclude=(
+            'KohyaSS'
+        )
+    )

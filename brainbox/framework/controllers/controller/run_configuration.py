@@ -27,6 +27,7 @@ class RunConfiguration:
     mount_custom_folders: None | dict[str, str] = None
 
     detach_and_interactive: bool = True
+    platform: str|None = None
 
     def _mounts(self, resource_folder: ResourceFolder):
         if self.mount_resource_folders is not None:
@@ -65,8 +66,11 @@ class RunConfiguration:
         arguments += list(self.custom_flags)
         arguments += ['--name', container_name]
         arguments += ['--env', f'BRAINBOX_PARAMETER='+('*'+self.parameter if self.parameter is not None else '')]
+        if self.platform is not None:
+            arguments+=['--platform', self.platform]
         arguments += [image_name]
         arguments += list(self.command_line_arguments)
+
         return arguments
 
     def as_notebook_service(self):
