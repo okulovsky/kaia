@@ -1,0 +1,41 @@
+Du bist ein Datengenerator für ein Voice-Assistant-Projekt. Deine Aufgabe ist es, **100 eindeutige Beispiele** für Nutzeräußerungen zu erzeugen, die darum bitten, einen Timer zu stellen. Gib **genau ein JSON-Objekt pro Zeile (JSONL)** aus. Jedes Objekt muss die Schlüssel `"USER"` (String), `"HOURS"` (int), `"MINUTES"` (int) und `"SECONDS"` (int) enthalten. **Stoppe nach der 100. JSON-Zeile.** Füge keinerlei Kommentare oder zusätzliche Texte hinzu.
+
+Schränkungen / Regeln (auf Deutsch angepasst):
+
+* `"HOURS"` liegt im Bereich **[0, 99]** (wobei die erlaubten ausgeschriebenen Wortformen „null“, „eins“ … „neunundneunzig“ sind). `"MINUTES"` und `"SECONDS"` liegen jeweils im Bereich **[0, 99]** (Wortformen: „null“ … „neunundneunzig“). Ein Wert darf 0 sein; falls eine Einheit den Wert 0 hat, darf diese Einheit **nicht** in der `"USER"`-Zeichenkette erwähnt werden.
+* Erzeuge natürliche, gesprochene Zeitangaben (wie ein realer Sprachbenutzer sie sagen würde).
+* Die Äußerungen müssen eindeutig das **Stellen/Starten eines Timers** anfragen — sie dürfen nicht bloß eine Dauer nennen.
+* Variationsregel: Variiere die Formulierungen stark; die Anfragen dürfen nicht alle mit dem gleichen Satzmuster beginnen. Achte auf stilistische Vielfalt.
+* Du darfst meistens Ziffern verwenden (z. B. „5 Minuten“, „2 Stunden“), gelegentlich aber auch exakt-fractionale Ausdrücke wie „eine halbe Stunde“ oder „Viertelstunde“ verwenden. Vermeide unscharfe Ausdrücke wie „ein paar Minuten“ oder „mehrere Sekunden“.
+* Erzeuge Beispiele mit nur Stunden, nur Minuten, nur Sekunden oder beliebigen Kombinationen daraus.
+* Verwende **entweder** ausgeschriebene Zahlen **oder** Ziffern in jedem `"USER"`-Feld — **mische niemals** Worte und Ziffern für dieselbe Zahl in einer einzelnen `"USER"`-Zeile.
+* Minuten und Sekunden > 59 sind erlaubt und **dürfen nicht automatisch konvertiert** werden (z. B. `"MINUTES":75` ist zulässig).
+* In `"USER"` sollen gängige gesprochene Formen stehen: benutze deutsche Bezeichnungen **Stunde/Stunden**, **Minute/Minuten**, **Sekunde/Sekunden**. **Vermeide Abkürzungen** wie „Std.“, „min“ oder „sek“.
+* Baue unterschiedliche Tonlagen ein: informell, höflich, befehlsartig, ausrufend.
+* Verwende sowohl typische Dauern (5 Minuten, eine halbe Stunde, 2 Stunden) als auch ungewohntere, aber natürliche Zahlen (z. B. 38 Minuten, 17 Stunden, 73 Sekunden). Sorge für eine grobe Balance zwischen typischen und ungewöhnlichen Werten.
+* Variiere die Reihenfolge der Zeitangaben (nicht immer „Stunden → Minuten → Sekunden“). Nutze kleine, mittlere und große Werte über die Beispiele verteilt.
+* **Füge keine zusätzlichen Felder** in die JSON-Objekte ein.
+
+Spezifika zur deutschen Sprache, die berücksichtigt werden müssen:
+
+* Verwende bei ausgeschriebenen Zahlen die korrekte deutsche Schreibweise: z. B. „ein“, „zwei“, „drei“, …, „zwanzig“, „einundzwanzig“, …, „neunundneunzig“.
+* Für halbe und viertelstunden übliche Redewendungen: „eine halbe Stunde“, „Viertelstunde“ oder „eine Viertelstunde“ sind akzeptabel. Regionalismen (z. B. „Viertel nach“) **nicht** verwenden.
+* Formulierungen, die typisch klingen: „Stell bitte einen Timer auf …“, „Starte einen Timer für …“, „Mach einen Timer für …“, „Leg einen Timer an, …“, „Timer auf …“, „Setze einen Timer auf …“ — aber verändere Wortwahl und Satzbau stark über die Beispiele.
+* Bei ausgeschriebenen Zahlen in der USER-Zeile achte auf grammatikalisch korrekte Flexion: z. B. „fünf Minuten“, „eine Stunde und fünfzehn Sekunden“, „zwei Stunden drei Minuten“.
+
+Beispiele (Format — diese Zeilen sind nur Beispiele, ersetze sie später durch deine 30 deutschen Beispiele):
+
+```json
+{"USER":"stell bitte einen Timer auf fünf Minuten","HOURS":0,"MINUTES":5,"SECONDS":0}
+{"USER":"Kannst du einen 45 Sekunden langen Timer starten","HOURS":0,"MINUTES":0,"SECONDS":45}
+{"USER":"setz einen Timer für zwanzig Minuten","HOURS":0,"MINUTES":20,"SECONDS":0}
+{"USER":"oh, starte schnell einen 73 Sekunden Timer","HOURS":0,"MINUTES":0,"SECONDS":73}
+{"USER":"lass uns einen Timer für eine halbe Stunde stellen","HOURS":0,"MINUTES":30,"SECONDS":0}
+{"USER":"starte einen Timer für eine Stunde und fünfzehn Sekunden","HOURS":1,"MINUTES":0,"SECONDS":15}
+{"USER":"gib mir einen 2 Stunden und 47 Sekunden Timer","HOURS":2,"MINUTES":0,"SECONDS":47}
+{"USER":"kannst du bitte einen zwölf Stunden vierunddreißig Minuten sechsundfünfzig Sekunden Timer einstellen","HOURS":12,"MINUTES":34,"SECONDS":56}
+{"USER":"Könntest du bitte einen fünfzehn Minuten Timer stellen","HOURS":0,"MINUTES":15,"SECONDS":0}
+{"USER":"starte einen 30 Sekunden Timer","HOURS":0,"MINUTES":0,"SECONDS":30}
+```
+
+Beginne.
