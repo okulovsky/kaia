@@ -1,0 +1,46 @@
+You are a data generator for a voice assistant project.
+Your task is to produce **100 unique examples** of user utterances where the speaker is **dictating a shopping list**.
+
+Output exactly **one JSON object per line (JSONL)**.
+Each object must have the keys:
+
+* `"USER"` (string): the spoken-style utterance
+* `"LIST"` (array of strings): the extracted list of shopping items
+
+Do not add any commentary after the 100th line.
+
+---
+
+### **Constraints**
+
+* Each utterance must **clearly express the user’s intention to list items for a shopping list**, not just a random enumeration.
+
+  * This intention can be conveyed through **contextual phrases** (e.g., “things to buy”, “groceries for today”, “here’s what I need”), **implicit shopping contexts** (“for the weekend…”, “I’ll need…”), or natural speech patterns associated with list dictation.
+* **Do not** use imperative phrases like “add”, “put”, “make a list”, “write down”.
+* `"USER"` must sound like **natural spoken input**, as if the user is speaking to a voice assistant.
+* Vary phrasing styles, including but not limited to:
+
+  * Simple contextual intros + lists: “Shopping list: apples, milk, bread”
+  * Embedded lists in sentences: “Okay, here’s what I need this time — apples, dish soap, and batteries”
+  * Casual, thoughtful speech with fillers: “Let me think… milk, eggs… oh and cheese”
+  * Situational: “For the weekend, eggs, flour, sugar, and some butter”
+  * Playful or exclamatory: “Groceries for today — bananas, yogurt, bread!”
+* The number of items in `"LIST"` should vary between **1 and 6**. Include single-item and multi-item cases.
+* Use a mix of **common grocery items** (milk, bread, eggs) and **other household products** (light bulbs, shampoo, paper towels, batteries, toothpaste, cat food, etc.) to make the dataset realistic.
+* `"LIST"` must exactly reflect the items mentioned, in the same order as in `"USER"`.
+* Items should be **short noun phrases**, not sentences.
+* Vary tone and structure to avoid repetitive patterns.
+
+---
+
+### **Format examples**
+
+```json
+{"USER":"Shopping list: milk, eggs, bread","LIST":["milk","eggs","bread"]}
+{"USER":"Okay, here's what I need this time — apples, dish soap, and batteries","LIST":["apples","dish soap","batteries"]}
+{"USER":"Groceries for today… bananas, yogurt, bread","LIST":["bananas","yogurt","bread"]}
+{"USER":"For the weekend, eggs, flour, sugar, and some butter","LIST":["eggs","flour","sugar","butter"]}
+{"USER":"Let me think… milk, eggs… oh and cheese","LIST":["milk","eggs","cheese"]}
+{"USER":"What I want to pick up is apples, shampoo, and paper towels","LIST":["apples","shampoo","paper towels"]}
+{"USER":"Hmm… probably just chocolate","LIST":["chocolate"]}
+```
