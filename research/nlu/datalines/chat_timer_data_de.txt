@@ -1,0 +1,1000 @@
+{"USER":"stell bitte einen Timer auf fünf Minuten","HOURS":0,"MINUTES":5,"SECONDS":0}
+{"USER":"mach einen Timer für zwei Stunden","HOURS":2,"MINUTES":0,"SECONDS":0}
+{"USER":"setz mir einen Timer auf 45 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":45}
+{"USER":"starte einen Timer von acht Minuten dreißig Sekunden","HOURS":0,"MINUTES":8,"SECONDS":30}
+{"USER":"kannst du einen Timer für drei Stunden und 20 Minuten stellen","HOURS":3,"MINUTES":20,"SECONDS":0}
+{"USER":"ich brauche einen Timer über 90 Sekunden","HOURS":0,"MINUTES":1,"SECONDS":30}
+{"USER":"lege einen Timer auf eine halbe Stunde an","HOURS":0,"MINUTES":30,"SECONDS":0}
+{"USER":"Timer bitte für zwölf Minuten","HOURS":0,"MINUTES":12,"SECONDS":0}
+{"USER":"stell mir einen Timer von einundzwanzig Stunden und vierzig Sekunden","HOURS":21,"MINUTES":0,"SECONDS":40}
+{"USER":"bitte starte einen Timer für 73 Minuten","HOURS":0,"MINUTES":73,"SECONDS":0}
+{"USER":"setz einen Timer für eine Viertelstunde","HOURS":0,"MINUTES":15,"SECONDS":0}
+{"USER":"starte einen Timer mit 4 Stunden 17 Minuten und 9 Sekunden","HOURS":4,"MINUTES":17,"SECONDS":9}
+{"USER":"stell einen Timer auf neunundneunzig Sekunden","HOURS":0,"MINUTES":1,"SECONDS":39}
+{"USER":"kannst du einen Timer über sieben Minuten einstellen","HOURS":0,"MINUTES":7,"SECONDS":0}
+{"USER":"los, stell einen Timer von 55 Minuten 13 Sekunden","HOURS":0,"MINUTES":55,"SECONDS":13}
+{"USER":"mach einen Timer für eine Stunde und 25 Minuten","HOURS":1,"MINUTES":25,"SECONDS":0}
+{"USER":"setz einen Timer von 36 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":36}
+{"USER":"ich brauche jetzt sofort einen Timer für zehn Stunden","HOURS":10,"MINUTES":0,"SECONDS":0}
+{"USER":"könntest du einen Timer für zweiundvierzig Minuten und eine Sekunde starten","HOURS":0,"MINUTES":42,"SECONDS":1}
+{"USER":"Timer auf 99 Stunden bitte","HOURS":99,"MINUTES":0,"SECONDS":0}
+{"USER":"stell bitte einen Timer über dreißig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":30}
+{"USER":"starte mir einen Timer mit 19 Minuten","HOURS":0,"MINUTES":19,"SECONDS":0}
+{"USER":"setz einen Timer für fünf Stunden 18 Minuten","HOURS":5,"MINUTES":18,"SECONDS":0}
+{"USER":"mach einen Timer auf zweiundzwanzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":22}
+{"USER":"kannst du einen Timer über elf Stunden 14 Sekunden stellen","HOURS":11,"MINUTES":0,"SECONDS":14}
+{"USER":"lege bitte einen Timer auf achtunddreißig Minuten an","HOURS":0,"MINUTES":38,"SECONDS":0}
+{"USER":"stell mir einen Timer für 2 Stunden und 47 Sekunden","HOURS":2,"MINUTES":0,"SECONDS":47}
+{"USER":"mach sofort einen Timer für 75 Sekunden","HOURS":0,"MINUTES":1,"SECONDS":15}
+{"USER":"setz bitte einen Timer von neun Minuten 59 Sekunden","HOURS":0,"MINUTES":9,"SECONDS":59}
+{"USER":"ich brauche einen Timer für 14 Stunden und 28 Minuten","HOURS":14,"MINUTES":28,"SECONDS":0}
+{"USER":"Bitte stell einen Timer für 10 Minuten","HOURS":0,"MINUTES":10,"SECONDS":0}
+{"USER":"Starte einen Countdown von 45 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":45}
+{"USER":"Könntest du einen Timer auf zwei Stunden einrichten","HOURS":2,"MINUTES":0,"SECONDS":0}
+{"USER":"Mach mal einen Timer für eine Viertelstunde","HOURS":0,"MINUTES":15,"SECONDS":0}
+{"USER":"Ich brauche einen Timer für 5 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":5}
+{"USER":"Leg bitte einen Timer für drei Stunden und zwanzig Minuten an","HOURS":3,"MINUTES":20,"SECONDS":0}
+{"USER":"Setz einen 90 Sekunden Timer","HOURS":0,"MINUTES":0,"SECONDS":90}
+{"USER":"Kannst du einen Timer für eine halbe Stunde starten","HOURS":0,"MINUTES":30,"SECONDS":0}
+{"USER":"Starte sofort einen Timer von 25 Minuten","HOURS":0,"MINUTES":25,"SECONDS":0}
+{"USER":"Bitte aktiviere einen Timer für zwölf Stunden","HOURS":12,"MINUTES":0,"SECONDS":0}
+{"USER":"Hey, stell einen Timer auf 75 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":75}
+{"USER":"Könnten Sie einen Timer für sieben Minuten einstellen","HOURS":0,"MINUTES":7,"SECONDS":0}
+{"USER":"Timer für eine Stunde bitte","HOURS":1,"MINUTES":0,"SECONDS":0}
+{"USER":"Ich möchte einen Timer für 40 Sekunden haben","HOURS":0,"MINUTES":0,"SECONDS":40}
+{"USER":"Bitte starte einen Countdown von achtzehn Minuten","HOURS":0,"MINUTES":18,"SECONDS":0}
+{"USER":"Setze einen Timer auf 2 Stunden 33 Minuten","HOURS":2,"MINUTES":33,"SECONDS":0}
+{"USER":"Kannst du mir einen Timer für fünfzehn Sekunden machen","HOURS":0,"MINUTES":0,"SECONDS":15}
+{"USER":"Leg los mit einem 50 Minuten Timer","HOURS":0,"MINUTES":50,"SECONDS":0}
+{"USER":"Stell bitte einen Wecker auf 99 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":99}
+{"USER":"Starte einen Timer für null Stunden acht Minuten und fünfzehn Sekunden","HOURS":0,"MINUTES":8,"SECONDS":15}
+{"USER":"Ich brauche einen Countdown von 63 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":63}
+{"USER":"Könntest du einen Timer für vier Stunden und zwei Minuten programmieren","HOURS":4,"MINUTES":2,"SECONDS":0}
+{"USER":"Mach einen Timer für zwanzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":20}
+{"USER":"Bitte initiiere einen 6 Stunden Timer","HOURS":6,"MINUTES":0,"SECONDS":0}
+{"USER":"Setz einen Countdown für elf Minuten und dreißig Sekunden","HOURS":0,"MINUTES":11,"SECONDS":30}
+{"USER":"Kannst du einen 45 Minuten Timer stellen","HOURS":0,"MINUTES":45,"SECONDS":0}
+{"USER":"Starte sofort einen Timer von siebenundneunzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":97}
+{"USER":"Ich hätte gern einen Timer für drei Stunden, fünf Minuten und zwei Sekunden","HOURS":3,"MINUTES":5,"SECONDS":2}
+{"USER":"Bitte leg einen Timer für achtundvierzig Minuten an","HOURS":0,"MINUTES":48,"SECONDS":0}
+{"USER":"Hey Assistant, starte einen 10 Sekunden Timer","HOURS":0,"MINUTES":0,"SECONDS":10}
+{"USER":"stell bitte einen Timer auf fünf Minuten","HOURS":0,"MINUTES":5,"SECONDS":0}
+{"USER":"Kannst du einen 45 Sekunden langen Timer starten","HOURS":0,"MINUTES":0,"SECONDS":45}
+{"USER":"setz einen Timer für zwanzig Minuten","HOURS":0,"MINUTES":20,"SECONDS":0}
+{"USER":"oh, starte schnell einen 73 Sekunden Timer","HOURS":0,"MINUTES":0,"SECONDS":73}
+{"USER":"lass uns einen Timer für eine halbe Stunde stellen","HOURS":0,"MINUTES":30,"SECONDS":0}
+{"USER":"starte einen Timer für eine Stunde und fünfzehn Sekunden","HOURS":1,"MINUTES":0,"SECONDS":15}
+{"USER":"gib mir einen 2 Stunden und 47 Sekunden Timer","HOURS":2,"MINUTES":0,"SECONDS":47}
+{"USER":"kannst du bitte einen zwölf Stunden vierunddreißig Minuten sechsundfünfzig Sekunden Timer einstellen","HOURS":12,"MINUTES":34,"SECONDS":56}
+{"USER":"Könntest du bitte einen fünfzehn Minuten Timer stellen","HOURS":0,"MINUTES":15,"SECONDS":0}
+{"USER":"starte einen 30 Sekunden Timer","HOURS":0,"MINUTES":0,"SECONDS":30}
+{"USER":"mach mir einen Timer auf drei Stunden und zwei Minuten","HOURS":3,"MINUTES":2,"SECONDS":0}
+{"USER":"bitte setze den Timer auf eine Viertelstunde","HOURS":0,"MINUTES":15,"SECONDS":0}
+{"USER":"Timer auf neunundzwanzig Minuten bitte","HOURS":0,"MINUTES":29,"SECONDS":0}
+{"USER":"Leg einen Timer für 7 Stunden und 8 Minuten an","HOURS":7,"MINUTES":8,"SECONDS":0}
+{"USER":"starte jetzt sofort einen Timer für 50 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":50}
+{"USER":"stell den Timer auf zwei Stunden drei Minuten vier Sekunden","HOURS":2,"MINUTES":3,"SECONDS":4}
+{"USER":"ich brauche einen Timer auf 18 Minuten","HOURS":0,"MINUTES":18,"SECONDS":0}
+{"USER":"setz den Timer bitte auf vierundvierzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":44}
+{"USER":"Stell einen Timer für neun Stunden fünfundzwanzig Minuten","HOURS":9,"MINUTES":25,"SECONDS":0}
+{"USER":"Timer bitte auf zwei Minuten dreißig Sekunden","HOURS":0,"MINUTES":2,"SECONDS":30}
+{"USER":"ich will einen Timer auf eine halbe Stunde","HOURS":0,"MINUTES":30,"SECONDS":0}
+{"USER":"Starte einen Timer über siebzehn Stunden und elf Sekunden","HOURS":17,"MINUTES":0,"SECONDS":11}
+{"USER":"setz einen Timer auf neununddreißig Minuten und zwölf Sekunden","HOURS":0,"MINUTES":39,"SECONDS":12}
+{"USER":"Timer bitte für vier Sekunden","HOURS":0,"MINUTES":0,"SECONDS":4}
+{"USER":"Kannst du den Timer auf elf Minuten stellen","HOURS":0,"MINUTES":11,"SECONDS":0}
+{"USER":"mach einen Timer mit 63 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":63}
+{"USER":"stell den Timer auf einundzwanzig Stunden und neunundneunzig Minuten","HOURS":21,"MINUTES":99,"SECONDS":0}
+{"USER":"setz den Timer auf 36 Minuten 25 Sekunden","HOURS":0,"MINUTES":36,"SECONDS":25}
+{"USER":"Leg bitte einen Timer über neun Stunden an","HOURS":9,"MINUTES":0,"SECONDS":0}
+{"USER":"Timer auf eine Stunde vierzehn Minuten","HOURS":1,"MINUTES":14,"SECONDS":0}
+{"USER":"Starte einen Timer für eine Minute","HOURS":0,"MINUTES":1,"SECONDS":0}
+{"USER":"mach bitte einen Timer für zwanzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":20}
+{"USER":"Stell mir einen Timer für achtundzwanzig Minuten","HOURS":0,"MINUTES":28,"SECONDS":0}
+{"USER":"Timer auf drei Stunden bitte","HOURS":3,"MINUTES":0,"SECONDS":0}
+{"USER":"setz einen Timer für sechsundfünfzig Minuten zwölf Sekunden","HOURS":0,"MINUTES":56,"SECONDS":12}
+{"USER":"bitte Timer für zweiundvierzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":42}
+{"USER":"stell einen Timer für eine Stunde zweiundzwanzig Minuten","HOURS":1,"MINUTES":22,"SECONDS":0}
+{"USER":"mach einen Timer auf neunundneunzig Minuten","HOURS":0,"MINUTES":99,"SECONDS":0}
+{"USER":"Starte bitte einen Timer für 14 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":14}
+{"USER":"ich will einen Timer von 10 Stunden und 10 Minuten","HOURS":10,"MINUTES":10,"SECONDS":0}
+{"USER":"Timer auf fünf Stunden dreiunddreißig Sekunden","HOURS":5,"MINUTES":0,"SECONDS":33}
+{"USER":"setz mir einen Timer auf 38 Minuten","HOURS":0,"MINUTES":38,"SECONDS":0}
+{"USER":"stell bitte einen Timer für neun Sekunden","HOURS":0,"MINUTES":0,"SECONDS":9}
+{"USER":"Timer auf vierundfünfzig Minuten vier Sekunden","HOURS":0,"MINUTES":54,"SECONDS":4}
+{"USER":"starte einen Timer für eine Viertelstunde","HOURS":0,"MINUTES":15,"SECONDS":0}
+{"USER":"bitte setze einen Timer auf zweiundzwanzig Minuten","HOURS":0,"MINUTES":22,"SECONDS":0}
+{"USER":"mach einen Timer auf fünfzehn Sekunden","HOURS":0,"MINUTES":0,"SECONDS":15}
+{"USER":"Leg einen Timer über drei Stunden und sieben Sekunden an","HOURS":3,"MINUTES":0,"SECONDS":7}
+{"USER":"setz einen Timer für siebenundachtzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":87}
+{"USER":"Timer bitte auf neununddreißig Minuten","HOURS":0,"MINUTES":39,"SECONDS":0}
+{"USER":"mach einen Timer auf sieben Stunden","HOURS":7,"MINUTES":0,"SECONDS":0}
+{"USER":"Stell den Timer bitte auf 48 Minuten 19 Sekunden","HOURS":0,"MINUTES":48,"SECONDS":19}
+{"USER":"Starte einen Timer über achtundsechzig Minuten","HOURS":0,"MINUTES":68,"SECONDS":0}
+{"USER":"setz mir einen Timer auf zwölf Sekunden","HOURS":0,"MINUTES":0,"SECONDS":12}
+{"USER":"Timer auf zwei Stunden und achtzehn Minuten","HOURS":2,"MINUTES":18,"SECONDS":0}
+{"USER":"mach mir bitte einen Timer für sechsunddreißig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":36}
+{"USER":"stell bitte einen Timer für sechs Stunden","HOURS":6,"MINUTES":0,"SECONDS":0}
+{"USER":"setz den Timer auf 25 Minuten 55 Sekunden","HOURS":0,"MINUTES":25,"SECONDS":55}
+{"USER":"starte einen Timer für fünfundvierzig Minuten","HOURS":0,"MINUTES":45,"SECONDS":0}
+{"USER":"Timer bitte auf 13 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":13}
+{"USER":"setz bitte einen Timer für siebenunddreißig Minuten","HOURS":0,"MINUTES":37,"SECONDS":0}
+{"USER":"stell den Timer auf zwei Stunden elf Sekunden","HOURS":2,"MINUTES":0,"SECONDS":11}
+{"USER":"Starte einen Timer über fünfundsiebzig Minuten","HOURS":0,"MINUTES":75,"SECONDS":0}
+{"USER":"mach einen Timer für neun Stunden und 30 Sekunden","HOURS":9,"MINUTES":0,"SECONDS":30}
+{"USER":"setz bitte einen Timer auf 22 Minuten 5 Sekunden","HOURS":0,"MINUTES":22,"SECONDS":5}
+{"USER":"Timer auf eine halbe Stunde bitte","HOURS":0,"MINUTES":30,"SECONDS":0}
+{"USER":"Stell mir einen Timer über dreiundzwanzig Stunden","HOURS":23,"MINUTES":0,"SECONDS":0}
+{"USER":"Starte einen Timer für fünf Sekunden","HOURS":0,"MINUTES":0,"SECONDS":5}
+{"USER":"setz einen Timer bitte auf 62 Minuten","HOURS":0,"MINUTES":62,"SECONDS":0}
+{"USER":"mach mir einen Timer über zwei Stunden 9 Minuten 3 Sekunden","HOURS":2,"MINUTES":9,"SECONDS":3}
+{"USER":"bitte Timer auf 17 Minuten","HOURS":0,"MINUTES":17,"SECONDS":0}
+{"USER":"stell einen Timer für drei Stunden 14 Sekunden","HOURS":3,"MINUTES":0,"SECONDS":14}
+{"USER":"setz einen Timer auf neunundneunzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":99}
+{"USER":"Timer bitte über acht Stunden 44 Minuten","HOURS":8,"MINUTES":44,"SECONDS":0}
+{"USER":"starte einen Timer für 27 Minuten 6 Sekunden","HOURS":0,"MINUTES":27,"SECONDS":6}
+{"USER":"stell einen Timer auf 19 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":19}
+{"USER":"mach einen Timer auf vierzig Minuten","HOURS":0,"MINUTES":40,"SECONDS":0}
+{"USER":"setz bitte einen Timer für fünf Stunden und acht Minuten","HOURS":5,"MINUTES":8,"SECONDS":0}
+{"USER":"Timer auf 23 Minuten und 2 Sekunden","HOURS":0,"MINUTES":23,"SECONDS":2}
+{"USER":"stell einen Timer für sechzehn Stunden","HOURS":16,"MINUTES":0,"SECONDS":0}
+{"USER":"mach bitte einen Timer auf siebenundsechzig Minuten","HOURS":0,"MINUTES":67,"SECONDS":0}
+{"USER":"Starte einen Timer über 8 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":8}
+{"USER":"setz mir bitte einen Timer auf zweiundfünfzig Minuten","HOURS":0,"MINUTES":52,"SECONDS":0}
+{"USER":"Timer auf eine Stunde vierundfünfzig Sekunden","HOURS":1,"MINUTES":0,"SECONDS":54}
+{"USER":"stell bitte einen Timer auf 34 Minuten 7 Sekunden","HOURS":0,"MINUTES":34,"SECONDS":7}
+{"USER":"mach einen Timer für zwei Stunden dreißig Minuten","HOURS":2,"MINUTES":30,"SECONDS":0}
+{"USER":"Starte einen Timer über 29 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":29}
+{"USER":"setz einen Timer auf vierzehn Minuten","HOURS":0,"MINUTES":14,"SECONDS":0}
+{"USER":"bitte stell einen Timer für elf Stunden 5 Minuten","HOURS":11,"MINUTES":5,"SECONDS":0}
+{"USER":"Timer auf 46 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":46}
+{"USER":"stell bitte einen Timer für eine Stunde und sechs Minuten","HOURS":1,"MINUTES":6,"SECONDS":0}
+{"USER":"setz den Timer für 59 Minuten","HOURS":0,"MINUTES":59,"SECONDS":0}
+{"USER":"mach mir einen Timer auf 21 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":21}
+{"USER":"stell einen Timer auf vier Stunden 25 Minuten","HOURS":4,"MINUTES":25,"SECONDS":0}
+{"USER":"Timer bitte über 9 Minuten 33 Sekunden","HOURS":0,"MINUTES":9,"SECONDS":33}
+{"USER":"setz mir einen Timer auf dreißig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":30}
+{"USER":"Starte einen Timer über zweiundvierzig Minuten","HOURS":0,"MINUTES":42,"SECONDS":0}
+{"USER":"stell einen Timer für sechzehn Sekunden","HOURS":0,"MINUTES":0,"SECONDS":16}
+{"USER":"setz den Timer bitte auf acht Stunden und 1 Minute","HOURS":8,"MINUTES":1,"SECONDS":0}
+{"USER":"mach bitte einen Timer für 13 Minuten 40 Sekunden","HOURS":0,"MINUTES":13,"SECONDS":40}
+{"USER":"stell mir einen Timer für eine Stunde","HOURS":1,"MINUTES":0,"SECONDS":0}
+{"USER":"Timer auf zweiunddreißig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":32}
+{"USER":"Stell bitte einen Timer für 5 Minuten","HOURS":0,"MINUTES":5,"SECONDS":0}
+{"USER":"Kannst du einen Timer für eine halbe Stunde starten","HOURS":0,"MINUTES":30,"SECONDS":0}
+{"USER":"Starte einen 45 Sekunden Timer","HOURS":0,"MINUTES":0,"SECONDS":45}
+{"USER":"Bitte setze einen Timer auf zwei Stunden","HOURS":2,"MINUTES":0,"SECONDS":0}
+{"USER":"Mach einen Timer für fünfzehn Minuten und dreißig Sekunden","HOURS":0,"MINUTES":15,"SECONDS":30}
+{"USER":"Leg einen Timer für eine Stunde an","HOURS":1,"MINUTES":0,"SECONDS":0}
+{"USER":"Könntest du einen Timer für 90 Sekunden stellen","HOURS":0,"MINUTES":0,"SECONDS":90}
+{"USER":"Stell mir einen Timer auf 25 Minuten","HOURS":0,"MINUTES":25,"SECONDS":0}
+{"USER":"Starte bitte einen Timer für drei Stunden und zehn Minuten","HOURS":3,"MINUTES":10,"SECONDS":0}
+{"USER":"Setze einen Timer für eine Viertelstunde","HOURS":0,"MINUTES":15,"SECONDS":0}
+{"USER":"Kannst du einen 12 Stunden Timer starten","HOURS":12,"MINUTES":0,"SECONDS":0}
+{"USER":"Bitte mach einen Timer für acht Minuten und fünfzehn Sekunden","HOURS":0,"MINUTES":8,"SECONDS":15}
+{"USER":"Stell einen Timer für siebzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":70}
+{"USER":"Leg bitte einen Timer für eine Stunde und zwanzig Minuten an","HOURS":1,"MINUTES":20,"SECONDS":0}
+{"USER":"Starte einen 50 Minuten Timer","HOURS":0,"MINUTES":50,"SECONDS":0}
+{"USER":"Setze einen Timer auf zwei Stunden und fünfundvierzig Sekunden","HOURS":2,"MINUTES":0,"SECONDS":45}
+{"USER":"Könntest du einen Timer für fünf Sekunden stellen","HOURS":0,"MINUTES":0,"SECONDS":5}
+{"USER":"Stell bitte einen Timer für achtunddreißig Minuten","HOURS":0,"MINUTES":38,"SECONDS":0}
+{"USER":"Starte einen Timer für siebzehn Stunden","HOURS":17,"MINUTES":0,"SECONDS":0}
+{"USER":"Mach einen Timer auf drei Minuten und fünfzig Sekunden","HOURS":0,"MINUTES":3,"SECONDS":50}
+{"USER":"Leg einen Timer für neunzig Minuten an","HOURS":0,"MINUTES":90,"SECONDS":0}
+{"USER":"Bitte setze einen Timer für eine Stunde und fünf Minuten","HOURS":1,"MINUTES":5,"SECONDS":0}
+{"USER":"Starte einen 99 Sekunden Timer","HOURS":0,"MINUTES":0,"SECONDS":99}
+{"USER":"Stell einen Timer für sechzig Minuten und dreißig Sekunden","HOURS":0,"MINUTES":60,"SECONDS":30}
+{"USER":"Kannst du einen Timer für zwei Stunden und drei Sekunden stellen","HOURS":2,"MINUTES":0,"SECONDS":3}
+{"USER":"Mach bitte einen Timer für fünfundsiebzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":75}
+{"USER":"Leg einen Timer auf zehn Stunden und fünfzehn Minuten an","HOURS":10,"MINUTES":15,"SECONDS":0}
+{"USER":"Setze einen Timer für eine Minute","HOURS":0,"MINUTES":1,"SECONDS":0}
+{"USER":"Starte einen Timer für vierzig Minuten und zehn Sekunden","HOURS":0,"MINUTES":40,"SECONDS":10}
+{"USER":"Stell bitte einen Timer auf sieben Stunden und zwei Minuten","HOURS":7,"MINUTES":2,"SECONDS":0}
+{"USER":"stell bitte einen Timer auf fünf Minuten","HOURS":0,"MINUTES":5,"SECONDS":0}
+{"USER":"starte einen Timer für zwei Stunden","HOURS":2,"MINUTES":0,"SECONDS":0}
+{"USER":"setz einen Timer auf neununddreißig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":39}
+{"USER":"mach einen Timer für eine Viertelstunde","HOURS":0,"MINUTES":15,"SECONDS":0}
+{"USER":"Timer auf 3 Minuten bitte","HOURS":0,"MINUTES":3,"SECONDS":0}
+{"USER":"stell mir einen Timer für eine halbe Stunde","HOURS":0,"MINUTES":30,"SECONDS":0}
+{"USER":"ich brauch einen Timer auf sechs Stunden","HOURS":6,"MINUTES":0,"SECONDS":0}
+{"USER":"kannst du einen Timer für siebenundfünfzig Sekunden einstellen","HOURS":0,"MINUTES":0,"SECONDS":57}
+{"USER":"setz bitte einen Timer auf achtzehn Minuten","HOURS":0,"MINUTES":18,"SECONDS":0}
+{"USER":"mach mal einen Timer für 4 Stunden und 20 Minuten","HOURS":4,"MINUTES":20,"SECONDS":0}
+{"USER":"stell den Timer auf zweiundzwanzig Minuten und zehn Sekunden","HOURS":0,"MINUTES":22,"SECONDS":10}
+{"USER":"starte jetzt einen Timer von elf Sekunden","HOURS":0,"MINUTES":0,"SECONDS":11}
+{"USER":"könntest du einen Timer auf sieben Stunden und drei Minuten anlegen","HOURS":7,"MINUTES":3,"SECONDS":0}
+{"USER":"setz einen Timer auf 45 Minuten und 9 Sekunden","HOURS":0,"MINUTES":45,"SECONDS":9}
+{"USER":"Timer für 33 Sekunden bitte","HOURS":0,"MINUTES":0,"SECONDS":33}
+{"USER":"stell mir einen Timer für achtunddreißig Minuten","HOURS":0,"MINUTES":38,"SECONDS":0}
+{"USER":"mach einen Timer auf eine Stunde und 55 Minuten","HOURS":1,"MINUTES":55,"SECONDS":0}
+{"USER":"setz bitte einen Timer für 90 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":90}
+{"USER":"stell einen Timer auf zwölf Stunden","HOURS":12,"MINUTES":0,"SECONDS":0}
+{"USER":"mach mal einen Timer für zwei Stunden und siebenundfünfzig Sekunden","HOURS":2,"MINUTES":0,"SECONDS":57}
+{"USER":"leg einen Timer auf 17 Minuten fest","HOURS":0,"MINUTES":17,"SECONDS":0}
+{"USER":"ich brauch einen Timer für dreißig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":30}
+{"USER":"stell bitte einen Timer auf einundfünfzig Minuten","HOURS":0,"MINUTES":51,"SECONDS":0}
+{"USER":"setz einen Timer für fünf Stunden und zehn Sekunden","HOURS":5,"MINUTES":0,"SECONDS":10}
+{"USER":"starte einen Timer über neunundneunzig Minuten","HOURS":0,"MINUTES":99,"SECONDS":0}
+{"USER":"Timer auf sechzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":60}
+{"USER":"bitte stell einen Timer für achtzehn Stunden","HOURS":18,"MINUTES":0,"SECONDS":0}
+{"USER":"setz einen Timer auf 14 Minuten 36 Sekunden","HOURS":0,"MINUTES":14,"SECONDS":36}
+{"USER":"stell mal einen Timer über fünfzehn Sekunden","HOURS":0,"MINUTES":0,"SECONDS":15}
+{"USER":"mach mir einen Timer auf 2 Stunden 25 Minuten","HOURS":2,"MINUTES":25,"SECONDS":0}
+{"USER":"stell bitte einen Timer auf drei Minuten und zwölf Sekunden","HOURS":0,"MINUTES":3,"SECONDS":12}
+{"USER":"könntest du einen Timer für neunundzwanzig Minuten starten","HOURS":0,"MINUTES":29,"SECONDS":0}
+{"USER":"setz einen Timer auf einundvierzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":41}
+{"USER":"stell mir bitte einen Timer für vier Stunden","HOURS":4,"MINUTES":0,"SECONDS":0}
+{"USER":"Timer für 8 Minuten bitte","HOURS":0,"MINUTES":8,"SECONDS":0}
+{"USER":"starte einen Timer auf fünfzig Minuten und dreißig Sekunden","HOURS":0,"MINUTES":50,"SECONDS":30}
+{"USER":"setz einen Timer auf eine Stunde dreißig Minuten","HOURS":1,"MINUTES":30,"SECONDS":0}
+{"USER":"stell bitte einen Timer über achtundsiebzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":78}
+{"USER":"mach einen Timer für zweiundvierzig Minuten","HOURS":0,"MINUTES":42,"SECONDS":0}
+{"USER":"setz bitte einen Timer auf siebenundzwanzig Minuten und fünf Sekunden","HOURS":0,"MINUTES":27,"SECONDS":5}
+{"USER":"stell mir einen Timer auf neun Stunden","HOURS":9,"MINUTES":0,"SECONDS":0}
+{"USER":"Timer bitte für 19 Minuten","HOURS":0,"MINUTES":19,"SECONDS":0}
+{"USER":"leg einen Timer über 66 Sekunden fest","HOURS":0,"MINUTES":0,"SECONDS":66}
+{"USER":"setz bitte einen Timer für drei Stunden und neununddreißig Minuten","HOURS":3,"MINUTES":39,"SECONDS":0}
+{"USER":"stell den Timer auf 25 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":25}
+{"USER":"mach einen Timer auf vierzehn Minuten","HOURS":0,"MINUTES":14,"SECONDS":0}
+{"USER":"stell bitte einen Timer für 10 Stunden und 15 Minuten","HOURS":10,"MINUTES":15,"SECONDS":0}
+{"USER":"setz mir einen Timer auf eine Stunde zwanzig Sekunden","HOURS":1,"MINUTES":0,"SECONDS":20}
+{"USER":"Timer für 35 Minuten und 12 Sekunden","HOURS":0,"MINUTES":35,"SECONDS":12}
+{"USER":"stell bitte einen Timer für 70 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":70}
+{"USER":"mach einen Timer auf siebenundzwanzig Stunden","HOURS":27,"MINUTES":0,"SECONDS":0}
+{"USER":"setz einen Timer auf acht Minuten und sechsundfünfzig Sekunden","HOURS":0,"MINUTES":8,"SECONDS":56}
+{"USER":"stell bitte einen Timer für neununddreißig Stunden","HOURS":39,"MINUTES":0,"SECONDS":0}
+{"USER":"mach einen Timer auf eine Stunde 45 Minuten","HOURS":1,"MINUTES":45,"SECONDS":0}
+{"USER":"bitte stell einen Timer für fünf Sekunden","HOURS":0,"MINUTES":0,"SECONDS":5}
+{"USER":"setz einen Timer auf siebenundfünfzig Minuten","HOURS":0,"MINUTES":57,"SECONDS":0}
+{"USER":"stell mir einen Timer für 22 Stunden","HOURS":22,"MINUTES":0,"SECONDS":0}
+{"USER":"mach einen Timer für neunundsechzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":69}
+{"USER":"Timer auf 48 Minuten","HOURS":0,"MINUTES":48,"SECONDS":0}
+{"USER":"stell bitte einen Timer über vier Stunden 15 Minuten","HOURS":4,"MINUTES":15,"SECONDS":0}
+{"USER":"setz einen Timer auf zwei Stunden und sechsundzwanzig Sekunden","HOURS":2,"MINUTES":0,"SECONDS":26}
+{"USER":"mach mir einen Timer für achtundzwanzig Minuten","HOURS":0,"MINUTES":28,"SECONDS":0}
+{"USER":"stell den Timer auf eine Minute dreißig Sekunden","HOURS":0,"MINUTES":1,"SECONDS":30}
+{"USER":"setz einen Timer für 21 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":21}
+{"USER":"Timer bitte auf 34 Minuten","HOURS":0,"MINUTES":34,"SECONDS":0}
+{"USER":"mach einen Timer über 13 Stunden","HOURS":13,"MINUTES":0,"SECONDS":0}
+{"USER":"setz bitte einen Timer auf 4 Stunden 44 Minuten","HOURS":4,"MINUTES":44,"SECONDS":0}
+{"USER":"stell mir einen Timer für zweiundzwanzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":22}
+{"USER":"starte einen Timer auf acht Minuten","HOURS":0,"MINUTES":8,"SECONDS":0}
+{"USER":"setz einen Timer auf siebzehn Stunden und fünfzig Minuten","HOURS":17,"MINUTES":50,"SECONDS":0}
+{"USER":"mach bitte einen Timer für 12 Minuten und 3 Sekunden","HOURS":0,"MINUTES":12,"SECONDS":3}
+{"USER":"stell den Timer für 65 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":65}
+{"USER":"setz einen Timer auf neunundneunzig Stunden","HOURS":99,"MINUTES":0,"SECONDS":0}
+{"USER":"stell bitte einen Timer über eine Stunde und neunundneunzig Minuten","HOURS":1,"MINUTES":99,"SECONDS":0}
+{"USER":"mach mir einen Timer für acht Sekunden","HOURS":0,"MINUTES":0,"SECONDS":8}
+{"USER":"setz einen Timer auf 20 Minuten 45 Sekunden","HOURS":0,"MINUTES":20,"SECONDS":45}
+{"USER":"stell mir bitte einen Timer für drei Stunden und zwei Sekunden","HOURS":3,"MINUTES":0,"SECONDS":2}
+{"USER":"Timer auf 11 Minuten bitte","HOURS":0,"MINUTES":11,"SECONDS":0}
+{"USER":"mach einen Timer für 72 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":72}
+{"USER":"setz bitte einen Timer auf sechzehn Stunden","HOURS":16,"MINUTES":0,"SECONDS":0}
+{"USER":"stell einen Timer über 23 Minuten","HOURS":0,"MINUTES":23,"SECONDS":0}
+{"USER":"mach einen Timer für 2 Stunden 9 Minuten und 18 Sekunden","HOURS":2,"MINUTES":9,"SECONDS":18}
+{"USER":"setz den Timer bitte auf 40 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":40}
+{"USER":"stell mir einen Timer für siebenunddreißig Minuten","HOURS":0,"MINUTES":37,"SECONDS":0}
+{"USER":"Timer bitte auf 15 Stunden","HOURS":15,"MINUTES":0,"SECONDS":0}
+{"USER":"setz einen Timer auf eine Stunde und fünfzig Sekunden","HOURS":1,"MINUTES":0,"SECONDS":50}
+{"USER":"mach einen Timer für 9 Minuten 25 Sekunden","HOURS":0,"MINUTES":9,"SECONDS":25}
+{"USER":"stell bitte einen Timer auf zwölf Sekunden","HOURS":0,"MINUTES":0,"SECONDS":12}
+{"USER":"setz einen Timer für 55 Minuten","HOURS":0,"MINUTES":55,"SECONDS":0}
+{"USER":"stell den Timer für 6 Stunden","HOURS":6,"MINUTES":0,"SECONDS":0}
+{"USER":"mach mir einen Timer auf vierzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":40}
+{"USER":"setz bitte einen Timer auf dreiundfünfzig Minuten","HOURS":0,"MINUTES":53,"SECONDS":0}
+{"USER":"stell einen Timer über 2 Stunden 7 Minuten","HOURS":2,"MINUTES":7,"SECONDS":0}
+{"USER":"mach bitte einen Timer für 14 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":14}
+{"USER":"stell den Timer auf achtundzwanzig Stunden","HOURS":28,"MINUTES":0,"SECONDS":0}
+{"USER":"setz bitte einen Timer für 36 Minuten 59 Sekunden","HOURS":0,"MINUTES":36,"SECONDS":59}
+{"USER":"stell mir einen Timer auf eine Stunde 22 Minuten","HOURS":1,"MINUTES":22,"SECONDS":0}
+{"USER":"mach einen Timer für neun Sekunden","HOURS":0,"MINUTES":0,"SECONDS":9}
+{"USER":"setz bitte einen Timer auf achtundvierzig Stunden","HOURS":48,"MINUTES":0,"SECONDS":0}
+{"USER":"stell bitte einen Timer auf fünf Minuten","HOURS":0,"MINUTES":5,"SECONDS":0}
+{"USER":"Kannst du einen 45 Sekunden langen Timer starten","HOURS":0,"MINUTES":0,"SECONDS":45}
+{"USER":"setz einen Timer für zwanzig Minuten","HOURS":0,"MINUTES":20,"SECONDS":0}
+{"USER":"oh starte schnell einen 73 Sekunden Timer","HOURS":0,"MINUTES":0,"SECONDS":73}
+{"USER":"lass uns einen Timer für eine halbe Stunde stellen","HOURS":0,"MINUTES":30,"SECONDS":0}
+{"USER":"starte einen Timer für eine Stunde und fünfzehn Sekunden","HOURS":1,"MINUTES":0,"SECONDS":15}
+{"USER":"gib mir einen 2 Stunden und 47 Sekunden Timer","HOURS":2,"MINUTES":0,"SECONDS":47}
+{"USER":"kannst du bitte einen zwölf Stunden vierunddreißig Minuten sechsundfünfzig Sekunden Timer einstellen","HOURS":12,"MINUTES":34,"SECONDS":56}
+{"USER":"Könntest du bitte einen fünfzehn Minuten Timer stellen","HOURS":0,"MINUTES":15,"SECONDS":0}
+{"USER":"starte einen 30 Sekunden Timer","HOURS":0,"MINUTES":0,"SECONDS":30}
+{"USER":"mach einen Timer für drei Minuten","HOURS":0,"MINUTES":3,"SECONDS":0}
+{"USER":"setz bitte einen Timer auf 1 Stunde 20 Minuten","HOURS":1,"MINUTES":20,"SECONDS":0}
+{"USER":"leg einen Timer an für neunundzwanzig Minuten","HOURS":0,"MINUTES":29,"SECONDS":0}
+{"USER":"Timer auf 120 Sekunden, bitte","HOURS":0,"MINUTES":0,"SECONDS":120}
+{"USER":"stell einen Timer für eine Viertelstunde","HOURS":0,"MINUTES":15,"SECONDS":0}
+{"USER":"Starte bitte einen Timer auf 2 Stunden und 30 Minuten","HOURS":2,"MINUTES":30,"SECONDS":0}
+{"USER":"mach mir einen Timer für siebenundvierzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":47}
+{"USER":"setz einen Timer auf vier Stunden zehn Minuten zwanzig Sekunden","HOURS":4,"MINUTES":10,"SECONDS":20}
+{"USER":"leg bitte einen Timer für drei Stunden und zwei Minuten an","HOURS":3,"MINUTES":2,"SECONDS":0}
+{"USER":"kannst du einen Timer für eine Stunde stellen","HOURS":1,"MINUTES":0,"SECONDS":0}
+{"USER":"Timer: 55 Minuten, bitte starten","HOURS":0,"MINUTES":55,"SECONDS":0}
+{"USER":"stell schnell einen 8 Sekunden Timer","HOURS":0,"MINUTES":0,"SECONDS":8}
+{"USER":"Bitte einen Timer auf sechzig Minuten","HOURS":0,"MINUTES":60,"SECONDS":0}
+{"USER":"Start einen Timer für elf Stunden","HOURS":11,"MINUTES":0,"SECONDS":0}
+{"USER":"mach einen Timer für zwei Minuten und 30 Sekunden","HOURS":0,"MINUTES":2,"SECONDS":30}
+{"USER":"stell einen Timer für sieben Stunden dreiundzwanzig Minuten","HOURS":7,"MINUTES":23,"SECONDS":0}
+{"USER":"bitte Timer auf 99 Sekunden setzen","HOURS":0,"MINUTES":0,"SECONDS":99}
+{"USER":"leg einen Timer an für vierzig Minuten","HOURS":0,"MINUTES":40,"SECONDS":0}
+{"USER":"stell bitte einen Timer auf neun Stunden","HOURS":9,"MINUTES":0,"SECONDS":0}
+{"USER":"Starte einen Timer für sechsunddreißig Minuten und 5 Sekunden","HOURS":0,"MINUTES":36,"SECONDS":5}
+{"USER":"setz einen Timer auf eine Stunde und zwanzig Minuten","HOURS":1,"MINUTES":20,"SECONDS":0}
+{"USER":"mach bitte einen Timer für 14 Minuten","HOURS":0,"MINUTES":14,"SECONDS":0}
+{"USER":"Kannst du einen Timer auf dreiundvierzig Sekunden setzen","HOURS":0,"MINUTES":0,"SECONDS":43}
+{"USER":"stell einen Timer für drei Stunden ein","HOURS":3,"MINUTES":0,"SECONDS":0}
+{"USER":"bitte starte einen Timer auf 7 Minuten und 7 Sekunden","HOURS":0,"MINUTES":7,"SECONDS":7}
+{"USER":"mach einen Timer für eine Stunde und fünf Minuten","HOURS":1,"MINUTES":5,"SECONDS":0}
+{"USER":"leg einen Timer für achtundfünfzig Minuten an","HOURS":0,"MINUTES":58,"SECONDS":0}
+{"USER":"stell bitte einen 40 Sekunden Timer an","HOURS":0,"MINUTES":0,"SECONDS":40}
+{"USER":"Startet einen Timer auf 18 Stunden","HOURS":18,"MINUTES":0,"SECONDS":0}
+{"USER":"setz einen Timer für zwölf Minuten und 12 Sekunden","HOURS":0,"MINUTES":12,"SECONDS":12}
+{"USER":"mach bitte einen Timer für eine Stunde dreiunddreißig Minuten","HOURS":1,"MINUTES":33,"SECONDS":0}
+{"USER":"stell einen Timer auf 250 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":250}
+{"USER":"bitte leg einen Timer für zwei Stunden an","HOURS":2,"MINUTES":0,"SECONDS":0}
+{"USER":"kannst du einen Timer auf sieben Minuten setzen","HOURS":0,"MINUTES":7,"SECONDS":0}
+{"USER":"Starte einen Timer für fünfundzwanzig Minuten","HOURS":0,"MINUTES":25,"SECONDS":0}
+{"USER":"setz mir bitte einen Timer auf 3 Stunden 5 Minuten 9 Sekunden","HOURS":3,"MINUTES":5,"SECONDS":9}
+{"USER":"mach einen Timer für sechs Sekunden","HOURS":0,"MINUTES":0,"SECONDS":6}
+{"USER":"stell einen Timer für einundzwanzig Minuten ein","HOURS":0,"MINUTES":21,"SECONDS":0}
+{"USER":"bitte Timer auf 16 Stunden und 45 Minuten","HOURS":16,"MINUTES":45,"SECONDS":0}
+{"USER":"start einen Timer für neun Minuten und 3 Sekunden","HOURS":0,"MINUTES":9,"SECONDS":3}
+{"USER":"setz einen Timer auf eineinhalb Stunden","HOURS":1,"MINUTES":30,"SECONDS":0}
+{"USER":"leg bitte einen Timer für vierundfünfzig Sekunden an","HOURS":0,"MINUTES":0,"SECONDS":54}
+{"USER":"stell einen Timer auf 70 Minuten","HOURS":0,"MINUTES":70,"SECONDS":0}
+{"USER":"kannst du einen Timer für drei Tage minus?","HOURS":24,"MINUTES":0,"SECONDS":0}
+{"USER":"Bitte einen Timer auf dreizehn Minuten setzen","HOURS":0,"MINUTES":13,"SECONDS":0}
+{"USER":"mach schnell einen 2 Minuten Timer","HOURS":0,"MINUTES":2,"SECONDS":0}
+{"USER":"start einen Timer für 37 Minuten und 40 Sekunden","HOURS":0,"MINUTES":37,"SECONDS":40}
+{"USER":"stell einen Timer für acht Stunden ein","HOURS":8,"MINUTES":0,"SECONDS":0}
+{"USER":"setz bitte einen Timer auf sechzehn Sekunden","HOURS":0,"MINUTES":0,"SECONDS":16}
+{"USER":"leg einen Timer an für zweiundvierzig Minuten","HOURS":0,"MINUTES":42,"SECONDS":0}
+{"USER":"starte bitte einen Timer auf 4 Stunden 0 Minuten 30 Sekunden","HOURS":4,"MINUTES":0,"SECONDS":30}
+{"USER":"mach einen Timer für neunundneunzig Minuten","HOURS":0,"MINUTES":99,"SECONDS":0}
+{"USER":"stell einen Timer auf eine Stunde und dreiundzwanzig Minuten","HOURS":1,"MINUTES":23,"SECONDS":0}
+{"USER":"Kannst du mir einen Timer für 5 Minuten 20 Sekunden machen","HOURS":0,"MINUTES":5,"SECONDS":20}
+{"USER":"setz einen Timer für siebenundsechzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":67}
+{"USER":"bitte einen Timer auf elf Minuten","HOURS":0,"MINUTES":11,"SECONDS":0}
+{"USER":"mach einen Timer für drei Stunden 45 Minuten","HOURS":3,"MINUTES":45,"SECONDS":0}
+{"USER":"stell einen Timer auf 2 Minuten 2 Sekunden","HOURS":0,"MINUTES":2,"SECONDS":2}
+{"USER":"leg bitte einen Timer für sechseinhalb Minuten an","HOURS":0,"MINUTES":6,"SECONDS":30}
+{"USER":"starte einen Timer für zehn Sekunden","HOURS":0,"MINUTES":0,"SECONDS":10}
+{"USER":"setz einen Timer auf vierundzwanzig Stunden","HOURS":24,"MINUTES":0,"SECONDS":0}
+{"USER":"mach mir einen Timer für dreiundsechzig Minuten","HOURS":0,"MINUTES":63,"SECONDS":0}
+{"USER":"bitte Timer auf 27 Minuten und 15 Sekunden setzen","HOURS":0,"MINUTES":27,"SECONDS":15}
+{"USER":"stell einen Timer für zwei Stunden 59 Minuten","HOURS":2,"MINUTES":59,"SECONDS":0}
+{"USER":"startet bitte einen Timer auf achtundzwanzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":28}
+{"USER":"setz einen Timer für fünf Stunden ein","HOURS":5,"MINUTES":0,"SECONDS":0}
+{"USER":"mach einen Timer für vier Minuten und sieben Sekunden","HOURS":0,"MINUTES":4,"SECONDS":7}
+{"USER":"stell bitte einen Timer auf neununddreißig Minuten","HOURS":0,"MINUTES":39,"SECONDS":0}
+{"USER":"kannst du einen Timer für sechzig Sekunden starten","HOURS":0,"MINUTES":0,"SECONDS":60}
+{"USER":"leg einen Timer an für 6 Stunden 6 Minuten","HOURS":6,"MINUTES":6,"SECONDS":0}
+{"USER":"bitte stell einen Timer auf fünfzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":50}
+{"USER":"Starte einen Timer für zwanzig Stunden","HOURS":20,"MINUTES":0,"SECONDS":0}
+{"USER":"setz mir schnell einen Timer für zweiunddreißig Minuten","HOURS":0,"MINUTES":32,"SECONDS":0}
+{"USER":"mach bitte einen Timer auf 81 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":81}
+{"USER":"stell einen Timer für eine Stunde und acht Minuten","HOURS":1,"MINUTES":8,"SECONDS":0}
+{"USER":"bitte Timer auf vierundzwanzig Minuten setzen","HOURS":0,"MINUTES":24,"SECONDS":0}
+{"USER":"leg einen Timer an für drei Minuten und fünf Sekunden","HOURS":0,"MINUTES":3,"SECONDS":5}
+{"USER":"setz einen Timer auf 48 Minuten","HOURS":0,"MINUTES":48,"SECONDS":0}
+{"USER":"mach einen Timer für sieben Stunden fünfzehn Minuten und 9 Sekunden","HOURS":7,"MINUTES":15,"SECONDS":9}
+{"USER":"stell bitte einen Timer auf sechs Minuten","HOURS":0,"MINUTES":6,"SECONDS":0}
+{"USER":"kannst du einen Timer für 19 Sekunden machen","HOURS":0,"MINUTES":0,"SECONDS":19}
+{"USER":"start einen Timer für fünf Stunden 55 Minuten","HOURS":5,"MINUTES":55,"SECONDS":0}
+{"USER":"setz bitte einen Timer auf dreiundzwanzig Minuten und 33 Sekunden","HOURS":0,"MINUTES":23,"SECONDS":33}
+{"USER":"mach einen Timer für einundzwanzig Stunden","HOURS":21,"MINUTES":0,"SECONDS":0}
+{"USER":"stell einen Timer auf zehn Minuten und 10 Sekunden","HOURS":0,"MINUTES":10,"SECONDS":10}
+{"USER":"bitte leg einen Timer für zwei Minuten an","HOURS":0,"MINUTES":2,"SECONDS":0}
+{"USER":"starte einen Timer für vier Sekunden","HOURS":0,"MINUTES":0,"SECONDS":4}
+{"USER":"setz einen Timer auf neunzig Minuten","HOURS":0,"MINUTES":90,"SECONDS":0}
+{"USER":"mach mir bitte einen Timer für drei Stunden und vier Sekunden","HOURS":3,"MINUTES":0,"SECONDS":4}
+{"USER":"stell einen Timer für sieben Minuten und 70 Sekunden","HOURS":0,"MINUTES":7,"SECONDS":70}
+{"USER":"leg einen Timer an für eine Viertelstunde bitte","HOURS":0,"MINUTES":15,"SECONDS":0}
+{"USER":"setz einen Timer auf 33 Minuten","HOURS":0,"MINUTES":33,"SECONDS":0}
+{"USER":"starte bitte einen Timer für vier Stunden und 44 Sekunden","HOURS":4,"MINUTES":0,"SECONDS":44}
+{"USER":"mach einen Timer für acht Minuten","HOURS":0,"MINUTES":8,"SECONDS":0}
+{"USER":"stell einen Timer auf zweiundzwanzig Minuten und 2 Sekunden","HOURS":0,"MINUTES":22,"SECONDS":2}
+{"USER":"bitte starte einen Timer für sechsundvierzig Minuten","HOURS":0,"MINUTES":46,"SECONDS":0}
+{"USER":"setz einen Timer für fünfundsiebzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":75}
+{"USER":"leg bitte einen Timer für 9 Stunden 9 Minuten an","HOURS":9,"MINUTES":9,"SECONDS":0}
+{"USER":"Stell bitte einen Timer auf fünfzehn Minuten","HOURS":0,"MINUTES":15,"SECONDS":0}
+{"USER":"Kannst du einen Timer für dreißig Sekunden starten","HOURS":0,"MINUTES":0,"SECONDS":30}
+{"USER":"Ich brauche einen Timer von zwei Stunden","HOURS":2,"MINUTES":0,"SECONDS":0}
+{"USER":"Starte einen 45-Minuten-Timer","HOURS":0,"MINUTES":45,"SECONDS":0}
+{"USER":"Bitte setze einen Timer auf zehn Sekunden","HOURS":0,"MINUTES":0,"SECONDS":10}
+{"USER":"Könntest du einen Timer für eine Stunde stellen","HOURS":1,"MINUTES":0,"SECONDS":0}
+{"USER":"Mach mal einen Timer für zwanzig Minuten","HOURS":0,"MINUTES":20,"SECONDS":0}
+{"USER":"Leg einen Timer an für fünf Minuten und dreißig Sekunden","HOURS":0,"MINUTES":5,"SECONDS":30}
+{"USER":"Timer auf drei Stunden fünfzehn Minuten bitte","HOURS":3,"MINUTES":15,"SECONDS":0}
+{"USER":"Starte sofort einen Timer von sieben Sekunden","HOURS":0,"MINUTES":0,"SECONDS":7}
+{"USER":"Kannst du mir einen Timer für eine halbe Stunde einrichten","HOURS":0,"MINUTES":30,"SECONDS":0}
+{"USER":"Stell einen Timer auf null Stunden acht Minuten","HOURS":0,"MINUTES":8,"SECONDS":0}
+{"USER":"Bitte starte einen Countdown von fünfundvierzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":45}
+{"USER":"Ich möchte einen Timer für zwei Stunden und dreißig Minuten","HOURS":2,"MINUTES":30,"SECONDS":0}
+{"USER":"Setz einen Timer auf fünfzehn Sekunden","HOURS":0,"MINUTES":0,"SECONDS":15}
+{"USER":"Könnten Sie einen Timer für siebzehn Minuten stellen","HOURS":0,"MINUTES":17,"SECONDS":0}
+{"USER":"Starte einen 99-Sekunden-Timer","HOURS":0,"MINUTES":0,"SECONDS":99}
+{"USER":"Bitte Timer für eine Viertelstunde","HOURS":0,"MINUTES":15,"SECONDS":0}
+{"USER":"Mach einen Timer von drei Minuten fünfzig Sekunden","HOURS":0,"MINUTES":3,"SECONDS":50}
+{"USER":"Stell den Timer auf acht Stunden zweiundvierzig Minuten","HOURS":8,"MINUTES":42,"SECONDS":0}
+{"USER":"Kannst du einen Timer für zehn Stunden starten","HOURS":10,"MINUTES":0,"SECONDS":0}
+{"USER":"Leg bitte einen Timer an für fünfzehn Sekunden","HOURS":0,"MINUTES":0,"SECONDS":15}
+{"USER":"Timer auf siebenundzwanzig Minuten stellen","HOURS":0,"MINUTES":27,"SECONDS":0}
+{"USER":"Starte einen Countdown von dreißig Minuten","HOURS":0,"MINUTES":30,"SECONDS":0}
+{"USER":"Könntest du einen Timer auf zweiundneunzig Sekunden setzen","HOURS":0,"MINUTES":0,"SECONDS":92}
+{"USER":"Ich brauche einen Timer für sechs Stunden fünf Minuten","HOURS":6,"MINUTES":5,"SECONDS":0}
+{"USER":"Bitte starte einen Timer von fünfzehn Sekunden","HOURS":0,"MINUTES":0,"SECONDS":15}
+{"USER":"Setze einen Timer auf drei Stunden","HOURS":3,"MINUTES":0,"SECONDS":0}
+{"USER":"Mach mal einen Timer für elf Minuten dreißig Sekunden","HOURS":0,"MINUTES":11,"SECONDS":30}
+{"USER":"Stell einen Timer auf vierundzwanzig Stunden","HOURS":24,"MINUTES":0,"SECONDS":0}
+{"USER":"Kannst du einen 50-Minuten-Timer starten","HOURS":0,"MINUTES":50,"SECONDS":0}
+{"USER":"Leg einen Timer an für zwei Sekunden","HOURS":0,"MINUTES":0,"SECONDS":2}
+{"USER":"Timer auf neunzig Minuten bitte","HOURS":0,"MINUTES":90,"SECONDS":0}
+{"USER":"Starte sofort einen Timer für sieben Stunden","HOURS":7,"MINUTES":0,"SECONDS":0}
+{"USER":"Könnten Sie einen Timer auf fünfzehn Minuten stellen","HOURS":0,"MINUTES":15,"SECONDS":0}
+{"USER":"Ich möchte einen Timer von dreißig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":30}
+{"USER":"Setz einen Timer für eine Stunde fünfzehn Minuten","HOURS":1,"MINUTES":15,"SECONDS":0}
+{"USER":"Bitte starte einen 88-Sekunden-Countdown","HOURS":0,"MINUTES":0,"SECONDS":88}
+{"USER":"Mach einen Timer auf zwölf Stunden dreißig Minuten","HOURS":12,"MINUTES":30,"SECONDS":0}
+{"USER":"Stell bitte einen Timer auf drei Minuten","HOURS":0,"MINUTES":3,"SECONDS":0}
+{"USER":"Kannst du einen Timer für neunzehn Sekunden einrichten","HOURS":0,"MINUTES":0,"SECONDS":19}
+{"USER":"Starte einen Timer von sechs Minuten","HOURS":0,"MINUTES":6,"SECONDS":0}
+{"USER":"Leg einen Timer an für zweiundfünfzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":52}
+{"USER":"Timer auf vier Stunden stellen","HOURS":4,"MINUTES":0,"SECONDS":0}
+{"USER":"Könntest du einen Timer für fünfzehn Minuten starten","HOURS":0,"MINUTES":15,"SECONDS":0}
+{"USER":"Ich brauche einen Timer von siebzehn Sekunden","HOURS":0,"MINUTES":0,"SECONDS":17}
+{"USER":"Bitte setze einen Timer auf dreißig Minuten","HOURS":0,"MINUTES":30,"SECONDS":0}
+{"USER":"Mach mal einen Timer für eine Stunde","HOURS":1,"MINUTES":0,"SECONDS":0}
+{"USER":"Stell einen Timer auf achtundvierzig Minuten","HOURS":0,"MINUTES":48,"SECONDS":0}
+{"USER":"Starte einen Timer von zwei Minuten fünfzehn Sekunden","HOURS":0,"MINUTES":2,"SECONDS":15}
+{"USER":"Kannst du einen 25-Minuten-Timer stellen","HOURS":0,"MINUTES":25,"SECONDS":0}
+{"USER":"Leg bitte einen Timer an für drei Stunden zehn Minuten","HOURS":3,"MINUTES":10,"SECONDS":0}
+{"USER":"Timer auf siebzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":70}
+{"USER":"Starte sofort einen Countdown von fünfzehn Minuten","HOURS":0,"MINUTES":15,"SECONDS":0}
+{"USER":"Könnten Sie einen Timer auf sechs Sekunden setzen","HOURS":0,"MINUTES":0,"SECONDS":6}
+{"USER":"Ich möchte einen Timer für zwei Stunden vierzig Minuten","HOURS":2,"MINUTES":40,"SECONDS":0}
+{"USER":"Setz einen Timer auf neunzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":90}
+{"USER":"Bitte starte einen Timer von acht Stunden","HOURS":8,"MINUTES":0,"SECONDS":0}
+{"USER":"Mach einen Timer für drei Minuten dreißig Sekunden","HOURS":0,"MINUTES":3,"SECONDS":30}
+{"USER":"Stell einen Timer auf fünfzehn Stunden","HOURS":15,"MINUTES":0,"SECONDS":0}
+{"USER":"Kannst du einen Timer für siebenundsechzig Sekunden starten","HOURS":0,"MINUTES":0,"SECONDS":67}
+{"USER":"Starte einen 18-Minuten-Timer","HOURS":0,"MINUTES":18,"SECONDS":0}
+{"USER":"Leg einen Timer an für eine halbe Stunde","HOURS":0,"MINUTES":30,"SECONDS":0}
+{"USER":"Timer auf zweiundzwanzig Minuten stellen bitte","HOURS":0,"MINUTES":22,"SECONDS":0}
+{"USER":"Könntest du einen Timer für elf Sekunden einrichten","HOURS":0,"MINUTES":0,"SECONDS":11}
+{"USER":"Ich brauche einen Timer von drei Stunden fünf Minuten","HOURS":3,"MINUTES":5,"SECONDS":0}
+{"USER":"Bitte setze einen Timer auf fünfzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":50}
+{"USER":"Mach mal einen Timer für vierzig Minuten","HOURS":0,"MINUTES":40,"SECONDS":0}
+{"USER":"Stell einen Timer auf sechs Stunden dreißig Minuten","HOURS":6,"MINUTES":30,"SECONDS":0}
+{"USER":"Starte einen Timer von drei Sekunden","HOURS":0,"MINUTES":0,"SECONDS":3}
+{"USER":"Kannst du einen 75-Minuten-Timer starten","HOURS":0,"MINUTES":75,"SECONDS":0}
+{"USER":"Leg bitte einen Timer an für zwei Stunden","HOURS":2,"MINUTES":0,"SECONDS":0}
+{"USER":"Timer auf neunzehn Sekunden","HOURS":0,"MINUTES":0,"SECONDS":19}
+{"USER":"Starte sofort einen Countdown von zehn Minuten","HOURS":0,"MINUTES":10,"SECONDS":0}
+{"USER":"Könnten Sie einen Timer auf fünf Stunden stellen","HOURS":5,"MINUTES":0,"SECONDS":0}
+{"USER":"Ich möchte einen Timer für dreißig Minuten fünfzehn Sekunden","HOURS":0,"MINUTES":30,"SECONDS":15}
+{"USER":"Setz einen Timer auf sieben Sekunden","HOURS":0,"MINUTES":0,"SECONDS":7}
+{"USER":"Bitte starte einen Timer von zwölf Stunden","HOURS":12,"MINUTES":0,"SECONDS":0}
+{"USER":"Mach einen Timer für acht Minuten vierzig Sekunden","HOURS":0,"MINUTES":8,"SECONDS":40}
+{"USER":"Stell einen Timer auf dreiundneunzig Minuten","HOURS":0,"MINUTES":93,"SECONDS":0}
+{"USER":"Kannst du einen Timer für fünfzehn Sekunden starten","HOURS":0,"MINUTES":0,"SECONDS":15}
+{"USER":"Starte einen 60-Minuten-Timer","HOURS":0,"MINUTES":60,"SECONDS":0}
+{"USER":"Leg einen Timer an für eine Viertelstunde","HOURS":0,"MINUTES":15,"SECONDS":0}
+{"USER":"Timer auf sieben Stunden zehn Minuten","HOURS":7,"MINUTES":10,"SECONDS":0}
+{"USER":"Könntest du einen Timer für zweiundachtzig Sekunden stellen","HOURS":0,"MINUTES":0,"SECONDS":82}
+{"USER":"Ich brauche einen Timer von fünf Minuten","HOURS":0,"MINUTES":5,"SECONDS":0}
+{"USER":"Bitte setze einen Timer auf vierzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":40}
+{"USER":"Mach mal einen Timer für sechs Stunden","HOURS":6,"MINUTES":0,"SECONDS":0}
+{"USER":"Stell einen Timer auf fünfunddreißig Minuten","HOURS":0,"MINUTES":35,"SECONDS":0}
+{"USER":"Starte einen Timer von neunzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":90}
+{"USER":"Kannst du einen 99-Minuten-Timer starten","HOURS":0,"MINUTES":99,"SECONDS":0}
+{"USER":"Leg bitte einen Timer an für drei Stunden fünfzehn Minuten","HOURS":3,"MINUTES":15,"SECONDS":0}
+{"USER":"Timer auf eine Minute","HOURS":0,"MINUTES":1,"SECONDS":0}
+{"USER":"Starte sofort einen Countdown von zwanzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":20}
+{"USER":"Könnten Sie einen Timer auf acht Stunden setzen","HOURS":8,"MINUTES":0,"SECONDS":0}
+{"USER":"Ich möchte einen Timer für fünfzehn Minuten dreißig Sekunden","HOURS":0,"MINUTES":15,"SECONDS":30}
+{"USER":"Setz einen Timer auf sechzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":60}
+{"USER":"Bitte starte einen Timer von zwei Stunden","HOURS":2,"MINUTES":0,"SECONDS":0}
+{"USER":"Mach einen Timer für sieben Minuten fünfzehn Sekunden","HOURS":0,"MINUTES":7,"SECONDS":15}
+{"USER":"Stell einen Timer auf fünfzig Stunden","HOURS":50,"MINUTES":0,"SECONDS":0}
+{"USER":"Kannst du einen Timer für drei Sekunden starten","HOURS":0,"MINUTES":0,"SECONDS":3}
+{"USER":"Starte einen 45-Sekunden-Timer","HOURS":0,"MINUTES":0,"SECONDS":45}
+{"USER":"Leg einen Timer an für zehn Minuten","HOURS":0,"MINUTES":10,"SECONDS":0}
+{"USER":"Timer auf drei Stunden stellen bitte","HOURS":3,"MINUTES":0,"SECONDS":0}
+{"USER":"stell bitte einen Timer auf fünf Minuten","HOURS":0,"MINUTES":5,"SECONDS":0}
+{"USER":"Kannst du einen 45 Sekunden langen Timer starten","HOURS":0,"MINUTES":0,"SECONDS":45}
+{"USER":"setz einen Timer für zwanzig Minuten","HOURS":0,"MINUTES":20,"SECONDS":0}
+{"USER":"oh, starte schnell einen 73 Sekunden Timer","HOURS":0,"MINUTES":0,"SECONDS":73}
+{"USER":"lass uns einen Timer für 30 Minuten stellen","HOURS":0,"MINUTES":30,"SECONDS":0}
+{"USER":"starte einen Timer für eine Stunde und fünfzehn Sekunden","HOURS":1,"MINUTES":0,"SECONDS":15}
+{"USER":"gib mir einen 2 Stunden und 47 Sekunden Timer","HOURS":2,"MINUTES":0,"SECONDS":47}
+{"USER":"kannst du bitte einen zwölf Stunden vierunddreißig Minuten sechsundfünfzig Sekunden Timer einstellen","HOURS":12,"MINUTES":34,"SECONDS":56}
+{"USER":"Könntest du bitte einen fünfzehn Minuten Timer stellen","HOURS":0,"MINUTES":15,"SECONDS":0}
+{"USER":"starte einen 30 Sekunden Timer","HOURS":0,"MINUTES":0,"SECONDS":30}
+{"USER":"mach einen Timer für eine Viertelstunde","HOURS":0,"MINUTES":15,"SECONDS":0}
+{"USER":"setz bitte einen Timer auf 1 Stunde 20 Minuten","HOURS":1,"MINUTES":20,"SECONDS":0}
+{"USER":"leg einen Timer für neunundneunzig Sekunden an","HOURS":0,"MINUTES":0,"SECONDS":99}
+{"USER":"Timer auf 2 Stunden und 30 Minuten, bitte","HOURS":2,"MINUTES":30,"SECONDS":0}
+{"USER":"stell einen Timer für drei Minuten","HOURS":0,"MINUTES":3,"SECONDS":0}
+{"USER":"Bitte starte einen 120 Sekunden Timer","HOURS":0,"MINUTES":0,"SECONDS":120}
+{"USER":"setz einen Timer für siebenundvierzig Minuten","HOURS":0,"MINUTES":47,"SECONDS":0}
+{"USER":"mach schnell einen Timer auf 8 Stunden","HOURS":8,"MINUTES":0,"SECONDS":0}
+{"USER":"Leg bitte einen Timer für eine halbe Stunde an","HOURS":0,"MINUTES":30,"SECONDS":0}
+{"USER":"Starte einen Timer für 17 Stunden","HOURS":17,"MINUTES":0,"SECONDS":0}
+{"USER":"stell einen Timer auf zwei Minuten und zehn Sekunden","HOURS":0,"MINUTES":2,"SECONDS":10}
+{"USER":"Kannst du mir einen 75 Minuten Timer setzen","HOURS":0,"MINUTES":75,"SECONDS":0}
+{"USER":"setz bitte einen Timer für neun Stunden zwölf Minuten","HOURS":9,"MINUTES":12,"SECONDS":0}
+{"USER":"mach einen Timer auf 99 Stunden","HOURS":99,"MINUTES":0,"SECONDS":0}
+{"USER":"Starte bitte einen Timer für vierundzwanzig Minuten","HOURS":0,"MINUTES":24,"SECONDS":0}
+{"USER":"stell einen Timer auf 6 Minuten und 5 Sekunden","HOURS":0,"MINUTES":6,"SECONDS":5}
+{"USER":"leg einen Timer an für eine Stunde und dreißig Minuten","HOURS":1,"MINUTES":30,"SECONDS":0}
+{"USER":"setz einen Timer für 38 Minuten","HOURS":0,"MINUTES":38,"SECONDS":0}
+{"USER":"Bitte Timer auf 47 Sekunden starten","HOURS":0,"MINUTES":0,"SECONDS":47}
+{"USER":"Starte einen Timer für zehn Stunden und zwei Minuten","HOURS":10,"MINUTES":2,"SECONDS":0}
+{"USER":"stell rasch einen 14 Minuten Timer","HOURS":0,"MINUTES":14,"SECONDS":0}
+{"USER":"Kannst du einen Timer für dreiundzwanzig Sekunden anlegen","HOURS":0,"MINUTES":0,"SECONDS":23}
+{"USER":"setz bitte einen Timer auf 40 Minuten und 20 Sekunden","HOURS":0,"MINUTES":40,"SECONDS":20}
+{"USER":"mach einen Timer für sechs Stunden acht Minuten","HOURS":6,"MINUTES":8,"SECONDS":0}
+{"USER":"Timer auf 1 Minute und 30 Sekunden, bitte","HOURS":0,"MINUTES":1,"SECONDS":30}
+{"USER":"Starte einen Timer für einundzwanzig Minuten","HOURS":0,"MINUTES":21,"SECONDS":0}
+{"USER":"stell bitte einen Timer auf 3 Stunden 45 Minuten","HOURS":3,"MINUTES":45,"SECONDS":0}
+{"USER":"leg einen Timer an für sieben Sekunden","HOURS":0,"MINUTES":0,"SECONDS":7}
+{"USER":"setz einen Timer für fünf Stunden und neunundvierzig Minuten","HOURS":5,"MINUTES":49,"SECONDS":0}
+{"USER":"Mach bitte einen Timer auf 52 Minuten","HOURS":0,"MINUTES":52,"SECONDS":0}
+{"USER":"starte mir einen 88 Sekunden Timer","HOURS":0,"MINUTES":0,"SECONDS":88}
+{"USER":"stell einen Timer auf eine Stunde und fünf Minuten","HOURS":1,"MINUTES":5,"SECONDS":0}
+{"USER":"Kannst du bitte einen 3 Minuten und 3 Sekunden Timer starten","HOURS":0,"MINUTES":3,"SECONDS":3}
+{"USER":"setz einen Timer für zehn Minuten","HOURS":0,"MINUTES":10,"SECONDS":0}
+{"USER":"Leg mir einen Timer für 66 Minuten an","HOURS":0,"MINUTES":66,"SECONDS":0}
+{"USER":"Starte schnell einen Timer auf zweieinhalb Minuten","HOURS":0,"MINUTES":2,"SECONDS":30}
+{"USER":"stell bitte einen Timer für sechsundzwanzig Stunden","HOURS":26,"MINUTES":0,"SECONDS":0}
+{"USER":"mach einen Timer für 9 Minuten und 9 Sekunden","HOURS":0,"MINUTES":9,"SECONDS":9}
+{"USER":"setz einen Timer auf drei Stunden und 1 Sekunde","HOURS":3,"MINUTES":0,"SECONDS":1}
+{"USER":"Kannst du einen Timer für siebenunddreißig Minuten einstellen","HOURS":0,"MINUTES":37,"SECONDS":0}
+{"USER":"Starte bitte einen 250 Sekunden Timer","HOURS":0,"MINUTES":0,"SECONDS":250}
+{"USER":"stell einen Timer auf zwölf Minuten und fünfzehn Sekunden","HOURS":0,"MINUTES":12,"SECONDS":15}
+{"USER":"mach einen Timer für elf Stunden","HOURS":11,"MINUTES":0,"SECONDS":0}
+{"USER":"setz mir bitte einen Timer für siebzehn Minuten","HOURS":0,"MINUTES":17,"SECONDS":0}
+{"USER":"Starte einen Timer auf 5 Stunden 5 Minuten 5 Sekunden","HOURS":5,"MINUTES":5,"SECONDS":5}
+{"USER":"leg bitte einen Timer für 33 Sekunden an","HOURS":0,"MINUTES":0,"SECONDS":33}
+{"USER":"stell einen Timer auf acht Minuten","HOURS":0,"MINUTES":8,"SECONDS":0}
+{"USER":"Kannst du einen Timer für zweiundvierzig Minuten setzen","HOURS":0,"MINUTES":42,"SECONDS":0}
+{"USER":"setz bitte einen Timer auf 100 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":100}
+{"USER":"mach einen Timer für vier Stunden und drei Minuten","HOURS":4,"MINUTES":3,"SECONDS":0}
+{"USER":"Starte bitte einen Timer für sechzig Minuten","HOURS":0,"MINUTES":60,"SECONDS":0}
+{"USER":"stell einen Timer auf neun Minuten und sechsundzwanzig Sekunden","HOURS":0,"MINUTES":9,"SECONDS":26}
+{"USER":"leg einen Timer an für 7 Stunden 70 Minuten","HOURS":7,"MINUTES":70,"SECONDS":0}
+{"USER":"setz einen Timer für sechsundfünfzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":56}
+{"USER":"mach bitte einen Timer auf 2 Minuten","HOURS":0,"MINUTES":2,"SECONDS":0}
+{"USER":"Starte einen Timer für einunddreißig Stunden","HOURS":31,"MINUTES":0,"SECONDS":0}
+{"USER":"stell einen Timer auf 19 Minuten und 40 Sekunden","HOURS":0,"MINUTES":19,"SECONDS":40}
+{"USER":"Kannst du bitte einen 8 Sekunden Timer starten","HOURS":0,"MINUTES":0,"SECONDS":8}
+{"USER":"setz einen Timer für zwei Stunden fünfzig Minuten","HOURS":2,"MINUTES":50,"SECONDS":0}
+{"USER":"mach einen Timer auf vierundzwanzig Stunden und drei Sekunden","HOURS":24,"MINUTES":0,"SECONDS":3}
+{"USER":"Starte einen Timer für fünf Minuten und fünfzehn Sekunden","HOURS":0,"MINUTES":5,"SECONDS":15}
+{"USER":"stell rasch einen 42 Minuten Timer","HOURS":0,"MINUTES":42,"SECONDS":0}
+{"USER":"leg bitte einen Timer für dreiundsechzig Sekunden an","HOURS":0,"MINUTES":0,"SECONDS":63}
+{"USER":"setz einen Timer für achtundzwanzig Minuten","HOURS":0,"MINUTES":28,"SECONDS":0}
+{"USER":"mach einen Timer auf 14 Stunden und 14 Minuten","HOURS":14,"MINUTES":14,"SECONDS":0}
+{"USER":"Starte bitte einen Timer für 2500 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":2500}
+{"USER":"stell einen Timer auf eine Stunde und einundzwanzig Minuten","HOURS":1,"MINUTES":21,"SECONDS":0}
+{"USER":"Kannst du einen Timer für 11 Minuten einstellen","HOURS":0,"MINUTES":11,"SECONDS":0}
+{"USER":"setz schnellen einen Timer auf 37 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":37}
+{"USER":"mach bitte einen Timer für neunundachtzig Minuten","HOURS":0,"MINUTES":89,"SECONDS":0}
+{"USER":"Starte einen Timer für zwei Stunden und zwanzig Sekunden","HOURS":2,"MINUTES":0,"SECONDS":20}
+{"USER":"stell einen Timer auf fünfzehn Stunden","HOURS":15,"MINUTES":0,"SECONDS":0}
+{"USER":"leg mir bitte einen Timer für zwölf Minuten und 2 Sekunden an","HOURS":0,"MINUTES":12,"SECONDS":2}
+{"USER":"setz einen Timer für 3 Minuten und 45 Sekunden","HOURS":0,"MINUTES":3,"SECONDS":45}
+{"USER":"mach einen Timer für 68 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":68}
+{"USER":"Starte einen Timer auf 53 Minuten","HOURS":0,"MINUTES":53,"SECONDS":0}
+{"USER":"stell bitte einen Timer für zweiundneunzig Minuten","HOURS":0,"MINUTES":92,"SECONDS":0}
+{"USER":"Kannst du einen 16 Minuten Timer für mich anlegen","HOURS":0,"MINUTES":16,"SECONDS":0}
+{"USER":"setz einen Timer auf sieben Stunden und 77 Sekunden","HOURS":7,"MINUTES":0,"SECONDS":77}
+{"USER":"mach schnell einen Timer für vier Minuten","HOURS":0,"MINUTES":4,"SECONDS":0}
+{"USER":"Starte bitte einen Timer auf 20 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":20}
+{"USER":"stell einen Timer für 18 Stunden und 6 Minuten","HOURS":18,"MINUTES":6,"SECONDS":0}
+{"USER":"leg einen Timer an für neun Minuten und 59 Sekunden","HOURS":0,"MINUTES":9,"SECONDS":59}
+{"USER":"setz bitte einen Timer auf 44 Minuten und 44 Sekunden","HOURS":0,"MINUTES":44,"SECONDS":44}
+{"USER":"mach einen Timer für eine Minute","HOURS":0,"MINUTES":1,"SECONDS":0}
+{"USER":"Starte einen Timer für 3 Stunden 3 Minuten","HOURS":3,"MINUTES":3,"SECONDS":0}
+{"USER":"stell einen Timer auf sechsunddreißig Minuten","HOURS":0,"MINUTES":36,"SECONDS":0}
+{"USER":"Kannst du bitte einen Timer für 98 Sekunden starten","HOURS":0,"MINUTES":0,"SECONDS":98}
+{"USER":"setz einen Timer für 27 Minuten und 7 Sekunden","HOURS":0,"MINUTES":27,"SECONDS":7}
+{"USER":"mach einen Timer auf 41 Stunden","HOURS":41,"MINUTES":0,"SECONDS":0}
+{"USER":"Starte bitte einen Timer für zehn Sekunden","HOURS":0,"MINUTES":0,"SECONDS":10}
+{"USER":"stell einen Timer auf fünf Stunden und drei Minuten","HOURS":5,"MINUTES":3,"SECONDS":0}
+{"USER":"leg bitte einen Timer für hundertvierundzwanzig Sekunden an","HOURS":0,"MINUTES":0,"SECONDS":124}
+{"USER":"setz einen Timer für zwei Minuten genau","HOURS":0,"MINUTES":2,"SECONDS":0}
+{"USER":"mach einen Timer für 55 Minuten","HOURS":0,"MINUTES":55,"SECONDS":0}
+{"USER":"Starte einen Timer auf 7 Minuten und 38 Sekunden","HOURS":0,"MINUTES":7,"SECONDS":38}
+{"USER":"stell bitte einen Timer für 13 Stunden 13 Minuten","HOURS":13,"MINUTES":13,"SECONDS":0}
+{"USER":"Kannst du einen Timer für 29 Sekunden anlegen","HOURS":0,"MINUTES":0,"SECONDS":29}
+{"USER":"setz einen Timer auf vier Minuten und 44 Sekunden","HOURS":0,"MINUTES":4,"SECONDS":44}
+{"USER":"mach einen Timer für 72 Minuten","HOURS":0,"MINUTES":72,"SECONDS":0}
+{"USER":"Starte bitte einen Timer auf 21 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":21}
+{"USER":"stell einen Timer auf acht Stunden und zwölf Minuten","HOURS":8,"MINUTES":12,"SECONDS":0}
+{"USER":"leg einen Timer an für sechzehn Minuten und 16 Sekunden","HOURS":0,"MINUTES":16,"SECONDS":16}
+{"USER":"setz einen Timer für zweiundachtzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":82}
+{"USER":"mach bitte einen Timer auf 50 Minuten","HOURS":0,"MINUTES":50,"SECONDS":0}
+{"USER":"stell bitte einen Timer auf fünf Minuten","HOURS":0,"MINUTES":5,"SECONDS":0}
+{"USER":"Kannst du einen 45 Sekunden langen Timer starten","HOURS":0,"MINUTES":0,"SECONDS":45}
+{"USER":"setz einen Timer für zwanzig Minuten","HOURS":0,"MINUTES":20,"SECONDS":0}
+{"USER":"oh, starte schnell einen 73 Sekunden Timer","HOURS":0,"MINUTES":0,"SECONDS":73}
+{"USER":"lass uns einen Timer für eine halbe Stunde stellen","HOURS":0,"MINUTES":30,"SECONDS":0}
+{"USER":"starte einen Timer für eine Stunde und fünfzehn Sekunden","HOURS":1,"MINUTES":0,"SECONDS":15}
+{"USER":"gib mir einen 2 Stunden und 47 Sekunden Timer","HOURS":2,"MINUTES":0,"SECONDS":47}
+{"USER":"kannst du bitte einen zwölf Stunden vierunddreißig Minuten sechsundfünfzig Sekunden Timer einstellen","HOURS":12,"MINUTES":34,"SECONDS":56}
+{"USER":"Könntest du bitte einen fünfzehn Minuten Timer stellen","HOURS":0,"MINUTES":15,"SECONDS":0}
+{"USER":"starte einen 30 Sekunden Timer","HOURS":0,"MINUTES":0,"SECONDS":30}
+{"USER":"Bitte setze einen Timer auf drei Stunden","HOURS":3,"MINUTES":0,"SECONDS":0}
+{"USER":"Timer auf 90 Minuten, bitte","HOURS":0,"MINUTES":90,"SECONDS":0}
+{"USER":"Mach einen 20 Minuten Timer","HOURS":0,"MINUTES":20,"SECONDS":0}
+{"USER":"Leg bitte einen Timer für eine Viertelstunde an","HOURS":0,"MINUTES":15,"SECONDS":0}
+{"USER":"Starte einen Timer für 1 Stunde 30 Minuten","HOURS":1,"MINUTES":30,"SECONDS":0}
+{"USER":"Kannst du mir einen zweistündigen Timer setzen","HOURS":2,"MINUTES":0,"SECONDS":0}
+{"USER":"Startet bitte einen Timer auf achtundvierzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":48}
+{"USER":"Bitte leg einen Timer für 75 Minuten an","HOURS":0,"MINUTES":75,"SECONDS":0}
+{"USER":"Setze einen Timer auf neunundsechzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":69}
+{"USER":"Mach schnell einen Timer für zwei Stunden und drei Minuten","HOURS":2,"MINUTES":3,"SECONDS":0}
+{"USER":"Timer auf 3 Stunden ein","HOURS":3,"MINUTES":0,"SECONDS":0}
+{"USER":"Stell bitte einen Timer für siebenundzwanzig Minuten","HOURS":0,"MINUTES":27,"SECONDS":0}
+{"USER":"Kannst du einen 13 Sekunden Timer starten","HOURS":0,"MINUTES":0,"SECONDS":13}
+{"USER":"Starte einen Timer für neun Minuten und fünfzehn Sekunden","HOURS":0,"MINUTES":9,"SECONDS":15}
+{"USER":"Leg einen Timer für 48 Stunden","HOURS":48,"MINUTES":0,"SECONDS":0}
+{"USER":"Bitte Timer auf eine Stunde und eine Viertelstunde setzen","HOURS":1,"MINUTES":15,"SECONDS":0}
+{"USER":"Setze bitte einen Timer für vierundzwanzig Minuten","HOURS":0,"MINUTES":24,"SECONDS":0}
+{"USER":"Starte einen Timer für 99 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":99}
+{"USER":"Bitte mach einen Timer auf sechs Stunden und zwanzig Minuten","HOURS":6,"MINUTES":20,"SECONDS":0}
+{"USER":"Timer: stell ihn auf 2 Minuten ein","HOURS":0,"MINUTES":2,"SECONDS":0}
+{"USER":"Lege bitte einen Timer für eine Stunde und sieben Minuten an","HOURS":1,"MINUTES":7,"SECONDS":0}
+{"USER":"Schnell: 15 Sekunden Timer starten","HOURS":0,"MINUTES":0,"SECONDS":15}
+{"USER":"Können Sie einen Timer für dreißig Minuten aktivieren","HOURS":0,"MINUTES":30,"SECONDS":0}
+{"USER":"Setz mir bitte einen Timer auf 11 Stunden","HOURS":11,"MINUTES":0,"SECONDS":0}
+{"USER":"Starte einen Timer für sechzig Minuten","HOURS":0,"MINUTES":60,"SECONDS":0}
+{"USER":"Mach einen Timer auf 37 Minuten und 12 Sekunden","HOURS":0,"MINUTES":37,"SECONDS":12}
+{"USER":"Bitte einen Timer für eine Stunde und 45 Sekunden","HOURS":1,"MINUTES":0,"SECONDS":45}
+{"USER":"Kannst du einen Timer auf vier Sekunden setzen","HOURS":0,"MINUTES":0,"SECONDS":4}
+{"USER":"Leg einen Timer für 7 Minuten an bitte","HOURS":0,"MINUTES":7,"SECONDS":0}
+{"USER":"Timer starten: eine Stunde dreiundzwanzig Minuten","HOURS":1,"MINUTES":23,"SECONDS":0}
+{"USER":"Stelle einen Timer auf 14 Minuten und 88 Sekunden","HOURS":0,"MINUTES":14,"SECONDS":88}
+{"USER":"Starte bitte einen fünfminütigen Timer","HOURS":0,"MINUTES":5,"SECONDS":0}
+{"USER":"Bitte setze einen Timer für 17 Stunden","HOURS":17,"MINUTES":0,"SECONDS":0}
+{"USER":"Mach einen Timer für neunundfünfzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":59}
+{"USER":"Bitte 83 Sekunden Timer starten","HOURS":0,"MINUTES":0,"SECONDS":83}
+{"USER":"Stell einen Timer auf zwölf Stunden und neunundvierzig Minuten","HOURS":12,"MINUTES":49,"SECONDS":0}
+{"USER":"Leg einen Timer für zehn Sekunden an","HOURS":0,"MINUTES":0,"SECONDS":10}
+{"USER":"Bitte starte einen Timer auf 4 Stunden und 5 Sekunden","HOURS":4,"MINUTES":0,"SECONDS":5}
+{"USER":"Setze einen Timer für eine Stunde und zwanzig Minuten","HOURS":1,"MINUTES":20,"SECONDS":0}
+{"USER":"Timer: 66 Minuten bitte","HOURS":0,"MINUTES":66,"SECONDS":0}
+{"USER":"Mach einen Timer auf zwei Minuten und neun Sekunden","HOURS":0,"MINUTES":2,"SECONDS":9}
+{"USER":"Kannst du bitte einen Timer für 3 Stunden, 33 Minuten und 3 Sekunden starten","HOURS":3,"MINUTES":33,"SECONDS":3}
+{"USER":"Starte einen Timer für vierundzwanzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":24}
+{"USER":"Leg einen Timer an auf acht Minuten","HOURS":0,"MINUTES":8,"SECONDS":0}
+{"USER":"Bitte stell einen Timer für 52 Stunden","HOURS":52,"MINUTES":0,"SECONDS":0}
+{"USER":"Gib mir einen Timer für eine Stunde","HOURS":1,"MINUTES":0,"SECONDS":0}
+{"USER":"Bitte setze einen Timer auf 16 Minuten","HOURS":0,"MINUTES":16,"SECONDS":0}
+{"USER":"Startet einen Timer für 39 Minuten und 77 Sekunden","HOURS":0,"MINUTES":39,"SECONDS":77}
+{"USER":"Mach einen Timer für sieben Stunden und zwölf Minuten","HOURS":7,"MINUTES":12,"SECONDS":0}
+{"USER":"Timer starten für 2 Minuten 2 Sekunden","HOURS":0,"MINUTES":2,"SECONDS":2}
+{"USER":"Stell bitte einen Timer auf fünfzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":50}
+{"USER":"Kannst du mir einen Timer für 18 Stunden setzen","HOURS":18,"MINUTES":0,"SECONDS":0}
+{"USER":"Bitte leg einen Timer für eine Viertelstunde an","HOURS":0,"MINUTES":15,"SECONDS":0}
+{"USER":"Starte bitte einen Timer auf 27 Minuten und 6 Sekunden","HOURS":0,"MINUTES":27,"SECONDS":6}
+{"USER":"Setze einen Timer für 9 Stunden, 59 Minuten und 59 Sekunden","HOURS":9,"MINUTES":59,"SECONDS":59}
+{"USER":"Bitte mach einen Timer für achtundzwanzig Minuten","HOURS":0,"MINUTES":28,"SECONDS":0}
+{"USER":"Leg einen Timer auf 87 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":87}
+{"USER":"Starte einen Timer für sechs Minuten und dreiundzwanzig Sekunden","HOURS":0,"MINUTES":6,"SECONDS":23}
+{"USER":"Setze einen Timer auf 40 Minuten","HOURS":0,"MINUTES":40,"SECONDS":0}
+{"USER":"Bitte Timer für zweiundvierzig Stunden starten","HOURS":42,"MINUTES":0,"SECONDS":0}
+{"USER":"Kannst du einen Timer für 5 Sekunden machen","HOURS":0,"MINUTES":0,"SECONDS":5}
+{"USER":"Start einen Timer für sechzehn Minuten und acht Sekunden","HOURS":0,"MINUTES":16,"SECONDS":8}
+{"USER":"Leg mir bitte einen Timer auf 3 Stunden und 75 Minuten","HOURS":3,"MINUTES":75,"SECONDS":0}
+{"USER":"Bitte mach einen Timer auf 21 Minuten","HOURS":0,"MINUTES":21,"SECONDS":0}
+{"USER":"Stell einen Timer für elf Sekunden","HOURS":0,"MINUTES":0,"SECONDS":11}
+{"USER":"Bitte starte einen Timer für drei Minuten","HOURS":0,"MINUTES":3,"SECONDS":0}
+{"USER":"Starte bitte einen Timer auf 68 Minuten","HOURS":0,"MINUTES":68,"SECONDS":0}
+{"USER":"Kannst du einen Timer für 14 Stunden, 2 Minuten und 1 Sekunde setzen","HOURS":14,"MINUTES":2,"SECONDS":1}
+{"USER":"Bitte leg einen Timer für vier Stunden und neunundneunzig Minuten an","HOURS":4,"MINUTES":99,"SECONDS":0}
+{"USER":"Timer: stell ihn auf 6 Minuten 45 Sekunden","HOURS":0,"MINUTES":6,"SECONDS":45}
+{"USER":"Mach einen Timer für zwölf Sekunden","HOURS":0,"MINUTES":0,"SECONDS":12}
+{"USER":"Stell einen 98 Sekunden Timer","HOURS":0,"MINUTES":0,"SECONDS":98}
+{"USER":"Bitte setze einen Timer auf zehn Stunden drei Minuten","HOURS":10,"MINUTES":3,"SECONDS":0}
+{"USER":"Starte einen Timer für eine Stunde und dreißig Minuten","HOURS":1,"MINUTES":30,"SECONDS":0}
+{"USER":"Leg einen Timer an, 53 Minuten bitte","HOURS":0,"MINUTES":53,"SECONDS":0}
+{"USER":"Setze bitte einen Timer für neun Minuten","HOURS":0,"MINUTES":9,"SECONDS":0}
+{"USER":"Kannst du einen Timer auf 31 Minuten stellen","HOURS":0,"MINUTES":31,"SECONDS":0}
+{"USER":"Starte einen Timer für zwei Stunden und siebenunddreißig Sekunden","HOURS":2,"MINUTES":0,"SECONDS":37}
+{"USER":"Bitte Timer auf 29 Minuten und 29 Sekunden","HOURS":0,"MINUTES":29,"SECONDS":29}
+{"USER":"Leg bitte einen Timer auf 12 Stunden und 2 Sekunden","HOURS":12,"MINUTES":0,"SECONDS":2}
+{"USER":"Mach einen Timer für eine halbe Stunde und 45 Sekunden","HOURS":0,"MINUTES":30,"SECONDS":45}
+{"USER":"Bitte setz einen Timer auf 55 Minuten","HOURS":0,"MINUTES":55,"SECONDS":0}
+{"USER":"Starte einen Timer für dreiunddreißig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":33}
+{"USER":"Setze mir bitte einen Timer auf 7 Stunden 7 Minuten und 7 Sekunden","HOURS":7,"MINUTES":7,"SECONDS":7}
+{"USER":"Kannst du bitte einen Timer für zweiundzwanzig Minuten und sechs Sekunden starten","HOURS":0,"MINUTES":22,"SECONDS":6}
+{"USER":"Stell einen Timer auf 99 Minuten","HOURS":0,"MINUTES":99,"SECONDS":0}
+{"USER":"Bitte einen Timer auf 8 Stunden und 8 Sekunden starten","HOURS":8,"MINUTES":0,"SECONDS":8}
+{"USER":"Starte bitte einen Timer für vier Minuten","HOURS":0,"MINUTES":4,"SECONDS":0}
+{"USER":"Setze einen Timer für drei Stunden und dreiunddreißig Sekunden","HOURS":3,"MINUTES":0,"SECONDS":33}
+{"USER":"Bitte starte einen Timer auf 47 Minuten und 3 Sekunden","HOURS":0,"MINUTES":47,"SECONDS":3}
+{"USER":"stell bitte einen Timer auf fünf Minuten","HOURS":0,"MINUTES":5,"SECONDS":0}
+{"USER":"Starte einen Timer für zwei Stunden","HOURS":2,"MINUTES":0,"SECONDS":0}
+{"USER":"setz einen Timer für achtundvierzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":48}
+{"USER":"mach mir einen Timer auf eine halbe Stunde","HOURS":0,"MINUTES":30,"SECONDS":0}
+{"USER":"Timer auf sieben Minuten und dreißig Sekunden","HOURS":0,"MINUTES":7,"SECONDS":30}
+{"USER":"Kannst du einen drei Stunden langen Timer starten","HOURS":3,"MINUTES":0,"SECONDS":0}
+{"USER":"leg einen Timer an für zwölf Minuten","HOURS":0,"MINUTES":12,"SECONDS":0}
+{"USER":"Starte bitte einen Timer auf eine Stunde und vierzehn Sekunden","HOURS":1,"MINUTES":0,"SECONDS":14}
+{"USER":"setz bitte einen Timer für sechzehn Sekunden","HOURS":0,"MINUTES":0,"SECONDS":16}
+{"USER":"Timer bitte auf fünfunddreißig Minuten","HOURS":0,"MINUTES":35,"SECONDS":0}
+{"USER":"stell einen Timer für eine Viertelstunde","HOURS":0,"MINUTES":15,"SECONDS":0}
+{"USER":"Starte einen Timer auf fünfundfünfzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":55}
+{"USER":"Mach einen Timer für zwei Stunden und fünfundzwanzig Minuten","HOURS":2,"MINUTES":25,"SECONDS":0}
+{"USER":"Setz bitte einen Timer auf siebzehn Stunden","HOURS":17,"MINUTES":0,"SECONDS":0}
+{"USER":"Einen Timer für neununddreißig Minuten, bitte","HOURS":0,"MINUTES":39,"SECONDS":0}
+{"USER":"Timer für 45 Sekunden starten","HOURS":0,"MINUTES":0,"SECONDS":45}
+{"USER":"Stell bitte einen Timer auf 3 Stunden 15 Minuten","HOURS":3,"MINUTES":15,"SECONDS":0}
+{"USER":"Mach einen Timer für 27 Minuten und 8 Sekunden","HOURS":0,"MINUTES":27,"SECONDS":8}
+{"USER":"Starte einen Timer für 90 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":90}
+{"USER":"Timer auf 8 Stunden stellen","HOURS":8,"MINUTES":0,"SECONDS":0}
+{"USER":"Kannst du bitte einen Timer für einundzwanzig Minuten stellen","HOURS":0,"MINUTES":21,"SECONDS":0}
+{"USER":"Leg einen Timer auf 4 Stunden und 2 Minuten an","HOURS":4,"MINUTES":2,"SECONDS":0}
+{"USER":"Starte einen Timer über 72 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":72}
+{"USER":"Stell mir bitte einen Timer auf neun Stunden","HOURS":9,"MINUTES":0,"SECONDS":0}
+{"USER":"Bitte Timer auf sechs Minuten und zwanzig Sekunden","HOURS":0,"MINUTES":6,"SECONDS":20}
+{"USER":"Stell einen Timer für 99 Minuten","HOURS":0,"MINUTES":99,"SECONDS":0}
+{"USER":"Starte bitte einen Timer über 31 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":31}
+{"USER":"Setze einen Timer auf 14 Stunden 38 Minuten","HOURS":14,"MINUTES":38,"SECONDS":0}
+{"USER":"Timer bitte auf 59 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":59}
+{"USER":"Stell bitte einen Timer für sieben Stunden und fünf Minuten","HOURS":7,"MINUTES":5,"SECONDS":0}
+{"USER":"Kannst du einen Timer auf zweiundzwanzig Minuten setzen","HOURS":0,"MINUTES":22,"SECONDS":0}
+{"USER":"Starte einen Timer für 64 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":64}
+{"USER":"Mach einen Timer über 10 Stunden und 1 Minute","HOURS":10,"MINUTES":1,"SECONDS":0}
+{"USER":"Timer auf vierzig Minuten einstellen","HOURS":0,"MINUTES":40,"SECONDS":0}
+{"USER":"Stell mir bitte einen Timer auf 2 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":2}
+{"USER":"Setz einen Timer auf eine Stunde dreiunddreißig Minuten","HOURS":1,"MINUTES":33,"SECONDS":0}
+{"USER":"Starte einen Timer für fünfundzwanzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":25}
+{"USER":"Timer bitte auf 11 Stunden","HOURS":11,"MINUTES":0,"SECONDS":0}
+{"USER":"Stell bitte einen Timer für siebenundachtzig Minuten","HOURS":0,"MINUTES":87,"SECONDS":0}
+{"USER":"Starte einen Timer über eine halbe Stunde","HOURS":0,"MINUTES":30,"SECONDS":0}
+{"USER":"Bitte einen Timer für drei Sekunden","HOURS":0,"MINUTES":0,"SECONDS":3}
+{"USER":"Mach mir einen Timer für 6 Stunden 19 Minuten","HOURS":6,"MINUTES":19,"SECONDS":0}
+{"USER":"Timer auf 41 Sekunden bitte","HOURS":0,"MINUTES":0,"SECONDS":41}
+{"USER":"Stell einen Timer für 15 Stunden und 45 Minuten","HOURS":15,"MINUTES":45,"SECONDS":0}
+{"USER":"Starte bitte einen Timer für 73 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":73}
+{"USER":"Leg einen Timer auf 26 Minuten an","HOURS":0,"MINUTES":26,"SECONDS":0}
+{"USER":"Timer für 8 Sekunden starten","HOURS":0,"MINUTES":0,"SECONDS":8}
+{"USER":"Setze einen Timer für 99 Stunden","HOURS":99,"MINUTES":0,"SECONDS":0}
+{"USER":"Stell bitte einen Timer für achtzehn Minuten und zwölf Sekunden","HOURS":0,"MINUTES":18,"SECONDS":12}
+{"USER":"Starte einen Timer für 50 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":50}
+{"USER":"Mach bitte einen Timer für 2 Stunden 59 Minuten","HOURS":2,"MINUTES":59,"SECONDS":0}
+{"USER":"Timer auf fünfundsechzig Minuten stellen","HOURS":0,"MINUTES":65,"SECONDS":0}
+{"USER":"Stell bitte einen Timer für neun Sekunden","HOURS":0,"MINUTES":0,"SECONDS":9}
+{"USER":"Setz bitte einen Timer auf vier Stunden und acht Minuten","HOURS":4,"MINUTES":8,"SECONDS":0}
+{"USER":"Starte einen Timer für siebenundvierzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":47}
+{"USER":"Timer bitte auf 23 Minuten","HOURS":0,"MINUTES":23,"SECONDS":0}
+{"USER":"Stell einen Timer über 60 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":60}
+{"USER":"Starte bitte einen Timer auf fünf Stunden und zweiundzwanzig Minuten","HOURS":5,"MINUTES":22,"SECONDS":0}
+{"USER":"Mach einen Timer für 33 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":33}
+{"USER":"Timer auf eine Stunde und sieben Minuten","HOURS":1,"MINUTES":7,"SECONDS":0}
+{"USER":"Stell bitte einen Timer für 29 Minuten","HOURS":0,"MINUTES":29,"SECONDS":0}
+{"USER":"Kannst du einen Timer für 66 Sekunden starten","HOURS":0,"MINUTES":0,"SECONDS":66}
+{"USER":"Starte einen Timer auf vierundzwanzig Stunden","HOURS":24,"MINUTES":0,"SECONDS":0}
+{"USER":"Setz bitte einen Timer auf 38 Minuten und 5 Sekunden","HOURS":0,"MINUTES":38,"SECONDS":5}
+{"USER":"Timer für 20 Sekunden bitte","HOURS":0,"MINUTES":0,"SECONDS":20}
+{"USER":"Stell bitte einen Timer für sieben Stunden vierzehn Minuten","HOURS":7,"MINUTES":14,"SECONDS":0}
+{"USER":"Starte einen Timer über 13 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":13}
+{"USER":"Mach bitte einen Timer für 54 Minuten","HOURS":0,"MINUTES":54,"SECONDS":0}
+{"USER":"Timer auf 78 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":78}
+{"USER":"Stell mir bitte einen Timer auf 16 Stunden","HOURS":16,"MINUTES":0,"SECONDS":0}
+{"USER":"Starte bitte einen Timer für 3 Minuten 9 Sekunden","HOURS":0,"MINUTES":3,"SECONDS":9}
+{"USER":"Timer auf eine Stunde bitte","HOURS":1,"MINUTES":0,"SECONDS":0}
+{"USER":"Stell bitte einen Timer für 92 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":92}
+{"USER":"Setz einen Timer auf 55 Minuten","HOURS":0,"MINUTES":55,"SECONDS":0}
+{"USER":"Starte einen Timer über 35 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":35}
+{"USER":"Mach bitte einen Timer für 19 Stunden 8 Minuten","HOURS":19,"MINUTES":8,"SECONDS":0}
+{"USER":"Timer für neunundzwanzig Sekunden starten","HOURS":0,"MINUTES":0,"SECONDS":29}
+{"USER":"Stell einen Timer auf acht Minuten","HOURS":0,"MINUTES":8,"SECONDS":0}
+{"USER":"Starte bitte einen Timer für 84 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":84}
+{"USER":"Timer auf zweiunddreißig Stunden stellen","HOURS":32,"MINUTES":0,"SECONDS":0}
+{"USER":"Stell bitte einen Timer für vierzehn Minuten und zweiundzwanzig Sekunden","HOURS":0,"MINUTES":14,"SECONDS":22}
+{"USER":"Starte einen Timer für 58 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":58}
+{"USER":"Mach einen Timer auf drei Stunden dreißig Minuten","HOURS":3,"MINUTES":30,"SECONDS":0}
+{"USER":"Timer auf zweiundsechzig Minuten einstellen","HOURS":0,"MINUTES":62,"SECONDS":0}
+{"USER":"Stell bitte einen Timer für 6 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":6}
+{"USER":"Setz bitte einen Timer auf 48 Minuten 7 Sekunden","HOURS":0,"MINUTES":48,"SECONDS":7}
+{"USER":"Starte einen Timer für 18 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":18}
+{"USER":"Timer bitte auf 37 Minuten","HOURS":0,"MINUTES":37,"SECONDS":0}
+{"USER":"Stell bitte einen Timer für 89 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":89}
+{"USER":"Starte einen Timer auf zwölf Stunden und fünf Minuten","HOURS":12,"MINUTES":5,"SECONDS":0}
+{"USER":"Mach bitte einen Timer für 4 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":4}
+{"USER":"Timer auf fünfundachtzig Minuten setzen","HOURS":0,"MINUTES":85,"SECONDS":0}
+{"USER":"Stell bitte einen Timer für neunundfünfzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":59}
+{"USER":"Starte bitte einen Timer auf 21 Stunden","HOURS":21,"MINUTES":0,"SECONDS":0}
+{"USER":"Setz einen Timer auf 17 Minuten und 14 Sekunden","HOURS":0,"MINUTES":17,"SECONDS":14}
+{"USER":"Timer für 36 Sekunden starten","HOURS":0,"MINUTES":0,"SECONDS":36}
+{"USER":"Stell bitte einen Timer für neun Stunden","HOURS":9,"MINUTES":0,"SECONDS":0}
+{"USER":"Starte einen Timer über 25 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":25}
+{"USER":"Mach bitte einen Timer für 68 Minuten","HOURS":0,"MINUTES":68,"SECONDS":0}
+{"USER":"Timer auf 12 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":12}
+{"USER":"stell bitte einen Timer auf fünf Minuten","HOURS":0,"MINUTES":5,"SECONDS":0}
+{"USER":"kannst du einen 73 Sekunden langen Timer starten","HOURS":0,"MINUTES":0,"SECONDS":73}
+{"USER":"setz einen Timer für zwanzig Minuten","HOURS":0,"MINUTES":20,"SECONDS":0}
+{"USER":"oh, starte schnell einen 30 Sekunden Timer","HOURS":0,"MINUTES":0,"SECONDS":30}
+{"USER":"lass uns einen Timer für eine halbe Stunde stellen","HOURS":0,"MINUTES":30,"SECONDS":0}
+{"USER":"starte einen Timer für eine Stunde und fünfzehn Sekunden","HOURS":1,"MINUTES":0,"SECONDS":15}
+{"USER":"gib mir einen 2 Stunden und 47 Sekunden Timer","HOURS":2,"MINUTES":0,"SECONDS":47}
+{"USER":"kannst du bitte einen zwölf Stunden vierunddreißig Minuten sechsundfünfzig Sekunden Timer einstellen","HOURS":12,"MINUTES":34,"SECONDS":56}
+{"USER":"Könntest du bitte einen fünfzehn Minuten Timer stellen","HOURS":0,"MINUTES":15,"SECONDS":0}
+{"USER":"starte einen 30 Sekunden Timer","HOURS":0,"MINUTES":0,"SECONDS":30}
+{"USER":"mach einen Timer auf drei Minuten","HOURS":0,"MINUTES":3,"SECONDS":0}
+{"USER":"Bitte setze einen Timer auf 1 Stunde","HOURS":1,"MINUTES":0,"SECONDS":0}
+{"USER":"Leg einen Timer für siebenundzwanzig Minuten an","HOURS":0,"MINUTES":27,"SECONDS":0}
+{"USER":"Timer auf 90 Sekunden, bitte","HOURS":0,"MINUTES":0,"SECONDS":90}
+{"USER":"stell einen Timer für eine Viertelstunde","HOURS":0,"MINUTES":15,"SECONDS":0}
+{"USER":"Starte bitte einen 3 Stunden Timer","HOURS":3,"MINUTES":0,"SECONDS":0}
+{"USER":"setz einen Timer für vier Minuten und fünfzehn Sekunden","HOURS":0,"MINUTES":4,"SECONDS":15}
+{"USER":"Kannst du einen Timer auf zwei Stunden und dreißig Minuten legen","HOURS":2,"MINUTES":30,"SECONDS":0}
+{"USER":"Bitte einen Timer auf 47 Sekunden starten","HOURS":0,"MINUTES":0,"SECONDS":47}
+{"USER":"Mach mir einen Timer für neunzig Minuten","HOURS":0,"MINUTES":90,"SECONDS":0}
+{"USER":"Stelle einen Timer auf eine Stunde und drei Minuten","HOURS":1,"MINUTES":3,"SECONDS":0}
+{"USER":"Starte einen 17 Stunden Timer","HOURS":17,"MINUTES":0,"SECONDS":0}
+{"USER":"Leg bitte einen Timer für achtunddreißig Minuten an","HOURS":0,"MINUTES":38,"SECONDS":0}
+{"USER":"setz schnell einen Timer auf 25 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":25}
+{"USER":"Kannst du mir einen Timer für vier Stunden und zwei Minuten einstellen","HOURS":4,"MINUTES":2,"SECONDS":0}
+{"USER":"Bitte Timer für 66 Sekunden starten","HOURS":0,"MINUTES":0,"SECONDS":66}
+{"USER":"Starte einen Timer auf sieben Stunden dreiundvierzig Minuten","HOURS":7,"MINUTES":43,"SECONDS":0}
+{"USER":"Mach einen Timer für eine Stunde und dreißig Minuten","HOURS":1,"MINUTES":30,"SECONDS":0}
+{"USER":"Leg einen Timer auf 5 Minuten bitte","HOURS":0,"MINUTES":5,"SECONDS":0}
+{"USER":"stell einen Timer für eine Minute","HOURS":0,"MINUTES":1,"SECONDS":0}
+{"USER":"Starte bitte einen 55 Sekunden Timer","HOURS":0,"MINUTES":0,"SECONDS":55}
+{"USER":"Kannst du einen Timer für sechsundfünfzig Minuten setzen","HOURS":0,"MINUTES":56,"SECONDS":0}
+{"USER":"Bitte leg einen Timer auf 2 Stunden 15 Sekunden","HOURS":2,"MINUTES":0,"SECONDS":15}
+{"USER":"setz einen Timer für neun Minuten und zwölf Sekunden","HOURS":0,"MINUTES":9,"SECONDS":12}
+{"USER":"Stelle einen Timer auf 48 Stunden nicht erlaubt","HOURS":0,"MINUTES":0,"SECONDS":0}
+{"USER":"Starte einen Timer auf 38 Minuten","HOURS":0,"MINUTES":38,"SECONDS":0}
+{"USER":"Mach einen Timer für dreiundzwanzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":23}
+{"USER":"setz bitte einen Timer für zehn Stunden","HOURS":10,"MINUTES":0,"SECONDS":0}
+{"USER":"Könntest du einen Timer auf eine halbe Stunde legen","HOURS":0,"MINUTES":30,"SECONDS":0}
+{"USER":"Bitte starte einen 7 Minuten Timer","HOURS":0,"MINUTES":7,"SECONDS":0}
+{"USER":"Leg für mich einen Timer auf zweiundzwanzig Minuten an","HOURS":0,"MINUTES":22,"SECONDS":0}
+{"USER":"Setze einen Timer auf 120 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":120}
+{"USER":"Starte sofort einen Timer für fünf Stunden und sechzig Sekunden","HOURS":5,"MINUTES":0,"SECONDS":60}
+{"USER":"Mach einen Timer für eine Stunde und zwanzig Minuten","HOURS":1,"MINUTES":20,"SECONDS":0}
+{"USER":"leg bitte einen Timer auf 33 Minuten","HOURS":0,"MINUTES":33,"SECONDS":0}
+{"USER":"Stell einen Timer für sieben Sekunden","HOURS":0,"MINUTES":0,"SECONDS":7}
+{"USER":"Bitte starte einen 99 Sekunden Timer","HOURS":0,"MINUTES":0,"SECONDS":99}
+{"USER":"Könntest du einen Timer für zehn Minuten stellen","HOURS":0,"MINUTES":10,"SECONDS":0}
+{"USER":"Setze einen Timer auf 2 Stunden 30 Minuten","HOURS":2,"MINUTES":30,"SECONDS":0}
+{"USER":"stell bitte einen Timer für drei Stunden zwölf Minuten","HOURS":3,"MINUTES":12,"SECONDS":0}
+{"USER":"Starte einen Timer auf sechzehn Minuten und fünf Sekunden","HOURS":0,"MINUTES":16,"SECONDS":5}
+{"USER":"Mach einen Timer für 8 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":8}
+{"USER":"Leg einen Timer auf eine Stunde und zweiundvierzig Minuten","HOURS":1,"MINUTES":42,"SECONDS":0}
+{"USER":"Bitte setze einen Timer für fünfundvierzig Minuten","HOURS":0,"MINUTES":45,"SECONDS":0}
+{"USER":"Starte einen 14 Stunden Timer","HOURS":14,"MINUTES":0,"SECONDS":0}
+{"USER":"setz einen Timer für sechs Minuten und dreiundzwanzig Sekunden","HOURS":0,"MINUTES":6,"SECONDS":23}
+{"USER":"Könntest du bitte einen Timer auf 40 Sekunden legen","HOURS":0,"MINUTES":0,"SECONDS":40}
+{"USER":"Stelle mir einen Timer für zweiundsechzig Minuten","HOURS":0,"MINUTES":62,"SECONDS":0}
+{"USER":"Bitte starte einen Timer auf 11 Minuten","HOURS":0,"MINUTES":11,"SECONDS":0}
+{"USER":"Leg einen Timer für siebenundachtzig Sekunden an","HOURS":0,"MINUTES":0,"SECONDS":87}
+{"USER":"Starte einen Timer auf 6 Stunden 5 Minuten","HOURS":6,"MINUTES":5,"SECONDS":0}
+{"USER":"Mach einen Timer für fünf Stunden und drei Minuten","HOURS":5,"MINUTES":3,"SECONDS":0}
+{"USER":"setz bitte einen Timer für neunundneunzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":99}
+{"USER":"Kannst du einen Timer für eine Stunde und vierundzwanzig Minuten einstellen","HOURS":1,"MINUTES":24,"SECONDS":0}
+{"USER":"Bitte leg einen Timer auf 3 Minuten 10 Sekunden","HOURS":0,"MINUTES":3,"SECONDS":10}
+{"USER":"Stelle bitte einen Timer für vierundfünfzig Minuten","HOURS":0,"MINUTES":54,"SECONDS":0}
+{"USER":"Starte einen Timer auf 18 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":18}
+{"USER":"Leg mir einen Timer für zwei Stunden und fünf Minuten an","HOURS":2,"MINUTES":5,"SECONDS":0}
+{"USER":"Bitte setze einen Timer auf siebenunddreißig Minuten","HOURS":0,"MINUTES":37,"SECONDS":0}
+{"USER":"Starte einen 24 Stunden Timer","HOURS":24,"MINUTES":0,"SECONDS":0}
+{"USER":"Könntest du einen Timer auf 29 Sekunden starten","HOURS":0,"MINUTES":0,"SECONDS":29}
+{"USER":"Mach bitte einen Timer für eine Viertelstunde","HOURS":0,"MINUTES":15,"SECONDS":0}
+{"USER":"setz einen Timer auf 13 Minuten und 5 Sekunden","HOURS":0,"MINUTES":13,"SECONDS":5}
+{"USER":"Bitte einen Timer für elf Stunden einstellen","HOURS":11,"MINUTES":0,"SECONDS":0}
+{"USER":"Starte einen Timer auf dreiundsechzig Minuten","HOURS":0,"MINUTES":63,"SECONDS":0}
+{"USER":"Leg einen Timer für 42 Sekunden an","HOURS":0,"MINUTES":0,"SECONDS":42}
+{"USER":"Stelle einen Timer auf 9 Minuten bitte","HOURS":0,"MINUTES":9,"SECONDS":0}
+{"USER":"Kannst du bitte einen Timer für sechsundzwanzig Minuten setzen","HOURS":0,"MINUTES":26,"SECONDS":0}
+{"USER":"Starte sofort einen Timer auf 1 Sekunde","HOURS":0,"MINUTES":0,"SECONDS":1}
+{"USER":"Bitte setze einen Timer auf 15 Stunden","HOURS":15,"MINUTES":0,"SECONDS":0}
+{"USER":"Mach einen Timer für vier Stunden vierundzwanzig Minuten","HOURS":4,"MINUTES":24,"SECONDS":0}
+{"USER":"Leg einen Timer auf 58 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":58}
+{"USER":"setz einen Timer für zwei Minuten und fünfzehn Sekunden","HOURS":0,"MINUTES":2,"SECONDS":15}
+{"USER":"Stelle einen Timer auf dreizehn Minuten","HOURS":0,"MINUTES":13,"SECONDS":0}
+{"USER":"Könntest du einen Timer für 70 Sekunden starten","HOURS":0,"MINUTES":0,"SECONDS":70}
+{"USER":"Bitte starte einen 20 Minuten Timer","HOURS":0,"MINUTES":20,"SECONDS":0}
+{"USER":"Starte einen Timer auf 8 Stunden und 59 Minuten","HOURS":8,"MINUTES":59,"SECONDS":0}
+{"USER":"Mach mir bitte einen Timer für fünfundzwanzig Minuten","HOURS":0,"MINUTES":25,"SECONDS":0}
+{"USER":"Leg einen Timer auf 37 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":37}
+{"USER":"setz einen Timer für eine Stunde und fünf Minuten","HOURS":1,"MINUTES":5,"SECONDS":0}
+{"USER":"Stelle einen Timer auf 68 Minuten","HOURS":0,"MINUTES":68,"SECONDS":0}
+{"USER":"Bitte starte einen Timer für vier Minuten","HOURS":0,"MINUTES":4,"SECONDS":0}
+{"USER":"Starte einen 19 Stunden Timer","HOURS":19,"MINUTES":0,"SECONDS":0}
+{"USER":"Kannst du einen Timer auf 44 Sekunden stellen","HOURS":0,"MINUTES":0,"SECONDS":44}
+{"USER":"Mach einen Timer für zwölf Minuten und zwölf Sekunden","HOURS":0,"MINUTES":12,"SECONDS":12}
+{"USER":"Leg bitte einen Timer für zweiundfünfzig Minuten an","HOURS":0,"MINUTES":52,"SECONDS":0}
+{"USER":"Stelle einen Timer auf 3 Stunden 33 Minuten","HOURS":3,"MINUTES":33,"SECONDS":0}
+{"USER":"Bitte setze einen Timer auf sechs Sekunden","HOURS":0,"MINUTES":0,"SECONDS":6}
+{"USER":"Starte einen Timer für sieben Stunden und acht Minuten","HOURS":7,"MINUTES":8,"SECONDS":0}
+{"USER":"Kannst du bitte einen Timer auf 21 Minuten legen","HOURS":0,"MINUTES":21,"SECONDS":0}
+{"USER":"Mach einen Timer für 88 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":88}
+{"USER":"Leg einen Timer für eine Stunde und sechsundzwanzig Minuten an","HOURS":1,"MINUTES":26,"SECONDS":0}
+{"USER":"setz einen Timer auf 50 Sekunden","HOURS":0,"MINUTES":0,"SECONDS":50}
+{"USER":"Stelle bitte einen Timer für neun Minuten und neun Sekunden","HOURS":0,"MINUTES":9,"SECONDS":9}
+{"USER":"Starte einen Timer auf 5 Stunden 55 Minuten","HOURS":5,"MINUTES":55,"SECONDS":0}
+{"USER":"Bitte leg einen Timer für vierundzwanzig Minuten an","HOURS":0,"MINUTES":24,"SECONDS":0}
+{"USER":"Könntest du einen Timer für 31 Sekunden starten","HOURS":0,"MINUTES":0,"SECONDS":31}
+{"USER":"Mach bitte einen Timer auf eine Stunde","HOURS":1,"MINUTES":0,"SECONDS":0}
+{"USER":"Setze einen Timer für zwei Minuten","HOURS":0,"MINUTES":2,"SECONDS":0}
+{"USER":"stell bitte einen Timer auf fünf Minuten","HOURS":0,"MINUTES":5,"SECONDS":0}
+{"USER":"Starte einen Timer für zwölf Sekunden","HOURS":0,"MINUTES":0,"SECONDS":12}
+{"USER":"setz einen Timer für eine Viertelstunde","HOURS":0,"MINUTES":15,"SECONDS":0}
+{"USER":"mach mir einen Timer über zwei Stunden","HOURS":2,"MINUTES":0,"SECONDS":0}
+{"USER":"bitte richte einen Timer für dreißig Minuten und zwanzig Sekunden ein","HOURS":0,"MINUTES":30,"SECONDS":20}
+{"USER":"Timer auf eine halbe Stunde stellen","HOURS":0,"MINUTES":30,"SECONDS":0}
+{"USER":"Kannst du einen Timer für siebenundzwanzig Sekunden starten","HOURS":0,"MINUTES":0,"SECONDS":27}
+{"USER":"Stell einen Timer für drei Stunden fünf Minuten","HOURS":3,"MINUTES":5,"SECONDS":0}
+{"USER":"starte einen Timer für vierzig Minuten","HOURS":0,"MINUTES":40,"SECONDS":0}
+{"USER":"Leg bitte einen Timer von neunundneunzig Sekunden an","HOURS":0,"MINUTES":0,"SECONDS":99}
+{"USER":"mach einen Timer für zwei Stunden achtzehn Sekunden","HOURS":2,"MINUTES":0,"SECONDS":18}
+{"USER":"stell einen Timer auf neun Minuten","HOURS":0,"MINUTES":9,"SECONDS":0}
+{"USER":"Starte einen Timer über sechzehn Stunden","HOURS":16,"MINUTES":0,"SECONDS":0}
+{"USER":"Kannst du einen Timer auf fünfundvierzig Minuten und dreißig Sekunden einstellen","HOURS":0,"MINUTES":45,"SECONDS":30}
+{"USER":"setz den Timer für dreißig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":30}
+{"USER":"stell einen Timer über zweiundzwanzig Stunden und fünf Minuten","HOURS":22,"MINUTES":5,"SECONDS":0}
+{"USER":"Stelle bitte einen Timer auf eine Minute und zwanzig Sekunden","HOURS":0,"MINUTES":1,"SECONDS":20}
+{"USER":"mach einen Timer für achtundvierzig Minuten","HOURS":0,"MINUTES":48,"SECONDS":0}
+{"USER":"Starte einen Timer mit zwei Stunden zehn Minuten und acht Sekunden","HOURS":2,"MINUTES":10,"SECONDS":8}
+{"USER":"setz bitte einen Timer über vier Sekunden","HOURS":0,"MINUTES":0,"SECONDS":4}
+{"USER":"Timer einstellen auf neunundneunzig Stunden","HOURS":99,"MINUTES":0,"SECONDS":0}
+{"USER":"Stell mir einen Timer über eine Stunde und drei Minuten","HOURS":1,"MINUTES":3,"SECONDS":0}
+{"USER":"mach einen Timer für fünfunddreißig Minuten","HOURS":0,"MINUTES":35,"SECONDS":0}
+{"USER":"bitte Timer auf zwei Minuten zehn Sekunden","HOURS":0,"MINUTES":2,"SECONDS":10}
+{"USER":"Starte einen Timer für fünfundfünfzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":55}
+{"USER":"setz einen Timer über achtzehn Stunden und vierzig Minuten","HOURS":18,"MINUTES":40,"SECONDS":0}
+{"USER":"mach mir einen Timer für fünf Stunden","HOURS":5,"MINUTES":0,"SECONDS":0}
+{"USER":"stell bitte einen Timer auf sieben Minuten fünfundvierzig Sekunden","HOURS":0,"MINUTES":7,"SECONDS":45}
+{"USER":"Timer bitte auf zweiundvierzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":42}
+{"USER":"starte einen Timer für sechs Stunden und neunundneunzig Minuten","HOURS":6,"MINUTES":99,"SECONDS":0}
+{"USER":"setz einen Timer für elf Minuten","HOURS":0,"MINUTES":11,"SECONDS":0}
+{"USER":"stell einen Timer über dreißig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":30}
+{"USER":"mach einen Timer von einer Stunde fünfzehn Minuten","HOURS":1,"MINUTES":15,"SECONDS":0}
+{"USER":"Starte bitte einen Timer für zwanzig Minuten vierzehn Sekunden","HOURS":0,"MINUTES":20,"SECONDS":14}
+{"USER":"stell einen Timer über neunundneunzig Minuten","HOURS":0,"MINUTES":99,"SECONDS":0}
+{"USER":"Timer auf drei Stunden und vier Sekunden","HOURS":3,"MINUTES":0,"SECONDS":4}
+{"USER":"setz einen Timer für fünfundsechzig Minuten","HOURS":0,"MINUTES":65,"SECONDS":0}
+{"USER":"mach einen Timer für eine Stunde und sechzig Sekunden","HOURS":1,"MINUTES":0,"SECONDS":60}
+{"USER":"bitte stell einen Timer auf siebzehn Stunden","HOURS":17,"MINUTES":0,"SECONDS":0}
+{"USER":"Starte einen Timer über zwei Minuten","HOURS":0,"MINUTES":2,"SECONDS":0}
+{"USER":"setz mir einen Timer auf sechs Sekunden","HOURS":0,"MINUTES":0,"SECONDS":6}
+{"USER":"mach einen Timer für drei Stunden und fünfundvierzig Sekunden","HOURS":3,"MINUTES":0,"SECONDS":45}
+{"USER":"stell bitte einen Timer über acht Minuten","HOURS":0,"MINUTES":8,"SECONDS":0}
+{"USER":"Starte einen Timer mit fünfundfünfzig Minuten","HOURS":0,"MINUTES":55,"SECONDS":0}
+{"USER":"setz einen Timer für eine halbe Stunde und zehn Sekunden","HOURS":0,"MINUTES":30,"SECONDS":10}
+{"USER":"mach mir einen Timer über einundzwanzig Stunden","HOURS":21,"MINUTES":0,"SECONDS":0}
+{"USER":"stell einen Timer auf vier Minuten vierzig Sekunden","HOURS":0,"MINUTES":4,"SECONDS":40}
+{"USER":"bitte Timer auf fünfundneunzig Sekunden setzen","HOURS":0,"MINUTES":0,"SECONDS":95}
+{"USER":"Starte einen Timer für neun Stunden fünf Minuten","HOURS":9,"MINUTES":5,"SECONDS":0}
+{"USER":"setz mir einen Timer über fünfzehn Sekunden","HOURS":0,"MINUTES":0,"SECONDS":15}
+{"USER":"mach einen Timer für zwei Stunden und achtundvierzig Minuten","HOURS":2,"MINUTES":48,"SECONDS":0}
+{"USER":"stell bitte einen Timer auf vierzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":40}
+{"USER":"Starte einen Timer über drei Stunden und neunzehn Minuten","HOURS":3,"MINUTES":19,"SECONDS":0}
+{"USER":"setz einen Timer für sieben Stunden dreiunddreißig Minuten und zehn Sekunden","HOURS":7,"MINUTES":33,"SECONDS":10}
+{"USER":"mach mir einen Timer für vier Minuten","HOURS":0,"MINUTES":4,"SECONDS":0}
+{"USER":"bitte stell einen Timer über sechs Stunden und zwei Sekunden","HOURS":6,"MINUTES":0,"SECONDS":2}
+{"USER":"Starte einen Timer für eine Stunde zwanzig Minuten","HOURS":1,"MINUTES":20,"SECONDS":0}
+{"USER":"setz mir einen Timer für eine Stunde dreißig Sekunden","HOURS":1,"MINUTES":0,"SECONDS":30}
+{"USER":"stell einen Timer auf vierundsechzig Minuten","HOURS":0,"MINUTES":64,"SECONDS":0}
+{"USER":"Timer bitte auf fünfzehn Stunden und neunundzwanzig Sekunden","HOURS":15,"MINUTES":0,"SECONDS":29}
+{"USER":"Starte einen Timer mit acht Minuten","HOURS":0,"MINUTES":8,"SECONDS":0}
+{"USER":"setz einen Timer für eine halbe Stunde","HOURS":0,"MINUTES":30,"SECONDS":0}
+{"USER":"mach bitte einen Timer auf vier Stunden elf Minuten","HOURS":4,"MINUTES":11,"SECONDS":0}
+{"USER":"stell mir einen Timer über siebenunddreißig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":37}
+{"USER":"Starte einen Timer für zweiundzwanzig Minuten","HOURS":0,"MINUTES":22,"SECONDS":0}
+{"USER":"setz den Timer auf drei Stunden siebenundzwanzig Minuten","HOURS":3,"MINUTES":27,"SECONDS":0}
+{"USER":"mach mir einen Timer über eine Stunde","HOURS":1,"MINUTES":0,"SECONDS":0}
+{"USER":"stell bitte einen Timer für neunundvierzig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":49}
+{"USER":"Starte einen Timer mit dreißig Minuten und neunundfünfzig Sekunden","HOURS":0,"MINUTES":30,"SECONDS":59}
+{"USER":"setz einen Timer für vier Stunden","HOURS":4,"MINUTES":0,"SECONDS":0}
+{"USER":"mach mir einen Timer für fünfzehn Minuten zwanzig Sekunden","HOURS":0,"MINUTES":15,"SECONDS":20}
+{"USER":"stell bitte einen Timer auf siebzig Minuten","HOURS":0,"MINUTES":70,"SECONDS":0}
+{"USER":"Starte einen Timer über achtunddreißig Sekunden","HOURS":0,"MINUTES":0,"SECONDS":38}
