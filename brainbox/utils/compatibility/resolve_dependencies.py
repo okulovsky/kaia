@@ -7,7 +7,7 @@ from brainbox.framework import DockerController, BrainboxImageBuilder
 from foundation_kaia.misc import Loc
 from yo_fluq import FileIO
 
-def resolve_dependencies(controller: DockerController, python_version: str|None = None):
+def resolve_dependencies(controller: DockerController, python_version: str | None = None):
     builder = controller.get_image_builder()
     if not isinstance(builder, BrainboxImageBuilder):
         raise ValueError("Only works with controllers that build with BrainboxImageBuilder")
@@ -33,6 +33,14 @@ def resolve_dependencies(controller: DockerController, python_version: str|None 
         run_uv('lock', cwd=folder)
 
         result = run_uv('export', '--format', 'requirements-txt', '--no-hashes', '--no-annotate', cwd=folder, text=True)
+
+        # Очистка строк и удаление numpy
+        lines = [line for line in result.splitlines() if line.strip() and line.strip() != "-e ." and not line.startswith("numpy==")]
+        
+        # Формируем итоговый список
+        clean = "\n".join(lines)
+        
+        yo_fluq.FileIO.write_text(clean, builder.context.requirements_lock)
 
 
 

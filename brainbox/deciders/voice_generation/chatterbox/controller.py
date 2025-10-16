@@ -16,7 +16,14 @@ class ChatterboxController(
         return BrainboxImageBuilder(
             Path(__file__).parent,
             '3.11.11',
-            allow_arm64=True
+            allow_arm64=True,
+            custom_dependencies=(
+                BrainboxImageBuilder.CustomDependencies(
+                    ('numpy==1.25.2',)
+                ),
+                BrainboxImageBuilder.Dependencies()
+            ),
+            keep_dockerfile = True
         )
 
     def get_service_run_configuration(self, parameter: str|None) -> RunConfiguration:
