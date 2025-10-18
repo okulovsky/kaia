@@ -18,7 +18,7 @@ if __name__ == '__main__':
         exit(0)
 
     if args.install:
-        model = Model()
+        model = Model(device='cpu')
         model.compute_embedding(Path(__file__).parent/'yc.wav')
         exit(0)
 

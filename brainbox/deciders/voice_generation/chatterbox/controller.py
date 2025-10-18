@@ -32,7 +32,9 @@ class ChatterboxController(
         return RunConfiguration(
             publish_ports={self.connection_settings.port:8080},
             mount_resource_folders={
-                'pretrained': '/home/app/.cache/huggingface'
+                'pretrained': '/home/app/.cache/huggingface',
+                'voices': '/voices',
+                'speakers': '/speakers',
             }
         )
     
