@@ -16,10 +16,11 @@ if __name__ == '__main__':
     if args.notebook:
         subprocess.call([sys.executable, '-m', 'notebook', '--allow-root', '--port', '8899', '--ip', '0.0.0.0', "--NotebookApp.token=''"], cwd='/repo')
         exit(0)
+    
+    model = Model(device='cpu')
 
     if args.install:
-        model = Model(device='cpu')
         model.compute_embedding(Path(__file__).parent/'yc.wav')
         exit(0)
 
-    ChatterboxApp().create_app().run('0.0.0.0',8080)
+    ChatterboxApp(model).create_app().run('0.0.0.0',8080)

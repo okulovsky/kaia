@@ -37,7 +37,8 @@ class ChatterboxController(
                 'pretrained': '/home/app/.cache/huggingface',
                 'voices': '/voices',
                 'speakers': '/speakers',
-            }
+            },
+            dont_rm=True
         )
     
     def post_install(self):
@@ -70,7 +71,7 @@ class ChatterboxController(
             .with_comment("Returns JSON with passed arguments and `success` fields")
         )
 
-        result = BrainBoxTask.call(Chatterbox).voiceover(VOICEOVER_TEXT, 'test_speaker')
+        result = api.execute(BrainBoxTask.call(Chatterbox).voiceover(VOICEOVER_TEXT, 'test_speaker'))
         tc.assertIsInstance(result, str)
         check_if_its_sound(api.open_file(result), tc)
         yield (
