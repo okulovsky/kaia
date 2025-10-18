@@ -2,8 +2,10 @@ from typing import Iterable
 from unittest import TestCase
 from ....framework import (
     RunConfiguration, TestReport, BrainboxImageBuilder, IImageBuilder, DockerWebServiceController,
-    BrainBoxApi, BrainBoxTask, FileIO, INotebookableController, IModelDownloadingController, DownloadableModel
+    BrainBoxApi, BrainBoxTask, FileIO, INotebookableController, IModelDownloadingController, DownloadableModel,
+    File
 )
+from ...common import VOICEOVER_TEXT, check_if_its_sound
 from .settings import ChatterboxSettings
 from pathlib import Path
 
@@ -57,7 +59,8 @@ class ChatterboxController(
     def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable:
         from .api import Chatterbox
 
-        api.execute(BrainBoxTask.call(Chatterbox).echo('argument'))
+        speaker_sample = File.read(Path(__file__).parent/'research/yc.wav')
+        api.execute(BrainBoxTask.call(Chatterbox).train('test_speaker', speaker_sample))
 
 
         yield (
@@ -67,4 +70,12 @@ class ChatterboxController(
             .with_comment("Returns JSON with passed arguments and `success` fields")
         )
 
-
+        result = BrainBoxTask.call(Chatterbox).voiceover(VOICEOVER_TEXT, 'test_speaker')
+        tc.assertIsInstance(result, str)
+        check_if_its_sound(api.open_file(result), tc)
+        yield (
+            TestReport
+            .last_call(api)
+            .href('voiceover')
+            .result_is_file(File.Kind.Audio)
+        )
