@@ -10,7 +10,7 @@ class Chatterbox(DockerWebServiceApi[ChatterboxSettings, ChatterboxController]):
         super().__init__(address)
 
 
-    def train(self, sample_file: FileLike.Type):
+    def train(self, speaker: str, sample_file: FileLike.Type):
         with FileLike(sample_file, self.cache_folder) as content:
             reply = requests.post(
                 self.endpoint('/train/'+speaker),

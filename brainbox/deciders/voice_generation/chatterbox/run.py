@@ -7,6 +7,5 @@ if __name__ == '__main__':
 
     controller.install()
     controller.self_test()
-    controller.run_notebook()
 
     #test_on_arm64(controller)
