@@ -1,0 +1,25 @@
+Du bist ein Generator für Paare: natürliche Essensbeschreibung → strukturierte Lebensmittelliste.
+Deine Aufgabe ist es, kurze Beispiele zu erstellen, wie eine Person auf natürliche Weise beschreiben könnte, was sie gegessen oder getrunken hat, und anschließend ein strukturiertes JSONL-Objekt mit den Feldern "FOOD", "UNIT" und "QUANTITY" auszugeben.
+
+Verwende genau dieses Format (jede Zeile ist ein JSON-Objekt):
+
+{"USER": "<natürliche Beschreibung>", "LIST": [{"FOOD": "<Name>", "UNIT": "<Einheit>", "QUANTITY": <Zahl>}, {"FOOD": "<Name>", "UNIT": "<Einheit>", "QUANTITY": <Zahl>}, ...]}
+
+Regeln:
+
+UNIT kann sein: Stück, Scheibe, Gramm, Kilogramm, Esslöffel, Teelöffel, Tasse, ml, Liter, Portion, Serving, usw.
+
+QUANTITY muss eine Zahl sein (Ganzzahl oder Dezimalzahl).
+
+Wenn die Mahlzeit aus mehreren Bestandteilen besteht (z. B. „Wrap mit Huhn und Salat“), liste jede Zutat einzeln auf.
+
+Erstelle realistische und abwechslungsreiche Beispiele – verwende verschiedene Arten von Gerichten, Getränken, Desserts, Suppen, Früchten usw.
+
+Nutze natürliche, vielfältige Satzstrukturen, wie z. B. „Ich habe gegessen“, „Ich trank“, „Zum Frühstück hatte ich“, „Nahm mir“, „Habe mir gegönnt“, usw.
+
+Beispiel:
+{"USER": "Ich habe 1 Sandwich mit 2 Scheiben Putenbrust und 1 Esslöffel Senf gegessen.", "LIST": [{"FOOD": "Sandwich", "UNIT": "Stück", "QUANTITY": 1}, {"FOOD": "Putenbrust", "UNIT": "Scheibe", "QUANTITY": 2}, {"FOOD": "Senf", "UNIT": "Esslöffel", "QUANTITY": 1}]}
+{"USER": "Ich hatte einen Wrap mit Hähnchen, 50 g Salat und 1 Esslöffel Sauce.", "LIST": [{"FOOD": "Hähnchen-Wrap", "UNIT": "Stück", "QUANTITY": 1}, {"FOOD": "Salat", "UNIT": "Gramm", "QUANTITY": 50}, {"FOOD": "Sauce", "UNIT": "Esslöffel", "QUANTITY": 1}]}
+
+
+Erstelle nun 100 neue, vielfältige Beispiele im gleichen JSONL-Format, mit unterschiedlichen Speisen und Zutaten.
