@@ -1,31 +1,35 @@
-You are a data generator for a voice assistant project. Your task is to produce 50 unique examples of user utterances that request setting a timer. Output exactly one JSON object per line (JSONL). Each object must have keys: `"USER"` (string), `"HOURS"` (int), `"MINUTES"` (int), `"SECONDS"` (int), `"NAME"` (string). After the 30th JSON line, stop. Do not add any commentary.
+You are a data generator for a voice assistant project. Your task is to produce 50 unique examples of user utterances that request setting a timer. Output exactly one JSON object per line (JSONL). Each object must have keys: `"USER"` (string), `"HOURS"` (int), `"MINUTES"` (int), `"SECONDS"` (int), `"NAME"` (string). After the 50th JSON line, stop. Do not add any commentary.
 
 Constraints:
 
-* "HOURS" in [1, 99] (or words: "one" to "ninety-nine"), "MINUTES" in [1, 99] (or words: "one" to "ninety-nine"), "SECONDS" in [1, 99] (or words: "one" to "ninety-nine"). Zero value is allowed, but then it should not be written in the USER.
-* `"NAME"` is sometimes `_` (None), and sometimes a meaningful label inferred from the USER utterance. Ensure **roughly half of the examples have a meaningful NAME**, and half are `_`.
-* **Variety in mentioning timer names:** Do not always use "for X". Use phrases like: `"on the X"`, `"to cook X"`, `"for my X"`, `"as X"`, `"to remind me about X"`, `"set X"`, `"timer X"`, `"in X"`, etc. The dataset should reflect natural speech patterns, not repetitive phrasing.
-* Generate examples of time durations expressed in natural, spoken-like ways.
-* Utterances must clearly request setting a timer, not just state a duration.
-* Vary the phrasing of user requests so they don’t all start with the same pattern. Ensure the dataset contains diverse wording and does not repeat the same style too often.
-* Use either words or digits for numerals, but do not mix them in the same USER string.
-* Include both typical durations (e.g., 5 minutes, half an hour, 2 hours) and unusual but natural durations (e.g., 38 minutes, 17 hours, 73 seconds).
-* Include diverse non-zero combinations of time units, and do not always follow the “hours → minutes → seconds” order.
-* "USER" must sound natural for voice commands via TTS/STT. Avoid shorthand abbreviations (*"h"*, *"min"*, *"sec"*).
+ "HOURS" in [1, 99] (or words: "one" to "ninety-nine"), "MINUTES" in [1, 99] (or words: "one" to "ninety-nine"), "SECONDS" in [1, 99] (or words: "one" to "ninety-nine"). Zero value is allowed, but then it should not be written in the USER.
+ `"NAME"` is sometimes "null", and sometimes a meaningful label inferred from the USER utterance. Ensure roughly half of the examples have a meaningful NAME, and half are `_`.
+ Variety in mentioning timer names: Do not always use "for X". Use phrases like: `"on the X"`, `"to cook X"`, `"for my X"`, `"as X"`, `"to remind me about X"`, `"set X"`, `"timer X"`, `"in X"`, etc. The dataset should reflect natural speech patterns, not repetitive phrasing.
+ Generate examples of time durations expressed in natural, spoken-like ways.
+ Utterances must clearly request setting a timer, not just state a duration.
+ Vary the phrasing of user requests so they don’t all start with the same pattern. Ensure the dataset contains diverse wording and does not repeat the same style too often.
+ Use either words or digits for numerals, but do not mix them in the same USER string.
+ You may generate examples with hours only, minutes only, seconds only, or any combination.
+ Include a variety of tones and phrases: casual, polite, commanding, exclamatory.
+ Include both typical durations (e.g., 5 minutes, half an hour, 2 hours) and unusual but natural durations (e.g., 38 minutes, 17 hours, 73 seconds).
+ You may use direct numerals (like "5 minutes" or "2 hours") most of the time, and occasionally include fractional but exact expressions (e.g., half an hour, a quarter of an hour). Avoid vague or approximate phrases like a couple of minutes or several seconds.
+ In your examples, sometimes use typical durations (e.g., 5 minutes, half an hour, 2 hours) and sometimes unusual but natural durations (e.g., 38 minutes, 17 hours, 73 seconds). Make sure your dataset includes both types in roughly balanced proportions. For unusual durations, use a wide range of numbers for hours, minutes, and seconds, ensuring that each unit appears with small, medium, and large values across the dataset. Include diverse non-zero combinations of time units, and avoid always following the “hours → minutes → seconds” order by varying unit combinations and permutations.
+ "USER" must sound natural for voice commands via TTS/STT. Avoid shorthand abbreviations ("h", "min", "sec").
+ Do not add extra fields.
 
-Format examples (now with **variety in how NAME is referenced**):
+Format examples:
 
 ```json
-{"USER":"please start a five minute timer","HOURS":0,"MINUTES":5,"SECONDS":0,"NAME":"_"}
-{"USER":"Can you put on a 45 second timer","HOURS":0,"MINUTES":0,"SECONDS":45,"NAME":"_"}
-{"USER":"set a timer for twenty minutes","HOURS":0,"MINUTES":20,"SECONDS":0,"NAME":"_"}
+{"USER":"please start a five minute timer","HOURS":0,"MINUTES":5,"SECONDS":0,"NAME":null}
+{"USER":"Can you put on a 45 second timer","HOURS":0,"MINUTES":0,"SECONDS":45,"NAME":null}
+{"USER":"set a timer for twenty minutes","HOURS":0,"MINUTES":20,"SECONDS":0,"NAME":null}
 {"USER":"start a 10 minute timer on chicken","HOURS":0,"MINUTES":10,"SECONDS":0,"NAME":"chicken"}
 {"USER":"set a half hour timer to cook the oven","HOURS":0,"MINUTES":30,"SECONDS":0,"NAME":"oven"}
 {"USER":"put a 2 hour timer as laundry","HOURS":2,"MINUTES":0,"SECONDS":0,"NAME":"laundry"}
 {"USER":"start a 12 minute timer to remind me about tea","HOURS":0,"MINUTES":12,"SECONDS":0,"NAME":"tea"}
 {"USER":"start a 3 minute timer, timer eggs","HOURS":0,"MINUTES":3,"SECONDS":0,"NAME":"eggs"}
-{"USER":"can you launch a 7 hour 15 minute timer","HOURS":7,"MINUTES":15,"SECONDS":0,"NAME":"_"}
-{"USER":"put a 73 second timer quickly","HOURS":0,"MINUTES":0,"SECONDS":73,"NAME":"_"}
+{"USER":"can you launch a 7 hour 15 minute timer","HOURS":7,"MINUTES":15,"SECONDS":0,"NAME":null}
+{"USER":"put a 73 second timer quickly","HOURS":0,"MINUTES":0,"SECONDS":73,"NAME":null}
 {"USER":"launch a 1 hour and 15 second timer as workout","HOURS":1,"MINUTES":0,"SECONDS":15,"NAME":"workout"}
 {"USER":"set a timer of 38 minutes to finish project","HOURS":0,"MINUTES":38,"SECONDS":0,"NAME":"project"}
 ```
