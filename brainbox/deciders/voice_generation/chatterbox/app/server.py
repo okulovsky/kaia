@@ -17,6 +17,7 @@ class ChatterboxApp:
     def create_app(self):
         app = flask.Flask(type(self).__name__)
         app.add_url_rule('/', view_func=self.index, methods=['GET'])
+        app.add_url_rule('/heartbeat', view_func=self.heartbeat, methods=['GET'])
         app.add_url_rule('/train/<speaker>', view_func=self.train, methods = ['POST'])
         app.add_url_rule('/voiceover', view_func=self.voiceover, methods = ['POST'])
         return app
@@ -24,6 +25,8 @@ class ChatterboxApp:
     def index(self):
         return "OK"
 
+    def heartbeat(self):
+        return "OK" 
 
     def train(self, speaker):
         try:
