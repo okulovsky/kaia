@@ -1,4 +1,5 @@
 import torch
+import os
 import torchaudio as ta
 from chatterbox.mtl_tts import ChatterboxMultilingualTTS, Conditionals  # Добавь импорт Conditionals
 
@@ -21,3 +22,5 @@ class Model:
             cfg_weight=cfg_weight
         )
         ta.save(output_file, wav_out, self.model.sr)
+
+        print(os.listdir("/home/app/main"), "================================================================================================================================")

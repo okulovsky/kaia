@@ -22,9 +22,9 @@ class Chatterbox(DockerWebServiceApi[ChatterboxSettings, ChatterboxController]):
                 raise ValueError(f"Endpoint returned error \n{reply.text}")
             return reply.text
         
-    def voiceover(self, text: str, speaker: str, language: str = 'en-us'):
+    def voiceover(self, text: str, speaker: str, language: str = 'en'):
         reply = requests.post(
-            self.endpoint('/voiceover/'),
+            self.endpoint('/voiceover'),
             json=dict(
                 text=text,
                 speaker=speaker,
