@@ -3,4 +3,4 @@ from ....framework import ConnectionSettings
 
 @dataclass
 class ChatterboxSettings:
-    connection = ConnectionSettings(20001, 20)
+    connection = ConnectionSettings(20001, 120)

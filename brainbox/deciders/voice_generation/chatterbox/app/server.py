@@ -6,12 +6,13 @@ import shutil
 import uuid
 from model import Model
 from pathlib import Path
+from chatterbox.mtl_tts import Conditionals 
 
 class ChatterboxApp:
     def __init__(self, model: Model):
         self.model = model
         self.voices_folder = Path('/voices')
-        self.speakers_folder = Path('/speaker')
+        self.speakers_folder = Path('/speakers')
         self.speakers_cache = {}
 
     def create_app(self):
@@ -30,36 +31,34 @@ class ChatterboxApp:
 
     def train(self, speaker):
         try:
-            voice_folder = self.voices_folder/speaker
-            shutil.rmtree(voice_folder, ignore_errors = True)
+            voice_folder = self.voices_folder / speaker
+            shutil.rmtree(voice_folder, ignore_errors=True)
             os.makedirs(voice_folder)
             for filename, content in flask.request.files.items():
-                content.save(voice_folder/filename)
-                embedding = self.model.compute_embedding(voice_folder/filename)
+                file_path = voice_folder / filename
+                content.save(file_path)
+                embedding = self.model.compute_embedding(file_path) 
                 self.speakers_cache[speaker] = embedding
-                with open(self.speakers_folder/speaker, 'wb') as stream:
-                    pickle.dumps(embedding)
+                embedding.save(self.speakers_folder / speaker)  
             return "OK"
         except:
             return traceback.format_exc(), 500
-        
+
     def voiceover(self):
-        temp_file = Path(__file__).parent/f'{uuid.uuid4()}.wav'
+        temp_file = Path(__file__).parent / f'{uuid.uuid4()}.wav'
         try:
             speaker = flask.request.json['speaker']
             if speaker not in self.speakers_cache:
-                speaker_file = self.speakers_folder/speaker
+                speaker_file = self.speakers_folder / speaker
                 if not speaker_file.is_file():
                     raise ValueError(f"Speaker {speaker} was not trained")
-                with open(speaker_file, 'rb') as stream:
-                    self.speakers_cache[speaker] = pickle.load(stream)
+                self.speakers_cache[speaker] = Conditionals.load(speaker_file)  # Загружаем через load
             self.model.voiceover(
                 flask.request.json['text'],
-                self.speakers_cache[speaker],
+                self.speakers_cache[speaker],  
                 flask.request.json['language'],
                 temp_file
             )
-
             return flask.send_file(temp_file)
         except:
             return traceback.format_exc(), 500
@@ -77,3 +76,4 @@ class ChatterboxApp:
             ))
         except:
             return traceback.format_exc(), 500
+
