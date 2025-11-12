@@ -10,10 +10,10 @@ class Model:
 
     def compute_embedding(self, src_path):
         self.model.prepare_conditionals(src_path, exaggeration=0.5)
-        return self.model.conds  # Теперь возвращаем Conditionals, а не модель
+        return self.model.conds
 
     def voiceover(self, text, conds, language, output_file, exaggeration=0.5, cfg_weight=1):
-        self.model.conds = conds  # Устанавливаем кондишены для этого спикера
+        self.model.conds = conds  
         # Если exaggeration отличается, generate сам обновит его в conds.t3.emotion_adv
         wav_out = self.model.generate(
             text=text,
@@ -23,4 +23,3 @@ class Model:
         )
         ta.save(output_file, wav_out, self.model.sr)
 
-        print(os.listdir("/home/app/main"), "================================================================================================================================")
