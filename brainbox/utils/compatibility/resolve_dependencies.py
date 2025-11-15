@@ -7,6 +7,30 @@ from brainbox.framework import DockerController, BrainboxImageBuilder
 from foundation_kaia.misc import Loc
 from yo_fluq import FileIO
 
+def _windows_uv():
+    # Windows only!!!
+    def run_uv(*args, **kwargs):
+        uv_path = Path(sys.executable).parent / "Scripts" / "uv.exe"
+        if not uv_path.exists():
+            raise RuntimeError(f"uv not found at {uv_path}")
+        cmd = [str(uv_path), *args]
+        print("RUN:", " ".join(cmd))
+        return subprocess.check_output(cmd, **kwargs)
+
+    run_uv('lock', cwd=folder)
+
+    result = run_uv('export', '--format', 'requirements-txt', '--no-hashes', '--no-annotate', cwd=folder, text=True)
+
+    # Очистка строк и удаление numpy
+    lines = [line for line in result.splitlines() if
+             line.strip() and line.strip() != "-e ." and not line.startswith("numpy==")]
+
+    # Формируем итоговый список
+    clean = "\n".join(lines)
+    return clean
+
+
+
 def resolve_dependencies(controller: DockerController, python_version: str | None = None):
     builder = controller.get_image_builder()
     if not isinstance(builder, BrainboxImageBuilder):
@@ -21,24 +45,7 @@ def resolve_dependencies(controller: DockerController, python_version: str | Non
 
         _create_toml(folder, deps, python_version)
 
-        # Windows only!!!
-        def run_uv(*args, **kwargs):
-            uv_path = Path(sys.executable).parent / "Scripts" / "uv.exe"
-            if not uv_path.exists():
-                raise RuntimeError(f"uv not found at {uv_path}")
-            cmd = [str(uv_path), *args]
-            print("RUN:", " ".join(cmd))
-            return subprocess.check_output(cmd, **kwargs)
-        
-        run_uv('lock', cwd=folder)
 
-        result = run_uv('export', '--format', 'requirements-txt', '--no-hashes', '--no-annotate', cwd=folder, text=True)
-
-        # Очистка строк и удаление numpy
-        lines = [line for line in result.splitlines() if line.strip() and line.strip() != "-e ." and not line.startswith("numpy==")]
-        
-        # Формируем итоговый список
-        clean = "\n".join(lines)
         
         yo_fluq.FileIO.write_text(clean, builder.context.requirements_lock)
 
