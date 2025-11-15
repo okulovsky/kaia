@@ -7,7 +7,7 @@ from brainbox.framework import DockerController, BrainboxImageBuilder
 from foundation_kaia.misc import Loc
 from yo_fluq import FileIO
 
-def _windows_uv():
+def _windows_uv(folder):
     # Windows only!!!
     def run_uv(*args, **kwargs):
         uv_path = Path(sys.executable).parent / "Scripts" / "uv.exe"
@@ -30,8 +30,22 @@ def _windows_uv():
     return clean
 
 
+def _linux_uv(folder):
+    subprocess.check_output([
+        'uv',
+        'lock',
+    ], cwd=folder)
 
-def resolve_dependencies(controller: DockerController, python_version: str | None = None):
+    result = subprocess.check_output([
+        'uv', 'export', '--format', 'requirements-txt', '--no-hashes', '--no-annotate'
+    ], cwd=folder, text=True)
+
+    clean = "\n".join(
+        line for line in result.splitlines()
+        if line.strip() != "-e ."
+    )
+
+def resolve_dependencies(controller: DockerController, python_version: str|None = None):
     builder = controller.get_image_builder()
     if not isinstance(builder, BrainboxImageBuilder):
         raise ValueError("Only works with controllers that build with BrainboxImageBuilder")
@@ -45,10 +59,12 @@ def resolve_dependencies(controller: DockerController, python_version: str | Non
 
         _create_toml(folder, deps, python_version)
 
+        if sys.platform == "win32":
+            clean = _windows_uv(folder)
+        else:
+            clean = _linux_uv(folder)
 
-        
         yo_fluq.FileIO.write_text(clean, builder.context.requirements_lock)
-
 
 
 def _create_toml(folder, dependencies_file_content, python_version):
