@@ -44,6 +44,7 @@ def _linux_uv(folder):
         line for line in result.splitlines()
         if line.strip() != "-e ."
     )
+    return clean
 
 def resolve_dependencies(controller: DockerController, python_version: str|None = None):
     builder = controller.get_image_builder()
