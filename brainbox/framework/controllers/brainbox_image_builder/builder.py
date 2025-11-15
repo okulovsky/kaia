@@ -71,6 +71,8 @@ class BrainboxImageBuilder(IImageBuilder):
         if self.repository is not None:
             lines.extend(self.repository.to_commands(context))
 
+        if (self.root_path / 'local_fix').exists():
+            lines.append('COPY local_fix/ /home/app/.local')
         lines.append('COPY app/ /home/app/main')
         lines.append('ENTRYPOINT ["python3","/home/app/main/main.py"]')
         return '\n\n'.join(lines)

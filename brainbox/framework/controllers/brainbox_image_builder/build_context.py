@@ -23,6 +23,10 @@ class BuildContext:
     @property
     def repo_fix_folder(self):
         return self.root_path/'repo_fix'
+    
+    @property
+    def local_fix_folder(self):
+        return self.root_path/'local_fix'
 
     @property
     def app_folder(self):

@@ -1,0 +1,10 @@
+diff a/brainbox/deciders/voice_generation/chatterbox/run.py b/brainbox/deciders/voice_generation/chatterbox/run.py	(rejected hunks)
+@@ -3,7 +3,7 @@ from brainbox.utils.compatibility import *
+ 
+ if __name__ == '__main__':
+     controller = Chatterbox.Controller()
+-    resolve_dependencies(controller)
++    #resolve_dependencies(controller)
+ 
+     controller.install()
+    # controller.self_test()
