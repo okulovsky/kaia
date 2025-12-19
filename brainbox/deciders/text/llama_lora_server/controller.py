@@ -100,16 +100,21 @@ class LlamaLoraServerController(
 
         time.sleep(5)  # model loading
 
-        api.execute(BrainBoxTask.call(LlamaLoraServer).health())
+        health_result = api.execute(BrainBoxTask.call(LlamaLoraServer).health())
+        tc.assertTrue(health_result)
         yield (
             TestReport.last_call(api)
             .href("health")
-            .with_comment("Returns JSON with `status` field")
+            .with_comment("Returns boolean status")
         )
 
-        timer_prompt = "USER:set a timer for 5 seconds\n"
+        timer_prompt1 = "USER:set a timer for 5 seconds\n"
+        timer_prompt2 = "USER:set a timer for 10 seconds\n"
+
         timer_task_result = api.execute(
-            BrainBoxTask.call(LlamaLoraServer).completion("timer_self_test", timer_prompt, 30)
+            BrainBoxTask.call(LlamaLoraServer).completion(
+                task_name="timer_self_test", prompt=timer_prompt1
+            )
         )
         tc.assertIsInstance(timer_task_result, str)
         tc.assertEqual(timer_task_result, "HOURS:0\nMINUTES:0\nSECONDS:5\nNAME:_")
@@ -120,7 +125,9 @@ class LlamaLoraServerController(
         )
 
         nutrition_task_result = api.execute(
-            BrainBoxTask.call(LlamaLoraServer).completion("nutrition_self_test", timer_prompt, 30)
+            BrainBoxTask.call(LlamaLoraServer).completion(
+                task_name="nutrition_self_test", prompt=timer_prompt1
+            )
         )
         tc.assertIsInstance(nutrition_task_result, str)
         tc.assertNotEqual(timer_task_result, nutrition_task_result)
@@ -128,4 +135,19 @@ class LlamaLoraServerController(
             TestReport.last_call(api)
             .href("completion")
             .with_comment("Returns only the text result")
+        )
+
+        multiple_prompts_result = api.execute(
+            BrainBoxTask.call(LlamaLoraServer).completion(
+                task_name="timer_self_test", prompts=[timer_prompt1, timer_prompt2]
+            )
+        )
+        tc.assertIsInstance(multiple_prompts_result, list)
+        tc.assertEqual(len(multiple_prompts_result), 2)
+        tc.assertEqual(multiple_prompts_result[0], "HOURS:0\nMINUTES:0\nSECONDS:5\nNAME:_")
+        tc.assertEqual(multiple_prompts_result[1], "HOURS:0\nMINUTES:0\nSECONDS:10\nNAME:_")
+        yield (
+            TestReport.last_call(api)
+            .href("completion")
+            .with_comment("Returns only the text result for multiple prompts")
         )

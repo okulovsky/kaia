@@ -16,15 +16,30 @@ class LlamaLoraServer(DockerWebServiceApi[LlamaLoraServerSettings, LlamaLoraServ
                 raise RuntimeError(f"Model for {endpoint} is still loading")
             raise RuntimeError(f"Endpoint /{endpoint} returned unexpected status code {code}")
 
-    def health(self) -> tp.Any:
+    def health(self) -> bool:
         response = requests.get(self.endpoint("/health"))
-        self._check_endpoint_code(response.status_code, "health")
-        return response.json()  # {"status":"ok"}
+        try:
+            self._check_endpoint_code(response.status_code, "health")
+        except RuntimeError:
+            return False
+        return True
 
-    def completion(self, task_name: str, prompt: str, max_tokens: int = -1) -> str:
+    def completion(
+        self,
+        *,
+        task_name: str,
+        prompt: tp.Optional[str] = None,
+        prompts: tp.Optional[list[str]] = None,
+        max_tokens: int = -1,
+    ) -> str | list[str]:
+        if prompt is None and prompts is None:
+            raise ValueError("You must provide either `prompt` or `prompts`, none given.")
+        if prompt is not None and prompts is not None:
+            raise ValueError("You must provide either `prompt` or `prompts`, not both.")
+
         id_ = self.taskname2id[task_name]
         payload = {
-            "prompt": prompt,
+            "prompt": prompt or prompts,
             "n_predict": max_tokens,
             "temperature": 0.0,  # TODO: might need to support later (e.g. for paraphrasing)
             "stream": False,  # TODO: might need to support later (e.g. for paraphrasing)
@@ -39,10 +54,11 @@ class LlamaLoraServer(DockerWebServiceApi[LlamaLoraServerSettings, LlamaLoraServ
 
         self._check_endpoint_code(response.status_code, "completion")
         data = response.json()
-        if "content" not in data:
-            raise ValueError("Expected content field in response")
 
-        return data["content"]
+        if prompt is not None:
+            return data["content"]
+        else:
+            return [item["content"] for item in data]
 
     Settings = LlamaLoraServerSettings
     Controller = LlamaLoraServerController
