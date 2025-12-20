@@ -24,6 +24,28 @@ On the main machine, install `spotifyd`:
 
 Repeat the same on the console (the package file may be different because of the architecture)
 
+#### Building from source
+
+Especially if spotify updated their protocol and release didn't catch up.
+
+```
+sudo apt update
+sudo apt install -y build-essential pkg-config libasound2-dev libssl-dev libpulse-dev libdbus-1-dev git
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+source "$HOME/.cargo/env"
+rustc --version
+cargo --version
+```
+
+Then pull the version of repo and compile:
+
+```
+git clone https://github.com/Spotifyd/spotifyd.git
+cd spotifyd
+cargo build --release
+ls target/release/spotifyd
+```
+
 ### Authenticate 
 
 On the main machine:
