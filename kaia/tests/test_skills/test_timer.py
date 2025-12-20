@@ -6,6 +6,7 @@ from kaia.skills.notification_skill import NotificationSkill, NotificationRegist
 from kaia import KaiaAssistant
 from avatar.daemon import ChatCommand
 from avatar.utils import TestTimeFactory
+from grammatron import UtterancesSequence
 
 
 
@@ -66,22 +67,32 @@ class TestDate(TestCase):
             .validate()
         )
 
-    def test_timer_beautification(self):
+    def test_several_timers(self):
         dtf = TestTimeFactory()
         (
-            S(dtf, True)
-            .send(TimerIntents.set_the_timer.utter(duration=timedelta(minutes=1)))
+            S(dtf)
+            .send(TimerIntents.set_the_timer.utter(duration=timedelta(minutes=5)))
             .check(
-                TimerReplies.timer_is_set.utter(duration=timedelta(minutes=1)),
+                TimerReplies.timer_is_set.utter(duration=timedelta(minutes=5)),
             )
-            .act_and_send(lambda: dtf.shift(60).event())
-            .check(lambda z: z.text=="Alarm")
-            .act_and_send(lambda: dtf.event())
-            .check()
-            .act_and_send(lambda: dtf.shift(10).event())
-            .check(lambda z: z.text=="Alarm")
-            .send("Stop")
-            .check(lambda z: z.text=="Alarm cancelled")
+            .send(TimerIntents.set_the_timer.utter(duration=timedelta(minutes=6)))
+            .check(
+                TimerReplies.timer_is_set.utter(index=2, duration=timedelta(minutes=6))
+            )
+            .send(TimerIntents.how_much_timers.utter())
+            .check(
+                lambda z: isinstance(z, UtterancesSequence) and z.utterances[0].value['amount'] == 2
+            )
+            .send(TimerIntents.how_much_time_left())
+            .check(
+                lambda z: isinstance(z, UtterancesSequence) and z.utterances[0].value['amount'] == 2
+            )
+            .send(TimerIntents.cancel_the_timer())
+            .check(TimerReplies.which_timer_error(2))
+            .send(TimerIntents.cancel_the_timer(1))
+            .check(TimerReplies.timer_is_cancelled(index=1))
+            .send(TimerIntents.how_much_time_left())
+            .check(TimerReplies.timer_description(duration=timedelta(minutes=6)))
             .validate()
         )
 

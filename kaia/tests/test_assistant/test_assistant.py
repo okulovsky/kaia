@@ -3,11 +3,7 @@ from kaia.skills.date import DateSkill, DateReplies, DateIntents
 from kaia.skills.time import TimeSkill, TimeReplies, TimeIntents
 from kaia import KaiaAssistant
 from kaia.assistant.automaton_not_found_skill import AutomatonNotFoundReplies
-from brainbox import BrainBoxApi
-from brainbox.deciders import FakeFile
 from eaglesong.core import Automaton, Scenario
-from datetime import datetime
-import json
 
 class AssistantTestCase(TestCase):
     def test_utterance_level(self):

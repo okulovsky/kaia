@@ -1,21 +1,19 @@
-from kaia.skills.cookbook_skill import CookBookSkill, Recipe, CookBookIntents
+from kaia.skills.cookbook_skill import CookBookSkill, Recipe, CookBookIntents, CookBookReplies
 from kaia.skills.notification_skill import NotificationRegister, NotificationInfo, NotificationSkill
 from kaia import KaiaAssistant
-from grammatron import Utterance
 from eaglesong import Scenario, Automaton
 from unittest import TestCase
 from avatar.utils import TestTimeFactory
 from avatar.daemon import ChatCommand
 
 def S(factory: TestTimeFactory):
-    recipe = Recipe(
+    recipe = Recipe.define(
         'tea',
-        [
-            Recipe.Stage("Boil water"),
-            Recipe.Stage("Put a teabag in the water"),
-            Recipe.Stage(timer_for_minutes=1),
-            Recipe.Stage("Enjoy your tea"),
-        ]
+        "Boil water",
+        "Put a teabag in the water",
+        {1 : "Enjoy your tea"},
+        Recipe.Ingredient("teabag"),
+        Recipe.Ingredient("water"),
     )
     register = NotificationRegister(
         (ChatCommand('alarm starts'),),
@@ -43,12 +41,12 @@ class CookbookSkillTestCase(TestCase):
             .send(CookBookIntents.next_step())
             .check(str)
             .send(CookBookIntents.next_step())
-            .check(Utterance)
+            .check(CookBookReplies.next_timer_in(1))
             .act_and_send(lambda: tf.shift(59).event())
             .check()
             .act_and_send(lambda: tf.shift(1).event())
             .check(lambda z: z.text == 'alarm starts')
             .send('Stop')
-            .check(lambda z: z.text == 'alarm stops', 'Enjoy your tea')
+            .check(lambda z: z.text == 'alarm stops', 'Enjoy your tea', CookBookReplies.all_done())
             .validate()
         )

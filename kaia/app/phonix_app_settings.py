@@ -25,7 +25,7 @@ class PhonixAppSettings(IAppInitializer):
             output = d.PyAudioOutput()
 
         units = [
-            d.PorcupineWakeWordUnit(),
+            d.PorcupineWakeWordUnitOldVersion(),
             d.SilenceMarginUnit(
                 self.silence_level,
                 self.silence_margin_length_in_seconds,
