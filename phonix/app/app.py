@@ -15,6 +15,7 @@ class PhonixAppSettings:
     tolerate_errors: bool = False
     async_messaging: bool = True
     output_backend: str = 'PyAudio'
+    new_porcupine_config: str = ''
 
     def create_avatar_api(self) -> AvatarApi:
         avatar_address =  f'{self.avatar_ip_address}:{self.avatar_port}'
@@ -33,7 +34,11 @@ class PhonixAppSettings:
             PyAudioInput(),
             SoxAudioOutput() if self.output_backend == 'Sox' else PyAudioOutput(),
             [
-                PorcupineWakeWordUnit(),
+                (
+                    PorcupineWakeWordUnitOldVersion()
+                    if (self.new_porcupine_config == '')
+                    else PorcupineWakeWordUnitNewVersion(self.new_porcupine_config)
+                ),
                 SilenceMarginUnit(self.silence_level, self.silence_margin_length),
                 RecordingUnit(recording_api, 1.1 * self.silence_margin_length),
                 TooLongOpenMicUnit(15),

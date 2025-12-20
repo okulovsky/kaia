@@ -8,4 +8,3 @@ class BrainBox:
     Task = BrainBoxTask
     ExtendedTask = BrainBoxExtendedTask
     CombinedTask = BrainBoxCombinedTask
-    Command = BrainBoxCommand

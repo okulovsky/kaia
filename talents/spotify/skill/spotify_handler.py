@@ -200,7 +200,7 @@ class SpotifyHandler:
             raise Exception(f"Failed to play playlist: {response.status_code} - {response.text}")
 
 
-    def _send_command_request(self, method: str, endpoint: str, expected_code: int = 204):
+    def _send_command_request(self, method: str, endpoint: str, expected_code: int = 200):
         url = f"https://api.spotify.com/v1/me/player/{endpoint}"
         headers = {
             "Authorization": f"Bearer {self._get_access_token()}"

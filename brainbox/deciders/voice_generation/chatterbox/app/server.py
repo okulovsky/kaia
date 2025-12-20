@@ -49,16 +49,20 @@ class ChatterboxApp:
         temp_file = Path('/file_cache') / f'{uuid.uuid4()}.wav'
         try:
             speaker = flask.request.json['speaker']
+            exaggeration = flask.request.json.get('exaggeration', 0.5)
+            cfg_weight = flask.request.json.get('cfg_weight', 0.5)
             if speaker not in self.speakers_cache:
                 speaker_file = self.speakers_folder / speaker
                 if not speaker_file.is_file():
                     raise ValueError(f"Speaker {speaker} was not trained")
-                self.speakers_cache[speaker] = Conditionals.load(speaker_file)  # Загружаем через load
+                self.speakers_cache[speaker] = Conditionals.load(speaker_file, self.model.device)  # Загружаем через load
             self.model.voiceover(
                 flask.request.json['text'],
                 self.speakers_cache[speaker],  
                 flask.request.json['language'],
-                temp_file
+                temp_file,
+                exaggeration,
+                cfg_weight
             )
             return flask.send_file(temp_file)
         except:

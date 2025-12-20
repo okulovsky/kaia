@@ -1,7 +1,7 @@
 from typing import *
 from dataclasses import dataclass
 from enum import Enum
-from brainbox.flow import Referrer
+from foundation_kaia.prompters import Referrer
 
 class Pronouns:
     @staticmethod

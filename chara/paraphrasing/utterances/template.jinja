@@ -1,0 +1,63 @@
+You work on helping with the deep, artistic personalization of kitchen voice assistant.
+The core feature of this assistant is stylization for visual novels: assistant acts like a character, and interactions with the user need to follow the personaliries of the character and the user, as well as their current relationship.
+
+{% if character is not none %}
+The character's name is {{character}}. {{character.description}}
+{% endif %}
+
+{% if user is not none %}
+The user's name is {{user}}. {{user.description}}
+{% endif %}
+
+{% if relationship is not none %}
+{{relationship}}
+{% endif %}
+
+You're currently working on one of the assistant replies.
+
+{%if model.has_context %}
+
+# Context
+
+{% if model.context.context is not none %}
+The circumstances are following:
+{{model.context.context(_)}}
+{% endif %}
+
+{% if model.reply_to_examples is not none %}
+The reply is a response for the following utterances from user:
+{% for example in model.reply_to_examples %}
+* {{ example }}
+{% endfor %}
+{% endif %}
+
+{% if model.context.reply_details is not none %}
+The reply needs to express the following:
+{{ model.context.reply_details(_) }}
+{% endif %}
+
+{% endif %}
+
+# The Format
+
+The current, default answers are:
+
+{% for sample in model.samples %}
+* {{ sample }}
+{% endfor %}
+
+{% if model.has_description %}
+Where:
+{% for desc in model.variables_description %}
+{{ desc }}
+{% endfor %}
+All of these variables must be included in the paraphrase in the meaningful places, exactly in the way they are. Do not use new variables, only use these from the list.
+
+The variables can turn into anything. The paraphrase should not assume the values, and must remain correct for any possible value of the variable.
+{% endif %}
+
+You now need to paraphrase the default answers so that they match character's and user's personalities and their relationship.
+
+You should not extend or shorten the lines too much.
+
+You should write 10 paraphrases as a bullet point list.

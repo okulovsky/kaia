@@ -1,4 +1,4 @@
-from brainbox.deciders import FakeText, Collector
+from brainbox.deciders import Empty, Collector
 from unittest import TestCase
 from brainbox import BrainBoxApi, BrainBoxTask
 from yo_fluq import Query
@@ -9,7 +9,7 @@ class PackTestCase(TestCase):
             builder = Collector.TaskBuilder()
             for tags in Query.combinatorics.grid(a=list(range(3)), b=list(range(2))):
                 builder.append(
-                    BrainBoxTask.call(FakeText)(f'{tags.a}/{tags.b}'),
+                    BrainBoxTask.call(Empty)(a=tags.a, b=tags.b),
                     tags
                 )
             pack = builder.to_collector_pack('to_array')
@@ -20,6 +20,4 @@ class PackTestCase(TestCase):
                 tags
             )
             for record in result:
-                self.assertTrue(
-                record['result'].startswith(f'{record["tags"]["a"]}/{record["tags"]["b"]}')
-            )
+                self.assertDictEqual(record['tags'], record['result'])

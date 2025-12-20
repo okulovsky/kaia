@@ -27,7 +27,7 @@ class StreamClient(IStreamClient):
         self.last_id = last_id
         self.name = name
         self.debug = debug
-        self.types: tuple[type,...]|None = None
+        self.types: tuple[type,...]|None = types
 
     def with_name(self, new_name: str) -> 'StreamClient':
         self.name = new_name

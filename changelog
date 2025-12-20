@@ -1,3 +1,27 @@
+4.0.8
+    Foundation
+        Patching
+    Brainbox
+        Cleanup from the previous refactoring
+        Improving Chatterbox, incl. PyTorchDependencies to adopt to the newest architectures
+        Mock decider and mocking mechanism
+        Flow submodule removed, now the better analogue is implemented in Chara
+        BrainBox.Command is also removed
+    Avatar
+        Patching
+    Grammatron
+        Patching
+    Chara
+        Completely new approach to ML pipelines is introduced in chara.
+        Currently 2 pipelines are available: Paraphrasing and Voice Clone with Chatterbox
+    Kaia
+        Cookbook skill improved
+    Talents
+        Spotify updated for the newest version
+
+4.0.7
+    Chatterbox is added to brainbox
+
 4.0.6
     Brainbox
         Most services are now using a dockerfile templated by a data structure

@@ -27,6 +27,10 @@ class ParaphraseRecord:
 
 
 class ParaphraseService(AvatarService):
+    FEEDBACK_FILENAME = 'paraphrases-feedback.json'
+    PARAPHRASES_PREFIX='paraphrase'
+    PARAPHRASES_SUFFIX='.pkl'
+
     def __init__(self, state: State, content_strategy: IContentStrategy|None = None):
         self.state = state
         self.content_strategy = content_strategy
@@ -38,10 +42,14 @@ class ParaphraseService(AvatarService):
         records = []
         if not self.resources_folder.is_dir():
             os.makedirs(self.resources_folder)
-        files = [file for file in os.listdir(self.resources_folder) if file.startswith('paraphrase') and file.endswith('.pkl')]
+        files = os.listdir(str(self.resources_folder))
+        files = [file for file in files
+                 if file.startswith(ParaphraseService.PARAPHRASES_PREFIX)
+                 and file.endswith(ParaphraseService.PARAPHRASES_SUFFIX)]
+
         for file in sorted(files):
             records+=FileIO.read_pickle(self.resources_folder/file)
-        feedback_file = self.resources_folder/'paraphrases-feedback.json'
+        feedback_file = self.resources_folder/ParaphraseService.FEEDBACK_FILENAME
 
         self.paraphrases_content_manager = ContentManager(
             DataClassDataProvider(records),

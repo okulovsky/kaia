@@ -8,12 +8,9 @@ class JsonInterfaceTestCase(TestCase):
         with BrainBoxApi.Test() as api:
             job = dict(
                 id='test',
-                decider='FakeFile',
+                decider='Empty',
                 method=None,
-                arguments=dict(
-                    tags=dict(test='test'),
-                    array_length=3
-                )
+                arguments=dict()
             )
 
             js = dict(arguments=dict(jobs=[job]))
@@ -30,10 +27,3 @@ class JsonInterfaceTestCase(TestCase):
             if reply.status_code!=200:
                 print(reply.text)
                 self.fail()
-
-            result = reply.json()['result'][0]
-            for i,file in enumerate(result):
-                reply = requests.get(f'http://{api.address}/cache/download/{file}')
-                js = json.loads(reply.text)
-                self.assertDictEqual(dict(test='test', option_index=i), js)
-

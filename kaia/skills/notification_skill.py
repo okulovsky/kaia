@@ -10,7 +10,8 @@ class NotificationInfo:
     start: datetime
     duration: timedelta
     pushback_after: Any = None
-
+    tags: dict[str, str] = field(default_factory=dict)
+    label: str|None = None
 
     @property
     def end(self):
@@ -21,13 +22,12 @@ class NotificationInfo:
 class NotificationRegister:
     notification_signals: Tuple[IMessage,...]
     exit_signals: Optional[Tuple[IMessage,...]] = None
-    instances: Dict[str, NotificationInfo] = field(default_factory=lambda: {})
-
+    instances: list[NotificationInfo] = field(default_factory=list)
 
 @dataclass
 class FoundNotification:
     register: NotificationRegister
-    name: str
+    index: int
     info: NotificationInfo
 
 
@@ -37,15 +37,15 @@ class NotificationSkill(IKaiaSkill):
                  pause_between_alarms_in_seconds: Optional[float] = None,
                  volume_delta: Optional[float] = None
                  ):
-        self.registers = tuple(registers)
+        self.registers: tuple[NotificationRegister,...] = tuple(registers)
         self.pause_between_alarms_in_seconds = pause_between_alarms_in_seconds
         self.volume_delta = volume_delta
 
     def _find_notification(self, current_time) -> Optional[FoundNotification]:
         for register in self.registers:
-            for name, instance in register.instances.items():
+            for index, instance in enumerate(register.instances):
                 if instance.end <= current_time:
-                    return FoundNotification(register, name, instance)
+                    return FoundNotification(register, index, instance)
         return None
 
     def get_name(self) -> str:
@@ -98,7 +98,7 @@ class NotificationSkill(IKaiaSkill):
                 if active_notification.register.exit_signals is not None:
                     for item in active_notification.register.exit_signals:
                         yield item.with_new_envelop()
-                del active_notification.register.instances[active_notification.name]
+                del active_notification.register.instances[active_notification.index]
                 if self.volume_delta is not None and not first_notification:
                     yield VolumeControlService.Command(restore_from='before_notification')
                 if active_notification.info.pushback_after is not None:

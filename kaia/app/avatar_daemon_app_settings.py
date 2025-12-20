@@ -36,6 +36,7 @@ class AvatarDaemonAppSettings(IAppInitializer):
     greetings_command: Any = field(default_factory=_default_greetings)
     initialize_volume: bool = False
     report_to_session: str|None = None
+    default_volume: float = 0.1
 
 
 
@@ -90,7 +91,10 @@ class AvatarDaemonAppSettings(IAppInitializer):
         )
 
     def create_volume_control_service(self, app: KaiaApp, state: s.State):
-        return s.VolumeControlService(initialize_volume=self.initialize_volume)
+        return s.VolumeControlService(
+            default_value=self.default_volume,
+            initialize_volume=self.initialize_volume
+        )
 
     def create_paraphrase_service(self, app: KaiaApp, state: s.State):
         strategy = cm.SequentialStrategy(

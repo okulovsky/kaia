@@ -7,7 +7,7 @@ from ...job_processing import IPlanner, MainLoop, Core, Job, SimplePlanner, Oper
 from dataclasses import dataclass, field
 from pathlib import Path
 from ...common import Loc, Locator
-from sqlalchemy import create_engine, select, Engine
+from sqlalchemy import create_engine, select, Engine,  func, Float
 from sqlalchemy.orm import Session
 from threading import Thread
 from datetime import datetime, timedelta
@@ -32,7 +32,10 @@ class BrainBoxService(IBrainboxService):
 
 
     def run(self):
-        self.engine = create_engine('sqlite:///'+str(self.settings.locator.db_path))
+        self.engine = create_engine(
+            'sqlite:///'+str(self.settings.locator.db_path),
+            connect_args={"check_same_thread": False, "timeout": 15}
+        )
         BrainBoxBase.metadata.create_all(self.engine)
         core = Core(self.engine, self.settings.registry, self.settings.locator, self.settings.debug_output)
         self.loop = MainLoop(core, self.settings.planner, self.settings.stop_controllers_at_termination)
@@ -144,3 +147,14 @@ class BrainBoxService(IBrainboxService):
     def cache_folder(self) -> Path:
         return self.settings.locator.cache_folder
 
+
+    @endpoint(url='/batch-progress', method='GET')
+    def batch_progress(self, batch: str):
+        with Session(self.engine) as session:
+            stmt = (
+                select(func.avg(Job.finished.cast(Float)))
+                .where(Job.batch == batch)
+            )
+            result = session.execute(stmt)
+            avg_finished = result.scalar() or 0.0
+            return dict(progress=avg_finished)

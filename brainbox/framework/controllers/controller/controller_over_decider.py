@@ -46,6 +46,8 @@ class ControllerOverDecider(IController):
     def get_name(self):
         if self.custom_name is not None:
             return self.custom_name
+        if hasattr(self.decider, 'get_custom_decider_name'):
+            return self.decider.get_custom_decider_name()
         return type(self.decider).__name__
 
     def find_api(self, instance_id: str):

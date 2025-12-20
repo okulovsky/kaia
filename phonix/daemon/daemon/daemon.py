@@ -3,7 +3,7 @@ from __future__ import annotations
 import threading
 import time
 from avatar.messaging import StreamClient, IStreamClient
-from avatar.daemon import SoundInjectionCommand, SoundCommand, SoundConfirmation, OpenMicCommand, VolumeCommand
+from avatar.daemon import SoundInjectionCommand, SoundCommand, SoundConfirmation, OpenMicCommand, VolumeCommand, VolumeEvent
 
 from ..processing import IUnit, SystemSoundCommand, SystemSoundType, State, UnitInput, IMonitor
 from ..outputs import IAudioOutput
@@ -100,6 +100,7 @@ class PhonixDeamon:
             if self.volume_controller is None:
                 self.volume_controller = VolumeController()
             self.volume_controller.set(message.value)
+            self.client.put(VolumeEvent(message.value))
 
         
 
@@ -158,9 +159,7 @@ class PhonixDeamon:
             while True:
                 try:
                     self._run_attempt(True)
-                except KeyboardInterrupt:
-                    return
-                except:
+                except Exception:
                     print(f"\nException:\n{traceback.format_exc()}")
                     print("Continuing")
                 time.sleep(1)

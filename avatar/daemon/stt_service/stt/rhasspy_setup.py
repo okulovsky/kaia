@@ -3,7 +3,7 @@ from brainbox import BrainBox, IPostprocessor
 from .recognition_setup import IRecognitionSetup, RecognitionContext, STTConfirmation
 from dataclasses import dataclass
 from ..rhasspy_training import RhasspyHandler, IntentsPack
-from brainbox.deciders import RhasspyKaldi, EmptyDecider
+from brainbox.deciders import RhasspyKaldi, Empty
 
 
 class RhasspyPostprocessor(IPostprocessor):
@@ -44,6 +44,6 @@ class RhasspyRecognitionSetup(IRecognitionSetup):
                 BrainBox.Task.call(RhasspyKaldi).train(pack.name, pack.language, handler.ini_file, pack.custom_words)
             )
         return BrainBox.CombinedTask(
-            BrainBox.Task.call(EmptyDecider)(),
+            BrainBox.Task.call(Empty)(),
             tuple(tasks)
         )

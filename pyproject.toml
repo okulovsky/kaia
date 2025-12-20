@@ -2,10 +2,50 @@
 name = "kaia"
 description = "Kitchen assistant with face, voice and personality of your favorite character"
 version = "0.0.0"
-dependencies = [ ]
+requires-python = ">=3.11,<3.13"
+
+dependencies = [
+    "Jinja2",
+    "dash",
+    "dill",
+    "flask",
+    "huggingface_hub",
+    "inflect",
+    "jsonpickle",
+    "lemminflect",
+    "loguru",
+    "networkx",
+    "nltk",
+    "num2words",
+    "numpy",
+    "pandas",
+    "plotly",
+    "pvporcupine==1.9.5",
+    "pyaudio",
+    "pymorphy3",
+    "python-dotenv",
+    "python-telegram-bot",
+    "regex",
+    "requests",
+    "scipy",
+    "soundfile",
+    "sqlalchemy",
+    "toml",
+    "gradio",
+    "notebook",
+    "build",
+    "twine",
+    "yo_fluq_ds",
+    "selenium",
+    "kaleido",
+    "graphviz"
+    ]
+
 [[project.authors]]
 name = "Yuri Okulovsky"
 email = "yuri.okulovsky@gmail.com"
 
 [tool.setuptools.packages.find]
 where = ["."]
+include = ["*"]
+exclude = ["data*", "temp*"]

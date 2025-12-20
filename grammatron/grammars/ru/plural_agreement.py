@@ -1,4 +1,4 @@
-from ...dubs import VariableDub, DubParameters
+from ...dubs import VariableDub, DubParameters, GrammarAdoptableDub, VariableInfo
 from dataclasses import dataclass
 from .grammar_rule import RuGrammarRule, Declinator, RuDeclension, RuGender, RuNumber
 from ..common import IPluralAgreement, WordProcessor
@@ -37,7 +37,6 @@ class RuPluralAgreement(IPluralAgreement):
             entity_rule = RuGrammarRule(declension=RuDeclension.GENITIVE, number=RuNumber.SINGULAR)
         else:
             entity_rule = RuGrammarRule(declension=RuDeclension.GENITIVE, number=RuNumber.PLURAL)
-
 
         entity_text = self.entity.to_str(value, parameters.change_grammar(entity_rule))
         return amount_text+' '+entity_text

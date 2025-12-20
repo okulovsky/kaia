@@ -5,8 +5,11 @@ from dataclasses import dataclass
 from .components import IAvatarComponent
 import logging
 import traceback
+from werkzeug.exceptions import HTTPException
 
 def handle_exception(e):
+    if isinstance(e, HTTPException):
+        return e.get_response()
     tb = traceback.format_exc()
     return flask.Response(tb, status=500, mimetype="text/plain")
 

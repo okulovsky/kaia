@@ -1,1 +1,0 @@
-from .face_identification_training import FaceIdentificationTraining

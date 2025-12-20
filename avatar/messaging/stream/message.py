@@ -1,4 +1,4 @@
-from typing import Union, Iterable
+from typing import Union, Iterable, Any
 
 try:
     from typing import Self
@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from copy import copy
 from uuid import uuid4
 from datetime import datetime
+
 
 
 def _new_id():
@@ -94,11 +95,17 @@ class IMessage:
         _ = self.envelop
         return self
 
-    def confirm_this(self, error: str|None = None) -> 'Confirmation':
-        return Confirmation(error).as_confirmation_for(self).as_reply_to(self)
+    def error_on_this(self, error: str|None = None) -> 'Confirmation':
+        return Confirmation(error = error).as_confirmation_for(self).as_reply_to(self)
 
+    def result_on_this(self, result: Any) -> 'Confirmation':
+        return Confirmation(result = result).as_confirmation_for(self).as_reply_to(self)
+
+    def confirm_this(self) -> 'Confirmation':
+        return Confirmation().as_confirmation_for(self).as_reply_to(self)
 
 @dataclass
 class Confirmation(IMessage):
+    result: Any = None
     error: str|None = None
 
