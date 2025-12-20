@@ -4,17 +4,25 @@ from trainer import Trainer
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-e",
-        "--exp-folder",
+        "-a",
+        "--adapter-name",
         type=str,
         required=True,
-        help="Relative path to the experiment folder (adapter_name/guid)",
+        help="Name of the adapter being trained",
+    )
+
+    parser.add_argument(
+        "-g",
+        "--guid",
+        type=str,
+        required=True,
+        help="GUID of the training run",
     )
 
     args = parser.parse_args()
-    print(f"Training in {args.exp_folder}")
+    print(f"Training in ../experiments/{args.adapter_name}/{args.guid}")
 
-    trainer = Trainer(args.exp_folder)
+    trainer = Trainer(args.adapter_name, args.guid)
 
     print("Training settings:")
     print(trainer.settings)

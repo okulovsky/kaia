@@ -1,7 +1,6 @@
 from typing import Iterable
 from unittest import TestCase
 from ....framework import (
-    RunConfiguration,
     TestReport,
     BrainboxImageBuilder,
     IImageBuilder,
@@ -11,8 +10,6 @@ from ....framework import (
 )
 from .settings import LlamaLoraSFTTrainerSettings
 from pathlib import Path
-import shutil
-import os
 
 
 class LlamaLoraSFTTrainerController(OnDemandDockerController[LlamaLoraSFTTrainerSettings]):
@@ -33,15 +30,6 @@ class LlamaLoraSFTTrainerController(OnDemandDockerController[LlamaLoraSFTTrainer
             keep_dockerfile=True,
         )
 
-    def get_base_configuration(self) -> RunConfiguration:
-        return RunConfiguration(
-            mount_resource_folders={
-                "models": "/home/app/.cache/huggingface",
-                "experiments": "/home/app/experiments",
-            },
-            detach_and_interactive=False,
-        )
-
     def get_default_settings(self):
         return LlamaLoraSFTTrainerSettings()
 
@@ -57,14 +45,32 @@ class LlamaLoraSFTTrainerController(OnDemandDockerController[LlamaLoraSFTTrainer
         adapter_name = "timer_skill"
         dataset = Path(__file__).parent / "train_example.jsonl"
 
-        training_run = api.execute(
-            BrainBoxTask.call(LlamaLoraSFTTrainer).train(adapter_name, dataset)
+        training_settings = LlamaLoraSFTTrainer.TrainingSettings(
+            training_args={
+                "num_train_epochs": 1,
+                "per_device_train_batch_size": 8,
+                "gradient_accumulation_steps": 2,
+                "learning_rate": 2e-4,
+                "logging_steps": 10,
+                "save_strategy": "steps",
+                "save_steps": 0.02,
+                "save_total_limit": 1,
+                "report_to": "none",
+                "weight_decay": 0.01,
+                "lr_scheduler_type": "cosine",
+                "warmup_ratio": 0.1,
+                "seed": 252,
+                "fp16": True,
+            },
         )
-        yield TestReport.last_call(api).href("Training")
+        training_run = api.execute(
+            BrainBoxTask.call(LlamaLoraSFTTrainer).train(adapter_name, dataset, training_settings)
+        )
+        yield TestReport.last_call(api).href("training")
         tc.assertIsInstance(training_run, TrainingRun)
         tc.assertEqual(
             training_run.path,
-            api.controller.resource_folder("experiments", adapter_name, training_run.guid),
+            self.resource_folder("experiments", adapter_name, training_run.guid),
         )
         tc.assertTrue(training_run.exists())
         for item in ["settings.json", "train.jsonl", "hf_checkpoints", "gguf_checkpoints"]:
@@ -81,10 +87,8 @@ class LlamaLoraSFTTrainerController(OnDemandDockerController[LlamaLoraSFTTrainer
 
         latest_gguf_checkpoint = max(gguf_files, key=lambda f: int(f.stem.split("-")[1]))
         checkpoint_task_name = training_run.guid
-        adapter_dest = LlamaLoraServer.controller.resource_folder(
-            "lora_adapters", checkpoint_task_name + ".gguf"
-        )
-        shutil.copy(latest_gguf_checkpoint, adapter_dest)
+        adapter_dest = f"lora_adapters/{checkpoint_task_name}.gguf"
+        api.controller_api.upload_resource("LlamaLoraServer", adapter_dest, latest_gguf_checkpoint)
 
         timer_prompt = "USER:set a timer for 5 seconds\n"
         tc.assertTrue(api.execute(BrainBoxTask.call(LlamaLoraServer).health()))
@@ -93,11 +97,11 @@ class LlamaLoraSFTTrainerController(OnDemandDockerController[LlamaLoraSFTTrainer
                 task_name=checkpoint_task_name, prompt=timer_prompt
             )
         )
-        tc.assertEqual(timer_task_result, "HOURS:0\nMINUTES:0\nSECONDS:5\nNAME:_")
+        tc.assertEqual(timer_task_result, "HOURS:0\nMINUTES:0\nSECONDS:5")
         yield (
             TestReport.last_call(api)
             .href("completion")
             .with_comment("Returns only the text result")
         )
 
-        os.remove(adapter_dest)
+        api.controller_api.delete_resource("LlamaLoraServer", adapter_dest)

@@ -54,11 +54,16 @@ class LlamaLoraSFTTrainer(
         with FileLike(dataset, self.cache_folder) as content:
             FileIO.write_bytes(content.read(), run.path / "train.jsonl")
 
-        cmd_args = ["--exp-folder", adapter_name]
+        cmd_args = ["--adapter-name", adapter_name, "--guid", guid]
 
         configuration = RunConfiguration(
             detach_and_interactive=False,
-            mount_top_resource_folder=True,
+            set_env_variables={"PYTHONUNBUFFERED": "1"},
+            custom_flags=["--tty"], # for tqdm bars
+            mount_resource_folders={
+                "models": "/home/app/.cache/huggingface",
+                "experiments": "/home/app/experiments",
+            },
             command_line_arguments=cmd_args,
         )
 

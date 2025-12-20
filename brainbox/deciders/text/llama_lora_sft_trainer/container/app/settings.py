@@ -17,12 +17,16 @@ class TrainingSettings:
 
     Hyperparameters Guide:
     - https://docs.unsloth.ai/get-started/fine-tuning-llms-guide/lora-hyperparameters-guide
+
+    Documentation:
+    - https://huggingface.co/docs/transformers/en/main_classes/trainer#transformers.TrainingArguments
+    - https://huggingface.co/docs/peft/en/package_reference/lora#peft.LoraConfig
     """
 
-    model_name: str = "google/gemma-3-270m-it"
+    hf_model_repo: str = "unsloth/gemma-3-270m-it"
     lora_config: dict[str, Any] = field(
         default_factory=lambda: {
-            "lora_rank": 16,
+            "r": 16,
             "lora_alpha": 32,
             "target_modules": [
                 "q_proj",
@@ -39,8 +43,8 @@ class TrainingSettings:
     )
     training_args: dict[str, Any] = field(
         default_factory=lambda: {
-            "num_train_epochs": 3,
-            "per_device_train_batch_size": 32,
+            "num_train_epochs": 3.0,
+            "per_device_train_batch_size": 16,
             "gradient_accumulation_steps": 1,
             "learning_rate": 2e-4,
             "logging_steps": 10,
