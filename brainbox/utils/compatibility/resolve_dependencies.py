@@ -46,7 +46,11 @@ def _linux_uv(folder):
     )
     return clean
 
-def resolve_dependencies(controller: DockerController, python_version: str|None = None):
+def resolve_dependencies(
+        controller: DockerController,
+        python_version: str|None = None,
+        exclude_pytorch: bool = False
+    ):
     builder = controller.get_image_builder()
     if not isinstance(builder, BrainboxImageBuilder):
         raise ValueError("Only works with controllers that build with BrainboxImageBuilder")
@@ -58,7 +62,7 @@ def resolve_dependencies(controller: DockerController, python_version: str|None 
         elif python_version is None:
             raise ValueError("Python version is not specified")
 
-        _create_toml(folder, deps, python_version)
+        _create_toml(folder, deps, python_version, exclude_pytorch)
 
         if sys.platform == "win32":
             clean = _windows_uv(folder)
@@ -68,7 +72,11 @@ def resolve_dependencies(controller: DockerController, python_version: str|None 
         yo_fluq.FileIO.write_text(clean, builder.context.requirements_lock)
 
 
-def _create_toml(folder, dependencies_file_content, python_version):
+def _create_toml(
+        folder,
+        dependencies_file_content,
+        python_version,
+        exclude_pytorch):
     deps = [d for d in dependencies_file_content.split('\n')]
     clean = []
     for d in deps:
@@ -80,6 +88,7 @@ def _create_toml(folder, dependencies_file_content, python_version):
         clean.append(d)
 
 
+
     data = {
         "project": {
             "name": "temp-project",
@@ -89,6 +98,15 @@ def _create_toml(folder, dependencies_file_content, python_version):
             "requires-python": '=='+python_version,
         },
     }
+
+    if exclude_pytorch:
+        data['tool'] = {
+            "uv": {
+                "exclude-dependencies": ["torch", "torchaudio", "torchvision"],
+            }
+        }
+
+    print(data)
 
 
     with open(folder/"pyproject.toml", "w", encoding="utf-8") as f:

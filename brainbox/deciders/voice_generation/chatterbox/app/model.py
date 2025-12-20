@@ -12,7 +12,7 @@ class Model:
         self.model.prepare_conditionals(src_path, exaggeration=0.5)
         return self.model.conds
 
-    def voiceover(self, text, conds, language, output_file, exaggeration=0.5, cfg_weight=1):
+    def voiceover(self, text, conds, language, output_file, exaggeration=0.5, cfg_weight=0.5):
         self.model.conds = conds  
         # Если exaggeration отличается, generate сам обновит его в conds.t3.emotion_adv
         wav_out = self.model.generate(

@@ -22,13 +22,15 @@ class Chatterbox(DockerWebServiceApi[ChatterboxSettings, ChatterboxController]):
                 raise ValueError(f"Endpoint returned error \n{reply.text}")
             return reply.text
         
-    def voiceover(self, text: str, speaker: str, language: str = 'en'):
+    def voiceover(self, text: str, speaker: str, language: str = 'en', exaggeration: float = 0.5, cfg_weight: float = 0.5):
         reply = requests.post(
             self.endpoint('/voiceover'),
             json=dict(
                 text=text,
                 speaker=speaker,
-                language=language
+                language=language,
+                exaggeration=exaggeration,
+                cfg_weight=cfg_weight,
             )
         )
         if reply.status_code != 200:

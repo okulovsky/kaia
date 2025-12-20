@@ -20,12 +20,15 @@ class ChatterboxController(
             '3.11.11',
             allow_arm64=True,
             custom_dependencies=(
+                BrainboxImageBuilder.PytorchDependencies(
+                    '2.7.0', 'cu128', True
+                ),
                 BrainboxImageBuilder.CustomDependencies(
                     ('numpy==1.25.2',)
                 ),
-                BrainboxImageBuilder.Dependencies()
+                BrainboxImageBuilder.Dependencies(no_deps=True)
             ),
-            keep_dockerfile = True
+            keep_dockerfile = True,
         )
 
     def get_service_run_configuration(self, parameter: str|None) -> RunConfiguration:

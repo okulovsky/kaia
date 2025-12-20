@@ -9,6 +9,7 @@ from .build_context import BuildContext
 from .user import User
 from .dependencies import Dependencies
 from .custom_dependencies import CustomDependencies
+from .pytorch_dependencies import PytorchDependencies
 
 @dataclass
 class BrainboxImageBuilder(IImageBuilder):
@@ -21,13 +22,13 @@ class BrainboxImageBuilder(IImageBuilder):
     allow_arm64: bool = False
     build_command: tuple[str,...] | None = None
     custom_apt_installation: tuple[str,...] | None = None
-    custom_dependencies: tuple[Dependencies|CustomDependencies,...]|None = None
+    custom_dependencies: tuple[Dependencies|CustomDependencies|PytorchDependencies,...]|None = None
     keep_dockerfile: bool = False
 
     Repository = Repository
     Dependencies = Dependencies
     CustomDependencies = CustomDependencies
-
+    PytorchDependencies = PytorchDependencies
 
     @property
     def source_is_python(self):

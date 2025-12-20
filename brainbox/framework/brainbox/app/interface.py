@@ -53,6 +53,10 @@ class IBrainboxService(ABC):
     def shutdown(self):
         pass
 
+    @abstractmethod
+    def batch_progress(self, batch: str):
+        pass
+
     def add(self, task: Union[IBrainBoxTask, Iterable[IBrainBoxTask]]) -> str|list[str]:
         if isinstance(task, IBrainBoxTask):
             single = True
