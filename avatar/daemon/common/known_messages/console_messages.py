@@ -59,6 +59,11 @@ class VolumeCommand(IMessage):
 
 
 @dataclass
+class VolumeEvent(IMessage):
+    value: float
+
+
+@dataclass
 class OpenMicCommand(IMessage):
     pass
 

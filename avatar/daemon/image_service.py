@@ -97,16 +97,16 @@ class ImageService(AvatarService):
     @message_handler
     def image_feedback(self, message: ImageFeedback) -> Confirmation:
         if self.last_image_record is None:
-            return message.confirm_this("No image")
+            return message.error_on_this("No image")
         self.media_library_manager.feedback(self.last_image_record.filename, message.feedback)
         return message.confirm_this()
 
     @message_handler
     def get_current_image_description(self, message: ImageDescriptionCommand) -> Union[Confirmation, ChatCommand]:
         if self.record_to_description is None:
-            return message.confirm_this("No description method")
+            return message.error_on_this("No description method")
         if self.last_image_record is None:
-            return message.confirm_this("No description")
+            return message.error_on_this("No description")
         return ChatCommand(self.record_to_description(self.last_image_record), ChatCommand.MessageType.system)
 
 

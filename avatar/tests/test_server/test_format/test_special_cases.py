@@ -3,7 +3,7 @@ from avatar.messaging import Confirmation, Envelop
 from avatar.server.messaging_component.format import Format
 from avatar.daemon import PlayableTextMessage, TextEvent, TextInfo, ButtonGridCommand, IntentsPack, STTService, BrainBoxService
 from pprint import pprint
-from brainbox.deciders import EmptyDecider
+from brainbox.deciders import Empty
 from brainbox import BrainBox
 import json
 
@@ -42,7 +42,7 @@ class SpecialCasesSerializationTestCase(TestCase):
         self.assertIsInstance(result.intent_packs[0], IntentsPack)
 
     def test_brainbox_command(self):
-        msg = BrainBoxService.Command(BrainBox.Task.call(EmptyDecider)())
+        msg = BrainBoxService.Command(BrainBox.Task.call(Empty)())
         js = Format.to_json(msg, BrainBoxService.Command)
         fr = Format.from_json(js, BrainBoxService.Command)
         print(fr)
