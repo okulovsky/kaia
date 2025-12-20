@@ -76,7 +76,7 @@ class FileCacheApi:
         else:
             ApiError.check(resp)
 
-    def list(self, path: str = '/', *, prefix: Optional[str] = None, suffix: Optional[str] = None, recursive: bool = False) -> list[str]:
+    def list(self, path: str = '/', *, prefix: Optional[str] = None, suffix: Optional[str] = None, recursive: bool = False) -> list[str]|None:
         url = self._url_dir(path)
         params = {}
         if prefix is not None:
@@ -86,6 +86,8 @@ class FileCacheApi:
         if recursive:
             params["recursive"] = "1"
         resp = requests.get(url, params=params, timeout=self.TIMEOUT)
+        if resp.status_code == 404:
+            return None
         return ApiError.check(resp).json()
 
     def is_folder(self, filepath: str) -> bool:

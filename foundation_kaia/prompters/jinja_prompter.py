@@ -32,6 +32,7 @@ class JinjaPrompter(IPrompter, Generic[T]):
         elif isinstance(obj, dict):
             values = copy(obj)
         values['_'] = obj
+
         s = self._template.render(**values)
 
         if self._prettify_newlines:
