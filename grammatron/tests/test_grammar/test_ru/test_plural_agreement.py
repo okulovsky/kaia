@@ -37,6 +37,9 @@ class RuPluralAgreementTestCase(TestCase):
         ag = RuPluralAgreement(CardinalDub().as_variable('amount'), OptionsDub(Things).as_variable('item'))
         self.assertEqual('две тысячи триста сорок одна кровать', ag.to_str(dict(amount=2341, item=Things.f), PARAMETERS))
 
+    def test_plural_agreement_with_variable(self):
+        ag = RuPluralAgreement(CardinalDub().as_variable('amount'), ToStrDub().as_variable('unit'))
+        self.assertEqual('пять секунд', ag.to_str(dict(amount=5, unit='секунда'), PARAMETERS))
 
 
 

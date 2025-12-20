@@ -4,7 +4,8 @@ from . import parser_intructions as PI
 
 class ToStrDub(IDub):
     def _to_str_internal(self, value, parameters: DubParameters):
-        return str(value)
+        result = parameters.grammar_rule.to_correct_form(str(value), value, self)
+        return result
 
     def _get_parser_data_internal(self, variables_stack: tuple[str,...], parameters: DubParameters) -> PI.ParserData:
         raise ValueError("ToStrDub cannot be used for parsing")

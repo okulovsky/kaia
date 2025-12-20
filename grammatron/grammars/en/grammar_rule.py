@@ -1,5 +1,5 @@
 from typing import Any
-from ...dubs import GrammarRule, OptionsDub, GrammarAdoptableDub, IDub
+from ...dubs import GrammarRule, OptionsDub, GrammarAdoptableDub, IDub, ToStrDub
 from copy import copy
 from .word_tools import EnglishWordTools
 
@@ -16,7 +16,7 @@ class EnGrammarRule(GrammarRule):
         return result
 
     def to_correct_form(self, text: str, value: Any, dub: 'IDub'):
-        if not isinstance(dub, OptionsDub) and not isinstance(dub, GrammarAdoptableDub):
+        if not isinstance(dub, (OptionsDub, GrammarAdoptableDub, ToStrDub)) :
             return text
         if self.plural:
             return EnglishWordTools.text_to_plural(text)
