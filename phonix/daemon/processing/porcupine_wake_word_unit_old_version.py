@@ -2,15 +2,15 @@ from avatar.messaging import StreamClient
 from .core import IUnit, State, MicState, SystemSoundCommand, SystemSoundType
 from avatar.daemon import WakeWordEvent
 
-import pvporcupine
 
-class PorcupineWakeWordUnit(IUnit):
+class PorcupineWakeWordUnitOldVersion(IUnit):
     def __init__(self, keyword: str = 'computer'):
         self.keyword = keyword
         self.porcupine = None
 
     def process(self, data: IUnit.Input) -> State|None:
         if self.porcupine is None:
+            import pvporcupine
             self.porcupine = pvporcupine.create(keywords=[self.keyword])
         if data.state.mic_state != MicState.Standby:
             return None
