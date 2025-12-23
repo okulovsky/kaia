@@ -39,7 +39,7 @@ class Trainer:
             return TrainingSettings(**json.load(stream))
 
     @staticmethod
-    def _format_prompt(tokenizer, sample) -> str:  # TODO: more universal solution, e.g. apply_chat_template
+    def _format_prompt(tokenizer, sample) -> str:  # TODO: add more universal solution
         inp = sample["INPUT"]
         out = sample["OUTPUT"]
         return f"{inp}{out}" + tokenizer.eos_token
@@ -49,7 +49,9 @@ class Trainer:
         sample, max_length, tokenizer
     ) -> (
         dict
-    ):  # TODO: works for gemma3, not tested for others (right padding side, tokenization differences)
+    ):  # TODO: 
+        # - works for gemma3 with \n separator, not tested for others (right padding side, tokenization differences);
+        # - add a more universal solution, e.g. apply_chat_template with return_assistant_tokens_mask
         prompt = f"{sample['INPUT']}"
         prompt_len = len(tokenizer(prompt)["input_ids"])
         tokenized = tokenizer(sample["text"], padding="max_length", max_length=max_length)
