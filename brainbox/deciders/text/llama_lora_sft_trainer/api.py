@@ -13,6 +13,7 @@ class TrainingRun:
     Represents a single training run.
     """
 
+    model_id: str
     adapter_name: str
     guid: str
     path: Path
@@ -26,6 +27,7 @@ class LlamaLoraSFTTrainer(
 ):
     def train(
         self,
+        model_id: str,
         adapter_name: str,
         dataset: FileLike.Type,
         settings: TrainingSettings | dict | None = None,
@@ -33,13 +35,14 @@ class LlamaLoraSFTTrainer(
         """
         Runs training and returns a TrainingRun pointing to the folder:
 
-            .../resources/LlamaLoraSFTTrainer/experiments/{adapter_name}/{guid}/
+            .../resources/LlamaLoraSFTTrainer/experiments/{model_id}/{adapter_name}/{guid}/
         """
         guid = uuid.uuid4().hex
         run = TrainingRun(
+            model_id=model_id,
             adapter_name=adapter_name,
             guid=guid,
-            path=self.controller.resource_folder("experiments", adapter_name, guid),
+            path=self.controller.resource_folder("experiments", model_id, adapter_name, guid),
         )
 
         if settings is None:
@@ -54,12 +57,12 @@ class LlamaLoraSFTTrainer(
         with FileLike(dataset, self.cache_folder) as content:
             FileIO.write_bytes(content.read(), run.path / "train.jsonl")
 
-        cmd_args = ["--adapter-name", adapter_name, "--guid", guid]
+        cmd_args = ["--model-id", model_id, "--adapter-name", adapter_name, "--guid", guid]
 
         configuration = RunConfiguration(
             detach_and_interactive=False,
             set_env_variables={"PYTHONUNBUFFERED": "1"},
-            custom_flags=["--tty"], # for tqdm bars
+            custom_flags=["--tty"],  # for tqdm bars
             mount_resource_folders={
                 "models": "/home/app/.cache/huggingface",
                 "experiments": "/home/app/experiments",

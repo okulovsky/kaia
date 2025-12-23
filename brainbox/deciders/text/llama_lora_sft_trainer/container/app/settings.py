@@ -7,9 +7,6 @@ class TrainingSettings:
     """
     Settings for SFT training of LoRA adapters.
 
-    save_total_limit: int or None
-        Maximum number of checkpoints to save. Use None for unlimited.
-
     gguf_outtype: Literal["f32", "f16", "bf16", "q8_0", "auto"]
         Output data type for GGUF conversion.
         Default is "f16".

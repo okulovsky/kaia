@@ -21,5 +21,6 @@ Example of a single line in the dataset:
 ### Notes
 
 * Using JSON format for the OUTPUT field is usually not ideal, because the extra brackets and quotes add unnecessary complexity, extra tokens for the model.
+Instead, consider a simpler format, e.g., using \n to separate fields, as in the example above. You can also choose any other format that is convenient for your task, as long as it’s consistent.
 
-* Instead, consider a simpler format, e.g., using \n to separate fields, as in the example above. You can also choose any other format that is convenient for your task, as long as it’s consistent.
+* A format's efficiency (token count, token boundaries) depends on the chosen model's tokenizer and can affect quality and inference speed.

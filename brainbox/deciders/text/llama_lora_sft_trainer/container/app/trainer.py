@@ -11,10 +11,11 @@ from huggingface_hub import snapshot_download
 
 
 class Trainer:
-    def __init__(self, adapter_name: str, guid: str) -> None:
+    def __init__(self, model_id:str, adapter_name: str, guid: str) -> None:
+        self.model_id = model_id
         self.adapter_name = adapter_name
         self.guid = guid
-        self.exp_folder = Path("/home/app/experiments") / self.adapter_name / self.guid
+        self.exp_folder = Path("/home/app/experiments") / self.model_id / self.adapter_name / self.guid
         self.settings = self._load_settings()
         self._download_model()
         self.dataset = self._load_dataset()
@@ -38,7 +39,7 @@ class Trainer:
             return TrainingSettings(**json.load(stream))
 
     @staticmethod
-    def _format_prompt(tokenizer, sample) -> str:
+    def _format_prompt(tokenizer, sample) -> str:  # TODO: more universal solution, e.g. apply_chat_template
         inp = sample["INPUT"]
         out = sample["OUTPUT"]
         return f"{inp}{out}" + tokenizer.eos_token
@@ -48,7 +49,7 @@ class Trainer:
         sample, max_length, tokenizer
     ) -> (
         dict
-    ):  # TODO: works for gemma3, not tested for others (padding side, tokenization differences)
+    ):  # TODO: works for gemma3, not tested for others (right padding side, tokenization differences)
         prompt = f"{sample['INPUT']}"
         prompt_len = len(tokenizer(prompt)["input_ids"])
         tokenized = tokenizer(sample["text"], padding="max_length", max_length=max_length)
@@ -62,7 +63,7 @@ class Trainer:
         dataset = load_dataset(
             "json",
             data_files={
-                "train": f"experiments/{self.adapter_name}/{self.guid}/train.jsonl",
+                "train": f"experiments/{self.model_id}/{self.adapter_name}/{self.guid}/train.jsonl",
             },
         )
         dataset["train"] = dataset["train"].map(

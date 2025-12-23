@@ -42,12 +42,12 @@ class LlamaLoraSFTTrainerController(OnDemandDockerController[LlamaLoraSFTTrainer
         from .api import LlamaLoraSFTTrainer, TrainingRun
         from ..llama_lora_server import LlamaLoraServer
 
+        model_id = "gemma-3-270m-it"
         adapter_name = "timer_skill"
-        dataset = Path(__file__).parent / "train_example.jsonl"
-
+        timer_dataset = Path(__file__).parent / "train_example.jsonl"
         training_settings = LlamaLoraSFTTrainer.TrainingSettings(
             training_args={
-                "num_train_epochs": 1,
+                "num_train_epochs": 0.7,
                 "per_device_train_batch_size": 8,
                 "gradient_accumulation_steps": 2,
                 "learning_rate": 2e-4,
@@ -64,13 +64,13 @@ class LlamaLoraSFTTrainerController(OnDemandDockerController[LlamaLoraSFTTrainer
             },
         )
         training_run = api.execute(
-            BrainBoxTask.call(LlamaLoraSFTTrainer).train(adapter_name, dataset, training_settings)
+            BrainBoxTask.call(LlamaLoraSFTTrainer).train(model_id, adapter_name, timer_dataset, training_settings)
         )
         yield TestReport.last_call(api).href("training")
         tc.assertIsInstance(training_run, TrainingRun)
         tc.assertEqual(
             training_run.path,
-            self.resource_folder("experiments", adapter_name, training_run.guid),
+            self.resource_folder("experiments", model_id, adapter_name, training_run.guid),
         )
         tc.assertTrue(training_run.exists())
         for item in ["settings.json", "train.jsonl", "hf_checkpoints", "gguf_checkpoints"]:
@@ -86,15 +86,15 @@ class LlamaLoraSFTTrainerController(OnDemandDockerController[LlamaLoraSFTTrainer
         )
 
         latest_gguf_checkpoint = max(gguf_files, key=lambda f: int(f.stem.split("-")[1]))
-        checkpoint_task_name = training_run.guid
-        adapter_dest = f"lora_adapters/{checkpoint_task_name}.gguf"
-        api.controller_api.upload_resource("LlamaLoraServer", adapter_dest, latest_gguf_checkpoint)
+        temporary_task_name = training_run.guid
+        temporary_adapter_dest = f"models/{model_id}/lora_adapters/{temporary_task_name}.gguf"
+        api.controller_api.upload_resource("LlamaLoraServer", temporary_adapter_dest, latest_gguf_checkpoint)
 
         timer_prompt = "USER:set a timer for 5 seconds\n"
-        tc.assertTrue(api.execute(BrainBoxTask.call(LlamaLoraServer).health()))
+        tc.assertTrue(api.execute(BrainBoxTask.call(LlamaLoraServer, model_id).health()))
         timer_task_result = api.execute(
-            BrainBoxTask.call(LlamaLoraServer).completion(
-                task_name=checkpoint_task_name, prompt=timer_prompt
+            BrainBoxTask.call(LlamaLoraServer, model_id).completion(
+                task_name=temporary_task_name, prompt=timer_prompt
             )
         )
         tc.assertEqual(timer_task_result, "HOURS:0\nMINUTES:0\nSECONDS:5")
@@ -104,4 +104,4 @@ class LlamaLoraSFTTrainerController(OnDemandDockerController[LlamaLoraSFTTrainer
             .with_comment("Returns only the text result")
         )
 
-        api.controller_api.delete_resource("LlamaLoraServer", adapter_dest)
+        api.controller_api.delete_resource("LlamaLoraServer", temporary_adapter_dest)
