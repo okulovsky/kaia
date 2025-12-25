@@ -26,7 +26,7 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    print(f"Training in ../experiments/{args.adapter_name}/{args.guid}")
+    print(f"Training in ../experiments/{args.model_id}/{args.adapter_name}/{args.guid}")
 
     trainer = Trainer(args.model_id, args.adapter_name, args.guid)
 

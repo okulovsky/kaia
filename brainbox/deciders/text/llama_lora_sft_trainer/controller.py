@@ -23,7 +23,7 @@ class LlamaLoraSFTTrainerController(OnDemandDockerController[LlamaLoraSFTTrainer
                 url="https://github.com/ggml-org/llama.cpp",
                 commit="dd62dcfab97e420949519fd0eac9fca7bf97e635",
                 install=True,
-                pip_install_options="--user",
+                pip_install_options="",
                 path_to_package="./gguf-py",
                 remove_repo=True,
             ),
@@ -91,7 +91,6 @@ class LlamaLoraSFTTrainerController(OnDemandDockerController[LlamaLoraSFTTrainer
         api.controller_api.upload_resource("LlamaLoraServer", temporary_adapter_dest, latest_gguf_checkpoint)
 
         timer_prompt = "USER:set a timer for 5 seconds\n"
-        tc.assertTrue(api.execute(BrainBoxTask.call(LlamaLoraServer, model_id).health()))
         timer_task_result = api.execute(
             BrainBoxTask.call(LlamaLoraServer, model_id).completion(
                 task_name=temporary_task_name, prompt=timer_prompt

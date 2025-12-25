@@ -12,7 +12,7 @@ from ....framework import (
     DownloadableModel,
 )
 from .settings import LlamaLoraServerSettings
-from .model import HFResource
+from .model import LlamaLoraServerResource
 from pathlib import Path
 import subprocess
 import platform
@@ -22,7 +22,7 @@ class LlamaLoraServerController(
     DockerWebServiceController[LlamaLoraServerSettings], IModelDownloadingController
 ):
     def get_downloadable_model_type(self) -> type[DownloadableModel]:
-        return HFResource
+        return LlamaLoraServerResource
 
     def get_image_builder(self) -> IImageBuilder | None:
         # TODO: other platforms support (e.g. ROCm). See https://github.com/ggml-org/llama.cpp/blob/master/docs/docker.md
@@ -72,7 +72,7 @@ class LlamaLoraServerController(
     def get_default_settings(self):
         return LlamaLoraServerSettings()
 
-    def pre_install(self):
+    def post_install(self):
         self.download_models(
             self.settings.self_test_lora_adapters + self.settings.gguf_models_to_download
         )
@@ -96,10 +96,6 @@ class LlamaLoraServerController(
         from .api import LlamaLoraServer
 
         model_id = self.settings.gguf_models_to_download[0].model_id
-
-        health_result = api.execute(BrainBoxTask.call(LlamaLoraServer, model_id).health())
-        tc.assertTrue(health_result)
-        yield (TestReport.last_call(api).href("health").with_comment("Returns boolean status"))
 
         timer_prompt1 = "USER:set a timer for 5 seconds\n"
         timer_prompt2 = "USER:set a timer for 10 seconds\n"

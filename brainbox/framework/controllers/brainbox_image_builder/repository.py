@@ -8,7 +8,7 @@ class Repository:
     commit: str | None = None
     options: str = ""
     path_to_package: str = "."
-    pip_install_options: str = "--user -e"
+    pip_install_options: str = "-e"
     install: bool = True
     remove_files: tuple[str, ...] | None = None
     remove_repo: bool = False
@@ -39,7 +39,7 @@ class Repository:
         if self.install:
             line_install = []
             line_install.append(
-                f"RUN cd /home/app/repo && pip install {self.pip_install_options} {self.path_to_package}{self.options}"
+                f"RUN cd /home/app/repo && pip install --user {self.pip_install_options} {self.path_to_package}{self.options}"
             )
             line_install.append(" && rm -rf ~/.cache/pip")
             result.append("".join(line_install))

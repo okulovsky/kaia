@@ -4,13 +4,11 @@ from .settings import LlamaLoraServerSettings
 from .controller import LlamaLoraServerController
 import typing as tp
 from pathlib import Path
-import time
 
 
 class LlamaLoraServer(DockerWebServiceApi[LlamaLoraServerSettings, LlamaLoraServerController]):
     def __init__(self, address: str | None = None):
         super().__init__(address)
-        time.sleep(5)  # wait for model to load
         self.taskname2id = None
 
     def _check_endpoint_code(self, code: int, endpoint: str) -> None:
@@ -23,14 +21,6 @@ class LlamaLoraServer(DockerWebServiceApi[LlamaLoraServerSettings, LlamaLoraServ
         response = requests.get(self.endpoint("/lora-adapters"))
         self._check_endpoint_code(response.status_code, "lora-adapters")
         return response.json()
-
-    def health(self) -> bool:
-        response = requests.get(self.endpoint("/health"))
-        try:
-            self._check_endpoint_code(response.status_code, "health")
-        except RuntimeError:
-            return False
-        return True
 
     def completion(
         self,
