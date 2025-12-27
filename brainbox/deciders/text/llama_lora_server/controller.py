@@ -11,10 +11,10 @@ from ....framework import (
     BrainBoxTask,
     DownloadableModel,
 )
-from .settings import LlamaLoraServerSettings, HFModel
+from .settings import LlamaLoraServerSettings
+from .model import LlamaLoraServerResource
 from pathlib import Path
 import subprocess
-import time
 import platform
 
 
@@ -22,7 +22,7 @@ class LlamaLoraServerController(
     DockerWebServiceController[LlamaLoraServerSettings], IModelDownloadingController
 ):
     def get_downloadable_model_type(self) -> type[DownloadableModel]:
-        return HFModel
+        return LlamaLoraServerResource
 
     def get_image_builder(self) -> IImageBuilder | None:
         # TODO: other platforms support (e.g. ROCm). See https://github.com/ggml-org/llama.cpp/blob/master/docs/docker.md
@@ -39,29 +39,25 @@ class LlamaLoraServerController(
             None,
         )
 
-    def get_tasknames(self) -> list[str]:
-        lora_path = self.resource_folder("lora_adapters")
+    def get_tasknames(self, model_id: str) -> list[str]:
+        lora_path = self.resource_folder("models", model_id, "lora_adapters")
         file_stems = [name.stem for name in lora_path.iterdir() if name.is_file()]
-        self_test_stems = [
-            test_adapter.filename.split(".")[0]
-            for test_adapter in self.settings.self_test_lora_adapters
-        ]
-        return sorted(set(file_stems + self_test_stems))
+        return sorted(file_stems)
 
     def get_service_run_configuration(self, parameter: str | None) -> RunConfiguration:
-        if parameter is not None:
-            raise ValueError(f"`parameter` must be None for {self.get_name()}")
+        if parameter is None:
+            raise ValueError(f"`parameter` cannot be None for {self.get_name()}")
         cmd_args = [
             "--lora-init-without-apply",
             "--host",
             "0.0.0.0",
             "--model",
-            f"/app/models/{self.settings.gguf_model.filename}",
+            f"/app/models/{parameter}/model.gguf",
             "--no-mmproj",
         ]
 
-        for taskname in self.get_tasknames():
-            path = "/app/lora_adapters/" + taskname + ".gguf"
+        for taskname in self.get_tasknames(parameter):
+            path = f"/app/models/{parameter}/lora_adapters/{taskname}.gguf"
             cmd_args.extend(["--lora", path])
 
         return RunConfiguration(
@@ -69,7 +65,6 @@ class LlamaLoraServerController(
             mount_top_resource_folder=False,
             mount_resource_folders={
                 "models": "/app/models",
-                "lora_adapters": "/app/lora_adapters",
             },
             command_line_arguments=cmd_args,
         )
@@ -77,13 +72,15 @@ class LlamaLoraServerController(
     def get_default_settings(self):
         return LlamaLoraServerSettings()
 
-    def pre_install(self):
-        self.download_models([self.settings.gguf_model] + self.settings.self_test_lora_adapters)
+    def post_install(self):
+        self.download_models(
+            self.settings.self_test_lora_adapters + self.settings.gguf_models_to_download
+        )
 
     def create_api(self):
         from .api import LlamaLoraServer
 
-        return LlamaLoraServer(self.get_tasknames())
+        return LlamaLoraServer()
 
     def _is_cuda_available(self) -> bool:
         try:
@@ -98,18 +95,15 @@ class LlamaLoraServerController(
     def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable:
         from .api import LlamaLoraServer
 
-        time.sleep(5)  # model loading
+        model_id = self.settings.gguf_models_to_download[0].model_id
 
-        api.execute(BrainBoxTask.call(LlamaLoraServer).health())
-        yield (
-            TestReport.last_call(api)
-            .href("health")
-            .with_comment("Returns JSON with `status` field")
-        )
+        timer_prompt1 = "USER:set a timer for 5 seconds\n"
+        timer_prompt2 = "USER:set a timer for 10 seconds\n"
 
-        timer_prompt = "USER:set a timer for 5 seconds\n"
         timer_task_result = api.execute(
-            BrainBoxTask.call(LlamaLoraServer).completion("timer_self_test", timer_prompt, 30)
+            BrainBoxTask.call(LlamaLoraServer, model_id).completion(
+                task_name="timer_self_test", prompt=timer_prompt1
+            )
         )
         tc.assertIsInstance(timer_task_result, str)
         tc.assertEqual(timer_task_result, "HOURS:0\nMINUTES:0\nSECONDS:5\nNAME:_")
@@ -120,7 +114,9 @@ class LlamaLoraServerController(
         )
 
         nutrition_task_result = api.execute(
-            BrainBoxTask.call(LlamaLoraServer).completion("nutrition_self_test", timer_prompt, 30)
+            BrainBoxTask.call(LlamaLoraServer, model_id).completion(
+                task_name="nutrition_self_test", prompt=timer_prompt1
+            )
         )
         tc.assertIsInstance(nutrition_task_result, str)
         tc.assertNotEqual(timer_task_result, nutrition_task_result)
@@ -128,4 +124,19 @@ class LlamaLoraServerController(
             TestReport.last_call(api)
             .href("completion")
             .with_comment("Returns only the text result")
+        )
+
+        multiple_prompts_result = api.execute(
+            BrainBoxTask.call(LlamaLoraServer, model_id).completion(
+                task_name="timer_self_test", prompts=[timer_prompt1, timer_prompt2]
+            )
+        )
+        tc.assertIsInstance(multiple_prompts_result, list)
+        tc.assertEqual(len(multiple_prompts_result), 2)
+        tc.assertEqual(multiple_prompts_result[0], "HOURS:0\nMINUTES:0\nSECONDS:5\nNAME:_")
+        tc.assertEqual(multiple_prompts_result[1], "HOURS:0\nMINUTES:0\nSECONDS:10\nNAME:_")
+        yield (
+            TestReport.last_call(api)
+            .href("completion")
+            .with_comment("Returns only the text result for multiple prompts")
         )
