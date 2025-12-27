@@ -1,4 +1,4 @@
-from phonix.daemon.processing import PorcupineWakeWordUnit, UnitInput, MicState, State, SystemSoundCommand, SystemSoundType, IMonitor
+from phonix.daemon.processing import PorcupineWakeWordUnitOldVersion, UnitInput, MicState, State, SystemSoundCommand, SystemSoundType, IMonitor
 from phonix.daemon.inputs import FakeInput
 from avatar.messaging import TestStream
 from avatar.daemon import WakeWordEvent
@@ -12,7 +12,7 @@ def check(file):
         file = Path(__file__).parent.parent.parent / 'files' / file
     input = FakeInput()
     input.set_sample(FileIO.read_bytes(file))
-    porcupine = PorcupineWakeWordUnit()
+    porcupine = PorcupineWakeWordUnitOldVersion()
     client = TestStream().create_client(None)
     clone_client = client.clone()
     result = []

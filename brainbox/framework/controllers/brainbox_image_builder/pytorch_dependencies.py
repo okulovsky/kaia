@@ -10,6 +10,7 @@ class PytorchDependencies(IBuilderPart):
     torchaudio_version: str|None|bool = None
     torchvideo_version: str|None = None
 
+
     def __post_init__(self):
         if isinstance(self.torchaudio_version, bool):
             if self.torchaudio_version:

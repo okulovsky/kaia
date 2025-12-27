@@ -81,6 +81,8 @@ class VoiceInference(ABC):
                 metadata['text'] = case.text
                 metadata['model_index'] = case.model_index
                 metadata['inference_index'] = case.inference_index
+                metadata['model_class'] = type(case.model).__name__
+                metadata['inference_class'] = type(case.inference).__name__
                 metadatas.append(metadata)
             cache.metadata.write(metadatas)
 

@@ -7,7 +7,7 @@ from typing import TypeVar
 
 T = TypeVar("T")
 
-class ParaphrasingPrompter:
+class UtteranceParaphrasingPrompter:
     def __init__(self, custom_template_path: Path|None = None):
         path = Path(__file__).parent/'template.jinja'
         if custom_template_path is not None:

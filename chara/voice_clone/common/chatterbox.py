@@ -23,7 +23,7 @@ class ChatterboxTrain(VoiceTrain):
             samples: list[Path],
             metadata: VoiceTrainMetadata|None = None) -> tuple[BrainBox.ITask, VoiceModel]:
         if len(samples) != 1:
-            raise ValueError("Chatterbox requires a single file as a sample.")
+            raise ValueError(f"Chatterbox requires a single file as a sample, but the sample list was of length {len(samples)}.")
 
         train_file = samples[0]
 
@@ -32,8 +32,7 @@ class ChatterboxTrain(VoiceTrain):
 
         model_name = metadata.model_name
         if model_name is None:
-            data = FileIO.read_bytes(train_file)
-            model_name = md5(data).hexdigest()[:24]
+            model_name = self.compute_hash(samples)
 
         model = ChatterboxModel(
             model_name,
@@ -43,23 +42,13 @@ class ChatterboxTrain(VoiceTrain):
         task = BrainBox.Task.call(Chatterbox).train(model_name, train_file)
         return task, model
 
-    def recode_in_proper_format(self, file: Path, folder: Path):
-        target_path = folder/(file.name.split('.')[0]+'.wav')
-        subprocess.call([
-            'ffmpeg',
-            '-i',
-            str(file),
-            str(target_path)
-        ])
-        if not target_path.is_file():
-            raise ValueError(f"Conversion failed on file {file}.")
 
     def requires_train_single_file_with_extension(self) -> str | None:
         return 'wav'
 
 @dataclass
 class ChatterboxInference(VoiceInference):
-    language: str
+    language: str = 'en'
     cfg_weight: float = 0.5
     exaggeration: float = 0.5
 

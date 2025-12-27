@@ -4,14 +4,15 @@ from typing import TypeVar, Generic
 from yo_fluq import Queryable, FileIO
 from .brainbox_cache_item import BrainBoxUnitResultItem
 from .brainbox_multifile_cache import BrainBoxMultifileCache
+from pathlib import Path
 
 TCase = TypeVar("TCase")
 TOption = TypeVar("TOption")
 
 
 class BrainBoxCache(Generic[TCase, TOption], ICache[None]):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, working_folder: Path|None = None):
+        super().__init__(working_folder)
         self.tasks = FileCache[list[BrainBox.ITask]]()
         self.task_id = FileCache[str](FileCache.Type.Text)
         self.result = BrainBoxMultifileCache[TCase, TOption]()

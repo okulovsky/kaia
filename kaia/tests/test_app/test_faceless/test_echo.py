@@ -25,10 +25,14 @@ class FacelessTestCase(TestCase):
                 sound = Query.en(result).where(lambda z: isinstance(z, SoundCommand)).single()
                 self.assertEqual('Say anything and I will repeat.', sound.text)
 
-                addition = c.query(3).take(2).to_list()
-                self.assertEqual(2, len(addition))
-                self.assertIsInstance(addition[0], WhisperRecognitionSetup)
-                self.assertIsInstance(addition[1], OpenMicCommand)
+                addition = c.query(3).take(3).to_list()
+                helper.check_events_list(
+                    addition,
+                    BackendIdleReport,
+                    WhisperRecognitionSetup,
+                    OpenMicCommand
+                )
+
                 c.query(3).take_while(lambda z: not isinstance(z, MicStateChangeReport) or z.state!=MicState.Open).to_list()
 
                 c = helper.say('make_me_a_sandwich')

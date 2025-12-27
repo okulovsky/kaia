@@ -11,6 +11,9 @@ from brainbox import BrainBox
 from pathlib import Path
 from dataclasses import dataclass
 from copy import copy
+from yo_fluq import FileIO
+from hashlib import md5
+import subprocess
 
 class VoiceModel:
     def get_metadata(self) -> dict:
@@ -54,13 +57,33 @@ class VoiceTrainMetadata:
 class VoiceTrain(ABC):
     Cache = VoiceTrainCache
 
+    def compute_hash(self, source_files: Iterable[Path]) -> str:
+        source_files = list(sorted(source_files))
+        hash = []
+        for source in source_files:
+            data = FileIO.read_bytes(source)
+            model_name = md5(data).hexdigest()[:24]
+            hash.append(model_name)
+        result = '/'.join(hash)
+        return md5(result.encode()).hexdigest()[:24]
+
+
     @abstractmethod
     def create_train_task_and_reference(self, samples: list[Path], metadata: VoiceTrainMetadata|None = None) -> tuple[BrainBox.ITask, VoiceModel]:
         pass
 
-    @abstractmethod
+
     def recode_in_proper_format(self, file: Path, folder: Path):
-        pass
+        target_path = folder/(file.name.split('.')[0]+'.wav')
+        subprocess.call([
+            'ffmpeg',
+            '-i',
+            str(file),
+            '-y',
+            str(target_path)
+        ])
+        if not target_path.is_file():
+            raise ValueError(f"Conversion failed on file {file}.")
 
     @abstractmethod
     def requires_train_single_file_with_extension(self) -> str | None:
@@ -78,7 +101,8 @@ class VoiceTrain(ABC):
                 raise ValueError(f"{source} is not a file or a directory")
             os.makedirs(cache.recoded.working_folder, exist_ok=True)
             for file in files:
-                trainer.recode_in_proper_format(file, cache.recoded.working_folder)
+                if file.name.endswith('.wav') or file.name.endswith('.mp3') or file.name.endswith('.aac'):
+                    trainer.recode_in_proper_format(file, cache.recoded.working_folder)
             cache.recoded.finalize()
 
         @logger.phase(cache.train_samples)

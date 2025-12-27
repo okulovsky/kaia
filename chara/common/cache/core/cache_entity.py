@@ -2,14 +2,15 @@ import os
 import shutil
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Self, Generic, TypeVar
+from typing import Generic, TypeVar
+
 from yo_fluq import FileIO
 
 TResult = TypeVar('TResult')
 
 
 class ICacheEntity(ABC):
-    def initialize(self, working_folder: Path) -> Self:
+    def initialize(self, working_folder: Path):
         self._cache_entity_working_folder = working_folder
         return self
 

@@ -4,8 +4,10 @@ import sys
 import subprocess
 from pathlib import Path
 import argparse
+import shutil
 
 def install(model_name, mode):
+
     print(f"Installing model {model_name} in mode {mode}")
     if mode == 'simple':
         data = load_tts(model_name)
@@ -26,6 +28,12 @@ def install(model_name, mode):
 
 
 if __name__ == '__main__':
+
+    shutil.copyfile(
+        '/home/app/repo/TTS/tts/models/xtts.py',
+        '/resources/xtts.py'
+    )
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-n','--notebook', action='store_true')
     parser.add_argument('-i','--install')

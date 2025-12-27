@@ -1,3 +1,11 @@
+4.0.9
+    Brainbox
+        CoquiTTS and Zonos are now working with the latest pytorch
+    Chara
+        XTTS and Zonos are now available as voice cloners
+        VoiceTranslation pipeline added
+        Upsampling pipeline added
+    Tests are fixed, packages are published under 4.0.9
 4.0.8
     Foundation
         Patching

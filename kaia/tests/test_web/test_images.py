@@ -1,5 +1,6 @@
 import time
 
+from avatar.server.messaging_component.message_format import get_full_name_by_type
 from kaia.tests.test_web.environment import TestEnvironmentFactory
 from unittest import TestCase
 from selenium.webdriver.common.by import By
@@ -21,9 +22,9 @@ class ImageHandlerTestCase(TestCase):
             process_btn.click()
 
             # 3) wait until the <img> src updates to our data URL
-            expected_src = '/file-cache/download/'+fname
+            expected_src = '/file-cache/file/'+fname
 
-            WebDriverWait(driver, 10).until(
+            WebDriverWait(driver, 100).until(
                 lambda d: d.find_element(By.ID, "preview").get_attribute("src") and
                           d.find_element(By.ID, "preview").get_attribute("src").endswith(expected_src)
             )

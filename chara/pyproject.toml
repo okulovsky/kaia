@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kaia-chara"
+description = "ML-Pipelines architecture and implementation for paraphrasing and voice cloning"
+version = "4.0.9"
+readme = 'README.md'
+requires-python = ">=3.10, <4.0"
+license = "LGPL-3.0-or-later"
+
+authors = [
+    {name = "Yuri Okulovsky", email = "yuri.okulovsky@gmail.com"}
+]
+
+dependencies = [
+    "yo_fluq",
+    "kaia-foundation",
+    "kaia-brainbox",
+    "kaia-eaglesong",
+    "kaia-grammatron",
+    "kaia-avatar",
+    "flask",
+    "loguru",
+    "matplotlib",
+    "ipywidgets",
+    "gradio",
+    "python-Levenshtein"
+]
+
+classifiers = [
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Information Technology",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Development Status :: 4 - Beta"
+]
+
+[project.optional-dependencies]
+dev = [
+    "tox",
+    "tox-conda",
+    "twine",
+]
+
+[project.urls]
+repository = "https://github.com/okulovsky/kaia/tree/main/avatar"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.setuptools.package-data]
+"*" = ["**/*.jinja", "**/*.wav"]

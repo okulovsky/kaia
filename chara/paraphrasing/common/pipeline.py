@@ -27,7 +27,10 @@ class ParaphrasePipeline:
 
         result = []
         for case, option in cache.llm.read_cases_and_options():
-            result.append(ParaphrasePipeline.case_and_option_to_record(case, option))
+            try:
+                result.append(ParaphrasePipeline.case_and_option_to_record(case, option))
+            except:
+                logger.log(f"Option `{option}` failed")
 
         cache.write_result(result)
 

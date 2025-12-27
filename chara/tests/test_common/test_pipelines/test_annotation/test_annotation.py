@@ -8,8 +8,8 @@ from gradio_client import Client
 from collections import OrderedDict
 
 class MyCache(ICache):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, working_folder):
+        super().__init__(working_folder)
         self.cache = LabelAnnotationCache()
 
 class AnnotationTestCase(TestCase):
@@ -31,7 +31,7 @@ class AnnotationTestCase(TestCase):
 
     def test_annotation(self):
         with Loc.create_test_folder(dont_delete=True) as folder:
-            cache = MyCache().initialize(folder)
+            cache = MyCache(folder)
             annotaton = OrderedDict(record_1 = 'Record 1', record_2 = 'Record 2', record_3 = 'Record 3')
             annotator = TextLabelAnnotator(annotaton,  TextLabelAnnotator.Settings(('Yes', 'No'),'Skip'))
             annotation_unit = AnnotationUnit(annotator)

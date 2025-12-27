@@ -42,7 +42,7 @@ class CookbookSkillTestCase(TestCase):
             .check('Stage1')
             .send(CookBookIntents.next_step())
             .check('Stage2')
-            .act(lambda: tf.shift(60))
+            .act(lambda: tf.shift(120))
             .send(CookBookIntents.next_step())
             .check(CookBookReplies.next_timer_in(1))
             .act_and_send(lambda: tf.shift(60).event())

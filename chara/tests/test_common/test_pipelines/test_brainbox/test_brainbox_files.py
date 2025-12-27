@@ -25,7 +25,7 @@ class BrainBoxUnitTestCase(TestCase):
         with Loc.create_test_folder() as folder:
             #folder = (Path(__file__)).parent/'cache'
             #shutil.rmtree(folder)
-            cache = BrainBoxCache().initialize(folder)
+            cache = BrainBoxCache(folder)
             unit = BrainBoxUnit(
                 create_task,
                 options_as_files=True

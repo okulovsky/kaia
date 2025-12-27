@@ -50,4 +50,7 @@ class IDrawableCollection(ABC):
         for key, value in kwargs.items():
             self.assign_metakey(key, value)
 
+    def clone_for_other_set(self, other_set: Iterable[IDrawable]) -> 'IDrawableCollection':
+        pass
+
 

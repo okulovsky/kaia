@@ -35,6 +35,9 @@ class ListCache(Generic[TInnerCache, TResult], IFinalizableCacheEntity[TResult])
     def create_subcache(self, index: int) -> TInnerCache:
         return self._create_cache(self._subcache_folder(index))
 
+    def __getitem__(self, index: int) -> TInnerCache:
+        return self.create_subcache(index)
+
     def _subcache_folder(self, index: int) -> Path:
         folder = self.working_folder / str(index).zfill(self.right_zeroes)
         return folder

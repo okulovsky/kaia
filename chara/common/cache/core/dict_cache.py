@@ -28,6 +28,9 @@ class DictCache(Generic[TInnerCache, TResult], IFinalizableCacheEntity[TResult])
     def create_subcache(self, name: str) -> TInnerCache:
         return self._create_cache(name)
 
+    def __getitem__(self, name: str) -> TInnerCache:
+        return self.create_subcache(name)
+
     def _create_cache(self, name: str):
         cache = self.cache_factory()
         cache.initialize(self.working_folder/name)

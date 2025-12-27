@@ -1,7 +1,7 @@
 from typing import Any
 from phonix.daemon import (
     PhonixDeamon, FakeInput, FakeOutput,
-    PorcupineWakeWordUnit, SilenceMarginUnit, TooLongOpenMicUnit,
+    PorcupineWakeWordUnitOldVersion, SilenceMarginUnit, TooLongOpenMicUnit,
     RecordingUnit, LevelReportingUnit, FolderFileRetriever
 )
 from phonix.components import PhonixApi
@@ -55,7 +55,7 @@ class PhonixTestEnvironmentFactory:
 
 
         units = [
-            PorcupineWakeWordUnit(),
+            PorcupineWakeWordUnitOldVersion(),
             silence_unit,
             RecordingUnit(api, 1.1),
             TooLongOpenMicUnit(self.waiting_time_to_close_the_mic),

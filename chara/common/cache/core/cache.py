@@ -1,4 +1,3 @@
-from typing import Self
 from .cache_entity import IFinalizableCacheEntity, TResult, ICacheEntity
 from pathlib import Path
 from typing import Generic
@@ -45,7 +44,7 @@ class ICache(Generic[TResult], IFinalizableCacheEntity[TResult]):
             self._cache_entities_initializer.add(key, value)
         super().__setattr__(key, value)
 
-    def initialize(self, working_folder: Path) -> Self:
+    def initialize(self, working_folder: Path):
         super().initialize(working_folder)
         self._cache_entities_initializer.set_working_folder(working_folder)
-        return self
+

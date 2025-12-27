@@ -42,6 +42,14 @@ class Language:
         return self.name
 
     @property
+    def zonos_name(self) -> str:
+        return self.name
+
+    @property
+    def xtts_name(self) -> str:
+        return self.name
+
+    @property
     def vosk_name(self) -> str:
         return self.name
 

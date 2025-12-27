@@ -1,4 +1,4 @@
-from chara.paraphrasing.utterances import JinjaModel, ParaphrasingPrompter
+from chara.paraphrasing.utterances import JinjaModel, UtteranceParaphrasingPrompter
 from chara.paraphrasing.common import ParaphraseCase, ParsedTemplate
 from grammatron import *
 from avatar.daemon import Character, World
@@ -13,7 +13,7 @@ start = Template("Do something!")
 def run(template):
     parsed = ParsedTemplate.parse(template)
     case = ParaphraseCase(parsed[0], 'en', char_1, char_2)
-    result = ParaphrasingPrompter()(case)
+    result = UtteranceParaphrasingPrompter()(case)
     print(result)
     return result
 

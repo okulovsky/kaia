@@ -9,6 +9,7 @@ from avatar.utils import slice
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from foundation_kaia.misc import Loc
+from pprint import pprint
 
 
 class SeleniumDriver:
@@ -71,6 +72,16 @@ class Helper:
 
         return Query.en(_())
 
+    def check_events_list(self, lst: list, *types):
+        if len(lst) != len(types):
+            pprint(lst)
+            pprint(types)
+            self.tc.assertEqual(len(types), len(lst))
+        for actual, expected_type in zip(lst, types):
+            self.tc.assertIsInstance(actual, expected_type)
+
+
+
     def init(self):
         self.client.initialize()
         self.client.put(TickEvent(datetime.now()))
@@ -81,11 +92,15 @@ class Helper:
             .feed(slice(lambda z: isinstance(z, BrainBoxService.Confirmation)))
         )
 
-        self.tc.assertEqual(4, len(kaldi_training))
-        self.tc.assertIsInstance(kaldi_training[0], TickEvent)
-        self.tc.assertIsInstance(kaldi_training[1], STTService.RhasspyTrainingCommand)
-        self.tc.assertIsInstance(kaldi_training[2], BrainBoxService.Command)
-        self.tc.assertIsInstance(kaldi_training[3], BrainBoxService.Confirmation)
+        self.check_events_list(
+            kaldi_training,
+            TickEvent,
+            STTService.RhasspyTrainingCommand,
+            BackendIdleReport,
+            BrainBoxService.Command,
+            BrainBoxService.Confirmation
+        )
+
 
     def say(self, file):
         self.client.put(SoundInjectionCommand(self.upload(file)))
@@ -96,12 +111,15 @@ class Helper:
         msg = self.client.pull(1)[0]
         wakeup = self.client.query(5).feed(self.process).feed(slice(lambda z: isinstance(z, MicStateChangeReport), 2))
 
-        self.tc.assertEqual(5, len(wakeup))
-        self.tc.assertIsInstance(wakeup[0], WakeWordEvent)
-        self.tc.assertIsInstance(wakeup[1], SystemSoundCommand)
-        self.tc.assertIsInstance(wakeup[2], MicStateChangeReport)
-        self.tc.assertIsInstance(wakeup[3], Confirmation)
-        self.tc.assertIsInstance(wakeup[4], MicStateChangeReport)
+        self.check_events_list(
+            wakeup,
+            WakeWordEvent,
+            SystemSoundCommand,
+            MicStateChangeReport,
+            Confirmation,
+            MicStateChangeReport
+        )
+
 
     def parse_reaction(self, expected_command: Type):
         response = []

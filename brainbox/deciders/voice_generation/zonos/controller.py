@@ -18,23 +18,15 @@ class ZonosController(
     def get_image_builder(self) -> IImageBuilder|None:
         return BrainboxImageBuilder(
             Path(__file__).parent,
-            'pytorch/pytorch:2.6.0-cuda12.4-cudnn9-devel',
-            ('espeak-ng','git','ffmpeg'),
+            '3.11.11',
+            ('espeak-ng','ffmpeg'),
             BrainboxImageBuilder.Repository(
                 'https://github.com/Zyphra/Zonos',
-                'c6f7704',
+                'bc40d98e1e1ab54fc65c483be127a90e3c7c0645',
             ),
             custom_dependencies=(
-                BrainboxImageBuilder.CustomDependencies(
-                    ('torch==2.6.0+cu124', 'torchaudio==2.6.0+cu124'),
-                    index_url='https://download.pytorch.org/whl/cu124'
-                ),
-                BrainboxImageBuilder.CustomDependencies(
-                    ('mamba-ssm==2.2.4', 'flash_attn==2.7.4.post1', 'causal-conv1d==1.5.0.post8'),
-                    no_build_isolation=True,
-                    no_binary=('mamba-ssm',),
-                ),
-                BrainboxImageBuilder.Dependencies()
+                BrainboxImageBuilder.PytorchDependencies('2.7.1', 'cu128', True),
+                BrainboxImageBuilder.Dependencies(True)
             ),
             keep_dockerfile = True
 

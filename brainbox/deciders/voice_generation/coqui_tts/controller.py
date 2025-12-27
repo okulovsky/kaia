@@ -19,6 +19,10 @@ class CoquiTTSController(DockerWebServiceController[CoquiTTSSettings], INotebook
                 'dbf1a08a0d4e47fdad6172e433eeb34bc6b13b4e',
                 '[all,dev,notebooks]'
             ),
+            custom_dependencies=(
+                BrainboxImageBuilder.PytorchDependencies('2.7.1', 'cu128', True),
+                BrainboxImageBuilder.Dependencies(True)
+            ),
             allow_arm64=False
         )
 

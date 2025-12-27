@@ -44,8 +44,8 @@ class CompositeCacheTest(TestCase):
 
     def test_nested_cache(self):
         class M(ICache):
-            def __init__(self):
-                super().__init__()
+            def __init__(self, working_folder):
+                super().__init__(working_folder)
                 self.file = FileCache()
                 self.composite = T()
 
@@ -53,7 +53,7 @@ class CompositeCacheTest(TestCase):
             folder = Path(__file__).parent/'test_composite_cache_cache'
             shutil.rmtree(folder, ignore_errors=True)
 
-            cache = M().initialize(folder)
+            cache = M(folder)
             self.assertEqual(folder/'00_file/cache', cache.file.cache_file_path)
             self.assertEqual(folder/'01_composite/00_file_1/cache', cache.composite.file_1.cache_file_path)
 

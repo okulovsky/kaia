@@ -23,7 +23,7 @@ def create_task(s: str):
 class BrainBoxUnitTestCase(TestCase):
     def test_simple(self):
         with Loc.create_test_folder() as folder:
-            cache = BrainBoxCache().initialize(folder)
+            cache = BrainBoxCache(folder)
             unit = BrainBoxUnit(
                 create_task
             )
@@ -69,7 +69,7 @@ class BrainBoxUnitTestCase(TestCase):
             return result.split(';')
 
         with Loc.create_test_folder() as folder:
-            cache = BrainBoxCache().initialize(folder)
+            cache = BrainBoxCache(folder)
             unit = BrainBoxUnit(
                 create_task,
                 _merge,

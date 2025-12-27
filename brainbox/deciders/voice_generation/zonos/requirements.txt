@@ -1,0 +1,16 @@
+torch>=2.5.1
+setuptools
+packaging
+inflect>=7.5.0
+kanjize>=1.5.0
+numpy>=2.2.2
+phonemizer>=3.3.0
+sudachidict-full>=20241021
+sudachipy>=0.6.10
+torchaudio>=2.5.1
+transformers>=4.48.1
+soundfile>=0.13.1
+huggingface-hub>=0.28.1
+gradio>=5.15.0
+flask
+notebook

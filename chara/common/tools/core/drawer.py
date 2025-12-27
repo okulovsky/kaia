@@ -17,17 +17,28 @@ class Drawer:
     _orderer: Orderer|None = None
     _table_view: TableView|None = None
 
-    def ordered_blocks(self, first_selector: str|Callable, second_selector: str|Callable|None = None) -> 'Drawer':
+    def filter(self, filter: Callable[[IDrawable], bool]) -> 'Drawer':
+        new_drawables = [self.drawables] if isinstance(self.drawables, IDrawable) else self.drawables.get_drawables()
+        new_drawables = [d for d in new_drawables if filter(d)]
         drawer = copy(self)
-        if second_selector is not None:
-            drawer._orderer = Orderer(None, Selector(second_selector), Selector(first_selector))
-        else:
-            drawer._orderer = Orderer(None, Selector(first_selector), None)
+        drawer.drawables = self.drawables.clone_for_other_set(new_drawables)
         return drawer
 
-    def blocks(self, column_count) -> 'Drawer':
+
+    def blocks(self, first_selector_or_column_count: str|Callable|int|None = None, second_selector: str|Callable|None = None) -> 'Drawer':
         drawer = copy(self)
-        self._orderer = Orderer(column_count)
+        if second_selector is not None:
+            if isinstance(first_selector_or_column_count, int):
+                raise ValueError("If second selector is set, first_selector cannot be int")
+            drawer._orderer = Orderer(None, Selector(second_selector), Selector(first_selector_or_column_count))
+        else:
+            if isinstance(first_selector_or_column_count, int):
+                drawer._orderer = Orderer(first_selector_or_column_count, None)
+            elif first_selector_or_column_count is not None:
+                drawer._orderer = Orderer(None, Selector(first_selector_or_column_count), None)
+            else:
+                drawer._orderer = Orderer(None, None, None)
+
         return drawer
 
     def group(self, selector: str|Callable) -> 'Drawer':
