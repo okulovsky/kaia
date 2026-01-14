@@ -27,7 +27,7 @@ class LlamaLoraServerController(
     def get_image_builder(self) -> IImageBuilder | None:
         # TODO: other platforms support (e.g. ROCm). See https://github.com/ggml-org/llama.cpp/blob/master/docs/docker.md
         if self._is_arm64_platform():
-            source_image = "ghcr.io/kyroninja/llamacpp-arm64:b70bb32"
+            source_image = "ghcr.io/kyroninja/llamacpp-arm64:68db51f"
         elif self._is_cuda_available():
             source_image = "ghcr.io/ggml-org/llama.cpp:server-cuda-b7018"
         else:
