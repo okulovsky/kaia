@@ -33,7 +33,9 @@ class LlamaLoraCache(ICache[TrainingRunStats]):
     def __init__(self, working_folder: Path | None = None):
         super().__init__(working_folder)
         self.train_checkpoints = BrainBoxCache[LoraTrainCase, TrainingRun]()
-        self.val_outputs = DictCache[BrainBoxCache[LoraGenerationCase, list[str]], None](BrainBoxCache)
+        self.val_outputs = DictCache[BrainBoxCache[LoraGenerationCase, list[str]], None](
+            BrainBoxCache
+        )
 
 
 class LlamaLoraPipeline:
@@ -42,10 +44,12 @@ class LlamaLoraPipeline:
         model_id: str,
         settings: TrainingSettings | dict | None = None,
         val_batch_size: int = 64,
+        max_tokens: int = 500,
     ):
         self.model_id = model_id
         self.settings = settings
         self.val_batch_size = val_batch_size
+        self.max_tokens = max_tokens
 
     def _create_training_task(self, train_case: LoraTrainCase) -> BrainBox.ITask:
         return BrainBox.Task.call(LlamaLoraSFTTrainer).train(
@@ -56,8 +60,10 @@ class LlamaLoraPipeline:
         )
 
     def _create_generation_task(self, generation_case: LoraGenerationCase) -> BrainBox.ITask:
-        return BrainBox.Task.call(LlamaLoraServer).completion(
-            task_name=generation_case.adapter_name, prompts=generation_case.inputs
+        return BrainBox.Task.call(LlamaLoraServer, self.model_id).completion(
+            task_name=generation_case.adapter_name,
+            prompts=generation_case.inputs,
+            max_tokens=self.max_tokens,
         )
 
     @staticmethod
@@ -143,7 +149,6 @@ class LlamaLoraPipeline:
                     "LlamaLoraServer", checkpoint_adapter_dest
                 )
             cache.val_outputs.finalize()
-                
 
         checkpoints_val_stats = []
         for checkpoint_number, subcache in cache.val_outputs.read_subcaches():

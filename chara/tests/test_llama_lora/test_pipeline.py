@@ -64,6 +64,7 @@ class LlamaLoraServerMock(Mock):
         *,
         task_name: str,
         prompts: Optional[list[str]] = None,
+        max_tokens: int = 500,
     ) -> str | list[str]:
         return [f"goat_output{prompt[-1]}" for prompt in prompts]
 

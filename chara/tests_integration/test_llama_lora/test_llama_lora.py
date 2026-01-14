@@ -11,6 +11,7 @@ from foundation_kaia.misc import Loc
 from pathlib import Path
 import matplotlib.pyplot as plt
 import pandas as pd
+from itertools import chain
 
 
 def plot_accuracy_by_checkpoint(checkpoints_val_stats):
@@ -81,14 +82,14 @@ class LlamaLoraTestCase(TestCase):
         model_id = "gemma-3-270m-it"
         settings = TrainingSettings(
             training_args={
-                "num_train_epochs": 0.1,
-                "per_device_train_batch_size": 8,
-                "gradient_accumulation_steps": 2,
+                "num_train_epochs": 5.0,
+                "per_device_train_batch_size": 16,
+                "gradient_accumulation_steps": 1,
                 "learning_rate": 2e-4,
                 "logging_steps": 10,
                 "save_strategy": "steps",
                 "save_steps": 0.02,
-                "save_total_limit": 50,
+                "save_total_limit": 100,
                 "report_to": "none",
                 "weight_decay": 0.01,
                 "lr_scheduler_type": "cosine",
@@ -97,7 +98,7 @@ class LlamaLoraTestCase(TestCase):
                 "fp16": True,
             },
         )
-        val_batch_size = 32
+        val_batch_size = 64
         adapter_name = "food_skill"
         train_dataset = Path(__file__).parent / "train_example.jsonl"
         val_dataset = Path(__file__).parent / "val_example.jsonl"
@@ -110,6 +111,7 @@ class LlamaLoraTestCase(TestCase):
                     model_id=model_id,
                     settings=settings,
                     val_batch_size=val_batch_size,
+                    max_tokens=500,
                 )
                 pipeline(
                     cache=cache,
@@ -125,16 +127,14 @@ class LlamaLoraTestCase(TestCase):
                     logger.log(f"Adapter: {adapter_name}")
                     logger.log(f"Checkpoints evaluated: {len(stats.checkpoints_val_stats)}")
 
-                with logger.section("Validation accuracy"):
-                    fig = plot_accuracy_by_checkpoint(stats.checkpoints_val_stats)
-                    logger.log(fig)
-
                 with logger.section("Checkpoint details"):
                     for checkpoint in sorted(stats.checkpoints_val_stats, key=lambda c: c.number):
                         with logger.section(f"Checkpoint {checkpoint.number}"):
                             log_checkpoint_stats(logger, checkpoint)
 
-                with logger.section("Training logs"):
-                    figures = plot_train_stats(stats.train_stats)
-                    for fig in figures:
+                with logger.section("Plots"):
+                    for fig in chain(
+                        plot_train_stats(stats.train_stats),
+                        [plot_accuracy_by_checkpoint(stats.checkpoints_val_stats)],
+                    ):
                         logger.log(fig)
