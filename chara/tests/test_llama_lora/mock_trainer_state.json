@@ -1,0 +1,16 @@
+{
+    "log_history": [
+        {
+            "grad_norm": 8.1,
+            "learning_rate": 0.0002,
+            "loss": 2.5,
+            "step": 5
+        },
+        {
+            "grad_norm": 3.1,
+            "learning_rate": 0.0001,
+            "loss": 1.5,
+            "step": 10
+        }
+    ]
+}
