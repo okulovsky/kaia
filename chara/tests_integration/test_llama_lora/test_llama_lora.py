@@ -60,26 +60,106 @@ def log_checkpoint_stats(logger, checkpoint: CheckpointValStats):
     logger.log(f"Accuracy: {acc:.4f}")
 
     if not wrong:
-        logger.log("No wrong predictions 🎉")
-        return
+        logger.log("No wrong predictions")
+    else:
+        df = pd.DataFrame(
+            [
+                {
+                    "input": r.input,
+                    "expected": r.expected_output,
+                    "output": r.output,
+                }
+                for r in wrong
+            ]
+        )
 
-    df = pd.DataFrame(
-        [
-            {
-                "input": r.input,
-                "expected": r.expected_output,
-                "output": r.output,
-            }
-            for r in wrong
-        ]
-    )
+        logger.log(df)
 
-    logger.log(df)
+
+def run_llama_lora_test(
+    *,
+    model_id: str,
+    settings: TrainingSettings,
+    val_batch_size: int,
+    max_tokens: int,
+    adapter_name: str,
+    train_dataset: Path,
+    val_dataset: Path,
+):
+    with Loc.create_test_folder() as working_folder:
+        with BrainBox.Api.Test() as api:
+            CharaApis.brainbox_api = api
+            cache = LlamaLoraCache(working_folder)
+            pipeline = LlamaLoraPipeline(
+                model_id=model_id,
+                settings=settings,
+                val_batch_size=val_batch_size,
+                max_tokens=max_tokens,
+            )
+            pipeline(
+                cache=cache,
+                adapter_name=adapter_name,
+                train_dataset=train_dataset,
+                val_dataset=val_dataset,
+            )
+
+        stats = cache.read_result()
+
+    with logger.html_report(Path(__file__).parent / f"{adapter_name}_lora_stats.html"):
+        with logger.section("Summary"):
+            logger.log(f"Model: {model_id}")
+            logger.log(f"Adapter: {adapter_name}")
+            logger.log(f"Checkpoints evaluated: {len(stats.checkpoints_val_stats)}")
+
+        with logger.section("Checkpoint details"):
+            for checkpoint in stats.checkpoints_val_stats:
+                with logger.section(f"Checkpoint {checkpoint.number}"):
+                    log_checkpoint_stats(logger, checkpoint)
+
+        with logger.section("Plots"):
+            for fig in chain(
+                plot_train_stats(stats.train_stats),
+                [plot_accuracy_by_checkpoint(stats.checkpoints_val_stats)],
+            ):
+                logger.log(fig)
 
 
 class LlamaLoraTestCase(TestCase):
-    def test_llama_lora(self):
+    def test_01_llama_lora_report(self):
         model_id = "gemma-3-270m-it"
+
+        settings = TrainingSettings(
+            training_args={
+                "num_train_epochs": 1.0,
+                "per_device_train_batch_size": 2,
+                "gradient_accumulation_steps": 1,
+                "learning_rate": 2e-4,
+                "logging_steps": 1,
+                "save_strategy": "steps",
+                "save_steps": 0.02,
+                "save_total_limit": 3,
+                "report_to": "none",
+                "weight_decay": 0.01,
+                "lr_scheduler_type": "cosine",
+                "warmup_ratio": 0.1,
+                "seed": 252,
+                "fp16": True,
+            },
+        )
+
+        run_llama_lora_test(
+            model_id=model_id,
+            settings=settings,
+            val_batch_size=2,
+            max_tokens=10,
+            adapter_name="food_skill_small",
+            train_dataset=Path(__file__).parent / "small_train_example.jsonl",
+            val_dataset=Path(__file__).parent / "small_val_example.jsonl",
+        )
+
+    def test_02_llama_lora_full(self):
+        model_id = "gemma-3-270m-it"
+
         settings = TrainingSettings(
             training_args={
                 "num_train_epochs": 5.0,
@@ -98,43 +178,13 @@ class LlamaLoraTestCase(TestCase):
                 "fp16": True,
             },
         )
-        val_batch_size = 64
-        adapter_name = "food_skill"
-        train_dataset = Path(__file__).parent / "train_example.jsonl"
-        val_dataset = Path(__file__).parent / "val_example.jsonl"
 
-        with Loc.create_test_folder() as working_folder:
-            with BrainBox.Api.Test() as api:
-                CharaApis.brainbox_api = api
-                cache = LlamaLoraCache(working_folder)
-                pipeline = LlamaLoraPipeline(
-                    model_id=model_id,
-                    settings=settings,
-                    val_batch_size=val_batch_size,
-                    max_tokens=500,
-                )
-                pipeline(
-                    cache=cache,
-                    adapter_name=adapter_name,
-                    train_dataset=train_dataset,
-                    val_dataset=val_dataset,
-                )
-
-            stats = cache.read_result()
-            with logger.html_report(Path(__file__).parent / "food_skill_lora_stats.html"):
-                with logger.section("Summary"):
-                    logger.log(f"Model: {model_id}")
-                    logger.log(f"Adapter: {adapter_name}")
-                    logger.log(f"Checkpoints evaluated: {len(stats.checkpoints_val_stats)}")
-
-                with logger.section("Checkpoint details"):
-                    for checkpoint in sorted(stats.checkpoints_val_stats, key=lambda c: c.number):
-                        with logger.section(f"Checkpoint {checkpoint.number}"):
-                            log_checkpoint_stats(logger, checkpoint)
-
-                with logger.section("Plots"):
-                    for fig in chain(
-                        plot_train_stats(stats.train_stats),
-                        [plot_accuracy_by_checkpoint(stats.checkpoints_val_stats)],
-                    ):
-                        logger.log(fig)
+        run_llama_lora_test(
+            model_id=model_id,
+            settings=settings,
+            val_batch_size=64,
+            max_tokens=500,
+            adapter_name="food_skill_full",
+            train_dataset=Path(__file__).parent / "train_example.jsonl",
+            val_dataset=Path(__file__).parent / "val_example.jsonl",
+        )

@@ -1,5 +1,5 @@
-{"INPUT":"goat_input1", "OUTPUT": "goat_output1"}
-{"INPUT":"goat_input2", "OUTPUT": "goat_output2"}
+{"INPUT":"input1", "OUTPUT": "output1"}
+{"INPUT":"input2", "OUTPUT": "output2"}
 {"INPUT":"bad_input3", "OUTPUT": "bad_output3"}
-{"INPUT":"goat_input4", "OUTPUT": "goat_output4"}
-{"INPUT":"goat_input5", "OUTPUT": "goat_output5"}
+{"INPUT":"input4", "OUTPUT": "output4"}
+{"INPUT":"input5", "OUTPUT": "output5"}

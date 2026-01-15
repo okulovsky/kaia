@@ -50,7 +50,7 @@ class LlamaLoraSFTTrainerMock(Mock):
         return TrainingRun(
             model_id=model_id,
             adapter_name=adapter_name,
-            guid="goat_guid",
+            guid="mock_guid",
             path=self.training_run_folder,
         )
 
@@ -66,13 +66,13 @@ class LlamaLoraServerMock(Mock):
         prompts: Optional[list[str]] = None,
         max_tokens: int = 500,
     ) -> str | list[str]:
-        return [f"goat_output{prompt[-1]}" for prompt in prompts]
+        return [f"output{prompt[-1]}" for prompt in prompts]
 
 
 class LlamaLoraPipelineTestCase(TestCase):
     def test_mocked_pipeline(self):
-        model_id = "goat_model"
-        adapter_name = "goat_skill"
+        model_id = "mock_pipeline_model"
+        adapter_name = "mock_skill"
         val_batch_size = 2
         train_dataset = Path(__file__).parent / "mock_train_example.jsonl"
         val_dataset = Path(__file__).parent / "mock_val_example.jsonl"
@@ -101,7 +101,7 @@ class LlamaLoraPipelineTestCase(TestCase):
 
             self.assertEqual(stats.training_run.model_id, model_id)
             self.assertEqual(stats.training_run.adapter_name, adapter_name)
-            self.assertEqual(stats.training_run.guid, "goat_guid")
+            self.assertEqual(stats.training_run.guid, "mock_guid")
             self.assertEqual(stats.training_run.path, training_run_folder)
 
             self.assertEqual(
@@ -120,13 +120,13 @@ class LlamaLoraPipelineTestCase(TestCase):
                     checkpoint_val_stats.generation_results, start=1
                 ):
                     if i != 3:
-                        self.assertEqual(generation_result.input, f"goat_input{i}")
-                        self.assertEqual(generation_result.expected_output, f"goat_output{i}")
-                        self.assertEqual(generation_result.output, f"goat_output{i}")
+                        self.assertEqual(generation_result.input, f"input{i}")
+                        self.assertEqual(generation_result.expected_output, f"output{i}")
+                        self.assertEqual(generation_result.output, f"output{i}")
                     else:
                         self.assertEqual(generation_result.input, f"bad_input{i}")
                         self.assertEqual(generation_result.expected_output, f"bad_output{i}")
-                        self.assertEqual(generation_result.output, f"goat_output{i}")
+                        self.assertEqual(generation_result.output, f"output{i}")
                 self.assertEqual(checkpoint_val_stats.get_accuracy(), 0.8)
                 wrong_predictions = checkpoint_val_stats.get_wrong_predictions()
                 self.assertEqual(len(wrong_predictions), 1)
@@ -135,6 +135,6 @@ class LlamaLoraPipelineTestCase(TestCase):
                     GenerationResult(
                         input="bad_input3",
                         expected_output="bad_output3",
-                        output="goat_output3",
+                        output="output3",
                     ),
                 )
