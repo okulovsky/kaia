@@ -121,7 +121,10 @@ class LlamaLoraPipeline:
             training_run = cache.train_checkpoints.read_options().to_list()[0]
             gguf_checkpoints_dir = training_run.path / "gguf_checkpoints"
             gguf_checkpoints = list(gguf_checkpoints_dir.glob("checkpoint-*.gguf"))
-            for gguf_checkpoint in gguf_checkpoints:
+
+            for index, gguf_checkpoint in enumerate(gguf_checkpoints):
+                logger.log(f"Checkpoint {gguf_checkpoint}, {index}/{len(gguf_checkpoints)}")
+
                 checkpoint_number = int(gguf_checkpoint.stem.split("-")[1])
                 checkpoint_task_name = f"{training_run.guid}_{checkpoint_number}"
                 checkpoint_adapter_dest = (
