@@ -1,0 +1,11 @@
+{"INPUT": "USER:Я съел две шоколадки и 100 грамм творожной массы.\n", "OUTPUT": "ITEM\nname: шоколадка\namount: 2\nITEM\nname: творожная масса\nweight: 100\n"}
+{"INPUT": "USER:На обед у меня была чечевичная похлебка и кусок цельнозернового хлеба.\n", "OUTPUT": "ITEM\nname: чечевичная похлебка\nITEM\nname: цельнозерновой хлеб\n"}
+{"INPUT": "USER:На обед съел две булочки, миску борща, 150 грамм жареной курицы и чашку черного кофе.\n", "OUTPUT": "ITEM\namount: 2\nname: булочка\nITEM\nname: борщ\nITEM\nweight: 150\nname: курица\nITEM\nunit: чашка\nname: черный кофе\n"}
+{"INPUT": "USER:На завтрак у меня была овсяная каша, две котлеты, 50 грамм сливочного масла, стакан черного чая и горсть изюма.\n", "OUTPUT": "ITEM\nname: овсяная каша\nITEM\nname: котлета\namount: 2\nITEM\nname: сливочное масло\nweight: 50\nITEM\nname: черный чай\nunit: стакан\nITEM\nname: изюм\nunit: горсть\n"}
+{"INPUT": "USER:Я съел две вафли и выпил 300 грамм йогурта.\n", "OUTPUT": "ITEM\nname: вафли\namount: 2\nITEM\nweight: 300\nname: йогурт\n"}
+{"INPUT": "USER:На завтрак у меня были два тоста и 30 граммов арахисовой пасты.\n", "OUTPUT": "ITEM\nname: тосты\namount: 2\nITEM\nname: арахисовая паста\nweight: 30\n"}
+{"INPUT": "USER:На завтрак у меня были три оладьи, 200 грамм сметаны, чашка кофе, два бутерброда с колбасой и щепотка корицы.\n", "OUTPUT": "ITEM\nname: оладьи\namount: 3\nITEM\nname: сметана\nweight: 200\nITEM\nname: кофе\nunit: чашка\nITEM\nname: бутерброд с колбасой\namount: 2\nITEM\nname: корица\nunit: щепотка\n"}
+{"INPUT": "USER:Съел 100 грамм ветчины.\n", "OUTPUT": "ITEM\nname: ветчина\nweight: 100\n"}
+{"INPUT": "USER:На ужин я приготовил гречку с грибами, 200 грамм свинины, 3 котлеты и ломтик ржаного хлеба.\n", "OUTPUT": "ITEM\nname: гречка с грибами\nunit: порция\nITEM\nname: свинина\nweight: 200\nITEM\nname: котлеты\namount: 3\nITEM\nname: ржаный хлеб\nunit: ломтик\n"}
+{"INPUT": "USER:Я съел три вареника с картошкой и грушу.\n", "OUTPUT": "ITEM\nname: вареник\namount: 3\nITEM\nname: груша\n"}
+{"INPUT": "USER:Я пообедал куриным филе с овощами и горсть семечек.\n", "OUTPUT": "ITEM\nname: куриное филе с овощами\nITEM\nname: семечки\nunit: горсть\n"}

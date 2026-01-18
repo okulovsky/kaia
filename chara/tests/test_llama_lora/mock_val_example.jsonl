@@ -1,0 +1,5 @@
+{"INPUT":"input1", "OUTPUT": "output1"}
+{"INPUT":"input2", "OUTPUT": "output2"}
+{"INPUT":"bad_input3", "OUTPUT": "bad_output3"}
+{"INPUT":"input4", "OUTPUT": "output4"}
+{"INPUT":"input5", "OUTPUT": "output5"}

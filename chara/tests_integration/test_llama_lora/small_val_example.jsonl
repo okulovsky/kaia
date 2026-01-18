@@ -1,0 +1,3 @@
+{"INPUT": "USER:На ужин я съел 250 грамм куриного филе, порцию гречневой каши и овощной салат.\n", "OUTPUT": "ITEM\nname: куриное филе\nweight: 250\nITEM\nname: гречневая каша\nunit: порция\nITEM\nname: овощной салат\n"}
+{"INPUT": "USER:На ужин я выпил стакан сока, съел булочку и 35 грамм пасты.\n", "OUTPUT": "ITEM\nname: сок\nunit: стакан\nITEM\nname: булочка\nITEM\nname: паста\nweight: 35\n"}
+{"INPUT": "USER:Съел пять кусочков пиццы.\n", "OUTPUT": "ITEM\nname: пицца\namount: 5\n"}
