@@ -98,3 +98,5 @@ class Template(TemplateBase[LanguageDispatchDub[TemplateDub]]):
         template = self.dub.get_dispatch(DubParameters())
         return 'Template: '+ ' | '.join(s.get_human_readable_representation(DubParameters()) for s in template.sequences)
 
+    def __repr__(self):
+        return self.__str__()

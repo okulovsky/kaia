@@ -2,7 +2,7 @@ from typing import *
 from .kaia_skill import IKaiaSkill
 from eaglesong.core import Automaton, ContextRequest, AutomatonExit, Listen, Return
 from grammatron import Template
-from avatar.daemon import IntentsPack, ChatCommand, NarrationService, State, BackendIdleReport
+from avatar.daemon import IntentsPack, ChatCommand, NarrationService, State
 from dataclasses import dataclass, field
 import traceback
 from datetime import datetime
@@ -52,7 +52,6 @@ class KaiaAssistant:
                  raise_exception: bool = False,
                  custom_words_in_core_intents: dict[str, str] = None,
                  default_language: str = 'en',
-                 report_idle: bool = False,
                  ):
         self.skills = tuple(skills)
         self.active_skills: list[ActiveSkill] = []
@@ -61,7 +60,6 @@ class KaiaAssistant:
         self.custom_words_in_core_intents = custom_words_in_core_intents
         self.default_language = default_language
         self.current_language = default_language
-        self.report_idle = report_idle
         self.all_skills = tuple(skills)
 
         self.automaton_not_found_skill = self._check_special_skill(
@@ -145,29 +143,10 @@ class KaiaAssistant:
         self.active_skills = [a for a in self.active_skills if a != active_skill]
 
 
-    def _fix_language(self, active_skill, context: KaiaContext):
-        language = active_skill.skill.get_language()
-        if language.type == IKaiaSkill.Language.Type.self_managed:
-            return
-        target_language = None
-        if language.type == IKaiaSkill.Language.Type.default:
-            target_language = self.default_language
-        elif language.type == IKaiaSkill.Language.Type.specific:
-            target_language = language.language
-        if target_language is not None:
-            if self.current_language is None or self.current_language != target_language:
-                if context is not None:
-                    state = context.get_client().run_synchronously(NarrationService.LanguageRequest(target_language), State)
-                    self.current_language = state.language
-                else:
-                    self.current_language = target_language
-
 
     def _one_step(self, input, context:KaiaContext):
         history_item = AssistantHistoryItem(self.datetime_factory(), input)
         active_skill = self._get_automaton(input, context)
-
-        self._fix_language(active_skill, context)
 
         try:
             while True:
@@ -202,8 +181,6 @@ class KaiaAssistant:
             if returned is not None:
                 input = returned
             else:
-                if self.report_idle:
-                    yield BackendIdleReport(len(self.active_skills) == 0)
                 input = yield listen
 
 

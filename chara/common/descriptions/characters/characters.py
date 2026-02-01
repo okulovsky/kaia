@@ -1,7 +1,7 @@
 from typing import *
 from dataclasses import dataclass
 from enum import Enum
-from foundation_kaia.prompters import Referrer
+from copy import copy
 
 class Pronouns:
     @staticmethod
@@ -36,24 +36,23 @@ class Pronouns:
         return Pronouns.get(self.gender, self.plural, 3)
 
 
+class Gender(Enum):
+    Feminine = 0
+    Masculine = 1
+    Neutral = 2
 
-@dataclass
-class Character:
-    class Gender(Enum):
-        Feminine = 0
-        Masculine = 1
-        Neutral = 2
-
-    name: str
-    gender: Gender
-    description: str|None = None
+class Entity:
+    def __init__(self, name: str, description: str|None = None):
+        self.name = name
+        self.description = description
+        self.gender = Gender.Neutral
 
     @property
     def pronoun(self):
         return Pronouns(self.gender, False)
 
     def __add__(self, other) -> 'CharacterSet':
-        if isinstance(other, Character):
+        if isinstance(other, Entity):
             return CharacterSet((self,other))
         elif isinstance(other, CharacterSet):
             return CharacterSet((self,)+other.characters)
@@ -64,27 +63,49 @@ class Character:
         return self.name
 
 
-class CharacterSet:
-    def __init__(self, characters: tuple[Character,...]):
-        self.characters = characters
+class Character(Entity):
+    Gender = Gender
 
-    def __add__(self, other) -> 'CharacterSet':
-        if isinstance(other, Character):
-            return CharacterSet(self.characters+(other,))
-        elif isinstance(other, CharacterSet):
-            return CharacterSet(self.characters+other.characters)
+    def __init__(self, name: str, gender: Gender, description: str|None):
+        super().__init__(name, description)
+        self.gender = gender
+
+
+class EntitySet:
+    def __init__(self, characters: Iterable[Entity]):
+        self.characters = tuple(characters)
+        self.junction = 'and'
+
+    def with_junction(self, junction: str):
+        result = copy(self)
+        result.junction = junction
+        return result
+
+    def __add__(self, other) -> 'EntitySet':
+        if isinstance(other, Entity):
+            return EntitySet(self.characters+(other,))
+        elif isinstance(other, EntitySet):
+            return EntitySet(self.characters+other.characters)
         else:
             raise ValueError("Other should be Character or CharacterSet")
 
     def __str__(self):
         names = [c.name for c in self.characters]
         if len(names) > 1:
-            return ', '.join(names[:-1]) + ' and ' + names[-1]
+            return ', '.join(names[:-1]) + ' ' + self.junction + ' ' + names[-1]
         elif len(names) == 1:
             return names[0]
         else:
             raise ValueError("Empty character set")
 
+    def __len__(self):
+        return len(self.characters)
+
+    def __index__(self, index: int) -> "Entity":
+        return self.characters[index]
+
+    def __iter__(self):
+        return iter(self.characters)
 
     @property
     def pronoun(self):
@@ -95,11 +116,4 @@ class CharacterSet:
         else:
             return Pronouns(self.characters[0].gender, False)
 
-
-class WorldState:
-    user: Character
-    character: Character
-    activity: str
-    language: str
-
-World = Referrer[WorldState]().ref
+CharacterSet = EntitySet

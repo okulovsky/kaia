@@ -47,6 +47,8 @@ class BrainboxImageBuilder(IImageBuilder):
 
         lines.extend(self._create_platform_check_lines())
 
+        lines.append("RUN pip install --no-cache-dir pip==23.2.1 wheel")
+
         context = BuildContext(self.root_path, exec)
 
         if self.apt_install is not None:

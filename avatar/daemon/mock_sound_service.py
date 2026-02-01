@@ -1,4 +1,4 @@
-from .common.known_messages import SoundCommand, SoundConfirmation, PlayableTextMessage
+from .common.known_messages import SoundCommand, SoundConfirmation, TextCommand
 from .common import AvatarService, message_handler, Confirmation
 
 
@@ -13,7 +13,7 @@ class MockSoundService(AvatarService):
 
 class MockVoiceoverService(AvatarService):
     @message_handler
-    def handle_playable(self, message: PlayableTextMessage) -> Confirmation:
+    def handle_playable(self, message: TextCommand) -> Confirmation:
         return message.confirm_this()
 
     def requires_brainbox(self):

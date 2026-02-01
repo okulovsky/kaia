@@ -10,6 +10,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from foundation_kaia.misc import Loc
 from pprint import pprint
+from loguru import logger
 
 
 class SeleniumDriver:
@@ -62,6 +63,7 @@ class Helper:
     def process(self, q):
         def _():
             for m in q:
+                logger.info(f"TEST SEES MESSAGE {m}")
                 if isinstance(m, ExceptionEvent):
                     print(m.source)
                     print(m.traceback)
@@ -87,7 +89,7 @@ class Helper:
         self.client.put(TickEvent(datetime.now()))
         kaldi_training = (
             self.client
-            .query(5)
+            .query(10)
             .feed(self.process)
             .feed(slice(lambda z: isinstance(z, BrainBoxService.Confirmation)))
         )
@@ -96,7 +98,6 @@ class Helper:
             kaldi_training,
             TickEvent,
             STTService.RhasspyTrainingCommand,
-            BackendIdleReport,
             BrainBoxService.Command,
             BrainBoxService.Confirmation
         )

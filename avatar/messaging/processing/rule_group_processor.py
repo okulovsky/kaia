@@ -42,11 +42,14 @@ class RuleGroupProcessor:
                 self.host_object.set_resources_folder(self.working_folder/type(self.host_object).__name__.split('.')[-1])
         while not self._stop_event.is_set():
             message: IMessage = self._queue.get()
+
             if message is None:
                 break
 
             for rule in self.rules:
-                if not rule.input.check_incoming(message):
+                check_result = rule.input.check_incoming(message)
+                if check_result is not None:
+                    #self._event_queue.put(ProcessingEvent(ProcessingEvent.Type.Rejected, message, rule.name, rejection_reason=check_result))
                     continue
 
                 self._event_queue.put(ProcessingEvent(ProcessingEvent.Type.Accepted, message, rule.name))

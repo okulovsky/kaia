@@ -1,4 +1,4 @@
-from .common import State, message_handler, UtteranceSequenceCommand, PlayableTextMessage, TextInfo, TextCommand, AvatarService
+from .common import State, message_handler, TextCommand, AvatarService, InternalTextCommand
 
 
 class StateToUtterancesApplicationService(AvatarService):
@@ -6,25 +6,14 @@ class StateToUtterancesApplicationService(AvatarService):
         self.state = state
 
     @message_handler
-    def on_utterance(self, text: UtteranceSequenceCommand) -> PlayableTextMessage[UtteranceSequenceCommand]:
-        result = PlayableTextMessage(
-            text,
-            TextInfo(
-                self.state.character,
-                self.state.language
-            )
+    def on_text_command(self, text: TextCommand) -> InternalTextCommand:
+        return InternalTextCommand(
+            text.text,
+            text.user,
+            text.language if text.language is not None else self.state.language,
+            text.character if text.character is not None else self.state.character
         ).as_propagation_confirmation_to(text)
-        return result
 
-    @message_handler
-    def on_text(self, text: TextCommand) -> PlayableTextMessage[TextCommand]:
-        return PlayableTextMessage(
-            text,
-            TextInfo(
-                self.state.character,
-                self.state.language
-            )
-        ).as_propagation_confirmation_to(text)
 
     def requires_brainbox(self):
         return False

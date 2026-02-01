@@ -6,7 +6,7 @@ from dataclasses import dataclass
 @dataclass
 class PytorchDependencies(IBuilderPart):
     pytorch_version: str
-    cuda_version: str = 'cu124'
+    cuda_version: str|None = 'cu124'
     torchaudio_version: str|None|bool = None
     torchvideo_version: str|None = None
 
@@ -29,10 +29,10 @@ class PytorchDependencies(IBuilderPart):
 
         pkgs = " ".join(packages)
 
-        cuda_index_url = (
+        index_url = (
             f"https://download.pytorch.org/whl/{self.cuda_version}"
             if self.cuda_version is not None
-            else None
+            else "https://download.pytorch.org/whl/cpu"
         )
 
         lines: list[str] = [
@@ -42,15 +42,10 @@ class PytorchDependencies(IBuilderPart):
         ]
 
         # amd64 / x86_64
-        if cuda_index_url is not None:
-            lines += [
-                f"        pip wheel --no-cache-dir --wheel-dir=/tmp/wheels "
-                f"--index-url {cuda_index_url} {pkgs}; \\",
-            ]
-        else:
-            lines += [
-                f"        pip wheel --no-cache-dir --wheel-dir=/tmp/wheels {pkgs}; \\",
-            ]
+        lines += [
+            f"        pip wheel --no-cache-dir --wheel-dir=/tmp/wheels "
+            f"--index-url {index_url} {pkgs}; \\",
+        ]
 
         lines += [
             f"        pip install --no-cache-dir --no-index --find-links=/tmp/wheels {pkgs}; \\",

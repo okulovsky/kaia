@@ -13,6 +13,14 @@ class ResemblyzerController(DockerWebServiceController[ResemblyzerSettings], INo
         return BrainboxImageBuilder(
             Path(__file__).parent,
             '3.8.20',
+            allow_arm64=True,
+            custom_dependencies=(
+                BrainboxImageBuilder.PytorchDependencies(
+                    '2.3.1', None, False
+                ),
+                BrainboxImageBuilder.Dependencies(no_deps=True)
+            ),
+            keep_dockerfile=True,
         )
 
     def get_service_run_configuration(self, parameter: str|None) -> RunConfiguration:

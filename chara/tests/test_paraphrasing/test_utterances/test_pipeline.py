@@ -1,6 +1,6 @@
 from avatar.server import AvatarApi, AvatarServerSettings
 from avatar.server.components import ResourcesComponent
-from avatar.daemon import ParaphraseService, State, PlayableTextMessage, UtteranceSequenceCommand, TextInfo
+from avatar.daemon import ParaphraseService, State
 from unittest import TestCase
 from grammatron import Template, TemplatesCollection, TimedeltaDub
 from chara.paraphrasing.utterances import CaseBuilder, UtteranceParaphrasePipeline, UtteranceParaphrasesCache, ParaphraseStats

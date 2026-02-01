@@ -1,4 +1,3 @@
-from eaglesong.core import Return
 from typing import *
 from grammatron import *
 from kaia import SingleLineKaiaSkill, World

@@ -1,13 +1,11 @@
-from .common import AvatarService, message_handler, PlayableTextMessage, State, ChatCommand, UtteranceEvent, ExceptionEvent, TextEvent
+from .common import AvatarService, message_handler, State, ChatCommand, ExceptionEvent, TextEvent, InternalTextCommand
 from grammatron import DubParameters
 from typing import *
 
 class ChatService(AvatarService):
     def __init__(self,
-                 state: State,
                  sender_to_image_url_translator: Callable[[str], str]
                  ):
-        self.state = state
         self.sender_to_image_url_translator = sender_to_image_url_translator
 
     def requires_brainbox(self):
@@ -16,35 +14,30 @@ class ChatService(AvatarService):
     def _get_picture(self, sender):
         if self.sender_to_image_url_translator is None:
             return None
+        if sender is None:
+            return None
         return self.sender_to_image_url_translator(sender)
 
 
     @message_handler
-    def handle_to_user(self, message: PlayableTextMessage) -> ChatCommand:
+    def on_command(self, message: InternalTextCommand) -> ChatCommand:
         return ChatCommand(
-            message.text.get_text(False, self.state.language),
+            message.get_text(False),
             ChatCommand.MessageType.to_user,
-            message.info.speaker,
-            self._get_picture(message.info.speaker)
+            message.character,
+            self._get_picture(message.character)
         )
 
-    def _get_message_from_user(self, text):
+
+
+    @message_handler
+    def on_event(self, message: TextEvent) -> ChatCommand:
         return ChatCommand(
-            text,
+            message.get_text(False),
             ChatCommand.MessageType.from_user,
-            self.state.user,
-            self._get_picture(self.state.user)
+            message.user,
+            self._get_picture(message.user)
         )
-
-    @message_handler
-    def on_utterance_event(self, message: UtteranceEvent) -> ChatCommand:
-        return self._get_message_from_user(message.utterance.to_str(DubParameters(False, self.state.language)))
-
-
-    @message_handler
-    def on_text_event(self, message: TextEvent) -> ChatCommand:
-        return self._get_message_from_user(message.text)
-
 
     @message_handler
     def handle_exception(self, message: ExceptionEvent) -> ChatCommand:

@@ -5,68 +5,67 @@ from dataclasses import dataclass, field
 from grammatron import Utterance, UtterancesSequence, DubParameters
 
 
-class ITextMessage(ABC):
-    @abstractmethod
-    def get_text(self, spoken: bool, language: str|None) -> str:
-        pass
+def _prettify_string(s):
+    s = s.strip()
+    s = s[0].upper() + s[1:]
+    if s[-1] not in {'.', '!', '?'}:
+        s += '.'
+    return s
+
+
+def _unwrap(element: str | Utterance | UtterancesSequence, parameters: DubParameters,
+            array: list[str]):
+    if isinstance(element, str):
+        array.append(element)
+    elif isinstance(element, Utterance):
+        array.append(element.to_str(parameters))
+    elif isinstance(element, UtterancesSequence):
+        for component in element.utterances:
+            _unwrap(component, parameters, array)
+    else:
+        raise TypeError("Expected string, Utterance or UtterancesSequence")
+
+
+def extract_text(argument: str | Utterance | UtterancesSequence, parameters: DubParameters):
+    text = []
+    _unwrap(argument, parameters, text)
+    return ' '.join(_prettify_string(s) for s in text)
+
+
 
 @dataclass
-class TextInfo:
-    speaker: str
-    language: str
+class TextEvent(IMessage):
+    text: str|Utterance
+    user: str|None = None
+    file_id: str|None = None
 
 
-TTextMessage = TypeVar('TTextMessage', bound=ITextMessage)
+    def get_text(self, spoken: bool) -> str:
+        return extract_text(
+            self.text,
+            DubParameters(spoken)
+        )
+
 
 @dataclass
-class PlayableTextMessage(IMessage, Generic[TTextMessage]):
-    text: TTextMessage
-    info: TextInfo
+class TextCommand(IMessage):
+    text: str|Utterance|UtterancesSequence
+    user: str|None = None
+    language: str|None = None
+    character: str|None = None
+
+    def get_text(self, spoken: bool) -> str:
+        return extract_text(self.text, DubParameters(spoken, self.language))
+
 
 @dataclass
-class UtteranceEvent(IMessage, ITextMessage):
-    utterance: Utterance
+class InternalTextCommand(IMessage):
+    text: str|Utterance|UtterancesSequence
+    user: str|None = None
+    language: str|None = None
+    character: str|None = None
 
-    def get_text(self, spoken: bool, language: str|None) -> str:
-        return self.utterance.to_str(DubParameters(spoken, language))
-
-@dataclass
-class TextEvent(IMessage, ITextMessage):
-    text: str
-    def get_text(self, spoken: bool, language: str|None) -> str:
-        return self.text
-
-
-class UtteranceSequenceCommand(IMessage, ITextMessage):
-    def __init__(self, content: UtterancesSequence|Utterance|str):
-        if isinstance(content, UtterancesSequence):
-            self.utterances_sequence = content
-        else:
-            self.utterances_sequence = UtterancesSequence(content)
-
-    def _prettify_string(self, s):
-        s = s.strip()
-        s = s[0].upper() + s[1:]
-        if s[-1] not in {'.', '!', '?'}:
-            s += '.'
-        return s
-
-    def get_text(self, spoken: bool, language: str|None) -> str:
-        texts = []
-        for component in self.utterances_sequence.utterances:
-            if isinstance(component, str):
-                texts.append(component)
-            elif isinstance(component, Utterance):
-                texts.append(component.to_str(DubParameters(spoken, language)))
-        texts = [self._prettify_string(s) for s in texts]
-        return ' '.join(texts)
-
-@dataclass
-class TextCommand(IMessage, ITextMessage):
-    text: str
-
-    def get_text(self, spoken: bool, language: str|None) -> str:
-        return self.text
-
+    def get_text(self, spoken: bool) -> str:
+        return extract_text(self.text, DubParameters(spoken, self.language))
 
 

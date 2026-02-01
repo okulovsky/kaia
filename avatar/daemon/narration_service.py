@@ -1,5 +1,5 @@
 from typing import *
-from .common import IMessage, State, message_handler, TickEvent, InitializationEvent, AvatarService, TextCommand, UtteranceSequenceCommand
+from .common import IMessage, State, message_handler, TickEvent, InitializationEvent, AvatarService, TextCommand
 from dataclasses import dataclass
 import numpy as np
 from datetime import datetime
@@ -34,7 +34,7 @@ class NarrationService(AvatarService):
                  state: State,
                  characters: tuple[str, ...] | None = None,
                  activities: tuple[str, ...] | None = None,
-                 welcome_command: TextCommand | UtteranceSequenceCommand | None = None,
+                 welcome_command: TextCommand  | None = None,
                  time_between_updates_in_seconds: int | None = None,
                  randomize: bool = True,
                  ):
@@ -68,7 +68,7 @@ class NarrationService(AvatarService):
 
 
     @message_handler
-    def change_character(self, message: ChangeCharacterCommand) -> Iterable[Union[NewImageCommand,State, TextCommand, UtteranceSequenceCommand]]:
+    def change_character(self, message: ChangeCharacterCommand) -> Iterable[Union[NewImageCommand,State, TextCommand]]:
         if message.character is None:
             character = self._random_change(self.state.character, self.characters)
         else:
@@ -109,7 +109,7 @@ class NarrationService(AvatarService):
         return self.state.with_new_envelop().as_confirmation_for(message)
 
     @message_handler
-    def initialize(self, message: InitializationEvent) -> Iterable[Union[NewImageCommand,State, TextCommand, UtteranceSequenceCommand]]:
+    def initialize(self, message: InitializationEvent) -> Iterable[Union[NewImageCommand,State, TextCommand]]:
         return self.change_character(ChangeCharacterCommand())
 
 

@@ -1,6 +1,6 @@
 from unittest import TestCase
 from foundation_kaia.misc import Loc
-from avatar.daemon import UtteranceEvent, ChatCommand, InitializationEvent, ImageService, UtteranceSequenceCommand
+from avatar.daemon import ChatCommand, InitializationEvent, ImageService, TextEvent, TextCommand
 from kaia.skills.activity_skill import ActivityIntents, ActivityReplies
 from kaia.tests.helper import Helper
 from avatar.utils import slice
@@ -18,18 +18,18 @@ class ActivitySkillTestCase(TestCase):
                 intro = client.query(5).feed(slice(lambda z: isinstance(z, ChatCommand)))
                 #self.assertEqual(9, len(intro))
 
-                client.put(UtteranceEvent(ActivityIntents.change_activity()))
+                client.put(TextEvent(ActivityIntents.change_activity()))
                 client.query(5).feed(slice(lambda z: isinstance(z, ImageService.NewImageCommand)))
-                after = client.query(5).feed(slice(lambda z: isinstance(z, UtteranceSequenceCommand)))
+                after = client.query(5).feed(slice(lambda z: isinstance(z, TextCommand)))
                 self.assertEqual(
-                    after[-1].utterances_sequence.utterances[0].template,
+                    after[-1].text.template,
                     ActivityReplies.activity_changed
                 )
 
-                client.put(UtteranceEvent(ActivityIntents.activity_request()))
-                after = client.query(5).feed(slice(lambda z: isinstance(z, UtteranceSequenceCommand)))
+                client.put(TextEvent(ActivityIntents.activity_request()))
+                after = client.query(5).feed(slice(lambda z: isinstance(z, TextCommand)))
                 self.assertEqual(
-                    after[-1].utterances_sequence.utterances[0].template,
+                    after[-1].text.template,
                     ActivityReplies.current_activity
                 )
 

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from kaia.assistant import KaiaSkillBase, CommonIntents
 from grammatron import *
-from avatar.daemon import World, TickEvent
+from kaia import  TickEvent, World
 from eaglesong import Listen, Return
 from typing import cast
 from yo_fluq import Query
@@ -12,7 +12,7 @@ from .music_skill import IMusicPlayer
 class Excercise:
     name: str
     duration_in_seconds: int
-    rest_afterwards_in_seconds: int
+    rest_afterwards_in_seconds: int|None
 
 @dataclass
 class Workout:
@@ -49,10 +49,11 @@ class WorkoutReplies(TemplatesCollection):
     cancelled = Template("The workout is cancelled").context(f"{World.user} requested to stop the workout routing thet {World.character} was running")
 
 class WorkoutSkill(KaiaSkillBase):
-    def __init__(self, workouts: list[Workout], music: IMusicPlayer|None):
+    def __init__(self, workouts: list[Workout], music: IMusicPlayer|None, last_announcement_skip: int = 10):
         self.workouts = workouts
         self.music = music
         workout_names = [w.name for w in workouts]
+        self.last_announcement_skip = last_announcement_skip
         super().__init__(
             [WorkoutIntents.start.substitute(workout_name=OptionsDub(workout_names))],
             WorkoutReplies,
@@ -65,6 +66,7 @@ class WorkoutSkill(KaiaSkillBase):
         return isinstance(input, TickEvent) or input in CommonIntents.stop
 
     def _wait(self, seconds: int):
+        print(f'Now waiting for {seconds}')
         first_tick: TickEvent|None = None
         while True:
             tick = yield Listen()
@@ -92,19 +94,21 @@ class WorkoutSkill(KaiaSkillBase):
             self.music.play()
         yield from self._wait(0)
         yield WorkoutReplies.starting(workout_name)
+        rest_after_previous = None
         for item in workout[0].items:
+            if rest_after_previous is not None:
+                yield WorkoutReplies.rest(timedelta(seconds=rest_after_previous))
+                yield from self._wait(rest_after_previous)
             yield WorkoutReplies.exercise(EXERCISE.assign(item.name), DURATION.assign(timedelta(seconds=item.duration_in_seconds)))
-            TAIL = 10
             first_call = item.duration_in_seconds//2
-            second_call = (item.duration_in_seconds - first_call) - TAIL
+            second_call = (item.duration_in_seconds - first_call) - self.last_announcement_skip
             yield from self._wait(first_call)
             yield WorkoutReplies.keep_going()
             yield from self._wait(second_call)
             yield WorkoutReplies.almost_there()
-            yield from self._wait(TAIL)
-            if item.rest_afterwards_in_seconds > 0:
-                yield WorkoutReplies.rest(item.rest_afterwards_in_seconds)
-                yield from self._wait(item.rest_afterwards_in_seconds)
+            yield from self._wait(self.last_announcement_skip)
+            rest_after_previous = item.rest_afterwards_in_seconds
+
         yield WorkoutReplies.done()
         if self.music is not None:
             self.music.stop()

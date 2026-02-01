@@ -8,25 +8,27 @@ class RuleConnector:
     include_publisher_prefixes: tuple[str,...]|None = None
     exclude_publisher_prefixes: tuple[str,...]|None = None
 
-    def check_incoming_internal(self, message_type: Type, publisher: str):
+    def check_incoming_internal(self, message_type: Type, publisher: str) -> str|None:
         if self.type is not None:
             if not issubclass(message_type, self.type):
-                return False
-        if self.exclude_publisher_prefixes is not None:
+                return f"Expected {self.type}, was {message_type}"
+        if self.exclude_publisher_prefixes is not None and publisher is not None:
             for prefix in self.exclude_publisher_prefixes:
                 if publisher.startswith(prefix):
-                    return False
+                    return f'Publisher {publisher} excluded by {prefix}'
         if self.include_publisher_prefixes is not None:
             found = False
-            for prefix in self.include_publisher_prefixes:
-                if publisher.startswith(prefix):
-                    found = True
-                    break
-            return found
-        return True
+            if publisher is not None:
+                for prefix in self.include_publisher_prefixes:
+                    if publisher.startswith(prefix):
+                        found = True
+                        break
+            if not found:
+                return f"Pushlisher {publisher} is not among {self.include_publisher_prefixes}"
+        return None
 
 
-    def check_incoming(self, message: IMessage):
+    def check_incoming(self, message: IMessage) -> str|None:
         return self.check_incoming_internal(type(message), message.envelop.publisher)
 
 

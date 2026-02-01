@@ -102,10 +102,13 @@ class IMessage:
         return Confirmation(result = result).as_confirmation_for(self).as_reply_to(self)
 
     def confirm_this(self) -> 'Confirmation':
-        return Confirmation().as_confirmation_for(self).as_reply_to(self)
+        return Confirmation(confirmation_details=str(self)).as_confirmation_for(self).as_reply_to(self)
+
+
 
 @dataclass
 class Confirmation(IMessage):
     result: Any = None
     error: str|None = None
+    confirmation_details: str|None = None
 

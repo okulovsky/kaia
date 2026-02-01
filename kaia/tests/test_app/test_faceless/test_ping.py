@@ -17,7 +17,7 @@ class FacelessTestCase(TestCase):
                 for i in range(3):
                     helper.wakeword()
                     c = helper.say('are_you_here')
-                    result = helper.parse_reaction(UtteranceSequenceCommand)
+                    result = helper.parse_reaction(TextCommand)
 
                     ThreadCollection.just_print(result)
                     chats = Query.en(result).where(lambda z: isinstance(z, ChatCommand)).to_list()

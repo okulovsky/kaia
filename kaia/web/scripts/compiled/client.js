@@ -47,12 +47,13 @@ export class AvatarClient {
      * @returns Array of Message instances.
      * @throws Error on non-2xx response.
      */
-    async getMessages(count) {
+    async getMessages(count, types) {
         const url = new URL(`${this.baseUrl}/messages/get`);
         const body = {
             session: this.session,
             last_message_id: this.lastMessageId,
-            count: count
+            count: count,
+            types: types
         };
         const resp = await fetch(url.toString(), {
             method: 'POST',

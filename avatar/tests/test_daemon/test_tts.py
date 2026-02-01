@@ -1,16 +1,25 @@
 from unittest import TestCase
-from avatar.daemon.common.known_messages import TextInfo
+from avatar.daemon.common.known_messages import SoundCommand
 from avatar.daemon import MockSoundService, BrainBoxService, TTSService, Confirmation
 from avatar.messaging import AvatarDaemon, TestStream, ThreadCollection
+from brainbox import BrainBox
+
+
+def brain_box_mock(task: BrainBox.ExtendedTask):
+    if task.task.decider != 'Mock':
+        raise ValueError("Mock task is expected")
+    text = task.task.arguments['text']
+    return SoundCommand('FILE: ' + text, text)
+
 
 class VoiceoverServiceTestCase(TestCase):
     def test_voiceover(self):
         voiceover_service = TTSService(TTSService.MockTaskFactory())
-        brainbox_service = BrainBoxService(TTSService.brain_box_mock)
+        brainbox_service = BrainBoxService(brain_box_mock)
         sound_processor = MockSoundService()
 
         client = TestStream().create_client()
-        client.put(TTSService.Command(('a','b'), TextInfo('x','y')))
+        client.put(TTSService.Command(('a','b'), TTSService.Command.Settings('x','y')))
         app = AvatarDaemon(client)
         app.rules.bind(voiceover_service)
         app.rules.bind(brainbox_service)

@@ -64,13 +64,5 @@ class STTService(AvatarService):
             .as_propagation_confirmation_to(message)
         )
 
-    @staticmethod
-    def brain_box_mock(task: BrainBox.ITask):
-        jobs = task.create_jobs()
-        if jobs[-1].decider=='EmptyDecider': #It means training
-            return 'OK'
-        if len(jobs) != 1:
-            raise ValueError("Must be either multi-job task for training, or a single-job task for recognition")
-        job = jobs[0]
-        return jsonpickle.loads(job.arguments['file'])[job.decider]
+
 

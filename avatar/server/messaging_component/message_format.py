@@ -1,4 +1,3 @@
-from typing import Any
 from ...messaging import IMessage, Envelop
 from .format import Format
 from typing import *

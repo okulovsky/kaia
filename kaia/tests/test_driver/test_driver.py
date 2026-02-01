@@ -1,7 +1,9 @@
+import loguru
+
 from kaia.driver import *
 from eaglesong import Listen, Automaton, Return, Terminate
-from grammatron import Template, Utterance, TemplatesCollection
-from avatar.daemon import TextEvent, ChatCommand, UtteranceSequenceCommand
+from grammatron import Template, Utterance, TemplatesCollection, UtterancesSequence
+from avatar.daemon import TextEvent, ChatCommand, TextCommand
 from avatar.messaging import TestStream, IMessage
 from unittest import TestCase
 from typing import cast
@@ -9,9 +11,10 @@ from typing import cast
 class Replies(TemplatesCollection):
     reply = Template("reply")
 
-def test_routine():
+def mock_routine():
     while True:
         value = yield
+        loguru.logger.info(f"In routine {value}")
         if not isinstance(value, TextEvent):
             yield Listen()
             continue
@@ -32,45 +35,41 @@ def test_routine():
         yield Listen()
 
 class DriverTestCase(TestCase):
-    def check_ut(self, result: list[IMessage], *expected):
+    def check_ut(self, result: list[IMessage], expected_type: type):
         self.assertEqual(2, len(result))
-        self.assertIsInstance(result[-1], UtteranceSequenceCommand)
+        self.assertIsInstance(result[-1], TextCommand)
         self.assertTrue(result[0].envelop.id, result[-1].envelop.reply_to)
-        cmd = cast(UtteranceSequenceCommand, result[-1])
-        self.assertEqual(len(expected), len(cmd.utterances_sequence.utterances))
-        for e, a in zip(expected, cmd.utterances_sequence.utterances):
-            if isinstance(e, Utterance):
-                e.assertion(a, self)
-            else:
-                self.assertEqual(e, a)
+        cmd = cast(TextCommand, result[-1])
+        self.assertIsInstance(cmd.text, expected_type)
+
 
 
 
     def test_driver(self):
         client = TestStream().create_client(None).with_name('main')
         driver = KaiaDriver(
-            lambda _: test_routine,
+            DefaultAssistantFactory(lambda _: mock_routine),
             client.clone('driver'),
             expect_confirmations_for_types=()
         )
         driver.run_in_thread()
         client.put(TextEvent('text'))
         result = client.query(1).take(2).to_list()
-        self.assertIsInstance(result[-1], UtteranceSequenceCommand)
-        self.check_ut(result, 'new_text')
+        self.assertIsInstance(result[-1], TextCommand)
+        self.check_ut(result, str)
 
         client.put(TextEvent('utterance'))
         result = client.query(1).take(2).to_list()
-        self.check_ut(result, Replies.reply())
+        self.check_ut(result, Utterance)
 
         client.put(TextEvent('sequence'))
         result = client.query(1).take(2).to_list()
-        self.check_ut(result, Replies.reply(), 'new_text')
+        self.check_ut(result, UtterancesSequence)
 
         client.put(TextEvent('message'))
         result = client.query(1).take(2).to_list()
         self.assertIsInstance(result[-1], ChatCommand)
-        self.assertEqual('command', result[-1].text)
+        self.assertEqual('command',  result[-1].text)
 
         client.put(TextEvent('error'))
         result = client.query(1).take(2).to_list()

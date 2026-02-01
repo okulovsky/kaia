@@ -33,7 +33,7 @@ class IRepetition(ABC):
 
 
 class WeekdayRepetition(IRepetition):
-    def __init__(self, days: Weekdays | int | Iterable[Weekdays|int]):
+    def __init__(self, days: Weekdays | int | Iterable[Weekdays|int], allowed_weeks: list[int]|None = None):
         try:
             iterator = iter(days)
             iterable = True
@@ -50,10 +50,23 @@ class WeekdayRepetition(IRepetition):
             else:
                 raise ValueError(f"Argument {i} should be Weekday or int, but was {day}")
         self._days = tuple(c.value for c in parsed)
+        self._allowed_weeks = allowed_weeks
 
 
     def accepts_date(self, date: date) -> bool:
-        return date.weekday() in self._days
+        if date.weekday() not in self._days:
+            return False
+        if self._allowed_weeks is None:
+            return True
+        new_date = date
+        week = 0
+        for i in range(6):
+            new_date = new_date - timedelta(days=7)
+            if new_date.month != date.month:
+                break
+            else:
+                week += 1
+        return week in self._allowed_weeks
 
 
 class EveryDayRepetition(IRepetition):

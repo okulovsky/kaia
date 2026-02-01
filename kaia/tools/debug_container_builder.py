@@ -10,7 +10,7 @@ def create_builder():
         .to_list()
     )
 
-    folders = ['foundation_kaia', 'brainbox', 'eaglesong', 'grammatron', 'avatar', 'phonix', 'kaia']
+    folders = ['foundation_kaia', 'brainbox', 'eaglesong', 'grammatron', 'avatar', 'phonix', 'kaia', 'chara']
 
     copy = {
         Loc.root_folder/name:name

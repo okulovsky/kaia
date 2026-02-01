@@ -1,4 +1,4 @@
-from .common import AvatarService, message_handler, BackendIdleReport, ImageEvent, State, IMessage, InitializationEvent
+from .common import AvatarService, message_handler, ImageEvent, IMessage, InitializationEvent
 from .common.vector_identificator import VectorIdentificator, IStrategy
 from .brainbox_service import BrainBoxService
 from brainbox import BrainBox
@@ -12,22 +12,24 @@ logger.disable(__name__)
 @dataclass
 class UserWalkInEvent(IMessage):
     user: str
+    file_id: str
+
+@dataclass
+class UserWalkInTrain(IMessage):
+    file_id: str
+    actual_user: str
 
 class UserWalkInService(AvatarService):
     Event = UserWalkInEvent
+    Train = UserWalkInTrain
+
 
     def __init__(self,
-                 state: State,
                  api: AvatarApi,
                  identification_strategy: IStrategy,
-                 idle_time_in_seconds = 60,
                  ):
-        self.state = state
         self.api = api
         self.identification_strategy = identification_strategy
-        self.idle_time_in_seconds = idle_time_in_seconds
-
-        self.first_idle: BackendIdleReport|None = None
         self.identificator: VectorIdentificator|None = None
 
     @message_handler
@@ -49,35 +51,19 @@ class UserWalkInService(AvatarService):
             return None
         return result.result[0]['embedding']
 
-
-    @message_handler
-    def on_backend_idle_report(self, message: BackendIdleReport):
-        logger.info("BackendIdleReport received")
-        if message.is_idle:
-            if self.first_idle is None:
-                logger.info('State in WalkIn set to Idle')
-                self.first_idle = message
-        else:
-            logger.info('State in WalkIn set to Busy')
-            self.first_idle = None
-
     @message_handler.with_call(BrainBoxService.Command, BrainBoxService.Confirmation)
     def on_image_event(self, message: ImageEvent) -> UserWalkInEvent|None:
-        if self.first_idle is None:
-            logger.info('Image while busy')
-            return None
-
-        delta = (message.envelop.timestamp - self.first_idle.envelop.timestamp).total_seconds()
-        if delta < self.idle_time_in_seconds:
-            logger.info(f'Not enough idle time, {delta} seconds of {self.idle_time_in_seconds}')
-            return None
         user = self.identificator.analyze(message.file_id)
         if user is None:
-            logger.info("User is not recognized. Misconfigured service?")
+            logger.info("User is not recognized")
             return None
-        self.state.user = user
-        yield UserWalkInEvent(user)
+        return UserWalkInEvent(user, message.file_id)
 
+
+    @message_handler
+    def train(self, message: UserWalkInTrain) -> None:
+        self.identificator.add_sample(message.actual_user, message.file_id)
+        self.identificator.initialize()
 
 
     def requires_brainbox(self):

@@ -31,7 +31,7 @@ class FullTestCase(TestCase):
 
                     helper.wakeword()
                     helper.say('are_you_here')
-                    reply_2 = helper.parse_reaction(UtteranceSequenceCommand)
+                    reply_2 = helper.parse_reaction(TextCommand)
 
                     paras = driver.find_elements(By.CSS_SELECTOR, "#chat p")
                     self.assertEqual(len(paras), 3)

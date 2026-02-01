@@ -1,9 +1,13 @@
 from .app import KaiaApp, IAppInitializer
 from avatar.messaging import IMessage
 from avatar.server import AvatarServer, AvatarServerSettings, MessagingComponent, AvatarStream, AvatarApi
+from avatar.server.messaging_component.store import CompositeStore
 from avatar.server.components import *
+from avatar.daemon import TickEvent
+from phonix.daemon import SoundLevelReport, SilenceLevelReport
 from phonix.components import PhonixMonitoringComponent, PhonixRecordingComponent, PhonixApi
 from dataclasses import dataclass, field
+
 import importlib
 import inspect
 import pkgutil
@@ -35,7 +39,11 @@ class AvatarServerAppSettings(IAppInitializer):
             MessagingComponent(
                 app.working_folder/'avatar/messages.db',
                 MessagingComponent.create_aliases("avatar.messaging", "avatar.daemon", "kaia"),
-                dict(default=(start_message,))
+                dict(default=(start_message,)),
+                {
+                    60*60*2.0: (SoundLevelReport, SilenceLevelReport, TickEvent)
+                },
+                CompositeStore.Factory(1000)
             ),
             FileCacheComponent(app.brainbox_cache_folder)
         ]

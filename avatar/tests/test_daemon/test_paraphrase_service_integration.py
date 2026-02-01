@@ -1,11 +1,11 @@
 import pickle
 
 from avatar.messaging import *
-from avatar.daemon import ParaphraseService, ParaphraseRecord, State, StateToUtterancesApplicationService
+from avatar.daemon import ParaphraseService, ParaphraseRecord, State, StateToUtterancesApplicationService, InternalTextCommand
 from unittest import TestCase
 from grammatron import Template, Utterance
 from avatar.daemon.common.content_manager import NewContentStrategy
-from avatar.daemon.common import UtteranceSequenceCommand, PlayableTextMessage, InitializationEvent
+from avatar.daemon.common import TextCommand, InitializationEvent
 from foundation_kaia.misc import Loc
 from avatar.server import AvatarApi, AvatarServerSettings, MessagingComponent, AvatarStream
 from avatar.server.components import ResourcesComponent
@@ -48,17 +48,22 @@ class ParaphraseTestCase(TestCase):
                 state = State(character='character_0', language='en')
                 stream = AvatarStream(api)
                 proc = AvatarDaemon(stream.create_client(), working_folder=folder)
-                proc.rules.bind(StateToUtterancesApplicationService(state))
+                proc.rules.bind(
+                    StateToUtterancesApplicationService(state),
+                )
                 service = ParaphraseService(state, NewContentStrategy(False))
-                proc.rules.bind(service, BindingSettings().bind_type(PlayableTextMessage).to_all_except(ParaphraseService))
+                proc.rules.bind(
+                    service,
+                    BindingSettings().bind_type(InternalTextCommand).to(StateToUtterancesApplicationService)
+                )
                 proc.run_in_thread()
 
                 client = stream.create_client().scroll_to_end()
                 api.messaging.add('default', InitializationEvent())
-                api.messaging.add('default', UtteranceSequenceCommand(templates[0].utter()))
-                result = client.query().where(lambda z: isinstance(z, PlayableTextMessage)).take(2).to_list()
+                api.messaging.add('default', TextCommand(templates[0].utter()))
+                result = client.query(5).where(lambda z: isinstance(z, InternalTextCommand)).take(2).to_list()
 
-                self.assertEqual('Test_1/character_0/0.', result[-1].text.get_text(True, None))
+                self.assertEqual('Test_1/character_0/0.', result[-1].get_text(True))
 
                 self.assertTrue(api.resources(ParaphraseService).is_file('paraphrases-feedback.json'))
                 self.assertTrue(folder/'ParaphrasesService/paraphrases-feedback.json')

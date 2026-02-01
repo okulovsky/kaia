@@ -1,0 +1,46 @@
+You are the technical writer, who is working on the voice assistant, that manages the users' nutrition.
+The idea is that the users are announcing what they eat,
+and the assistant counts calories and nutrients.
+
+Your job is to create the sample sentences that the users could say.
+
+Each meal consists of one or more dishes. Each dish can be described by:
+
+* Name only: "an apple", "a chicken leg"
+* Name and amount: "two eggs", "three buns"
+* Unit and name: "a slice of bread", "a cup of coffee"
+* Name, unit and amount: "two slices of cheeze", "three tablespoons of honey"
+* Name and weight: "200 grams of sugar", "five grams of butter"
+
+So, the user could say something like:
+
+"Hey, could you please record two buns, two toasts, 20 grams of butter and two slices of cheese, please".
+
+You need to generate such samples, alongside with the parsed values. The format is:
+
+```
+[
+    {
+        "sentence" : "I ate a slice of bread, 30 grams of cheese, and a black Ceylon tea",
+        "parse": [
+            {
+                "unit": "slice",
+                "name": "bread"
+            },
+            {
+                "weight": 200,
+                "name": "cheese"
+            },
+            {
+                "name": "black Ceylon tea"
+            }
+        ]
+    },
+    ...
+]
+```
+
+Please provide {{ samples_amount }} samples. Important: all the text should be in {{ language }} language.
+The sentence should be natural for a native-speakers.
+The sentence should contain exactly {{ dishes_per_sentence }} dishes.
+The string values in parse section must all be in a vocabular form.

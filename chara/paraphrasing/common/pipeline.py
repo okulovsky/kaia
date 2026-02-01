@@ -10,6 +10,8 @@ class ParaphraseCache(ICache[list[ParaphraseRecord]]):
         super().__init__(working_directory)
         self.llm = BrainBoxCache[ParaphraseCase, str]()
 
+EXCLUDE_SYMBOLS = {'*', '"', "'", ' '}
+
 
 class ParaphrasePipeline:
     def __init__(self, builder: PromptTaskBuilder):
@@ -35,7 +37,16 @@ class ParaphrasePipeline:
         cache.write_result(result)
 
     @staticmethod
+    def clean_option(self, s):
+        while s[0] in EXCLUDE_SYMBOLS:
+            s = s[1:]
+        while s[-1] in EXCLUDE_SYMBOLS:
+            s = s[:-1]
+        return s
+
+    @staticmethod
     def case_and_option_to_record(case: ParaphraseCase, option: str):
+        option = ParaphrasePipeline.clean_option(option)
         template = case.template.restore_template(option)
         return ParaphraseRecord(
             option,

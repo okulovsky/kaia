@@ -1,6 +1,6 @@
 from unittest import TestCase
 from foundation_kaia.misc import Loc
-from avatar.daemon import UtteranceEvent, InitializationEvent, State
+from avatar.daemon import TextEvent, InitializationEvent, State
 from kaia.skills.character_skill import ChangeCharacterIntents
 from kaia.tests.helper import Helper
 
@@ -20,11 +20,11 @@ class ActivitySkillTestCase(TestCase):
                     if new_character != initial_state.character:
                         break
 
-                client.put(UtteranceEvent(ChangeCharacterIntents.change_character(new_character)))
+                client.put(TextEvent(ChangeCharacterIntents.change_character(new_character)))
                 after = client.query(5).where(lambda z: isinstance(z, State)).first()
                 self.assertEqual(new_character, after.character)
 
-                client.put(UtteranceEvent(ChangeCharacterIntents.change_character()))
+                client.put(TextEvent(ChangeCharacterIntents.change_character()))
                 after = client.query(5).where(lambda z: isinstance(z, State)).first()
                 self.assertNotEqual(new_character, after.character)
 

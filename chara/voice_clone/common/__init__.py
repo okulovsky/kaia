@@ -5,3 +5,4 @@ from .voice_similarity import VoiceSimilarityCache
 from .chatterbox import ChatterboxModel, ChatterboxInference, ChatterboxTrain
 from .zonos import ZonosModel, ZonosInference, ZonosTrain
 from .xtts import XTTSModel, XTTSInference, XTTSTrain
+from .cosy_voice import CosyVoiceModel, CosyVoiceTrain, CosyVoiceInference

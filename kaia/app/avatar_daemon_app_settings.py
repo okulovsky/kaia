@@ -1,5 +1,7 @@
 from typing import Callable, Any
 from dataclasses import dataclass, field
+
+from avatar.daemon import TextCommand
 from brainbox import BrainBox
 from brainbox.framework import ControllersSetup
 from .app import KaiaApp, IAppInitializer
@@ -13,7 +15,7 @@ from kaia.assistant import KaiaAssistant
 from yo_fluq import FileIO
 
 class DemoDubTaskFactory(s.TTSService.TaskFactory):
-    def create_task(self, s: str, info: s.TextInfo) -> BrainBox.ITask:
+    def create_task(self, s: str, info: s.TTSService.Command.Settings) -> BrainBox.ITask:
         return BrainBox.Task.call(Piper).voiceover(s, info.language)
 
 def _speaker_to_image_url(speaker):
@@ -70,20 +72,13 @@ class AvatarDaemonAppSettings(IAppInitializer):
 
     def create_stt_service(self, app: KaiaApp, state: s.State):
         return s.STTService(
-            s.RhasspyRecognitionSetup(KaiaAssistant.RHASSPY_MAIN_MODEL_NAME)
-        )
-
-    def create_narration_service(self, app: KaiaApp, state: s.State):
-        return s.NarrationService(
-            state,
-            self.characters,
-            self.activity,
-            self.greetings_command,
-            30*60
+            s.RhasspyRecognitionSetup(KaiaAssistant.RHASSPY_MAIN_MODEL_NAME),
         )
 
     def create_state_to_utterances_application(self, app: KaiaApp, state: s.State):
-        return s.StateToUtterancesApplicationService(state)
+        service = s.StateToUtterancesApplicationService(state)
+        return service
+
 
     def create_voiceover_service(self, app: KaiaApp, state: s.State):
         return s.TTSService(
@@ -102,24 +97,21 @@ class AvatarDaemonAppSettings(IAppInitializer):
             cm.AnyContentStrategy()
         )
         service = s.ParaphraseService(state, strategy)
-        service.binding_settings.bind_type(s.PlayableTextMessage).to_all_except(s.ParaphraseService)
+        service.binding_settings.bind_type(s.InternalTextCommand).to(s.StateToUtterancesApplicationService)
         return service
 
     def create_chat_service(self, app: KaiaApp, state: s.State):
-        service = s.ChatService(state, self.speaker_to_image_url)
-        service.binding_settings.bind_type(s.PlayableTextMessage).to(s.ParaphraseService)
+        service = s.ChatService(self.speaker_to_image_url)
+        service.binding_settings.bind_type(s.InternalTextCommand).to(s.ParaphraseService)
         return service
 
     def create_text_command_to_tts_command(self, app: KaiaApp, state: s.State):
         service = s.TTSIntegrationService()
-        service.binding_settings.bind_type(s.PlayableTextMessage).to(s.ParaphraseService)
+        service.binding_settings.bind_type(s.InternalTextCommand).to(s.ParaphraseService)
         return service
 
-
     def create_sound_event_to_stt_command(self, app: KaiaApp, state: s.State):
-        return s.STTIntegrationService(state)
-
-
+        return s.STTIntegrationService(state, False)
 
     def create_autoconfirm(self, app: KaiaApp, state: s.State):
         if app.brainbox_api is None:
@@ -161,6 +153,15 @@ class AvatarDaemonAppSettings(IAppInitializer):
             proc.rules.bind(service)
 
         app.avatar_processor = proc
+
+    def create_narration_service(self, app: KaiaApp, state: s.State):
+        return s.NarrationService(
+            state,
+            self.characters,
+            self.activity,
+            self.greetings_command,
+            30*60
+        )
 
 
 

@@ -248,3 +248,19 @@ body {
 .system-btn:active {
   transform: scale(0.95);
 }
+
+
+#busy-indicator {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: red;
+
+  z-index: 2147483647; /* above everything */
+  pointer-events: none;
+
+}

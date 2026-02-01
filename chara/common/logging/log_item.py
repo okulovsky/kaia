@@ -5,7 +5,6 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from ipywidgets import Widget
 
-from avatar.daemon import World
 
 
 class ILogItem(ABC):

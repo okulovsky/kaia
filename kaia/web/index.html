@@ -7,6 +7,7 @@
 </head>
 
 <body>
+  <div id="busy-indicator"></div>
   <div id="content">
     <div id="image">
       <img id="main_image" src="static/style/image.png" alt="main image">
@@ -38,7 +39,8 @@
     client.addMessage(initMessage);
     client.lastMessageId = initMessage.envelop.id;
 
-    const dispatcher  = new Dispatcher(client, 1);
+    const busyEl = document.getElementById('busy-indicator');
+    const dispatcher = new Dispatcher(client, 1, busyEl);
 
     new ChatCommandHandler(dispatcher, chatDiv, window.location.origin);
     new ImageCommandHandler(dispatcher, imageDiv);

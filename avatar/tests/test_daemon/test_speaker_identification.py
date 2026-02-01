@@ -11,7 +11,7 @@ from foundation_kaia.misc import Loc
 from pathlib import Path
 from yo_fluq import FileIO
 
-def test_sample_to_vector(file: Path|str):
+def make_sample_to_vector(file: Path|str):
     if isinstance(file, Path):
         file = file.name
     idx = int(file.split('_')[0])
@@ -34,10 +34,9 @@ class SpeakerIdentificationTestCase(TestCase):
             with Loc.create_test_folder() as folder:
                 prepare_folder(folder)
 
-                state = State()
-                service = SpeakerIdentificationService(state, api, BestOfStrategy(4))
+                service = SpeakerIdentificationService(api, BestOfStrategy(4))
                 service.set_resources_folder(folder)
-                service.sample_to_vector = test_sample_to_vector
+                service.sample_to_vector = make_sample_to_vector
                 client = AvatarStream(api).create_client()
                 proc = AvatarDaemon(client.clone())
                 proc.rules.bind(service)
@@ -47,14 +46,12 @@ class SpeakerIdentificationTestCase(TestCase):
                 self.assertEqual(['A','A','A','B','B','B'], list(df.index))
                 self.assertEqual([1, 1, 1, 0, 0, 0], list(df[0]))
                 self.assertEqual([0, 0, 0, 1, 1, 1], list(df[1]))
-                self.assertIsNone(state.user)
-
-                proc.debug_and_stop_by_count(1, SoundEvent('1_10'))
-                self.assertEqual('B', state.user)
 
 
-    def run_identification_retrain(self, target_speaker, speakers: list[str]
-                                   ) -> tuple[BrainBoxService.Command, SpeakerIdentificationService.TrainConfirmation]:
+                result = proc.debug_and_stop_by_count(1, SpeakerIdentificationService.Command('1_10')).messages
+                self.assertEqual('B', result[-1].result)
+
+    def test_train(self):
         with Loc.create_test_folder() as avatar_cache_folder:
             settings = AvatarServerSettings((
                 MessagingComponent(avatar_cache_folder/'db'),
@@ -64,38 +61,18 @@ class SpeakerIdentificationTestCase(TestCase):
                 with Loc.create_test_folder() as folder:
                     prepare_folder(folder)
 
-                    state = State()
-                    service = SpeakerIdentificationService(state, api, BestOfStrategy(4))
-                    service.sample_to_vector = test_sample_to_vector
+                    service = SpeakerIdentificationService(api, BestOfStrategy(4))
+                    service.sample_to_vector = make_sample_to_vector
                     service.set_resources_folder(folder)
                     client = AvatarStream(api).create_client()
                     proc = AvatarDaemon(client.clone())
                     proc.rules.bind(service)
                     proc.debug_and_stop_by_count(1, InitializationEvent())
 
-                    for line in speakers:
-                        api.file_cache.upload(b'', line)
-                        proc.debug_and_stop_by_count(1, SoundEvent(line))
+                    file_id = api.file_cache.upload(b'','0_4')
+                    proc.debug_and_stop_by_count(1, SpeakerIdentificationService.Train(file_id, 'A'))
 
-                    result = proc.debug_and_stop_by_all_confirmed(SpeakerIdentificationService.Train(target_speaker))
-                    return service.vector_identificator.base, result.messages[-1]
+                    self.assertIn('0_4', service.vector_identificator.base['A'])
 
-
-    def test_speaker_identification_retrain(self):
-        bs, reply = self.run_identification_retrain('B', ['0_10','1_10','1_11'])
-        self.assertEqual(3, len(bs['B']))
-        self.assertEqual(3, len(bs['A']))
-        self.assertFalse(reply.admit_errors)
-
-
-    def test_one_retrain(self):
-        bs, reply = self.run_identification_retrain('B', ['0_10','0_11','1_10'])
-        self.assertTrue(reply.admit_errors)
-        self.assertIn('0_11', bs['B'])
-
-    def test_two_retrains(self):
-        bs, reply = self.run_identification_retrain('B', ['0_10','0_11','0_12'])
-        self.assertTrue(reply.admit_errors)
-        self.assertIn('0_11', bs['B'])
-        self.assertIn('0_12', bs['B'])
-
+                    proc.debug_and_stop_by_count(1, SpeakerIdentificationService.Train(file_id, 'B'))
+                    self.assertIn('0_4', service.vector_identificator.base['B'])

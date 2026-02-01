@@ -1,16 +1,19 @@
 import os
-import traceback
-
 import flask
 from ..components import IAvatarComponent
 from pathlib import Path
-from .message_record import MessageRecord, Base
-from sqlalchemy import create_engine, asc, or_, and_
+from .store import MessageRecord, Base, SqlMessageStore, IMessageStore, LastMessageNotFoundException
+from sqlalchemy import create_engine, delete
 from sqlalchemy.orm import sessionmaker
 import uuid
 from foundation_kaia.misc import Loc
 from ...messaging import IMessage
 from .message_format import MessageFormat, get_full_name_by_type
+from typing import Type, Callable, Any, Optional
+from threading import Thread
+from datetime import datetime, timedelta
+import time
+
 
 import  importlib, pkgutil, inspect
 
@@ -19,6 +22,8 @@ class MessagingComponent(IAvatarComponent):
                  db_path: Path|None = None,
                  aliases: dict[str, type] = None,
                  session_to_initialization_messages: dict[str,tuple[IMessage,...]]|None = None,
+                 cleanup_time_in_seconds_to_message_types: dict[float, tuple[Type[IMessage],...]]|None = None,
+                 store_factory: Optional[Callable[[Any], IMessageStore]] = None
                  ):
         self.db_path = db_path
         if self.db_path is None:
@@ -29,12 +34,42 @@ class MessagingComponent(IAvatarComponent):
             aliases = {}
         self.aliases = aliases
         self.session_to_initialization_messages = session_to_initialization_messages
+        self.cleanup_time_in_seconds_to_message_types = cleanup_time_in_seconds_to_message_types
+        self.store_factory = store_factory
+
+
+    def _cleanup(self):
+        min_cleanup_time = min(self.cleanup_time_in_seconds_to_message_types)
+        while True:
+            with self.Session() as session:
+                for ttl, messages in self.cleanup_time_in_seconds_to_message_types.items():
+                    cutoff = datetime.now() - timedelta(seconds=ttl)
+                    type_names = [get_full_name_by_type(t) for t in messages]
+                    stmt = (
+                        delete(MessageRecord)
+                        .where(MessageRecord.message_type.in_(type_names))
+                        .where(MessageRecord.created_at < cutoff)
+                    )
+                    session.execute(stmt)
+                session.commit()
+            time.sleep(min_cleanup_time)
+
 
     def setup_server(self, app: IAvatarComponent.App, address: str):
         os.makedirs(self.db_path.parent, exist_ok=True)
         self.engine = create_engine(f'sqlite:///{self.db_path}', echo=False, future=True)
         Base.metadata.create_all(self.engine)
         self.Session = sessionmaker(bind=self.engine, future=True)
+
+        if self.store_factory is None:
+            self.store = SqlMessageStore(self.Session)
+        else:
+            self.store = self.store_factory(self.Session)
+
+        if self.cleanup_time_in_seconds_to_message_types is not None:
+            thread = Thread(target=self._cleanup, daemon=True)
+            thread.start()
+
         app.add_url_rule('/messages/add', view_func=self.messages_add, methods=['POST'])
         app.add_url_rule('/messages/get', view_func=self.messages_get, methods=['POST'])
         app.add_url_rule('/messages/last', view_func=self.messages_last, methods=['POST'])
@@ -61,14 +96,10 @@ class MessagingComponent(IAvatarComponent):
             message_type=data['message_type'],
             session=data.get('session'),
             envelop=data['envelop'],
-            payload=data['payload']
+            payload=data['payload'],
+            created_at=datetime.now(),
         )
-
-        with self.Session() as db:
-            db.add(msg)
-            db.commit()
-            db.refresh(msg)
-
+        self.store.add(msg)
 
 
     def messages_add(self):
@@ -79,58 +110,16 @@ class MessagingComponent(IAvatarComponent):
 
     def messages_last(self):
         session = flask.request.json.get('session', None)
-        with self.Session() as db:
-            q = db.query(MessageRecord)
-            if session is not None:
-                q = q.filter(MessageRecord.session == session)
-            last_message = (
-                q
-                .order_by(MessageRecord.id.desc())
-                .first()
-            )
-            id = None if last_message is None else last_message.message_id
-            return flask.jsonify({'id': id})
-
-
-
-    def _get_type_filters(self, types: list[str]|None):
-        if types is None or len(types) == 0:
-            return None
-        return or_(*[MessageRecord.message_type.like(f"%{suf}") for suf in types])
-
-    def _get_except_type_filters(self, except_types: list[str]|None):
-        if except_types is None or len(except_types) == 0:
-            return None
-        return and_(*[~MessageRecord.message_type.like(f"%{suf}") for suf in except_types])
-
-    def _get_query_essentials(self, db, session: str|None, types: list[str]|None, except_types: list[str]|None):
-        q = db.query(MessageRecord)
-        if session is not None:
-            q = q.filter(MessageRecord.session == session)
-        type_filter = self._get_type_filters(types)
-        if type_filter is not None:
-            q = q.filter(type_filter)
-        except_type_filter = self._get_except_type_filters(except_types)
-        if except_type_filter is not None:
-            q = q.filter(except_type_filter)
-        return q
+        id = self.store.last_id(session)
+        return flask.jsonify({'id': id})
 
     def messages_tail(self):
         session = flask.request.json.get('session', None)
         count = flask.request.json.get('count', None)
         types = flask.request.json.get('types', None)
         except_types = flask.request.json.get('except_types', None)
-
-        with self.Session() as db:
-            q = self._get_query_essentials(db, session, types, except_types)
-            results = (
-                q.order_by(MessageRecord.id.desc())
-                .limit(count)
-                .all()
-            )
-            return flask.jsonify([msg.to_dict() for msg in reversed(results)]), 200
-
-
+        tail = self.store.tail(session, count, types, except_types)
+        return flask.jsonify([msg.to_dict() for msg in tail]), 200
 
     def messages_get(self):
         session = flask.request.json.get('session', None)
@@ -139,26 +128,11 @@ class MessagingComponent(IAvatarComponent):
         types = flask.request.json.get('types', None)
         except_types = flask.request.json.get('except_types', None)
 
-        with self.Session() as db:
-            q = self._get_query_essentials(db, session, types, except_types)
-            if last_message_id is not None:
-                last = (
-                    db.query(MessageRecord)
-                    .filter(MessageRecord.message_id == last_message_id)
-                    .first()
-                )
-                if last:
-                    q = q.filter(MessageRecord.id > last.id)
-                else:
-                    return flask.jsonify({'error': 'last_message_id not found'}), 400
-
-            q = q.order_by(asc(MessageRecord.id))
-            if count is not None:
-                q = q.limit(count)
-
-            results = q.all()
-            return flask.jsonify([msg.to_dict() for msg in results]), 200
-
+        try:
+            messages = self.store.get(session, count, last_message_id, types, except_types)
+        except LastMessageNotFoundException:
+            return flask.jsonify({'error': 'last_message_id not found'}), 400
+        return flask.jsonify([msg.to_dict() for msg in messages]), 200
 
     @staticmethod
     def create_aliases(*namespaces):
@@ -166,7 +140,6 @@ class MessagingComponent(IAvatarComponent):
         for pkg in namespaces:
             all_subclasses.extend(find_subclasses_in_package(IMessage, pkg))
         return {c.__name__: c for c in all_subclasses}
-
 
 
 def find_subclasses_in_package(base_class: type, package_name: str) -> list[type]:

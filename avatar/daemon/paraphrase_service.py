@@ -1,9 +1,12 @@
 import os
 from typing import *
-from grammatron import Utterance, UtterancesSequence, TemplateDub, Template, DubParameters, LanguageDispatchDub
+
+from grammatron import Utterance, UtterancesSequence, TemplateDub, Template, LanguageDispatchDub
 from dataclasses import dataclass
+
+from . import InternalTextCommand
 from .common.content_manager import IContentStrategy, ContentManager, DataClassDataProvider
-from .common import PlayableTextMessage, UtteranceSequenceCommand, TextInfo, State, AvatarService, message_handler, InitializationEvent
+from .common import State, AvatarService, message_handler, InitializationEvent, TextCommand
 from copy import copy
 from yo_fluq import FileIO
 
@@ -57,7 +60,7 @@ class ParaphraseService(AvatarService):
             self.content_strategy
         )
 
-    def _paraphrase_utterance(self, u: Utterance, info: TextInfo) -> Utterance:
+    def _paraphrase_utterance(self, u: Utterance, command: InternalTextCommand) -> Utterance:
         if self.paraphrases_content_manager is None:
             return u
         if not isinstance(u, Utterance):
@@ -65,7 +68,7 @@ class ParaphraseService(AvatarService):
         if u.template.get_context() is None:
             return u
         dub = u.template.dub
-        language = info.language
+        language = command.language
         if not isinstance(dub, LanguageDispatchDub):
             return u
         if language not in dub.dispatch:
@@ -77,14 +80,18 @@ class ParaphraseService(AvatarService):
         variables = dub.find_required_variables(u.value)
         variables_tag = ParaphraseRecord.create_variables_tag(variables)
 
+        state_tag = copy(self.state.__dict__)
+        state_tag['language'] = language
+        state_tag['character'] = command.character
+        state_tag['user'] = command.user
+
         template_tag = {
             'original_template_name': u.template.get_name(),
             'used_variables_tag': variables_tag,
             'language': language,
+            'character': command.character,
         }
-        state_tag = copy(self.state.__dict__)
-        if 'language' in state_tag:
-            del state_tag['language']
+
         matcher = self.paraphrases_content_manager.match().strong(template_tag).weak(state_tag)
         #matcher.debug = True
         template_record = matcher.find_content()
@@ -95,17 +102,24 @@ class ParaphraseService(AvatarService):
         return template_record.template(u.value)
 
     @message_handler
-    def paraphrase(self, text: PlayableTextMessage[UtteranceSequenceCommand]) -> PlayableTextMessage[UtteranceSequenceCommand]:
-        if not isinstance(text.text, UtteranceSequenceCommand):
-            return text.with_new_envelop().as_propagation_confirmation_to(text)
-        sequence = text.text.utterances_sequence
+    def paraphrase(self, command: InternalTextCommand) -> InternalTextCommand:
+        if isinstance(command.text, str):
+            return command.with_new_envelop().as_propagation_confirmation_to(command)
+        elif isinstance(command.text, UtterancesSequence):
+            sequences = command.text.utterances
+        elif isinstance(command.text, Utterance):
+            sequences = [command.text]
+        else:
+            raise ValueError("TextCommand must have str, Utterance, or UtterancesSequence as `text`")
         paraphrase = []
-        for u in sequence.utterances:
-            paraphrase.append(self._paraphrase_utterance(u, text.info))
-        return PlayableTextMessage[UtteranceSequenceCommand](
-            UtteranceSequenceCommand(UtterancesSequence(*paraphrase)),
-            text.info
-        ).as_propagation_confirmation_to(text)
+        for u in sequences:
+            paraphrase.append(self._paraphrase_utterance(u, command))
+        return InternalTextCommand(
+            UtterancesSequence(*paraphrase),
+            command.user,
+            command.language,
+            command.character
+        ).as_propagation_confirmation_to(command)
 
     def requires_brainbox(self):
         return False

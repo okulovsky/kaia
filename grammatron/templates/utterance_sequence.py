@@ -7,9 +7,6 @@ class UtterancesSequence(IAsserter):
     def __init__(self, *utterances: Utterance|str):
         self.utterances = tuple(utterances)
 
-    def __str__(self):
-        return ' | '.join(str(u) for u in self.utterances)
-
     def __add__(self, other: Union[Utterance, 'UtterancesSequence', str]) -> 'UtterancesSequence':
         if isinstance(other, Utterance) or isinstance(other, str):
             return UtterancesSequence(*self.utterances, other)
@@ -26,3 +23,9 @@ class UtterancesSequence(IAsserter):
                 test_case.assertEqual(e, a)
             else:
                 e.assertion(a, test_case)
+
+    def __str__(self):
+        return '[Utterance sequence] ' + ' >> '.join(str(s) for s in self.utterances)
+
+    def __repr__(self):
+        return self.__str__()

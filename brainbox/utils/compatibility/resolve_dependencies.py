@@ -102,7 +102,7 @@ def _create_toml(
     if exclude_pytorch:
         data['tool'] = {
             "uv": {
-                "exclude-dependencies": ["torch", "torchaudio", "torchvision"],
+                "override-dependencies": ["torch; sys_platform == 'never'", "torchaudio; sys_platform == 'never'", "torchvision; sys_platform == 'never'"],
             }
         }
 

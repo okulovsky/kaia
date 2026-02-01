@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, JSON, Index, UniqueConstraint
+from sqlalchemy import Column, Integer, String, JSON, Index, UniqueConstraint, DateTime
 from sqlalchemy.orm import declarative_base
+from datetime import datetime
 
 Base = declarative_base()
 
@@ -17,6 +18,7 @@ class MessageRecord(Base):
     session = Column(String, nullable=True)
     envelop = Column(JSON, nullable=False)
     payload = Column(JSON, nullable=False)
+    created_at = Column(DateTime, nullable=False)
 
     def to_dict(self):
         return {

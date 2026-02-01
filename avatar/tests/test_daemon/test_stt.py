@@ -3,13 +3,24 @@ from avatar.daemon import BrainBoxService, STTService, WhisperRecognitionSetup, 
 from avatar.messaging import *
 import jsonpickle
 from grammatron import Template, TemplatesCollection
+from brainbox import BrainBox
 
+
+def brain_box_mock(task: BrainBox.ITask):
+    jobs = task.create_jobs()
+    if jobs[-1].decider == 'EmptyDecider':  # It means training
+        return 'OK'
+    if len(jobs) != 1:
+        raise ValueError(
+            "Must be either multi-job task for training, or a single-job task for recognition")
+    job = jobs[0]
+    return jsonpickle.loads(job.arguments['file'])[job.decider]
 
 class STTTestCase(TestCase):
     def test_stt(self):
         proc = AvatarDaemon(TestStream().create_client())
         proc.rules.bind(STTService(WhisperRecognitionSetup()))
-        proc.rules.bind(BrainBoxService(STTService.brain_box_mock))
+        proc.rules.bind(BrainBoxService(brain_box_mock))
 
         obj=dict(Whisper=STTService.Confirmation('test'))
         proc.client.put(STTService.Command(jsonpickle.dumps(obj)))
@@ -20,11 +31,10 @@ class STTTestCase(TestCase):
         self.assertEqual('test', message.recognition)
 
 
-
     def test_stt_request(self):
         proc = AvatarDaemon(TestStream().create_client())
         proc.rules.bind(STTService(WhisperRecognitionSetup()))
-        proc.rules.bind(BrainBoxService(STTService.brain_box_mock))
+        proc.rules.bind(BrainBoxService(brain_box_mock))
 
         obj1 = dict(Vosk = STTService.Confirmation("vosk"))
         proc.client.put(VoskRecognitionSetup('x'))
@@ -43,7 +53,7 @@ class STTTestCase(TestCase):
     def test_stt_kaldi_no_training(self):
         proc = AvatarDaemon(TestStream().create_client())
         proc.rules.bind(STTService(RhasspyRecognitionSetup('test_1')))
-        proc.rules.bind(BrainBoxService(STTService.brain_box_mock))
+        proc.rules.bind(BrainBoxService(brain_box_mock))
 
         obj = dict(RhasspyKaldi=STTService.Confirmation("rhasspy"))
         proc.client.put(STTService.Command(jsonpickle.dumps(obj)))
@@ -63,7 +73,7 @@ class STTTestCase(TestCase):
         proc = AvatarDaemon(TestStream().create_client())
         stt = STTService(RhasspyRecognitionSetup('test_2'))
         proc.rules.bind(stt)
-        proc.rules.bind(BrainBoxService(STTService.brain_box_mock))
+        proc.rules.bind(BrainBoxService(brain_box_mock))
 
         obj = dict(RhasspyKaldi=STTService.Confirmation("rhasspy"))
         proc.client.put(STTService.RhasspyTrainingCommand(packs))

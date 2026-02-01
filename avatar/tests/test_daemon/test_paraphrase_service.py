@@ -1,19 +1,21 @@
 from avatar.messaging import *
-from avatar.daemon import ParaphraseService, ParaphraseRecord, State, StateToUtterancesApplicationService
+from avatar.daemon import ParaphraseService, ParaphraseRecord, State, StateToUtterancesApplicationService, \
+    InternalTextCommand
 from unittest import TestCase
 from grammatron import Template, Utterance
 from avatar.daemon.common.content_manager import NewContentStrategy
-from avatar.daemon.common import UtteranceSequenceCommand, PlayableTextMessage, InitializationEvent
+from avatar.daemon.common import TextCommand, InitializationEvent
 from foundation_kaia.misc import Loc
 from yo_fluq import FileIO
 
-def test(proc: AvatarDaemon, utterance: Utterance) -> str:
-    proc.client.put(UtteranceSequenceCommand(utterance))
+def make(proc: AvatarDaemon, utterance: Utterance) -> str:
+    proc.client.put(TextCommand(utterance))
     messages = proc.debug_and_stop_by_empty_queue().messages
+    print(messages)
     m = messages[-1]
-    if not isinstance(m, PlayableTextMessage):
-        raise ValueError("Wrong type, expected PlayableTextMessage")
-    return m.text.get_text(True,'en')
+    if not isinstance(m, InternalTextCommand):
+        raise ValueError("Wrong type, expected TextCommand")
+    return m.get_text(True)
 
 
 class ParaphraseTestCase(TestCase):
@@ -40,22 +42,24 @@ class ParaphraseTestCase(TestCase):
 
             state = State(character='character_0', language='en')
             proc = AvatarDaemon(TestStream().create_client())
-            proc.rules.bind(StateToUtterancesApplicationService(state))
+            proc.rules.bind(
+                StateToUtterancesApplicationService(state),
+            )
             service = ParaphraseService(state, NewContentStrategy(False))
             service.set_resources_folder(folder)
-            proc.rules.bind(service, BindingSettings().bind_type(PlayableTextMessage).to_all_except(ParaphraseService))
+            proc.rules.bind(service, BindingSettings().bind_type(InternalTextCommand).to(StateToUtterancesApplicationService))
             proc.client.put(InitializationEvent())
 
-            m = test(proc, templates[0].utter())
+            m = make(proc, templates[0].utter())
             self.assertEqual('Test_1/character_0/0.', m)
 
-            m = test(proc, templates[0].utter())
+            m = make(proc, templates[0].utter())
             self.assertEqual('Test_1/character_0/1.', m)
 
-            m = test(proc, templates[1].utter())
+            m = make(proc, templates[1].utter())
             self.assertEqual('Test_2/character_0/0.', m)
 
             state.character = 'character_1'
-            m = test(proc, templates[0].utter())
+            m = make(proc, templates[0].utter())
             self.assertEqual('Test_1/character_1/0.', m)
 

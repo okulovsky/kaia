@@ -12,12 +12,17 @@ class Repository:
     install: bool = True
     remove_files: tuple[str, ...] | None = None
     remove_repo: bool = False
+    recursive_clone: bool = False
 
     def to_commands(self, context: BuildContext) -> list[str]:
         result = []
 
         line_init = []
-        line_init.append(f"RUN git clone {self.url} /home/app/repo")
+        if self.recursive_clone:
+            recursive = '--recursive'
+        else:
+            recursive = ''
+        line_init.append(f"RUN git clone {recursive} {self.url} /home/app/repo")
         line_init.append(" && cd /home/app/repo")
         if self.commit is not None:
             line_init.append(f" && git reset --hard {self.commit}")

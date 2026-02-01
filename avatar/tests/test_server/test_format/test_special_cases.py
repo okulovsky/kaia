@@ -1,8 +1,7 @@
 from unittest import TestCase
 from avatar.messaging import Confirmation, Envelop
 from avatar.server.messaging_component.format import Format
-from avatar.daemon import PlayableTextMessage, TextEvent, TextInfo, ButtonGridCommand, IntentsPack, STTService, BrainBoxService
-from pprint import pprint
+from avatar.daemon import ButtonGridCommand, IntentsPack, STTService, BrainBoxService
 from brainbox.deciders import Empty
 from brainbox import BrainBox
 import json
@@ -21,11 +20,6 @@ class SpecialCasesSerializationTestCase(TestCase):
         js = Format.to_json(msg, Envelop)
         self.assertNotIn('@base64', json.dumps(js))
 
-    def test_playable_text(self):
-        msg = PlayableTextMessage(TextEvent('test'), TextInfo('speaker', 'en'))
-        result = Format.to_json(msg, PlayableTextMessage)
-        self.assertIn('@base64', result['text'])
-        self.assertNotIn('@base64', result['info'])
 
 
 

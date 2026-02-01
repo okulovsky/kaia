@@ -4,32 +4,30 @@ from .common import SoundEvent, IMessage, message_handler, State, AvatarService,
 from .common.vector_identificator import VectorIdentificator, IStrategy
 from .brainbox_service import BrainBoxService
 from dataclasses import dataclass
-from pathlib import Path
 from brainbox.framework import FileLike
 from ..server import AvatarApi
-from yo_fluq import FileIO
+from ..messaging import Confirmation
+
 
 @dataclass
 class SpeakerIdentificationTrain(IMessage):
-    true_speaker: str
+    file_id: str
+    actual_user: str
 
 @dataclass
-class SpeakerIdentificationTrainConfirmation(IMessage):
-    admit_errors: bool
+class SpeakerIdentificationCommand(IMessage):
+    file_id: str
 
 
 
 class SpeakerIdentificationService(AvatarService):
     Train = SpeakerIdentificationTrain
-    TrainConfirmation = SpeakerIdentificationTrainConfirmation
-
+    Command = SpeakerIdentificationCommand
 
     def __init__(self,
-                 state: State,
                  api: AvatarApi,
                  identification_strategy: IStrategy,
                  ):
-        self.state = state
         self.api = api
         self.identification_strategy = identification_strategy
 
@@ -56,29 +54,15 @@ class SpeakerIdentificationService(AvatarService):
         return self.client.run_synchronously(command, BrainBoxService.Confirmation).result['vector']
 
     @message_handler.with_call(BrainBoxService.Command, BrainBoxService.Confirmation)
-    def on_sound_event(self, message: SoundEvent) -> None:
+    def on_sound_event(self, message: SpeakerIdentificationCommand) -> Confirmation:
         speaker = self.vector_identificator.analyze(message.file_id)
-        if speaker is not None:
-            self.state.user = speaker
-            self.buffer.append((message,speaker))
-            self.buffer = self.buffer[-2:]
-
+        return Confirmation(speaker).as_confirmation_for(message)
 
 
     @message_handler.with_call(BrainBoxService.Command, BrainBoxService.Confirmation)
-    def train(self, message: SpeakerIdentificationTrain) -> SpeakerIdentificationTrainConfirmation:
-        count = 0
-        for event, speaker in self.buffer:
-            if speaker == message.true_speaker:
-                continue
-            self.vector_identificator.add_sample(message.true_speaker, event.file_id)
-            count += 1
-
-        if count == 0:
-            return SpeakerIdentificationTrainConfirmation(False).as_confirmation_for(message)
+    def train(self, message: SpeakerIdentificationTrain) -> None:
+        self.vector_identificator.add_sample(message.actual_user, message.file_id)
         self.vector_identificator.initialize()
-        return SpeakerIdentificationTrainConfirmation(True).as_confirmation_for(message)
-
 
     def requires_brainbox(self):
         return True

@@ -1,6 +1,6 @@
 import unittest
 from avatar.messaging.rules.rule_creator import get_annotated_output_type
-from avatar.daemon.common.known_messages import (PlayableTextMessage, UtteranceSequenceCommand)
+from avatar.daemon.common.known_messages import TextCommand
 from typing import *
 
 class TestGetAnnotatedOutputType(unittest.TestCase):
@@ -63,13 +63,6 @@ class TestGetAnnotatedOutputType(unittest.TestCase):
             set(get_annotated_output_type(handler)),
         )
 
-    def test_generic(self):
-        def handler() -> PlayableTextMessage[UtteranceSequenceCommand]:
-            pass
-        self.assertEqual(
-            {PlayableTextMessage},
-            set(get_annotated_output_type(handler))
-        )
 
     def test_none(self):
         def handler() -> None:

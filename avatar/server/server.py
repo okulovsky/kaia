@@ -1,6 +1,6 @@
 import flask
 from foundation_kaia.marshalling import Server
-from foundation_kaia.web_utils import Component
+from foundation_kaia.web_utils import Component, WebAppEntryPoint
 from dataclasses import dataclass
 from .components import IAvatarComponent
 import logging
@@ -25,7 +25,7 @@ class AvatarServer(Server):
         self.settings = settings
         super().__init__(self.settings.port)
 
-    def __call__(self):
+    def create_web_app_entry_point(self) -> WebAppEntryPoint:
         app = flask.Flask("AvatarServer", static_folder=None, static_url_path=None)
         app.register_error_handler(Exception, handle_exception)
 
@@ -44,7 +44,16 @@ class AvatarServer(Server):
 
         self.bind_heartbeat(app)
         app.add_url_rule('/', view_func=self.index, methods=['GET'])
-        app.run('0.0.0.0', self.settings.port)
+        return WebAppEntryPoint(
+            app,
+            self.settings.port
+        )
+
+
+    def __call__(self):
+        entry_point = self.create_web_app_entry_point()
+        entry_point.run()
+
 
     def index(self):
         html = '<html><body>'

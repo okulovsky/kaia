@@ -1,4 +1,4 @@
-from .common import message_handler, AvatarService, PlayableTextMessage, State, Confirmation
+from .common import message_handler, AvatarService, InternalTextCommand, State, Confirmation
 from .tts_service import TTSService
 import re
 
@@ -23,10 +23,11 @@ def simple_sent_tokenize(text: str) -> list[str]:
 class TTSIntegrationService(AvatarService):
 
     @message_handler.with_call(TTSService.Command)
-    def on_playable_text(self, event: PlayableTextMessage) -> Confirmation:
-        text = event.text.get_text(True, event.info.language)
+    def on_playable_text(self, event: InternalTextCommand) -> Confirmation:
+        text = event.get_text(True)
         sentences = simple_sent_tokenize(text)
-        command = TTSService.Command(tuple(sentences), event.info).as_reply_to(event)
+        settings = TTSService.Command.Settings(event.character, event.language)
+        command = TTSService.Command(tuple(sentences), settings).as_reply_to(event)
         result = self.client.run_synchronously(command)
         confirmation = event.confirm_this().as_reply_to(result)
         return confirmation

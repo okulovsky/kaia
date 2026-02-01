@@ -1,5 +1,5 @@
 from grammatron import *
-from avatar.daemon import World
+from kaia import World
 
 DISH = VariableDub(
     "dish",

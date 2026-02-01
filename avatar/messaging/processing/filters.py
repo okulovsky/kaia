@@ -48,7 +48,7 @@ class MessageFoundFilter(IProcessingFilter):
 
 class PrintingFilter(IProcessingFilter):
     def should_stop_on_event(self, ev: ProcessingEvent):
-        print(f"{ev.timestamp} {ev.type} {type(ev.message).__name__} {ev.rule_name}")
+        print(f"{ev.timestamp} {ev.type} {type(ev.message).__name__} {ev.rule_name} {ev.rejection_reason}")
         return False
 
 

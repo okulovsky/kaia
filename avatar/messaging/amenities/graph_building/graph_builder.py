@@ -63,7 +63,7 @@ class GraphBuilder:
 
     def _generate_edges(self, from_node: RuleNode, to_node: RuleNode):
         for message_type in from_node.output_edge_count:
-            if to_node.connector.check_incoming_internal(message_type, from_node.publisher):
+            if to_node.connector.check_incoming_internal(message_type, from_node.publisher) is None:
                 from_node.output_edge_count[message_type] += 1
                 to_node.input_edge_count += 1
                 self.edges.append(Edge(

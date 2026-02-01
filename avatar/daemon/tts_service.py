@@ -1,19 +1,28 @@
 from typing import *
-from .common import Confirmation, SoundConfirmation, TextInfo, SoundCommand, IMessage, message_handler, CommandConfirmationQueue, AvatarService
+from .common import Confirmation, SoundConfirmation, SoundCommand, IMessage, message_handler, CommandConfirmationQueue, AvatarService
 from abc import ABC, abstractmethod
 from .brainbox_service import BrainBoxService
 from brainbox import BrainBox, IPostprocessor
 from dataclasses import dataclass
 
+@dataclass
+class TTSSettings:
+    character: str
+    language: str
+
+
 class TTSTaskFactory(ABC):
     @abstractmethod
-    def create_task(self, s: str, info: TextInfo) -> BrainBox.ITask:
+    def create_task(self, s: str, info: TTSSettings) -> BrainBox.ITask:
         pass
+
 
 @dataclass
 class TTSCommand(IMessage):
+    Settings = TTSSettings
     text: tuple[str,...]
-    settings: TextInfo
+    settings: TTSSettings
+
 
 @dataclass
 class PlayingElement:
@@ -92,15 +101,10 @@ class TTSService(AvatarService):
         return tuple(result)
 
     class MockTaskFactory(TTSTaskFactory):
-        def create_task(self, s: str, settings: TextInfo) -> BrainBox.ITask:
+        def create_task(self, s: str, settings: TTSSettings) -> BrainBox.ITask:
             return BrainBox.Task(decider='Mock', arguments=dict(text=s))
 
-    @staticmethod
-    def brain_box_mock(task: BrainBox.ExtendedTask):
-        if task.task.decider != 'Mock':
-            raise ValueError("Mock task is expected")
-        text = task.task.arguments['text']
-        return SoundCommand('FILE: '+text, text)
+
 
 
 

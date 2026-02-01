@@ -1,10 +1,12 @@
 from kaia.app import KaiaAppSettings
 from unittest import TestCase
 from foundation_kaia.misc import Loc
-from avatar.daemon import UtteranceEvent, ChatCommand
+from avatar.daemon import TextEvent, ChatCommand, IMessage
 from kaia.skills.ping import PingIntents
 from kaia.tests.helper import Helper
 
+def print_message(m: IMessage):
+    print(m, m.envelop.publisher)
 
 class PingBrainlessTestCase(TestCase):
     def test_ping(self):
@@ -13,7 +15,7 @@ class PingBrainlessTestCase(TestCase):
             with helper.app.get_fork_app(None):
                 client = helper.app.create_avatar_client()
                 client.initialize()
-                client.put(UtteranceEvent(PingIntents.question()))
+                client.put(TextEvent(PingIntents.question()))
 
                 result = client.query(5).where(lambda z: isinstance(z, ChatCommand)).take(2).to_list()
                 self.assertEqual("Are you here?", result[0].text)
@@ -30,8 +32,8 @@ class PingBrainlessTestCase(TestCase):
                 client = helper.app.create_avatar_client()
                 client.initialize()
 
-                utterance = client.put(UtteranceEvent(PingIntents.question()))
-                self.assertIsInstance(client.pull()[0], UtteranceEvent)
+                utterance = client.put(TextEvent(PingIntents.question()))
+                self.assertIsInstance(client.pull()[0], TextEvent)
 
                 result = client.query(5).where(lambda z: isinstance(z, ChatCommand)).take(2).to_list()
                 self.assertEqual('/static/unknown.png', result[0].sender_avatar_file_id)

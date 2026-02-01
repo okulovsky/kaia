@@ -19,24 +19,25 @@ class FacelessTestCase(TestCase):
                 helper.wakeword()
 
                 c= helper.say('repeat_after_me')
-                result = helper.parse_reaction(UtteranceSequenceCommand)
+                result = helper.parse_reaction(TextCommand)
                 ThreadCollection.just_print(result)
 
                 sound = Query.en(result).where(lambda z: isinstance(z, SoundCommand)).single()
                 self.assertEqual('Say anything and I will repeat.', sound.text)
 
                 addition = c.query(3).take(3).to_list()
+
                 helper.check_events_list(
                     addition,
-                    BackendIdleReport,
                     WhisperRecognitionSetup,
-                    OpenMicCommand
+                    OpenMicCommand,
+                    Confirmation
                 )
 
                 c.query(3).take_while(lambda z: not isinstance(z, MicStateChangeReport) or z.state!=MicState.Open).to_list()
 
                 c = helper.say('make_me_a_sandwich')
-                result = helper.parse_reaction(UtteranceSequenceCommand)
+                result = helper.parse_reaction(TextCommand)
 
                 sandwich = 'Make me a sandwich.'
                 chats = Query.en(result).where(lambda z: isinstance(z, ChatCommand)).to_list()

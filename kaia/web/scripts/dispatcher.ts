@@ -7,15 +7,24 @@ export class Dispatcher {
   private client: AvatarClient;
   private rateMs: number;
   private handlers = new Map<string, Handler[]>();
-  private timerId?: number;
 
-  /**
-   * @param client  your AvatarClient instance
-   * @param updateRateInSeconds  poll interval
-   */
-  constructor(client: AvatarClient, updateRateInSeconds: number) {
+  private timeoutId?: number;
+  private running = false;
+
+  private busyEl?: HTMLElement | null;
+  private handledTypes: string[];
+
+  constructor(
+    client: AvatarClient,
+    updateRateInSeconds: number,
+    busyElement?: HTMLElement | null
+  ) {
     this.client = client;
     this.rateMs = updateRateInSeconds * 1000;
+    this.busyEl = busyElement;
+    this.handledTypes = []
+
+    this.setBusy(false);
   }
 
   /** Subscribe a handler to any message whose type endsWith this suffix */
@@ -27,38 +36,114 @@ export class Dispatcher {
 
   /** Start polling & dispatching */
   start(): void {
-    this.timerId = window.setInterval(() => void this.tick(), this.rateMs);
+    if (this.running) return;
+    this.running = true;
+    this.handledTypes = [...this.handlers.keys()]
+    void this.loop();
   }
 
   /** Stop polling */
   stop(): void {
-    if (this.timerId != null) {
-      clearInterval(this.timerId);
-      this.timerId = undefined;
+    this.running = false;
+    if (this.timeoutId != null) {
+      window.clearTimeout(this.timeoutId);
+      this.timeoutId = undefined;
+    }
+    this.setBusy(false);
+  }
+
+  /** Self-scheduling loop: strictly serial ticks */
+  private async loop(): Promise<void> {
+    while (this.running) {
+      await this.tick();
+
+      if (!this.running) break;
+
+      await new Promise<void>(resolve => {
+        this.timeoutId = window.setTimeout(resolve, this.rateMs);
+      });
     }
   }
 
-  /** One polling round */
+  /**
+   * Build and send frontend debug info for one polling round.
+   * Must never throw — debug reporting must not break polling.
+   */
+  private async sendFrontendDebugInfo(
+    startedAt: number,
+    finishedAt: number,
+    msgs: Message[]
+  ): Promise<void> {
+    try {
+      const fetchSeconds = (finishedAt - startedAt) / 1000;
+
+      const messageTypes = Array.from(
+        new Set(msgs.map(m => m.message_type))
+      );
+
+      const debugMsg = new Message(
+        "FrontendDebugInfo",
+        undefined,
+        {
+          fetch_seconds: fetchSeconds,
+          message_count: msgs.length,
+          message_types: messageTypes,
+          handled_types: Array.from(this.handledTypes),
+          fetched_at: new Date().toISOString(),
+        }
+      );
+
+      //await this.client.addMessage(debugMsg);
+    } catch (e) {
+      console.warn(
+        "Dispatcher: failed to send FrontendDebugInfo",
+        e
+      );
+    }
+  }
+
+
+  /** One polling round (network busy only during fetch; handlers awaited) */
   private async tick(): Promise<void> {
     let msgs: Message[];
+    const startedAt = performance.now();
+
     try {
-      msgs = await this.client.getMessages();
+      this.setBusy(true);
+      msgs = await this.client.getMessages(undefined, this.handledTypes);
+      const finishedAt = performance.now();
+      await this.sendFrontendDebugInfo(startedAt, finishedAt, msgs);
     } catch (e) {
       console.error('Dispatcher: fetch failed', e);
       return;
+    } finally {
+      this.setBusy(false);
     }
+
+    const handlerPromises: Promise<void>[] = [];
 
     for (const msg of msgs) {
       for (const [suffix, handlers] of this.handlers) {
         if (msg.message_type.endsWith(suffix)) {
           for (const h of handlers) {
-            // fire & forget each handler, catch errors
-            h(msg, this.client).catch(err =>
-              console.error(`Handler for ${suffix} failed:`, err)
+            handlerPromises.push(
+              h(msg, this.client).catch(err =>
+                console.error(`Handler for ${suffix} failed:`, err)
+              )
             );
           }
         }
       }
     }
+
+    if (handlerPromises.length > 0) {
+      await Promise.allSettled(handlerPromises);
+    }
+  }
+
+  private setBusy(isBusy: boolean): void {
+    const el = this.busyEl;
+    if (!el) return;
+    el.hidden = !isBusy; // or: el.style.display = isBusy ? '' : 'none';
   }
 }

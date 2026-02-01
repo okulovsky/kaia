@@ -4,13 +4,13 @@ from kaia import SingleLineKaiaSkill, World
 from datetime import datetime
 
 class PingIntents(TemplatesCollection):
-    question = Template(
+    question: ClassVar[Template] = Template(
         'Are you here?',
     )
 
 
 class PingReplies(TemplatesCollection):
-    answer = (
+    answer: ClassVar[Template] = (
         Template("Sure, I'm listening.")
         .context(
             f"{World.user} asks if {World.character} is still listening to {World.user}, and {World.character} confirms",
@@ -19,8 +19,7 @@ class PingReplies(TemplatesCollection):
     )
 
 class PingSkill(SingleLineKaiaSkill):
-    def __init__(self, datetime_factory: Callable[[], datetime] = datetime.now):
-        self.datetime_factory = datetime_factory
+    def __init__(self):
         super().__init__(
             PingIntents,
             PingReplies,

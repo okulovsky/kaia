@@ -2,7 +2,7 @@ import datetime
 
 from avatar.messaging import *
 from avatar.daemon import NarrationService, State, ImageService
-from avatar.daemon.common.known_messages import UtteranceSequenceCommand
+from avatar.daemon.common.known_messages import TextCommand
 from unittest import TestCase
 
 characters = ('c0', 'c1', 'c2')
@@ -16,7 +16,7 @@ class NarrationTestCase(TestCase):
             self.state,
             characters,
             activities,
-            UtteranceSequenceCommand('hello'),
+            TextCommand('hello'),
             60,
             False
         ))
@@ -27,7 +27,7 @@ class NarrationTestCase(TestCase):
         self.assertEqual('c0', self.state.character)
         self.assertEqual('a0', self.state.activity)
         self.assertIsInstance(m[1], ImageService.NewImageCommand)
-        self.assertIsInstance(m[2], UtteranceSequenceCommand)
+        self.assertIsInstance(m[2], TextCommand)
 
 
     def test_character_change(self):
@@ -37,7 +37,7 @@ class NarrationTestCase(TestCase):
         self.assertEqual('c2', self.state.character)
         self.assertEqual('a0', self.state.activity)
         self.assertIsInstance(m[1], ImageService.NewImageCommand)
-        self.assertIsInstance(m[2], UtteranceSequenceCommand)
+        self.assertIsInstance(m[2], TextCommand)
 
     def test_random_activity_change(self):
         m = self.proc.debug_and_stop_by_empty_queue(NarrationService.ChangeActivityCommand()).messages

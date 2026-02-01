@@ -14,7 +14,7 @@ class RulesDrawingsTestCase(TestCase):
 
         builder = GraphBuilder(
             rules,
-            (UtteranceSequenceCommand, TextCommand),
+            (TextCommand,),
             (),
             ('NarrationService',)
         )
