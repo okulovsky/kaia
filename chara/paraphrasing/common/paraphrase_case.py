@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from avatar.daemon import Character
+from chara.common import Character
 from .parsed_template import ParsedTemplate
 from uuid import uuid4
 

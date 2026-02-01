@@ -1,4 +1,4 @@
-from avatar.daemon import Character
+from chara.common import Character
 from typing import Iterable
 from grammatron import Template
 from ..common import ParsedTemplate, ParaphraseCase

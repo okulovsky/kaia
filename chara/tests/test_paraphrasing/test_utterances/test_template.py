@@ -1,7 +1,7 @@
 from chara.paraphrasing.utterances import JinjaModel, UtteranceParaphrasingPrompter
 from chara.paraphrasing.common import ParaphraseCase, ParsedTemplate
 from grammatron import *
-from avatar.daemon import Character, World
+from chara.common import Character, World
 from foundation_kaia.prompters import Prompter
 from unittest import TestCase
 

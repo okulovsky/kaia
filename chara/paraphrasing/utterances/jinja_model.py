@@ -1,7 +1,7 @@
 from grammatron import *
 from dataclasses import dataclass
 from ..common import ParaphraseCase, ParsedTemplate
-from avatar.daemon import Character
+from chara.common import Character
 
 @dataclass
 class JinjaTemplateModel:
