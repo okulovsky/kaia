@@ -1,7 +1,15 @@
-from chara.paraphrasing.intents import IntentCaseBuilder, IntentPrompter
+import pickle
+from brainbox import BrainBox
+from chara.common import CharaApis
+from chara.paraphrasing.common.llm_tools import PromptTaskBuilder
+from chara.paraphrasing.intents import (
+    IntentCaseBuilder, IntentPrompter,
+    IntentPipeline, IntentPipelineCache,
+)
 from kaia.skills.timer_skill import TimerIntents
 from kaia.skills.time import TimeIntents
 from kaia.skills.date import DateIntents
+from foundation_kaia.misc import Loc
 
 all_templates = [
     *TimerIntents.get_templates(),
@@ -9,18 +17,15 @@ all_templates = [
     *DateIntents.get_templates(),
 ]
 
+CharaApis.brainbox_api = BrainBox.Api('127.0.0.1:18090')
 
-def build_prompts(languages=('ru',)):
-    builder = IntentCaseBuilder(templates=all_templates, languages=languages)
-    prompter = IntentPrompter()
-    cases = builder.create_cases()
-    return [(case, prompter(case)) for case in cases]
+cases = IntentCaseBuilder(templates=all_templates, languages=('ru',)).create_cases()
 
+builder = PromptTaskBuilder(prompter=IntentPrompter(), model='mistral')
+cache = IntentPipelineCache(Loc.data_folder / 'intent_paraphrases_cache')
+IntentPipeline(builder)(cache, cases)
 
-if __name__ == '__main__':
-    items = build_prompts()
-    print(f"Total prompts: {len(items)}")
-    for case, prompt in items:
-        modality = case.modality.name if case.modality else 'no modality'
-        print(f"\n--- {case.template.template.get_name()} / {modality} ---")
-        print(prompt)
+results = cache.read_result()
+output = Loc.data_folder / 'intent_paraphrases.pkl'
+output.write_bytes(pickle.dumps(results))
+print(f"Done. {len(results)} paraphrases → {output}")

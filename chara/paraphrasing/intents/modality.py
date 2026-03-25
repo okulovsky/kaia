@@ -8,6 +8,6 @@ class Modality:
 
 
 MODALITIES = [
-    Modality('neutral', 'говорит нейтрально и чётко'),
-    Modality('quick', 'говорит быстро и коротко, без лишних слов'),
+    Modality('neutral', 'speaks neutrally and clearly'),
+    Modality('quick', 'speaks quickly and briefly, no filler words'),
 ]

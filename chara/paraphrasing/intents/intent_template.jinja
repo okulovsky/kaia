@@ -1,21 +1,20 @@
-Ты помогаешь создавать датасет для голосового ассистента.
-Задача: перефразировать голосовые команды пользователя.
+You are helping build a voice assistant dataset.
+Task: rephrase the following voice commands in {{ language }}.
 {% if modality %}
-
-Стиль речи пользователя: {{ modality.description }}.
+Speaking style: the user {{ modality.description }}.
 {% endif %}
 
-Примеры того, что пользователь может сказать:
+Default examples:
 {% for sample in samples %}
 * {{ sample }}
 {% endfor %}
 {% if variables_description %}
 
-Где:
+Variables (must be preserved exactly as-is in curly braces):
 {% for desc in variables_description %}
 {{ desc }}
 {% endfor %}
 {% endif %}
 
-Напиши 10 вариантов в виде маркированного списка.
-Сохраняй смысл{% if modality %}, меняй формулировку в соответствии со стилем речи{% endif %}.
+Write exactly 10 rephrases as a bullet-point list in {{ language }}.
+Keep the meaning, vary the phrasing{% if modality %} to match the speaking style{% endif %}.

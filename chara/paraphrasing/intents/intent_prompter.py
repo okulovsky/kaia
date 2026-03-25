@@ -10,6 +10,7 @@ class _IntentJinjaModel:
     samples: tuple[str, ...]
     variables_description: tuple[str, ...]
     modality: object  # Modality | None
+    language: str
 
 
 class IntentPrompter:
@@ -30,5 +31,6 @@ class IntentPrompter:
             samples=samples,
             variables_description=variables_description,
             modality=case.modality,
+            language=case.language,
         )
         return self.template(model)
