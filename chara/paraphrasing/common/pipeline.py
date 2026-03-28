@@ -37,7 +37,7 @@ class ParaphrasePipeline:
         cache.write_result(result)
 
     @staticmethod
-    def clean_option(self, s):
+    def clean_option(s):
         while s[0] in EXCLUDE_SYMBOLS:
             s = s[1:]
         while s[-1] in EXCLUDE_SYMBOLS:

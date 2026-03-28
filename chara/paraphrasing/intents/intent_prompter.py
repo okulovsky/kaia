@@ -4,6 +4,13 @@ from yo_fluq import FileIO
 from foundation_kaia.prompters import JinjaPrompter
 from .intent_case import IntentCase
 
+_LANGUAGE_NAMES = {
+    'ru': 'Russian',
+    'en': 'English',
+    'de': 'German',
+    'fr': 'French',
+}
+
 
 @dataclass
 class _IntentJinjaModel:
@@ -31,6 +38,6 @@ class IntentPrompter:
             samples=samples,
             variables_description=variables_description,
             modality=case.modality,
-            language=case.language,
+            language=_LANGUAGE_NAMES.get(case.language, case.language),
         )
         return self.template(model)

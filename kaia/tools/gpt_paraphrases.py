@@ -1,4 +1,3 @@
-import pickle
 from brainbox import BrainBox
 from chara.common import CharaApis
 from chara.paraphrasing.common.llm_tools import PromptTaskBuilder
@@ -17,15 +16,20 @@ all_templates = [
     *DateIntents.get_templates(),
 ]
 
-CharaApis.brainbox_api = BrainBox.Api('127.0.0.1:18090')
+CharaApis.brainbox_api = BrainBox.Api('127.0.0.1:8090')
 
 cases = IntentCaseBuilder(templates=all_templates, languages=('ru',)).create_cases()
 
-builder = PromptTaskBuilder(prompter=IntentPrompter(), model='mistral')
+builder = PromptTaskBuilder(prompter=IntentPrompter(), model='llama3.1:8b')
 cache = IntentPipelineCache(Loc.data_folder / 'intent_paraphrases_cache')
 IntentPipeline(builder)(cache, cases)
 
 results = cache.read_result()
-output = Loc.data_folder / 'intent_paraphrases.pkl'
-output.write_bytes(pickle.dumps(results))
+output = Loc.data_folder / 'intent_paraphrases.txt'
+lines = []
+for case, paraphrase in results:
+    lines.append(f"# {case.template.template.get_name()} | {case.modality.name if case.modality else 'no modality'} | {case.language}")
+    lines.append(paraphrase)
+    lines.append("")
+output.write_text('\n'.join(lines), encoding='utf-8')
 print(f"Done. {len(results)} paraphrases → {output}")
