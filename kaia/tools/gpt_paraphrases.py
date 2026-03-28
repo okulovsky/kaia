@@ -10,6 +10,8 @@ from kaia.skills.time import TimeIntents
 from kaia.skills.date import DateIntents
 from foundation_kaia.misc import Loc
 
+MODEL = 'mistral-small'
+
 all_templates = [
     *TimerIntents.get_templates(),
     *TimeIntents.get_templates(),
@@ -20,7 +22,7 @@ CharaApis.brainbox_api = BrainBox.Api('127.0.0.1:8090')
 
 cases = IntentCaseBuilder(templates=all_templates, languages=('ru',)).create_cases()
 
-builder = PromptTaskBuilder(prompter=IntentPrompter(), model='llama3.1:8b')
+builder = PromptTaskBuilder(prompter=IntentPrompter(), model=MODEL)
 cache = IntentPipelineCache(Loc.data_folder / 'intent_paraphrases_cache')
 IntentPipeline(builder)(cache, cases)
 
