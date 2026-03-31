@@ -1,0 +1,12 @@
+tsconfig.json
+.eslintrc.js
+.eslintrc.json
+.eslintrc
+.prettierrc
+
+.vscode/
+.idea/
+*.log
+
+node_modules/
+*.tgz
