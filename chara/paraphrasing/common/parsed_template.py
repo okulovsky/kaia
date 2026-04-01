@@ -5,6 +5,7 @@ from grammatron import (
 )
 from avatar.daemon.paraphrase_service import ParaphraseRecord
 import re
+import copy
 from collections import OrderedDict
 
 @dataclass
@@ -98,7 +99,7 @@ class ParsedTemplate:
         return templates
 
 
-    def restore_template(self, s: str) -> Template:
+    def restore_template(self, s: str, grammar_rules: dict | None = None) -> Template:
         unwrapped_sequence = self.sequences[0].unwrapped_sequence
         regexp = r'(\{[^\}]*\})'
         hit_fragments = set(unwrapped_sequence.fragment_to_description)
@@ -111,7 +112,14 @@ class ParsedTemplate:
                     raise ValueError(f"Fragment `{fragment}` is missing from the original template")
                 else:
                     hit_fragments.remove(fragment)
-                    sequence.append(unwrapped_sequence.fragment_to_description[fragment].dub)
+                    dub = unwrapped_sequence.fragment_to_description[fragment].dub
+                    if grammar_rules is not None:
+                        var_name = fragment[1:-1].split('/')[0].split('+')[0]
+                        rule = grammar_rules.get(var_name)
+                        if rule is not None:
+                            dub = copy.deepcopy(dub)
+                            dub.grammar._set_grammar(rule.get_language_name(), rule)
+                    sequence.append(dub)
             else:
                 sequence.append(ConstantDub(fragment))
         if len(hit_fragments) != 0:

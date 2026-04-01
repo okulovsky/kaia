@@ -3,4 +3,4 @@ from .intent_case import IntentCase, IntentFingerprint
 from .intent_case_builder import IntentCaseBuilder
 from .intent_prompter import IntentPrompter
 from .intent_pipeline import IntentPipelineCache, IntentPipeline
-from .case_prompter import CasePrompter, parse_case_response
+from .case_prompter import GrammarPrompter, RuGrammarPrompter
