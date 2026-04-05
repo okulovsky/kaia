@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BrainBox - API</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+  h1, h2, h3 { color: #333; }
+  nav { margin-bottom: 16px; }
+  nav a { margin-right: 12px; color: #0066cc; text-decoration: none; }
+  nav a:hover { text-decoration: underline; }
+  .service { background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 24px; padding: 16px; border-radius: 4px; }
+  .endpoint { border-left: 4px solid #0066cc; margin: 12px 0; padding: 8px 12px; background: #f0f4ff; }
+  .endpoint h3 { margin: 0 0 6px 0; font-size: 1em; }
+  .url { font-family: monospace; background: #e8e8e8; padding: 3px 6px; border-radius: 3px; }
+  .docstring { color: #555; font-style: italic; margin: 4px 0; }
+  table { border-collapse: collapse; margin-top: 8px; width: 100%; }
+  th { background: #ddd; padding: 4px 8px; text-align: left; font-size: 0.85em; }
+  td { padding: 4px 8px; border-bottom: 1px solid #eee; font-size: 0.85em; }
+  .tag { display: inline-block; font-size: 0.75em; padding: 1px 5px; border-radius: 3px; margin-left: 4px; }
+  .tag-file { background: #fff3cd; color: #856404; }
+  .tag-return { background: #d4edda; color: #155724; }
+  #status { color: #555; margin-bottom: 12px; }
+  .schema-container { margin-top: 8px; font-size: 0.85em; }
+  .schema-container table { margin: 0; }
+  .schema-prop-name { font-family: monospace; font-weight: bold; }
+  .schema-type { color: #0066cc; font-family: monospace; }
+  .schema-union { color: #888; font-style: italic; }
+  .schema-ref { color: #aa6600; font-family: monospace; }
+  .schema-def { margin: 4px 0 4px 16px; border-left: 2px solid #ccc; padding-left: 8px; }
+  .file-params { margin-top: 6px; font-size: 0.85em; color: #555; }
+</style>
+</head>
+<body>
+<h1 id="page-title">BrainBox - API</h1>
+<nav>
+  <a href="/static/controllers.html">&#8592; Controllers</a>
+</nav>
+<div id="status">Loading...</div>
+<div id="content"></div>
+
+<script>
+function schemaTypeLabel(s, defs) {
+  if (!s || typeof s !== 'object') return document.createTextNode(String(s));
+  if (s.anyOf) {
+    const span = document.createElement('span');
+    span.className = 'schema-union';
+    span.textContent = s.anyOf.map(a => schemaTypeLabel(a, defs).textContent || '?').join(' | ');
+    return span;
+  }
+  if (s.$ref) {
+    const refName = s.$ref.split('/').pop();
+    const span = document.createElement('span');
+    span.className = 'schema-ref';
+    span.textContent = refName.split('.').pop(); // short name
+    return span;
+  }
+  if (s.enum) {
+    const span = document.createElement('span');
+    span.className = 'schema-type';
+    span.textContent = 'enum(' + s.enum.join(', ') + ')';
+    return span;
+  }
+  if (s.type === 'array') {
+    const span = document.createElement('span');
+    span.className = 'schema-type';
+    const inner = schemaTypeLabel(s.items, defs);
+    span.textContent = 'array[' + (inner.textContent || '?') + ']';
+    return span;
+  }
+  if (s.type === 'object' && s.properties) {
+    return renderProperties(s.properties, defs);
+  }
+  const span = document.createElement('span');
+  span.className = 'schema-type';
+  span.textContent = s.type || '?';
+  if (s.format) span.textContent += '(' + s.format + ')';
+  return span;
+}
+
+function renderProperties(properties, defs) {
+  const tbl = document.createElement('table');
+  const thead = document.createElement('thead');
+  thead.innerHTML = '<tr><th>Parameter</th><th>Type</th></tr>';
+  tbl.appendChild(thead);
+  const tbody = document.createElement('tbody');
+  for (const [name, propSchema] of Object.entries(properties)) {
+    const tr = document.createElement('tr');
+    const tdName = document.createElement('td');
+    tdName.className = 'schema-prop-name';
+    tdName.textContent = name;
+    const tdType = document.createElement('td');
+    tdType.appendChild(schemaTypeLabel(propSchema, defs));
+    // If it's a $ref, expand inline
+    if (propSchema.$ref) {
+      const refName = propSchema.$ref.split('/').pop();
+      const refSchema = defs[refName];
+      if (refSchema && refSchema.properties) {
+        const sub = document.createElement('div');
+        sub.className = 'schema-def';
+        sub.appendChild(renderProperties(refSchema.properties, defs));
+        tdType.appendChild(sub);
+      }
+    }
+    tr.appendChild(tdName);
+    tr.appendChild(tdType);
+    tbody.appendChild(tr);
+  }
+  tbl.appendChild(tbody);
+  return tbl;
+}
+
+const params = new URLSearchParams(window.location.search);
+const name = params.get('name') || '';
+document.getElementById('page-title').textContent = 'API: ' + name;
+document.title = 'BrainBox - API: ' + name;
+
+async function loadDoc() {
+  try {
+    const resp = await fetch('/decider-service/api-doc/' + encodeURIComponent(name));
+    if (!resp.ok) {
+      document.getElementById('status').textContent = 'Error ' + resp.status + ': ' + await resp.text();
+      return;
+    }
+    const doc = await resp.json();
+    document.getElementById('status').textContent = '';
+    const content = document.getElementById('content');
+    content.innerHTML = '';
+
+    for (const [svcName, svc] of Object.entries(doc.services || {})) {
+      const div = document.createElement('div');
+      div.className = 'service';
+
+      const h2 = document.createElement('h2');
+      h2.textContent = svc.name;
+      div.appendChild(h2);
+
+      if (svc.docstring) {
+        const p = document.createElement('p');
+        p.className = 'docstring';
+        p.textContent = svc.docstring;
+        div.appendChild(p);
+      }
+
+      for (const [epName, ep] of Object.entries(svc.endpoints || {})) {
+        const epDiv = document.createElement('div');
+        epDiv.className = 'endpoint';
+
+        const h3 = document.createElement('h3');
+        h3.textContent = ep.name;
+        epDiv.appendChild(h3);
+
+        if (ep.docstring) {
+          const ds = document.createElement('p');
+          ds.className = 'docstring';
+          ds.textContent = ep.docstring;
+          epDiv.appendChild(ds);
+        }
+
+        const urlP = document.createElement('p');
+        urlP.innerHTML = 'URL: <span class="url">' + ep.url_template + '</span>';
+        epDiv.appendChild(urlP);
+
+        const jsonSchema = ep.json_schema || {};
+        const schemaObj = jsonSchema.schema || {};
+        const defs = jsonSchema.defs || {};
+        const hasJsonParams = Object.keys(schemaObj.properties || {}).length > 0;
+        const fileParams = ep.file_params || [];
+
+        if (hasJsonParams) {
+          const schemaDiv = document.createElement('div');
+          schemaDiv.className = 'schema-container';
+          schemaDiv.appendChild(renderProperties(schemaObj.properties, defs));
+          epDiv.appendChild(schemaDiv);
+        }
+
+        if (fileParams.length > 0) {
+          const fp = document.createElement('p');
+          fp.className = 'file-params';
+          fp.innerHTML = 'File params: ' + fileParams.map(n =>
+            '<span class="tag tag-file">' + n + '</span>'
+          ).join(' ');
+          epDiv.appendChild(fp);
+        }
+
+        const retP = document.createElement('p');
+        const retTag = ep.return_is_file
+          ? '<span class="tag tag-file">file</span>'
+          : '<span class="tag tag-return">' + ep.return_type + '</span>';
+        retP.innerHTML = 'Returns: ' + retTag;
+        epDiv.appendChild(retP);
+
+        div.appendChild(epDiv);
+      }
+
+      content.appendChild(div);
+    }
+  } catch (e) {
+    document.getElementById('status').textContent = 'Error: ' + e.message;
+  }
+}
+
+loadDoc();
+</script>
+</body>
+</html>

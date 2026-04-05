@@ -1,11 +1,14 @@
 from dataclasses import dataclass
+from enum import Enum
 from ....framework import ConnectionSettings
-from .model import WD14TaggerModel
+
+
+class WD14TaggerModels(str, Enum):
+    wd14_vit_v2 = 'wd14-vit.v2'
+
 
 @dataclass
 class WD14TaggerSettings:
     connection = ConnectionSettings(20303)
-    models_to_download: tuple[WD14TaggerModel,...] = (
-        WD14TaggerModel('wd14-vit.v2', 'models--SmilingWolf--wd-v1-4-vit-tagger-v2'),
-    )
-    cpu_share:float = 0.25
+    models_to_install = [WD14TaggerModels.wd14_vit_v2]
+    cpu_share: float = 0.25

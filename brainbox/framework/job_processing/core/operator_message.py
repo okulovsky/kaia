@@ -11,6 +11,7 @@ class OperatorMessage:
         log = 2
         result = 3
         error = 4
+        responding = 5
 
 
 

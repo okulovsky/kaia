@@ -1,10 +1,28 @@
 import requests
-from ....framework import DockerWebServiceApi, FileLike
+from foundation_kaia.marshalling_2 import service, FileLike, FileLikeHandler
+from foundation_kaia.brainbox_utils import brainbox_endpoint
+from ....framework import DockerWebServiceApi, EntryPoint, TaskBuilder
 from .controller import RhasspyKaldiController
 from .settings import RhasspyKaldiSettings
 from .model import RhasspyKaldiModel
 
-class RhasspyKaldi(DockerWebServiceApi[RhasspyKaldiSettings, RhasspyKaldiController]):
+
+@service
+class IRhasspyKaldi:
+    @brainbox_endpoint
+    def train(self, model: str, language: str, sentences: str, custom_words: dict[str, str]|None = None) -> dict:
+        ...
+
+    @brainbox_endpoint
+    def transcribe(self, file: FileLike, model: str) -> dict:
+        ...
+
+    @brainbox_endpoint
+    def phonemes(self, language: str) -> str:
+        ...
+
+
+class RhasspyKaldiApi(DockerWebServiceApi[RhasspyKaldiSettings, RhasspyKaldiController], IRhasspyKaldi):
     def __init__(self, address: str | None = None):
         super().__init__(address)
 
@@ -18,37 +36,32 @@ class RhasspyKaldi(DockerWebServiceApi[RhasspyKaldiSettings, RhasspyKaldiControl
             raise ValueError(f"RhasspyKaldi couldn't train for {language}/{model}\n{reply.text}")
         return reply.json()
 
-    def transcribe(self, file: FileLike.Type, model: str):
-        with FileLike(file, self.cache_folder) as file:
-            reply = requests.post(
-                f'http://{self.address}/transcribe/{model}',
-                files=(
-                    ('file', file),
-                )
-            )
-            if reply.status_code != 200:
-                raise ValueError(f"RhasspyKaldi couldn't transcribe for {model}\n{reply.text}")
-            return reply.json()
+    def transcribe(self, file: FileLike, model: str):
+        reply = requests.post(
+            f'http://{self.address}/transcribe/{model}',
+            files=(('file', FileLikeHandler.to_bytes(file)),)
+        )
+        if reply.status_code != 200:
+            raise ValueError(f"RhasspyKaldi couldn't transcribe for {model}\n{reply.text}")
+        return reply.json()
 
     def phonemes(self, language: str):
         return requests.get(f'http://{self.address}/phonemes/{language}').text
 
-    Controller = RhasspyKaldiController
-    Settings = RhasspyKaldiSettings
-    Model = RhasspyKaldiModel
 
-    @classmethod
-    def get_ordering_arguments_sequence(cls) -> tuple[str,...]|None:
+class RhasspyKaldiTaskBuilder(TaskBuilder, IRhasspyKaldi):
+    pass
+
+
+class RhasspyKaldiEntryPoint(EntryPoint[RhasspyKaldiTaskBuilder]):
+    def __init__(self):
+        super().__init__()
+        self.Api = RhasspyKaldiApi
+        self.Controller = RhasspyKaldiController
+        self.Settings = RhasspyKaldiSettings
+        self.Model = RhasspyKaldiModel
+
+    def get_ordering_arguments_sequence(self) -> tuple[str, ...]|None:
         return ('model',)
 
-
-'''
-
-`[order]
-_order = Shi|Ukha|Borsh
-I order <_order>{_order}`
-`shi S i
-ukha u h 'A
-borsh b o r S`
-
-'''
+RhasspyKaldi = RhasspyKaldiEntryPoint()

@@ -1,12 +1,21 @@
-from ....framework import DockerWebServiceApi
-import requests
-from .settings import LlamaLoraServerSettings
-from .controller import LlamaLoraServerController
 import typing as tp
 from pathlib import Path
+import requests
+from foundation_kaia.marshalling_2 import service
+from foundation_kaia.brainbox_utils import brainbox_endpoint
+from ....framework import DockerWebServiceApi,EntryPoint, TaskBuilder
+from .settings import LlamaLoraServerSettings
+from .controller import LlamaLoraServerController
 
 
-class LlamaLoraServer(DockerWebServiceApi[LlamaLoraServerSettings, LlamaLoraServerController]):
+@service
+class ILlamaLoraServer:
+    @brainbox_endpoint
+    def completion(self, *, task_name: str, prompt: str|None = None, prompts: list[str]|None = None, max_tokens: int = -1) -> str:
+        ...
+
+
+class LlamaLoraServerApi(DockerWebServiceApi[LlamaLoraServerSettings, LlamaLoraServerController], ILlamaLoraServer):
     def __init__(self, address: str | None = None):
         super().__init__(address)
         self.taskname2id = None
@@ -63,5 +72,16 @@ class LlamaLoraServer(DockerWebServiceApi[LlamaLoraServerSettings, LlamaLoraServ
         else:
             return [item["content"] for item in data]
 
-    Settings = LlamaLoraServerSettings
-    Controller = LlamaLoraServerController
+
+class LlamaLoraServerTaskBuilder(TaskBuilder, ILlamaLoraServer):
+    pass
+
+
+class LlamaLoraServerEntryPoint(EntryPoint[LlamaLoraServerTaskBuilder]):
+    def __init__(self):
+        super().__init__()
+        self.Api = LlamaLoraServerApi
+        self.Settings = LlamaLoraServerSettings
+        self.Controller = LlamaLoraServerController
+
+LlamaLoraServer = LlamaLoraServerEntryPoint()

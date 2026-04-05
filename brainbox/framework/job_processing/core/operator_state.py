@@ -1,11 +1,12 @@
 from dataclasses import dataclass, field
 from .decider_instance_key import DeciderInstanceKey
+from .command_queue import CommandQueue
 from datetime import datetime
 from queue import Queue
 from .job import Job
 from .operator_message import OperatorMessage
 from .operator_log import OperatorLog
-from ...controllers.controller import IController
+from ...controllers.architecture import IController
 from ...common import IDecider
 from threading import Thread
 
@@ -23,6 +24,7 @@ class OperatorState:
     controller: IController
     controller_run_instance_id: str
     api: IDecider
+    command_queue: CommandQueue
     logger: OperatorLog = field(default_factory=OperatorLog)
     operator_thread: Thread|None = None
     exit_request: bool = False

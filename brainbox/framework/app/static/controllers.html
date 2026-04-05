@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BrainBox - Controllers</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+  h1 { color: #333; }
+  nav { margin-bottom: 16px; }
+  nav a { margin-right: 12px; color: #0066cc; text-decoration: none; }
+  nav a:hover { text-decoration: underline; }
+  table { border-collapse: collapse; width: 100%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  th { background: #444; color: #fff; padding: 8px 12px; text-align: left; }
+  td { padding: 8px 12px; border-bottom: 1px solid #eee; vertical-align: middle; }
+  tr:hover td { background: #f9f9f9; }
+  .installed { color: #2e7d32; font-weight: bold; }
+  .not-installed { color: #888; }
+  .installing-banner { background: #fff3cd; border: 1px solid #ffc107; padding: 8px 12px; margin-bottom: 12px; border-radius: 4px; }
+.actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  button { padding: 4px 10px; cursor: pointer; border: 1px solid #ccc; border-radius: 3px; background: #fff; font-size: 0.85em; }
+  button:hover:not(:disabled) { background: #e8e8e8; }
+  button:disabled { opacity: 0.4; cursor: default; }
+  button.btn-primary { background: #0066cc; color: #fff; border-color: #0066cc; }
+  button.btn-primary:hover:not(:disabled) { background: #0052a3; }
+  button.btn-danger { background: #c62828; color: #fff; border-color: #c62828; }
+  button.btn-danger:hover:not(:disabled) { background: #a31f1f; }
+  #status { color: #555; font-size: 0.9em; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<h1>BrainBox - Controllers</h1>
+<nav>
+  <a href="/static/batches.html">Batches</a>
+  <a href="/static/operator_log.html">Operator Log</a>
+</nav>
+<div id="installing-banner" style="display:none"></div>
+<div id="status">Loading...</div>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Installed</th>
+      <th>Size</th>
+      <th>Instances</th>
+      <th>Self-test</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody id="ctrl-body"></tbody>
+</table>
+
+<script>
+async function post(url) {
+  const resp = await fetch(url, { method: 'POST' });
+  if (!resp.ok) {
+    const text = await resp.text();
+    alert('Error ' + resp.status + ': ' + text);
+  }
+}
+
+async function action(btn, fn) {
+  btn.disabled = true;
+  try { await fn(); } finally {
+    await loadControllers();
+    btn.disabled = false;
+  }
+}
+
+async function loadControllers() {
+  try {
+    const resp = await fetch('/controllers-service/status');
+    if (!resp.ok) { document.getElementById('status').textContent = 'Error: ' + resp.status; return; }
+    const data = await resp.json();
+    document.getElementById('status').textContent = 'Last update: ' + new Date().toLocaleTimeString();
+
+    const banner = document.getElementById('installing-banner');
+    if (data.currently_installing) {
+      banner.style.display = 'block';
+      banner.className = 'installing-banner';
+      banner.textContent = 'Installing: ' + data.currently_installing + '...';
+    } else {
+      banner.style.display = 'none';
+    }
+
+    const tbody = document.getElementById('ctrl-body');
+    tbody.innerHTML = '';
+    for (const c of data.controllers) {
+      const tr = document.createElement('tr');
+
+      // Name
+      const tdName = document.createElement('td');
+      const nameLink = document.createElement('a');
+      nameLink.href = '/static/decider.html?name=' + encodeURIComponent(c.name);
+      nameLink.textContent = c.name;
+      tdName.appendChild(nameLink);
+      tr.appendChild(tdName);
+
+      // Installed
+      const tdInst = document.createElement('td');
+      tdInst.textContent = c.installed ? (c.dockerless ? 'Dockerless' : 'Installed') : 'Not installed';
+      tdInst.className = c.installed ? 'installed' : 'not-installed';
+      tr.appendChild(tdInst);
+
+      // Size
+      const tdSize = document.createElement('td');
+      tdSize.textContent = c.size || '';
+      tr.appendChild(tdSize);
+
+      // Instances
+      const tdRun = document.createElement('td');
+      if (c.instances.length === 0) {
+        tdRun.textContent = '—';
+      } else {
+        for (const inst of c.instances) {
+          const d = document.createElement('div');
+          const short = inst.instance_id.substring(0, 12) + '...';
+          d.textContent = inst.parameter ? short + ' (' + inst.parameter + ')' : short;
+          d.title = inst.instance_id;
+          tdRun.appendChild(d);
+        }
+      }
+      tr.appendChild(tdRun);
+
+      // Self-test
+      const tdSt = document.createElement('td');
+      if (c.has_self_test_report) {
+        tdSt.textContent = c.has_errors_in_self_test_report ? 'Has errors' : 'OK';
+        tdSt.style.color = c.has_errors_in_self_test_report ? '#c62828' : '#2e7d32';
+      } else {
+        tdSt.textContent = '—';
+      }
+      tr.appendChild(tdSt);
+
+      // Actions
+      const tdAct = document.createElement('td');
+      const div = document.createElement('div');
+      div.className = 'actions';
+
+      if (!c.installed) {
+        const btnInstall = document.createElement('button');
+        btnInstall.textContent = 'Install';
+        btnInstall.className = 'btn-primary';
+        btnInstall.onclick = () => action(btnInstall, () => post('/controllers-service/install/' + encodeURIComponent(c.name)));
+        div.appendChild(btnInstall);
+      } else {
+        const btnUninstall = document.createElement('button');
+        btnUninstall.textContent = 'Uninstall';
+        btnUninstall.className = 'btn-danger';
+        btnUninstall.onclick = () => action(btnUninstall, () => post('/controllers-service/uninstall/' + encodeURIComponent(c.name)));
+        div.appendChild(btnUninstall);
+
+        for (const inst of c.instances) {
+          const btnStop = document.createElement('button');
+          btnStop.textContent = c.instances.length > 1 ? 'Stop ' + inst.instance_id.substring(0, 6) + '…' : 'Stop';
+          btnStop.className = 'btn-danger';
+          btnStop.onclick = () => action(btnStop, () => post('/controllers-service/stop/' + encodeURIComponent(c.name) + '/' + encodeURIComponent(inst.instance_id)));
+          div.appendChild(btnStop);
+        }
+
+        const btnSelfTest = document.createElement('button');
+        btnSelfTest.textContent = 'Self-test';
+        btnSelfTest.onclick = () => action(btnSelfTest, () => post('/controllers-service/self-test/' + encodeURIComponent(c.name)));
+        div.appendChild(btnSelfTest);
+      }
+
+      tdAct.appendChild(div);
+      tr.appendChild(tdAct);
+
+      tbody.appendChild(tr);
+    }
+  } catch (e) {
+    document.getElementById('status').textContent = 'Error: ' + e.message;
+  }
+}
+
+loadControllers();
+setInterval(loadControllers, 5000);
+</script>
+</body>
+</html>

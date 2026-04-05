@@ -1,3 +1,4 @@
+import os
 import traceback
 
 from .command import  Command
@@ -69,27 +70,25 @@ class ExecutionScenario:
 
     def _execute_with_monitoring(self):
         self._monitored_output = []
+        env = {**os.environ, 'PYTHONUNBUFFERED': '1'}
         try:
             process = subprocess.Popen(
                 self.command,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
                 **self.call_kwargs,
                 text=True,
                 bufsize=1,
-                encoding='utf-8'
+                encoding='utf-8',
+                env=env,
             )
 
             stdout_thread = threading.Thread(target=self._monitor, args=(process.stdout,), daemon=True)
-            stderr_thread = threading.Thread(target=self._monitor, args=(process.stderr,), daemon=True)
-
             stdout_thread.start()
-            stderr_thread.start()
 
             process.wait()
 
             stdout_thread.join()
-            stderr_thread.join()
 
         except Exception as ex:
             raise ValueError(f"Error launching subprocess, arguments:\n{self.command_as_str}") from ex

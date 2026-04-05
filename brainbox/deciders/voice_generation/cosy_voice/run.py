@@ -3,7 +3,7 @@ from brainbox.deciders.voice_generation.cosy_voice.controller import CosyVoiceCo
 
 if __name__ == '__main__':
     controller = CosyVoiceController()
-    #resolve_dependencies(controller, exclude_pytorch=True)
+    resolve_dependencies(controller, exclude_pytorch=True)
 
     controller.install()
     controller.self_test()

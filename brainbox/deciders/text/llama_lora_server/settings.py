@@ -5,7 +5,7 @@ from .model import LlamaLoraServerModel, LlamaLoraServerLoraAdapter
 
 @dataclass
 class LlamaLoraServerSettings:
-    connection = ConnectionSettings(20403)
+    connection = ConnectionSettings(20403, 300)
     gguf_models_to_download: tuple[LlamaLoraServerModel, ...] = (
         LlamaLoraServerModel(
             "gemma-3-270m-it",

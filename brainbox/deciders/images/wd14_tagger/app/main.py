@@ -1,19 +1,17 @@
-import subprocess
-import argparse
-import sys
-from server import WD14Server
+import os
+os.environ['HF_HOME'] = '/resources'
+
+from foundation_kaia.brainbox_utils import run_brainbox_app, SingleModelStorage, ModelLoadingSupport, ModelInstallingSupport
+from model import WD14TaggerInstaller
+from service import WD14TaggerService
+
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-n', '--notebook', action='store_true')
-
-    args = parser.parse_args()
-    print(f"Running with arguments\n{args}")
-
-    if args.notebook:
-        subprocess.call([sys.executable, '-m', 'notebook', '--allow-root', '--port', '8899', '--ip', '0.0.0.0'], cwd='/repo')
-        exit(0)
-
-    WD14Server()()
-
-
+    installer = WD14TaggerInstaller()
+    storage = SingleModelStorage(installer, default_model='wd14-vit.v2')
+    service = WD14TaggerService(storage)
+    run_brainbox_app([
+        service,
+        ModelLoadingSupport(storage),
+        ModelInstallingSupport[str](installer),
+    ])

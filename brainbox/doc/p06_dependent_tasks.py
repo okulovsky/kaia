@@ -6,16 +6,17 @@ def dependent_tasks(test_case: TestCase, api: BrainBox.Api):
     """
     ### Build a workflow from tasks
 
-    The output of the tasks can serve as an input to other tasks:
+    The output of a task can serve as the input to another task:
     """
-    task1 = BrainBox.Task.call(HelloBrainBox).json("Hello")
-    task2 = BrainBox.Task.call(HelloBrainBox).json(task1)
+    task1 = HelloBrainBox.new_task().sum(2, 4)
+    task2 = HelloBrainBox.new_task().sum(task1, 10)
     result = api.execute([task1, task2])
-    test_case.assertDictEqual(result[0], result[1]['argument'])
+    test_case.assertEqual(6, result[0])
+    test_case.assertEqual(16, result[1])
 
     """
-    In this case, the `task1` will be executed before `task2` and the output of `task1` will be used
-    as an argument for `task2` method.
+    In this case, `task1` will be executed before `task2`, and the output of
+    `task1` will be used as an argument to `task2`.
     """
 
 def collector(test_case: TestCase, api: BrainBox.Api):
@@ -26,75 +27,46 @@ def collector(test_case: TestCase, api: BrainBox.Api):
     several tasks are run, each associated with some __tags__ describing a task,
     and then the outputs of all tasks are collected together and returned as a single entity.
 
-    `Collector` does just this. Declaring collector tasks in a raw form is very cumbersome,
-     and we actually use helpers to do this,
-     however, it helps to see what's going on under the hood.
+    `Collector` does just this. The simplest way to use it is via `Collector.TaskBuilder`:
     """
     from brainbox.deciders import Collector
-    from brainbox import BrainBoxCombinedTask
-
-    id1 = BrainBox.Task.safe_id()
-    id2 = BrainBox.Task.safe_id()
-    task1 = BrainBox.Task.call(HelloBrainBox).json(0).to_task(id=id1)
-    task2 = BrainBox.Task.call(HelloBrainBox).json(1).to_task(id=id2)
-    collector = BrainBox.Task.call(Collector).to_array(
-        tags = {id1: dict(index=0), id2: dict(index=1)},
-        ** {
-            id1: task1,
-            id2: task2
-        }
-    )
-    pack = BrainBoxCombinedTask(
-        resulting_task = collector,
-        intermediate_tasks = (task1, task2)
-    )
-    array = api.execute(pack)
-    for item in array:
-        test_case.assertIsNone(item['error'])
-        test_case.assertEqual(item['tags']['index'], item['result']['argument'])
-
-
-
-    """
-    Method `BrainBox.Task.safe_id` creates uuid4 and converts it in python literal so it can be used in **kwargs. 
-    
-    We can shorten this significantly with `Collector.TaskBuilder`:
-    """
 
     builder = Collector.TaskBuilder()
     for i in range(10):
-        builder.append(task=BrainBox.Task.call(HelloBrainBox).json(i), tags=dict(index=i))
+        builder.append(task=HelloBrainBox.new_task().sum(0, i), tags=dict(index=i))
     pack = builder.to_collector_pack('to_array')
     array = api.execute(pack)
     for item in array:
         test_case.assertIsNone(item['error'])
-        test_case.assertEqual(item['tags']['index'], item['result']['argument'])
+        test_case.assertEqual(item['tags']['index'], item['result'])
 
 
-def media_library(test_case:TestCase, api:BrainBox.Api):
+def media_library(test_case: TestCase, api: BrainBox.Api):
     """
     ### Collect the files from many tasks
-    
-    One problem remains: if deciders return files, these files won't be collected. 
+
+    One problem remains: if deciders return files, these files won't be collected.
     To solve it, MediaLibrary structure is used. Essentially it's a zip-file
-    that contains all the outputs as well as tags. 
-    
+    that contains all the outputs as well as tags.
+
     """
     from brainbox import MediaLibrary
     from brainbox.deciders import Collector
     import json
 
     builder = Collector.TaskBuilder()
-    for i in range(10):
-        builder.append(task=BrainBox.Task.call(HelloBrainBox).file(i), tags=dict(index=i))
+    for i in range(3):
+        builder.append(
+            task=HelloBrainBox.new_task().voiceover(str(i), HelloBrainBox.Models.google),
+            tags=dict(index=i)
+        )
+    from pathlib import Path
+    import tempfile
+
     pack = builder.to_collector_pack('to_media_library')
-    path = api.download(api.execute(pack))
+    path = api.cache.download(api.execute(pack), Path(tempfile.gettempdir()))
     ml = MediaLibrary.read(path)
     for record in ml.records:
         content = record.get_content()
         tags = record.tags
-        test_case.assertEqual(tags['index'], json.loads(content)['argument'])
-
-
-
-
+        test_case.assertEqual(str(tags['index']), json.loads(content)['text'])

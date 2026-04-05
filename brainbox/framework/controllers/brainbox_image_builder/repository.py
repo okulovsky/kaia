@@ -13,6 +13,7 @@ class Repository:
     remove_files: tuple[str, ...] | None = None
     remove_repo: bool = False
     recursive_clone: bool = False
+    post_install_commands: tuple[str, ...] | None = None
 
     def to_commands(self, context: BuildContext) -> list[str]:
         result = []
@@ -31,7 +32,7 @@ class Repository:
         result.append("".join(line_init))
 
         if context.repo_fix_folder.is_dir():
-            result.append(f"COPY {context.repo_fix_folder.name}/ /home/app/repo/")
+            result.append(f"COPY --chown=app:app {context.repo_fix_folder.name}/ /home/app/repo/")
 
         if self.remove_files is not None:
             line_remove = ["RUN "]
@@ -48,6 +49,10 @@ class Repository:
             )
             line_install.append(" && rm -rf ~/.cache/pip")
             result.append("".join(line_install))
+
+        if self.post_install_commands:
+            for cmd in self.post_install_commands:
+                result.append(f"RUN {cmd}")
 
         if self.remove_repo:
             result.append("RUN rm -rf /home/app/repo")

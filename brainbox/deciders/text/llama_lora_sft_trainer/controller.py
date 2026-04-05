@@ -1,24 +1,29 @@
-from typing import Iterable
+import json
 from unittest import TestCase
 from ....framework import (
-    TestReport,
     BrainboxImageBuilder,
     IImageBuilder,
     BrainBoxApi,
     BrainBoxTask,
-    OnDemandDockerController,
+    DockerMarshallingController,
+    RunConfiguration,
 )
+from foundation_kaia.marshalling_2 import TypeTools
+from .app.interface import TrainingRun
 from .settings import LlamaLoraSFTTrainerSettings
 from pathlib import Path
 
 
-class LlamaLoraSFTTrainerController(OnDemandDockerController[LlamaLoraSFTTrainerSettings]):
+class LlamaLoraSFTTrainerController(DockerMarshallingController[LlamaLoraSFTTrainerSettings]):
     def get_image_builder(self) -> IImageBuilder | None:
         return BrainboxImageBuilder(
-            Path(__file__).parent / "container",
+            Path(__file__).parent,
             "3.13.2",
             allow_arm64=True,
-            custom_dependencies=(BrainboxImageBuilder.Dependencies(),),
+            dependencies=(
+                BrainboxImageBuilder.RequirementsLockTxt(),
+                BrainboxImageBuilder.KaiaFoundationDependencies()
+            ),
             repository=BrainboxImageBuilder.Repository(
                 url="https://github.com/ggml-org/llama.cpp",
                 commit="dd62dcfab97e420949519fd0eac9fca7bf97e635",
@@ -33,13 +38,19 @@ class LlamaLoraSFTTrainerController(OnDemandDockerController[LlamaLoraSFTTrainer
     def get_default_settings(self):
         return LlamaLoraSFTTrainerSettings()
 
+    def get_service_run_configuration(self, parameter: str | None) -> RunConfiguration:
+        return RunConfiguration(
+            publish_ports={self.connection_settings.port: 8080},
+            dont_rm=False,
+            set_env_variables={"HF_HOME": "/resources/models"},
+        )
+
     def create_api(self):
+        from .api import LlamaLoraSFTTrainerApi
+        return LlamaLoraSFTTrainerApi()
+
+    def custom_self_test(self, api: BrainBoxApi, tc: TestCase):
         from .api import LlamaLoraSFTTrainer
-
-        return LlamaLoraSFTTrainer()
-
-    def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable:
-        from .api import LlamaLoraSFTTrainer, TrainingRun
         from ..llama_lora_server import LlamaLoraServer
 
         model_id = "gemma-3-270m-it"
@@ -63,20 +74,38 @@ class LlamaLoraSFTTrainerController(OnDemandDockerController[LlamaLoraSFTTrainer
                 "fp16": True,
             },
         )
-        training_run = api.execute(
-            BrainBoxTask.call(LlamaLoraSFTTrainer).train(model_id, adapter_name, timer_dataset, training_settings)
-        )
-        yield TestReport.last_call(api).href("training")
-        tc.assertIsInstance(training_run, TrainingRun)
-        tc.assertEqual(
-            training_run.path,
-            self.resource_folder("experiments", model_id, adapter_name, training_run.guid),
-        )
-        tc.assertTrue(training_run.exists())
-        for item in ["settings.json", "train.jsonl", "hf_checkpoints", "gguf_checkpoints"]:
-            tc.assertTrue((training_run.path / item).exists())
 
-        gguf_checkpoints_dir = training_run.path / "gguf_checkpoints"
+        task = LlamaLoraSFTTrainer.new_task().train(
+            model_id, adapter_name, training_settings, timer_dataset
+        )
+
+        id = None
+        try:
+            id = api.add(task)
+            log_file = api.join(id)
+        except Exception:
+            if id is not None:
+                from pprint import pprint
+                pprint(api.tasks.get_log(id))
+            raise
+
+        training_run = None
+        lines = api.cache.read_file(log_file).string_content.split('\n')
+        for line in lines:
+            if len(line.strip()) > 0:
+                js = json.loads(line)
+                if js['result'] is not None:
+                    training_run = TypeTools.deserialize(js['result'], TrainingRun)
+
+        tc.assertIsNotNone(training_run)
+        tc.assertIsInstance(training_run, TrainingRun)
+
+        run_path = self.resource_folder("experiments", model_id, adapter_name, training_run.guid)
+        tc.assertTrue(run_path.exists())
+        for item in ["settings.json", "train.jsonl", "hf_checkpoints", "gguf_checkpoints"]:
+            tc.assertTrue((run_path / item).exists())
+
+        gguf_checkpoints_dir = run_path / "gguf_checkpoints"
         gguf_files = list(gguf_checkpoints_dir.glob("checkpoint-*.gguf"))
         tc.assertTrue(len(gguf_files) > 0, "No GGUF checkpoint files found")
         tc.assertEqual(
@@ -88,19 +117,14 @@ class LlamaLoraSFTTrainerController(OnDemandDockerController[LlamaLoraSFTTrainer
         latest_gguf_checkpoint = max(gguf_files, key=lambda f: int(f.stem.split("-")[1]))
         temporary_task_name = training_run.guid
         temporary_adapter_dest = f"models/{model_id}/lora_adapters/{temporary_task_name}.gguf"
-        api.controller_api.upload_resource("LlamaLoraServer", temporary_adapter_dest, latest_gguf_checkpoint)
+        api.resources.upload("LlamaLoraServer", temporary_adapter_dest, latest_gguf_checkpoint)
 
         timer_prompt = "USER:set a timer for 5 seconds\n"
         timer_task_result = api.execute(
-            BrainBoxTask.call(LlamaLoraServer, model_id).completion(
+            LlamaLoraServer.new_task(parameter=model_id).completion(
                 task_name=temporary_task_name, prompt=timer_prompt
             )
         )
         tc.assertEqual(timer_task_result, "HOURS:0\nMINUTES:0\nSECONDS:5")
-        yield (
-            TestReport.last_call(api)
-            .href("completion")
-            .with_comment("Returns only the text result")
-        )
 
-        api.controller_api.delete_resource("LlamaLoraServer", temporary_adapter_dest)
+        api.resources.delete("LlamaLoraServer", temporary_adapter_dest)

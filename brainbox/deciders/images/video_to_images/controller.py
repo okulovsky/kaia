@@ -1,75 +1,79 @@
-from typing import Iterable
+import json
 from unittest import TestCase
+
 from ....framework import (
-    RunConfiguration, TestReport, BrainboxImageBuilder, IImageBuilder,
-    BrainBoxApi, BrainBoxTask, File,
-    OnDemandDockerController
+    BrainboxImageBuilder, IImageBuilder,
+    BrainBoxApi, BrainBoxTask,
+    DockerMarshallingController, RunConfiguration,
 )
 from .settings import VideoToImagesSettings
+from .app.installer import VideoToImagesInstaller
+from foundation_kaia.brainbox_utils import Installer
 from pathlib import Path
 
 
-
-class VideoToImagesController(OnDemandDockerController[VideoToImagesSettings]):
-    def get_image_builder(self) -> IImageBuilder|None:
+class VideoToImagesController(DockerMarshallingController[VideoToImagesSettings]):
+    def get_image_builder(self) -> IImageBuilder | None:
         return BrainboxImageBuilder(
             Path(__file__).parent,
             '3.11.11',
-            allow_arm64=True
+            allow_arm64=True,
+            dependencies=(
+                BrainboxImageBuilder.PytorchDependencies('2.7.0', 'cu128'),
+                BrainboxImageBuilder.RequirementsLockTxt(),
+                BrainboxImageBuilder.KaiaFoundationDependencies(),
+            ),
         )
 
     def get_default_settings(self):
         return VideoToImagesSettings()
 
-    def post_install(self):
-        if (self.resource_folder('cache')/'huggingface/hub/models--sentence-transformers--clip-ViT-B-32').is_dir():
-            return
-        self.run_with_configuration(self.get_run_configuration(['--install']))
+    def get_installer(self) -> Installer | None:
+        return VideoToImagesInstaller(self.resource_folder())
 
-    def create_api(self):
-        from .api import VideoToImages
-        return VideoToImages()
-
-    def get_run_configuration(self, arguments: list[str] | None = None):
-        if arguments is None:
-            arguments = []
+    def get_service_run_configuration(self, parameter: str | None) -> RunConfiguration:
         return RunConfiguration(
-            None,
-            command_line_arguments=arguments,
-            detach_and_interactive=False,
-            mount_resource_folders={
-                'cache' : '/home/app/.cache'
-            }
+            publish_ports={self.connection_settings.port: 8080},
+            dont_rm=False,
+            mount_resource_folders={'cache': '/home/app/.cache'},
         )
 
+    def create_api(self):
+        from .api import VideoToImagesApi
+        return VideoToImagesApi()
 
-    def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable:
+    def custom_self_test(self, api: BrainBoxApi, tc: TestCase):
         from .api import VideoToImages
 
-        VideoToImages.upload_video(Path(__file__).parent/'sample.mp4').execute(api)
-        result = api.execute(BrainBoxTask.call(VideoToImages).process(VideoToImages.AnalysisSettings(
-            'sample.mp4',
-            max_produced_frames=5,
-        )))
+        filename = Path(__file__).parent / 'sample.mp4'
+
+        def run_process(settings):
+            task = VideoToImages.new_task().process(filename, settings)
+            id = api.add(task)
+            log_file = api.join(id)
+            result = None
+            lines = api.cache.read_file(log_file).string_content.split('\n')
+            for line in lines:
+                if len(line.strip()) > 0:
+                    js = json.loads(line)
+                    if js['result'] is not None:
+                        result = js['result']
+            return result
+
+        result = run_process(VideoToImages.AnalysisSettings(max_produced_frames=5))
         tc.assertEqual(5, len(result))
-        yield TestReport.last_call(api).href('run')
 
+        tar = api.execute(VideoToImages.new_task().get_tar())
+        tc.assertIsNotNone(tar)
 
-        result = api.execute(BrainBoxTask.call(VideoToImages).process(VideoToImages.AnalysisSettings(
-            'sample.mp4',
+        result = run_process(VideoToImages.AnalysisSettings(
             max_produced_frames=5,
             add_semantic_comparator=True,
-        )))
+        ))
         tc.assertEqual(5, len(result))
-        yield TestReport.last_call(api).href('run-comparator')
 
-
-        result = api.execute(BrainBoxTask.call(VideoToImages).process(VideoToImages.AnalysisSettings(
-            'sample.mp4',
+        result = run_process(VideoToImages.AnalysisSettings(
             max_produced_frames=5,
             buffer_by_laplacian_in_ms=500,
-        )))
+        ))
         tc.assertEqual(5, len(result))
-        yield TestReport.last_call(api).href('run_bufferer')
-
-

@@ -60,10 +60,11 @@ class StartCommand(IPlannerAction):
                 controller,
                 instance_id,
                 api,
+                core.command_queue,
                 core.operator_log,
             )
             operator = DeciderOperator(op_state)
-            thread = Thread(target=operator.cycle)
+            thread = Thread(target=operator.cycle, daemon=True)
             op_state.operator_thread = thread
             thread.start()
             core.operator_states[instance_id] = op_state
@@ -74,9 +75,9 @@ class StartCommand(IPlannerAction):
                 tasks: list[Job] = list(session.scalars(
                     select(Job)
                     .where(
-                        ~Job.finished &
+                        Job.finished_timestamp.is_(None) &
                         (Job.decider == self.key.decider_name) &
-                        (Job.decider_parameter == self.key.parameter)
+                        (Job.parameter == self.key.parameter)
                     )
                 ))
                 for task in tasks:

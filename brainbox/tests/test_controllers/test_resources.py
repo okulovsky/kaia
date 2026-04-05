@@ -1,38 +1,29 @@
-from brainbox.framework import BrainBoxApi, ControllerApi, Loc, Locator
+from brainbox.framework import BrainBoxApi, Loc, Locator
 from brainbox.deciders import HelloBrainBox
 from unittest import TestCase
-import os
-from yo_fluq import *
-from pprint import pprint
+from yo_fluq import Query
+
 
 class ResourcesTestCase(TestCase):
     def test_resources_uploads(self):
         with Loc.create_test_folder() as test_folder:
-            with ControllerApi.Test([HelloBrainBox.Controller()], test_folder) as api:
-                locator = Locator(test_folder)
+            with BrainBoxApi.test([HelloBrainBox.Controller()], locator=Locator(test_folder), run_controllers_in_default_environment=False) as api:
+                locator = api.locator
                 self.assertEqual(0, Query.folder(locator.resources_folder, '**/*').count())
-                api.uninstall(HelloBrainBox, True)
+                api.controllers.uninstall(HelloBrainBox, True)
 
-                result = api.install(HelloBrainBox)
+                result = api.controllers.install(HelloBrainBox)
                 self.assertIsNone(result.error)
 
-                self.assertEqual(2, Query.folder(locator.resources_folder, '**/*').where(lambda z: z.is_file()).count())
+                # After install: installation.yaml + models/google + models/duckduckgo
+                self.assertEqual(3, Query.folder(locator.resources_folder, '**/*').where(lambda z: z.is_file()).count())
 
-                resources_list = api.list_resources(HelloBrainBox, '/')
+                resources_list = api.resources.list(HelloBrainBox, '/', glob=True)
                 print(resources_list)
-                self.assertEqual(2, len(resources_list))
+                self.assertEqual(3, len(resources_list))
 
-                api.delete_resource(HelloBrainBox, 'nested')
+                api.resources.upload(HelloBrainBox, 'new/file', b'Hello')
+                self.assertEqual(1, len(api.resources.list_details(HelloBrainBox, '/new')))
 
-                self.assertEqual(1, len(api.list_resources(HelloBrainBox,'/')))
-
-                api.upload_resource(HelloBrainBox,'new/file', b'Hello')
-                self.assertEqual(2, len(api.list_resources(HelloBrainBox, '/')))
-
-                file = api.download_resource(HelloBrainBox,'new/file', test_folder/'created_file')
-                self.assertEqual(b'Hello', FileIO.read_bytes(test_folder/'created_file'))
-
-
-
-
-
+                content = api.resources.read_content(HelloBrainBox, 'new/file')
+                self.assertEqual(b'Hello', content)

@@ -4,56 +4,48 @@ from unittest import TestCase
 
 def downloads(test_case: TestCase, api: BrainBox.Api):
     """
-    ### Download files, produced by deciders
+    ### Download files produced by deciders
 
-    Many BrainBox deciders return files with generated images or sounds.
+    Many BrainBox deciders return files with generated audio or images.
     In order not to overload the BrainBox database with all these
     gigabytes, the files are stored in the cache folder,
-    and only files' names are returned.
+    and only the file names are returned.
     """
 
-    filename = api.execute(BrainBox.Task.call(HelloBrainBox).file("Hello, file!"))
+    filename = api.execute(HelloBrainBox.new_task().voiceover('Hello, file!', HelloBrainBox.Models.google))
     test_case.assertIsInstance(filename, str)
 
     """
-    You may open this file with `api.open_file` method, which returns `File` 
-    instance, reading the content of the file on the fly. 
+    You may open this file with `api.cache.read_file` method, which returns a `File`
+    instance, reading the content of the file on the fly.
     """
 
     from brainbox import File
     import json
 
-    file = api.open_file(filename)
+    file = api.cache.read_file(filename)
     test_case.assertIsInstance(file, File)
-    test_case.assertDictEqual(
-        {
-            'argument': 'Hello, file!',
-            'model': 'no_parameter',
-            'setting': 'default_setting'
-        },
-        json.loads(file.content)
-    )
+    content = json.loads(file.content)
+    test_case.assertEqual('Hello, file!', content['text'])
+    test_case.assertIn('google', content['model'])
 
     """
-    If you don't want to open the file, only download it on the disk:
+    If you don't want to open the file, only download it to disk:
     """
     from pathlib import Path
+    import tempfile
 
-    path = api.download(filename)
+    path = api.cache.download(filename, Path(tempfile.gettempdir()))
     test_case.assertIsInstance(path, Path)
-    with open(path, 'r') as stream:
-        test_case.assertDictEqual(
-            {
-                'argument': 'Hello, file!',
-                'model': 'no_parameter',
-                'setting': 'default_setting'
-            },
-            json.load(stream)
-        )
+    with open(path, 'rb') as stream:
+        content = json.loads(stream.read())
+    test_case.assertEqual('Hello, file!', content['text'])
 
     """
-    which simply downloads the file on the disk to the given location
-    (by default, in the API's cache folder), and returns the full path to file.
-    You may specify the location and the flag to redownload the file even
-    if it was already downloaded.
+    which simply downloads the file to the given folder and returns the full path to the file.
+    You may specify any target folder; the file is placed there under its original name.
+    
+    There is also an option to `.read` only the content of the file, or `.open` it to get the Iterable of bytes. 
     """
+
+

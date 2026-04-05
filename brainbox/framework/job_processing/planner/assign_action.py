@@ -18,14 +18,14 @@ class AssignAction(IPlannerAction):
     def apply(self, core: Core):
         with core.new_session() as session:
             job = core.get_job_by_id(session, self.job_id)
-            if job.finished:
+            if job.finished_timestamp is not None:
                 return
             arguments = job.arguments
             if job.dependencies is not None:
                 requirements = list(job.dependencies.values())
                 requirement_to_result = {}
                 for element in session.scalars(select(Job).where(Job.id.in_(requirements))):
-                    if element.success:
+                    if element.success or element.responding_timestamp is not None:
                         requirement_to_result[element.id] = element.result
                     else:
                         session.expunge(element)
@@ -45,11 +45,12 @@ class AssignAction(IPlannerAction):
             try:
                 job_clone = copy.copy(job)
                 core.operator_states[self.instance_id].jobs_queue.put(job_clone)
-                job.assigned = True
                 job.assigned_timestamp = datetime.now()
                 core.operator_log.task(self.job_id).event('Assigned')
+                for j in core.jobs_for_planner:
+                    if j.id == self.job_id:
+                        j.assigned = True
             except:
                 core.close_job(session, job, "Assignment failed")
-
             finally:
                 session.commit()

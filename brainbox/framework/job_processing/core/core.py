@@ -1,11 +1,12 @@
 from ...controllers import ControllerRegistry
 from .operator_state import OperatorState
 from .operator_log import OperatorLog
+from .command_queue import CommandQueue, ICoreAction
 from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session
+from datetime import datetime
 from .job import Job
 import traceback
-from abc import ABC, abstractmethod
 from .trackable_session_factory import TrackableSessionFactory
 from .job_for_planner import JobForPlanner
 from ...common import Locator, Loc
@@ -32,6 +33,7 @@ class Core:
         self.operator_states: dict[str, OperatorState] = dict()
         self.operator_log: OperatorLog = OperatorLog(debug_output)
         self.jobs_for_planner: tuple[JobForPlanner,...]|None = None
+        self.command_queue: CommandQueue = CommandQueue()
 
     @staticmethod
     def job_to_id(job: Job):
@@ -44,12 +46,8 @@ class Core:
         self.operator_log.task(job.id).event(custom_message)
         if custom_message is None:
             custom_message = traceback.format_exc()
-        job.finished = True
+        job.finished_timestamp = datetime.now()
         job.success = False
         job.error = custom_message
 
 
-class ICoreAction(ABC):
-    @abstractmethod
-    def apply(self, core: Core):
-        pass

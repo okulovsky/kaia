@@ -1,5 +1,7 @@
 from dataclasses import dataclass
+from ....framework import ConnectionSettings
+
 
 @dataclass
 class VideoToImagesSettings:
-    pass
+    connection = ConnectionSettings(20305, 120)

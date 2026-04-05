@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BrainBox - Decider</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+  h1, h2, h3 { color: #333; }
+  nav { margin-bottom: 16px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  nav a { color: #0066cc; text-decoration: none; }
+  nav a:hover { text-decoration: underline; }
+  .tabs { display: flex; gap: 0; }
+  .tab { padding: 5px 14px; border: 1px solid #ccc; background: #fff; cursor: pointer; font-size: 0.9em; }
+  .tab:first-child { border-radius: 4px 0 0 4px; }
+  .tab:last-child { border-radius: 0 4px 4px 0; border-left: none; }
+  .tab.active { background: #0066cc; color: #fff; border-color: #0066cc; }
+  .method { background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; padding: 16px; border-radius: 4px; }
+  .method h2 { margin: 0 0 6px 0; font-size: 1.1em; font-family: monospace; }
+  .docstring { color: #555; font-style: italic; margin: 4px 0 10px 0; }
+  .section-label { font-size: 0.8em; font-weight: bold; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin: 10px 0 4px 0; }
+  .url { font-family: monospace; background: #e8e8e8; padding: 3px 6px; border-radius: 3px; }
+  table { border-collapse: collapse; margin-top: 4px; width: 100%; }
+  th { background: #ddd; padding: 4px 8px; text-align: left; font-size: 0.85em; }
+  td { padding: 4px 8px; border-bottom: 1px solid #eee; font-size: 0.85em; }
+  .schema-prop-name { font-family: monospace; font-weight: bold; }
+  .schema-type { color: #0066cc; font-family: monospace; }
+  .schema-union { color: #888; font-style: italic; }
+  .schema-ref { color: #aa6600; font-family: monospace; }
+  .schema-def { margin: 4px 0 4px 16px; border-left: 2px solid #ccc; padding-left: 8px; }
+  .tag { display: inline-block; font-size: 0.75em; padding: 1px 5px; border-radius: 3px; margin-left: 4px; }
+  .tag-file { background: #fff3cd; color: #856404; }
+  .tag-return { background: #d4edda; color: #155724; }
+  .no-cases { color: #aaa; font-style: italic; font-size: 0.85em; }
+  #status { color: #555; margin-bottom: 12px; }
+  .arg-list { margin: 0; padding: 0; list-style: none; }
+  .arg-list li { margin: 2px 0; font-size: 0.85em; }
+  .arg-name { font-family: monospace; font-weight: bold; color: #555; margin-right: 4px; }
+  .arg-unknown { color: #888; font-style: italic; font-size: 0.85em; }
+  .btn-execute { padding: 3px 10px; cursor: pointer; border: 1px solid #0066cc; border-radius: 3px; background: #fff; color: #0066cc; font-size: 0.8em; margin-top: 6px; }
+  .btn-execute:hover:not(:disabled) { background: #e8f0fb; }
+  .btn-execute:disabled { opacity: 0.5; cursor: default; }
+  .result-cell { min-width: 160px; }
+  .result-running { color: #888; font-style: italic; font-size: 0.85em; }
+  .result-error { color: #c62828; font-size: 0.8em; white-space: pre-wrap; max-height: 120px; overflow: auto; }
+  .result-json { font-size: 0.8em; white-space: pre-wrap; max-height: 200px; overflow: auto; background: #f8f8f8; padding: 4px; }
+
+  /* Tab visibility */
+  body.mode-api  .args-section { display: none; }
+  body.mode-args .api-section  { display: none; }
+</style>
+</head>
+<body class="mode-args">
+<h1 id="page-title">BrainBox - Decider</h1>
+<nav>
+  <a href="/static/controllers.html">&#8592; Controllers</a>
+  <div class="tabs">
+    <button class="tab active" onclick="setMode('args')">Arguments</button>
+    <button class="tab" onclick="setMode('api')">API</button>
+  </div>
+</nav>
+<div id="status">Loading...</div>
+<div id="content"></div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const name = params.get('name') || '';
+document.getElementById('page-title').textContent = name;
+document.title = 'BrainBox - ' + name;
+
+function setMode(mode) {
+  document.body.className = 'mode-' + mode;
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', (mode === 'args') === (i === 0));
+  });
+}
+
+function schemaTypeLabel(s, defs) {
+  if (!s || typeof s !== 'object') return document.createTextNode(String(s));
+  if (s.anyOf) {
+    const span = document.createElement('span');
+    span.className = 'schema-union';
+    span.textContent = s.anyOf.map(a => schemaTypeLabel(a, defs).textContent || '?').join(' | ');
+    return span;
+  }
+  if (s.$ref) {
+    const refName = s.$ref.split('/').pop();
+    const span = document.createElement('span');
+    span.className = 'schema-ref';
+    span.textContent = refName.split('.').pop();
+    return span;
+  }
+  if (s.enum) {
+    const span = document.createElement('span');
+    span.className = 'schema-type';
+    span.textContent = 'enum(' + s.enum.join(', ') + ')';
+    return span;
+  }
+  if (s.type === 'array') {
+    const span = document.createElement('span');
+    span.className = 'schema-type';
+    const inner = schemaTypeLabel(s.items, defs);
+    span.textContent = 'array[' + (inner.textContent || '?') + ']';
+    return span;
+  }
+  if (s.type === 'object' && s.properties) {
+    return renderPropertiesTable(s.properties, defs);
+  }
+  const span = document.createElement('span');
+  span.className = 'schema-type';
+  span.textContent = s.type || '?';
+  if (s.format) span.textContent += '(' + s.format + ')';
+  return span;
+}
+
+function renderPropertiesTable(properties, defs) {
+  const tbl = document.createElement('table');
+  const thead = document.createElement('thead');
+  thead.innerHTML = '<tr><th>Parameter</th><th>Type</th></tr>';
+  tbl.appendChild(thead);
+  const tbody = document.createElement('tbody');
+  for (const [pname, propSchema] of Object.entries(properties)) {
+    const tr = document.createElement('tr');
+    const tdName = document.createElement('td');
+    tdName.className = 'schema-prop-name';
+    tdName.textContent = pname;
+    const tdType = document.createElement('td');
+    tdType.appendChild(schemaTypeLabel(propSchema, defs));
+    if (propSchema.$ref) {
+      const refName = propSchema.$ref.split('/').pop();
+      const refSchema = defs[refName];
+      if (refSchema && refSchema.properties) {
+        const sub = document.createElement('div');
+        sub.className = 'schema-def';
+        sub.appendChild(renderPropertiesTable(refSchema.properties, defs));
+        tdType.appendChild(sub);
+      }
+    }
+    tr.appendChild(tdName);
+    tr.appendChild(tdType);
+    tbody.appendChild(tr);
+  }
+  tbl.appendChild(tbody);
+  return tbl;
+}
+
+const AUDIO_MIME = {wav: 'audio/wav', mp3: 'audio/mpeg', ogg: 'audio/ogg'};
+const IMAGE_MIME = {png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', bmp: 'image/bmp'};
+
+function renderFileWidget(value) {
+  // value should be a serialized File: {name, content: {"@type":"bytes","value":"<b64>"}, kind}
+  if (!value || typeof value !== 'object') return null;
+  const content = value.content;
+  if (!content || content['@type'] !== 'bytes') return null;
+  const b64 = content.value;
+  const kind = value.kind;            // "Audio" | "Image" | "Json" | "Text" | null
+  const filename = value.name || '';
+  const ext = filename.split('.').pop().toLowerCase();
+
+  if (kind === 'Audio' || AUDIO_MIME[ext]) {
+    const mime = AUDIO_MIME[ext] || 'audio/wav';
+    const audio = document.createElement('audio');
+    audio.controls = true;
+    audio.style.height = '32px';
+    const source = document.createElement('source');
+    source.src = 'data:' + mime + ';base64,' + b64;
+    audio.appendChild(source);
+    const label = document.createElement('span');
+    label.style.cssText = 'font-size:0.8em;color:#888;margin-left:6px';
+    label.textContent = filename;
+    const wrap = document.createElement('span');
+    wrap.appendChild(audio);
+    wrap.appendChild(label);
+    return wrap;
+  }
+
+  if (kind === 'Image' || IMAGE_MIME[ext]) {
+    const mime = IMAGE_MIME[ext] || 'image/png';
+    const wrap = document.createElement('span');
+    const img = document.createElement('img');
+    img.src = 'data:' + mime + ';base64,' + b64;
+    img.style.cssText = 'max-width:200px;max-height:120px;display:block;margin-top:2px';
+    const label = document.createElement('span');
+    label.style.cssText = 'font-size:0.8em;color:#888';
+    label.textContent = filename;
+    wrap.appendChild(label);
+    wrap.appendChild(img);
+    return wrap;
+  }
+
+  if (kind === 'Text' || kind === 'Json') {
+    const text = atob(b64);
+    const pre = document.createElement('pre');
+    pre.style.cssText = 'margin:0;font-size:0.75em;max-height:80px;overflow:auto;background:#f8f8f8;padding:4px';
+    pre.textContent = text;
+    return pre;
+  }
+
+  // Unknown binary
+  const span = document.createElement('span');
+  span.className = 'arg-unknown';
+  span.textContent = (filename || 'file') + ' (~' + Math.round(b64.length * 3 / 4) + ' bytes)';
+  return span;
+}
+
+function uuid4() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = crypto.getRandomValues(new Uint8Array(1))[0];
+    return (c === 'x' ? r & 0xf : (r & 0x3 | 0x8)).toString(16);
+  });
+}
+
+const STREAM_CACHE_AUDIO = new Set(['wav','mp3','ogg']);
+const STREAM_CACHE_IMAGE = new Set(['png','jpg','jpeg','bmp']);
+
+function renderCachedFileWidget(filename) {
+  const ext = filename.split('.').pop().toLowerCase();
+  if (STREAM_CACHE_AUDIO.has(ext)) {
+    const audio = document.createElement('audio');
+    audio.controls = true;
+    audio.style.height = '32px';
+    audio.src = '/streaming-cache/read/' + encodeURIComponent(filename);
+    const label = document.createElement('div');
+    label.style.cssText = 'font-size:0.75em;color:#888';
+    label.textContent = filename;
+    const wrap = document.createElement('div');
+    wrap.appendChild(audio);
+    wrap.appendChild(label);
+    return wrap;
+  }
+  if (STREAM_CACHE_IMAGE.has(ext)) {
+    const wrap = document.createElement('div');
+    const img = document.createElement('img');
+    img.src = '/streaming-cache/read/' + encodeURIComponent(filename);
+    img.style.cssText = 'max-width:200px;max-height:120px;display:block;margin-top:2px';
+    const label = document.createElement('div');
+    label.style.cssText = 'font-size:0.75em;color:#888';
+    label.textContent = filename;
+    wrap.appendChild(label);
+    wrap.appendChild(img);
+    return wrap;
+  }
+  const a = document.createElement('a');
+  a.href = '/streaming-cache/read/' + encodeURIComponent(filename);
+  a.textContent = filename;
+  a.style.fontSize = '0.85em';
+  return a;
+}
+
+async function executeJob(deciderName, methodName, args, resultIsFile, resultCell, btn) {
+  btn.disabled = true;
+  resultCell.innerHTML = '';
+  const running = document.createElement('span');
+  running.className = 'result-running';
+  running.textContent = 'Running\u2026';
+  resultCell.appendChild(running);
+
+  try {
+    const jobId = uuid4();
+    const addResp = await fetch('/tasks-service/base-add', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({jobs: [{
+        id: jobId,
+        decider: deciderName,
+        parameter: null,
+        method: methodName,
+        arguments: args,
+        info: null,
+        batch: null,
+        ordering_token: null,
+        dependencies: {}
+      }]})
+    });
+    if (!addResp.ok) {
+      throw new Error('base-add ' + addResp.status + ': ' + await addResp.text());
+    }
+
+    const joinResp = await fetch('/tasks-service/base-join', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ids: [jobId]})
+    });
+    if (!joinResp.ok) {
+      throw new Error('base-join ' + joinResp.status + ': ' + await joinResp.text());
+    }
+
+    const results = await joinResp.json();
+    const result = results[0];
+    resultCell.innerHTML = '';
+
+    if (resultIsFile && typeof result === 'string') {
+      resultCell.appendChild(renderCachedFileWidget(result));
+    } else if (result && typeof result === 'object' && result.content && result.content['@type'] === 'bytes') {
+      const widget = renderFileWidget(result);
+      if (widget) resultCell.appendChild(widget);
+      else resultCell.textContent = JSON.stringify(result);
+    } else {
+      const pre = document.createElement('pre');
+      pre.className = 'result-json';
+      pre.textContent = JSON.stringify(result, null, 2);
+      resultCell.appendChild(pre);
+    }
+  } catch (e) {
+    resultCell.innerHTML = '';
+    const err = document.createElement('pre');
+    err.className = 'result-error';
+    err.textContent = e.message;
+    resultCell.appendChild(err);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function renderArgValue(value, isFile) {
+  if (isFile) {
+    const widget = renderFileWidget(value);
+    if (widget) return widget;
+  }
+  const pre = document.createElement('pre');
+  pre.style.cssText = 'margin:0;font-size:0.8em';
+  pre.textContent = JSON.stringify(value, null, 2);
+  return pre;
+}
+
+function renderSchema(jsonSchema) {
+  const schema = jsonSchema?.schema || {};
+  const defs = jsonSchema?.defs || {};
+  const properties = schema.properties || {};
+  if (Object.keys(properties).length === 0) return null;
+  return renderPropertiesTable(properties, defs);
+}
+
+async function loadDoc() {
+  try {
+    const resp = await fetch('/decider-service/decider-doc/' + encodeURIComponent(name));
+    if (!resp.ok) {
+      document.getElementById('status').textContent = 'Error ' + resp.status + ': ' + await resp.text();
+      return;
+    }
+    const doc = await resp.json();
+    document.getElementById('status').textContent = '';
+    const content = document.getElementById('content');
+    content.innerHTML = '';
+
+    if (doc.docstring) {
+      const p = document.createElement('p');
+      p.className = 'docstring';
+      p.textContent = doc.docstring;
+      content.appendChild(p);
+    }
+
+    for (const method of doc.methods || []) {
+      const div = document.createElement('div');
+      div.className = 'method';
+
+      const h2 = document.createElement('h2');
+      h2.textContent = method.method_name;
+      div.appendChild(h2);
+
+      if (method.docstring) {
+        const ds = document.createElement('p');
+        ds.className = 'docstring';
+        ds.textContent = method.docstring;
+        div.appendChild(ds);
+      }
+
+      // Arguments schema (mode-args)
+      const argsWrap = document.createElement('div');
+      argsWrap.className = 'args-section';
+      const argsTable = renderSchema(method.arguments);
+      if (argsTable) {
+        const lbl = document.createElement('div');
+        lbl.className = 'section-label';
+        lbl.textContent = 'Arguments';
+        argsWrap.appendChild(lbl);
+        argsWrap.appendChild(argsTable);
+      }
+      div.appendChild(argsWrap);
+
+      // Endpoint info (mode-api, MarshallingApi only)
+      if (method.endpoint) {
+        const ep = method.endpoint;
+        const apiWrap = document.createElement('div');
+        apiWrap.className = 'api-section';
+
+        const lbl = document.createElement('div');
+        lbl.className = 'section-label';
+        lbl.textContent = 'HTTP Endpoint';
+        apiWrap.appendChild(lbl);
+
+        const urlP = document.createElement('p');
+        urlP.innerHTML = 'URL: <span class="url">' + ep.url_template + '</span>';
+        apiWrap.appendChild(urlP);
+
+        if (ep.file_params && ep.file_params.length > 0) {
+          const fp = document.createElement('p');
+          fp.style.fontSize = '0.85em';
+          fp.innerHTML = 'File params: ' + ep.file_params.map(n =>
+            '<span class="tag tag-file">' + n + '</span>'
+          ).join(' ');
+          apiWrap.appendChild(fp);
+        }
+
+        const retP = document.createElement('p');
+        retP.style.fontSize = '0.85em';
+        const retTag = ep.return_is_file
+          ? '<span class="tag tag-file">file</span>'
+          : '<span class="tag tag-return">' + ep.return_type + '</span>';
+        retP.innerHTML = 'Returns: ' + retTag;
+        apiWrap.appendChild(retP);
+
+        div.appendChild(apiWrap);
+      }
+
+      // Self-test cases
+      const lbl2 = document.createElement('div');
+      lbl2.className = 'section-label';
+      lbl2.textContent = 'Self-test cases';
+      div.appendChild(lbl2);
+
+      if (!method.self_test_cases || method.self_test_cases.length === 0) {
+        const none = document.createElement('p');
+        none.className = 'no-cases';
+        none.textContent = 'None';
+        div.appendChild(none);
+      } else {
+        const tbl = document.createElement('table');
+        const thead = document.createElement('thead');
+        thead.innerHTML = '<tr><th>Title</th><th>Arguments</th><th>Result</th></tr>';
+        tbl.appendChild(thead);
+        const tbody = document.createElement('tbody');
+        const fileArgs = new Set(method.is_file || []);
+        for (const sc of method.self_test_cases) {
+          const tr = document.createElement('tr');
+
+          const tdTitle = document.createElement('td');
+          tdTitle.textContent = sc.title || '—';
+          tr.appendChild(tdTitle);
+
+          const tdArgs = document.createElement('td');
+          const ul = document.createElement('ul');
+          ul.className = 'arg-list';
+          for (const [argName, argValue] of Object.entries(sc.arguments || {})) {
+            const li = document.createElement('li');
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'arg-name';
+            nameSpan.textContent = argName + ':';
+            li.appendChild(nameSpan);
+            li.appendChild(renderArgValue(argValue, fileArgs.has(argName)));
+            ul.appendChild(li);
+          }
+          tdArgs.appendChild(ul);
+          const btn = document.createElement('button');
+          btn.className = 'btn-execute';
+          btn.textContent = 'Execute';
+          tdArgs.appendChild(btn);
+          tr.appendChild(tdArgs);
+
+          const tdResult = document.createElement('td');
+          tdResult.className = 'result-cell';
+          tdResult.textContent = '—';
+          btn.onclick = () => executeJob(name, method.method_name, sc.arguments, method.result_is_file, tdResult, btn);
+          tr.appendChild(tdResult);
+
+          tbody.appendChild(tr);
+        }
+        tbl.appendChild(tbody);
+        div.appendChild(tbl);
+      }
+
+      content.appendChild(div);
+    }
+
+    if (!doc.methods || doc.methods.length === 0) {
+      content.innerHTML = '<p style="color:#888">No documented methods found.</p>';
+    }
+  } catch (e) {
+    document.getElementById('status').textContent = 'Error: ' + e.message;
+  }
+}
+
+loadDoc();
+</script>
+</body>
+</html>

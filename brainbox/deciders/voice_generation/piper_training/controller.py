@@ -1,48 +1,69 @@
-
+import json
 import os
-from typing import Iterable
 from unittest import TestCase
-from brainbox.framework import Loc, FileIO, DownloadableModel
-from .model import PiperTrainingModel
-from ...common import VOICEOVER_TEXT, check_if_its_sound
+from brainbox.framework import Loc, RunConfiguration
+from foundation_kaia.brainbox_utils import Installer
+from foundation_kaia.marshalling_2 import TypeTools
+from .app.interface import CkptData
+from .settings import PiperTrainingSettings
+from ...common import VOICEOVER_TEXT
+from brainbox.framework.controllers.self_test.self_test_case import check_if_its_sound
+from pprint import pprint
 
 from ....framework import (
-    TestReport, SmallImageBuilder, IImageBuilder,
+    SmallImageBuilder, IImageBuilder,
     BrainBoxApi, BrainBoxTask, File,
-    OnDemandDockerController, IModelDownloadingController
+    DockerMarshallingController, BrainboxImageBuilder
 )
-from .settings import PiperTrainingSettings
 from pathlib import Path
 import zipfile
+from .app.installer import PiperTrainingInstaller
 
 
+class PiperTrainingController(DockerMarshallingController[PiperTrainingSettings]):
+    def get_installer(self) -> Installer|None:
+        return PiperTrainingInstaller(self.resource_folder())
 
-class PiperTrainingController(OnDemandDockerController[PiperTrainingSettings], IModelDownloadingController):
     def get_image_builder(self) -> IImageBuilder|None:
-        return SmallImageBuilder(
-            Path(__file__).parent/'container',
-            DOCKERFILE,
-            DEPENDENCIES.split('\n'),
+        return BrainboxImageBuilder(
+            Path(__file__).parent,
+            '3.10.18',
+            repository=BrainboxImageBuilder.Repository(
+                'https://github.com/rhasspy/piper',
+                pip_install_options='--no-deps -e',
+                commit='73c04d81d5590ecc46e522de3601ce7fb29fc2be',
+                path_to_package='src/python',
+                remove_files=(
+                    'src/python/requirements.txt',
+                ),
+                post_install_commands=(
+                    'cd /home/app/repo/src/python && python3 piper_train/vits/monotonic_align/setup.py build_ext --inplace',
+                )
+            ),
+            dependencies=(
+                BrainboxImageBuilder.PytorchDependencies('2.7.1', 'cu128', True),
+                BrainboxImageBuilder.RequirementsLockTxt(True),
+                BrainboxImageBuilder.KaiaFoundationDependencies()
+            ),
+            keep_dockerfile=True
         )
 
-    def get_default_settings(self):
-        return PiperTrainingSettings()
+    def get_service_run_configuration(self, parameter: str|None) -> RunConfiguration:
+        return RunConfiguration(
+            publish_ports={self.connection_settings.port:8080},
+            dont_rm=False
+        )
 
-    def get_downloadable_model_type(self) -> type[DownloadableModel]:
-        return PiperTrainingModel
 
     def create_api(self):
-        from .api import PiperTraining
-        return PiperTraining()
+        from .api import PiperTrainingApi
+        return PiperTrainingApi()
 
-    def post_install(self):
-        self.download_models(self.settings.models_to_download)
-
-    def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable:
+    def custom_self_test(self, api: BrainBoxApi, tc: TestCase):
         from .api import PiperTraining
         from ..piper import Piper
 
-        NAME  = 'piper_voice_training_dataset'
+        NAME = 'piper_voice_training_dataset'
 
         #preparing zip-file in a dataset format
         src_folder = Path(__file__).parent/'files'
@@ -52,21 +73,38 @@ class PiperTrainingController(OnDemandDockerController[PiperTrainingSettings], I
                 for instance in range(100):
                     zip.write(src_folder/file, f'voice/{instance}-'+file)
 
-        task = PiperTraining.create_training_pack(
-            dataset,
-            PiperTraining.TrainingSettings(),
-            clean_up_afterwards=False,
-            reset_if_existing=True
+        task = PiperTraining.new_task().train(
+            NAME,
+            PiperTraining.Models.lessac,
+            PiperTraining.TrainingParameters(),
+            dataset
         )
-        result = api.execute(task)
-        yield TestReport.last_call(api).href('training')
 
-        Piper.UploadVoice(api.cache_folder/result[0]['onnx'], custom_name=NAME).execute(api)
-        voice_result = api.execute(BrainBoxTask.call(Piper).voiceover(VOICEOVER_TEXT, NAME))
-        check_if_its_sound(api.open_file(voice_result).content, tc)
-        yield TestReport.last_call(api).href('inference').result_is_file(File.Kind.Audio)
+        id = None
+        try:
+            id = api.add(task)
+            log_file = api.join(id)
+        except Exception:
+            if id is not None:
+                pprint(api.tasks.get_log(id))
+            raise
 
-        Piper.DeleteVoice(NAME).execute(api)
+        lines = api.cache.read_file(log_file).string_content.split('\n')
+        ckpt = None
+        for line in lines:
+            if len(line.strip()) > 0:
+                js = json.loads(line)
+                if js['result'] is not None:
+                    print(js)
+                    ckpt = TypeTools.deserialize(js['result'], list[CkptData])[0]
+
+        onnx = api.execute(PiperTraining.new_task().export(ckpt))
+
+        api.execute(Piper.new_task().upload_tar_voice(onnx, NAME))
+        voice_result = api.execute(Piper.new_task().voiceover(VOICEOVER_TEXT, NAME))
+        check_if_its_sound(api.cache.read_file(voice_result).content, tc)
+
+        api.execute(Piper.new_task().delete_voice(NAME))
 
 
 
@@ -103,62 +141,7 @@ ENTRYPOINT ["python3", "/home/app/main.py"]
 """
 
 DEPENDENCIES = """
-aiohappyeyeballs==2.4.6
-aiohttp==3.11.12
-aiosignal==1.3.2
-async-timeout==5.0.1
-attrs==25.1.0
-audioread==3.0.1
-certifi==2025.1.31
-cffi==1.17.1
-charset-normalizer==3.4.1
-coloredlogs==15.0.1
-Cython==0.29.37
-decorator==5.1.1
-flatbuffers==25.2.10
-frozenlist==1.5.0
-fsspec==2025.2.0
-humanfriendly==10.0
-idna==3.10
-joblib==1.4.2
-lazy_loader==0.4
-librosa==0.10.2.post1
-lightning-utilities==0.12.0
-llvmlite==0.43.0
-monotonic-align==1.0.0
-mpmath==1.3.0
-msgpack==1.1.0
-multidict==6.1.0
-numba==0.60.0
-numpy==1.26.4
-nvidia-cublas-cu11==11.10.3.66
-nvidia-cuda-nvrtc-cu11==11.7.99
-nvidia-cuda-runtime-cu11==11.7.99
-nvidia-cudnn-cu11==8.5.0.96
-onnx==1.17.0
-onnxruntime==1.19.2
-packaging==24.2
-piper-phonemize==1.1.0
-platformdirs==4.3.6
-pooch==1.8.2
-propcache==0.2.1
-protobuf==5.29.3
-pycparser==2.22
-pytorch-lightning==1.9.5
-PyYAML==6.0.2
-requests==2.32.3
-scikit-learn==1.6.1
-scipy==1.13.1
-soundfile==0.13.1
-soxr==0.5.0.post1
-sympy==1.13.3
-threadpoolctl==3.5.0
-torch==1.13.1
-torchmetrics==1.5.2
-tqdm==4.67.1
-typing_extensions==4.12.2
-urllib3==2.3.0
-yarl==1.18.3
+
 """
 
 #This recepy worked https://github.com/rhasspy/piper/issues/295 (up to lightning update)

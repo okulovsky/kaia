@@ -1,8 +1,6 @@
-from typing import Iterable
 from unittest import TestCase
 from ....framework import (
     RunConfiguration,
-    TestReport,
     SmallImageBuilder,
     IImageBuilder,
     DockerWebServiceController,
@@ -67,6 +65,7 @@ class LlamaLoraServerController(
                 "models": "/app/models",
             },
             command_line_arguments=cmd_args,
+            dont_rm=False
         )
 
     def get_default_settings(self):
@@ -78,9 +77,8 @@ class LlamaLoraServerController(
         )
 
     def create_api(self):
-        from .api import LlamaLoraServer
-
-        return LlamaLoraServer()
+        from .api import LlamaLoraServerApi
+        return LlamaLoraServerApi()
 
     def _is_cuda_available(self) -> bool:
         try:
@@ -92,7 +90,7 @@ class LlamaLoraServerController(
     def _is_arm64_platform(self):
         return platform.machine().lower() in ["arm64", "aarch64"]
 
-    def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable:
+    def custom_self_test(self, api: BrainBoxApi, tc: TestCase):
         from .api import LlamaLoraServer
 
         model_id = self.settings.gguf_models_to_download[0].model_id
@@ -101,33 +99,23 @@ class LlamaLoraServerController(
         timer_prompt2 = "USER:set a timer for 10 seconds\n"
 
         timer_task_result = api.execute(
-            BrainBoxTask.call(LlamaLoraServer, model_id).completion(
+            LlamaLoraServer.new_task(parameter=model_id).completion(
                 task_name="timer_self_test", prompt=timer_prompt1
             )
         )
         tc.assertIsInstance(timer_task_result, str)
         tc.assertEqual(timer_task_result, "HOURS:0\nMINUTES:0\nSECONDS:5\nNAME:_")
-        yield (
-            TestReport.last_call(api)
-            .href("completion")
-            .with_comment("Returns only the text result")
-        )
 
         nutrition_task_result = api.execute(
-            BrainBoxTask.call(LlamaLoraServer, model_id).completion(
+            LlamaLoraServer.new_task(parameter=model_id).completion(
                 task_name="nutrition_self_test", prompt=timer_prompt1
             )
         )
         tc.assertIsInstance(nutrition_task_result, str)
         tc.assertNotEqual(timer_task_result, nutrition_task_result)
-        yield (
-            TestReport.last_call(api)
-            .href("completion")
-            .with_comment("Returns only the text result")
-        )
 
         multiple_prompts_result = api.execute(
-            BrainBoxTask.call(LlamaLoraServer, model_id).completion(
+            LlamaLoraServer.new_task(parameter=model_id).completion(
                 task_name="timer_self_test", prompts=[timer_prompt1, timer_prompt2]
             )
         )
@@ -135,8 +123,3 @@ class LlamaLoraServerController(
         tc.assertEqual(len(multiple_prompts_result), 2)
         tc.assertEqual(multiple_prompts_result[0], "HOURS:0\nMINUTES:0\nSECONDS:5\nNAME:_")
         tc.assertEqual(multiple_prompts_result[1], "HOURS:0\nMINUTES:0\nSECONDS:10\nNAME:_")
-        yield (
-            TestReport.last_call(api)
-            .href("completion")
-            .with_comment("Returns only the text result for multiple prompts")
-        )

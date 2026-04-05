@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BrainBox - Operator Log</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+  h1 { color: #333; }
+  nav { margin-bottom: 16px; }
+  nav a { margin-right: 12px; color: #0066cc; text-decoration: none; }
+  nav a:hover { text-decoration: underline; }
+  table { border-collapse: collapse; width: 100%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  th { background: #444; color: #fff; padding: 8px 12px; text-align: left; }
+  td { padding: 6px 12px; border-bottom: 1px solid #eee; font-size: 0.9em; vertical-align: top; }
+  tr:hover td { background: #f9f9f9; }
+  .level-Service { color: #555; }
+  .level-Decider { color: #1565c0; }
+  .level-Task { color: #2e7d32; }
+  .level-Core { color: #6a1b9a; }
+  .level-Planer { color: #e65100; }
+  .error-cell { color: #c62828; font-size: 0.85em; max-width: 400px; white-space: pre-wrap; word-break: break-all; }
+</style>
+</head>
+<body>
+<h1>BrainBox - Operator Log</h1>
+<nav>
+  <a href="/static/batches.html">Batches</a>
+  <a href="/static/controllers.html">Controllers</a>
+</nav>
+<div id="status">Loading...</div>
+<table>
+  <thead>
+    <tr>
+      <th>Timestamp</th>
+      <th>Level</th>
+      <th>ID</th>
+      <th>Event</th>
+      <th>Error</th>
+    </tr>
+  </thead>
+  <tbody id="log-body"></tbody>
+</table>
+
+<script>
+function fmtTime(ts) {
+  if (!ts) return '';
+  return new Date(ts).toLocaleTimeString();
+}
+
+async function loadLog() {
+  try {
+    const resp = await fetch('/diagnostics-service/operator-log?entries_count=100');
+    if (!resp.ok) { document.getElementById('status').textContent = 'Error: ' + resp.status; return; }
+    const items = await resp.json();
+    document.getElementById('status').textContent = 'Last update: ' + new Date().toLocaleTimeString() + ' (' + items.length + ' entries)';
+    const tbody = document.getElementById('log-body');
+    tbody.innerHTML = '';
+    for (let i = items.length - 1; i >= 0; i--) {
+      const item = items[i];
+      const tr = document.createElement('tr');
+
+      const tdTs = document.createElement('td');
+      tdTs.textContent = fmtTime(item.timestamp);
+      tr.appendChild(tdTs);
+
+      const tdLv = document.createElement('td');
+      tdLv.textContent = item.level;
+      tdLv.className = 'level-' + item.level;
+      tr.appendChild(tdLv);
+
+      const tdId = document.createElement('td');
+      tdId.textContent = item.id || '';
+      if (item.id) { tdId.title = item.id; tdId.textContent = item.id.substring(0, 20) + (item.id.length > 20 ? '...' : ''); }
+      tr.appendChild(tdId);
+
+      const tdEv = document.createElement('td');
+      tdEv.textContent = item.event;
+      tr.appendChild(tdEv);
+
+      const tdErr = document.createElement('td');
+      tdErr.className = 'error-cell';
+      tdErr.textContent = item.error || '';
+      tr.appendChild(tdErr);
+
+      tbody.appendChild(tr);
+    }
+  } catch (e) {
+    document.getElementById('status').textContent = 'Error: ' + e.message;
+  }
+}
+
+loadLog();
+setInterval(loadLog, 3000);
+</script>
+</body>
+</html>

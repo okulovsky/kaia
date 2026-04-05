@@ -1,14 +1,14 @@
 from unittest import TestCase
-from brainbox.framework import Job, BrainBoxTask, BrainBoxBase, BrainBoxService, Loc, Core, ControllerRegistry, IDecider, RemoveIncorrectJobsAction
+from brainbox.framework import Job, BrainBox, BrainBoxTask, BrainBoxBase, ISelfManagingDecider, Loc, Core, ControllerRegistry, IDecider, RemoveIncorrectJobsAction
 from sqlalchemy.orm import Session
 from sqlalchemy import select, create_engine
 
-class A(IDecider):
-    def __call__(self, a=1, b=2):
+class A(ISelfManagingDecider):
+    def run(self, a=1, b=2):
         return a+b
 
-class B(IDecider):
-    def __call__(self, a=1, b=2):
+class B(ISelfManagingDecider):
+    def run(self, a=1, b=2):
         return a-b
 
 
@@ -19,14 +19,13 @@ class InternalFunctionsTest(TestCase):
             BrainBoxBase.metadata.create_all(engine)
 
             with Session(engine) as session:
-                jobs = [
-                    BrainBoxTask.call(A)().to_task(id='1'),
-                    BrainBoxTask.call(A)().to_task(id='2'),
-                    BrainBoxTask.call(B)().to_task(id='3'),
-
+                tasks = [
+                    BrainBox.TaskBuilder.call(A, id='1').run(),
+                    BrainBox.TaskBuilder.call(A, id='2').run(),
+                    BrainBox.TaskBuilder.call(B, id='3').run(),
                 ]
-                for job in BrainBoxTask.to_all_jobs(jobs):
-                    session.add(job.set_defaults())
+                for job in BrainBoxTask.several_to_job_descriptions(tasks):
+                    session.add(job.to_job())
                 session.commit()
 
             core = Core(engine, ControllerRegistry([A()]))
@@ -34,7 +33,7 @@ class InternalFunctionsTest(TestCase):
             RemoveIncorrectJobsAction().apply(core)
 
             with Session(engine) as session:
-                result = list(session.execute(select(Job.id, Job.finished)))
+                result = list(session.execute(select(Job.id, Job.finished_timestamp.is_not(None).label('finished'))))
 
             engine.dispose()
 

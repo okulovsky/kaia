@@ -46,7 +46,7 @@ class TaskForPlannerSyncWithTracking(ICoreAction):
             select(
                 Job.id,
                 Job.decider,
-                Job.decider_parameter,
+                Job.parameter,
                 Job.received_timestamp,
                 Job.assigned,
                 Job.ordering_token

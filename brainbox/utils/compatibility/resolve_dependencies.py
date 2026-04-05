@@ -7,6 +7,18 @@ from brainbox.framework import DockerController, BrainboxImageBuilder
 from foundation_kaia.misc import Loc
 from yo_fluq import FileIO
 
+FOUNDATIONS_DEPENDENCIES = [
+    'requests',
+    'fastapi',
+    'uvicorn',
+    'websocket-client',
+    'python-dotenv',
+    'websockets',
+    'tqdm',
+    'notebook',
+    'pyyaml'
+]
+
 def _windows_uv(folder):
     # Windows only!!!
     def run_uv(*args, **kwargs):
@@ -49,13 +61,17 @@ def _linux_uv(folder):
 def resolve_dependencies(
         controller: DockerController,
         python_version: str|None = None,
-        exclude_pytorch: bool = False
+        exclude_pytorch: bool = True,
+        add_kaia_brainbox_dependencies: bool = True
     ):
     builder = controller.get_image_builder()
     if not isinstance(builder, BrainboxImageBuilder):
         raise ValueError("Only works with controllers that build with BrainboxImageBuilder")
     with Loc.create_test_folder() as folder:
         deps = FileIO.read_text(builder.context.requirements_original)
+        deps = [d for d in deps.split('\n')]
+        if add_kaia_brainbox_dependencies:
+            deps.extend(FOUNDATIONS_DEPENDENCIES)
 
         if builder.source_is_python:
             python_version = builder.source_image
@@ -74,12 +90,11 @@ def resolve_dependencies(
 
 def _create_toml(
         folder,
-        dependencies_file_content,
+        dependencies_list,
         python_version,
         exclude_pytorch):
-    deps = [d for d in dependencies_file_content.split('\n')]
     clean = []
-    for d in deps:
+    for d in dependencies_list:
         if '#' in d:
             d = d[:d.index('#')]
         d = d.strip()

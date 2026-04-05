@@ -1,5 +1,6 @@
+import uuid
 from typing import *
-from ....framework import BrainBoxTask, BrainBoxCombinedTask, IBrainBoxTask, BrainBoxExtendedTask, CombinedPrerequisite, CacheUploadPrerequisite
+from ....framework import JobRequest, IJobRequestFactory, JobDescription
 from pathlib import Path
 import dataclasses
 
@@ -8,7 +9,7 @@ import dataclasses
 class TaskBuilder:
     @dataclasses.dataclass
     class Record:
-        task: IBrainBoxTask
+        job_request: JobRequest
         tags: None | dict[str, Any]
 
     def __init__(self,
@@ -24,37 +25,39 @@ class TaskBuilder:
             return True
         return len(self.records) < self.limit_records_for_test_purposes_at
 
-    def append(self, task: IBrainBoxTask, tags: None | dict[str, Any]):
+    def append(self, task: IJobRequestFactory, tags: None | dict[str, Any] = None):
         if self._can_add():
-            self.records.append(TaskBuilder.Record(task, tags))
+            self.records.append(TaskBuilder.Record(task.to_job_request(), tags))
         return task
 
     def to_collector_pack(self, method: str, **kwargs):
         dependencies = {}
         tags = {}
-        tasks = []
-
+        descriptions = []
         for record in self.records:
-            tasks.append(record.task)
             if record.tags is not None:
-                tags[record.task.get_resulting_id()] = record.tags
-                dependencies[record.task.get_resulting_id()] = record.task.get_resulting_id()
+                tags[record.job_request.main_id] = record.tags
+                dependencies[record.job_request.main_id] = record.job_request.main_id
+            descriptions.extend(record.job_request.jobs)
 
-        resulting_task = BrainBoxTask(
-            decider='Collector',
-            decider_method=method,
-            dependencies=dependencies,
-            arguments=dict(tags=tags, **kwargs)
+        collector_description = JobDescription(
+            str(uuid.uuid4()),
+            'Collector',
+            None,
+            method,
+            dict(tags = tags),
+            None,
+            None,
+            '',
+            dependencies
+        )
+        jobs = (collector_description,)+tuple(descriptions)
+
+        result = JobRequest(
+            jobs
         )
 
-        result = BrainBoxCombinedTask(resulting_task, tuple(tasks))
-        if len(self.uploads) > 0:
-            result = BrainBoxExtendedTask(
-                result,
-                CombinedPrerequisite([
-                    CacheUploadPrerequisite(path,filename) for filename, path in self.uploads.items()
-                ])
-            )
+
         return result
 
 

@@ -1,9 +1,7 @@
 from typing import Iterable
-from unittest import TestCase
 from ....framework import (
-    RunConfiguration, SmallImageBuilder,
-    IImageBuilder, DockerWebServiceController, BrainBoxApi, IModelDownloadingController, DownloadableModel,
-    TestReport, INotebookableController
+    RunConfiguration, SelfTestCase, SmallImageBuilder,
+    IImageBuilder, DockerWebServiceController, IModelDownloadingController, DownloadableModel,
 )
 from .settings import RhasspyKaldiSettings
 from .model import RhasspyKaldiModel
@@ -13,7 +11,7 @@ from pathlib import Path
 class RhasspyKaldiController(
     DockerWebServiceController[RhasspyKaldiSettings],
     IModelDownloadingController,
-    INotebookableController,
+
 ):
     def get_image_builder(self) -> IImageBuilder|None:
         return SmallImageBuilder(
@@ -41,18 +39,17 @@ class RhasspyKaldiController(
         return RhasspyKaldiSettings()
 
     def create_api(self):
-        from .api import RhasspyKaldi
-        return RhasspyKaldi()
+        from .api import RhasspyKaldiApi
+        return RhasspyKaldiApi()
 
     def post_install(self):
         self.download_models(self.settings.languages)
         
-    def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable:
+    def self_test_cases(self) -> Iterable[SelfTestCase]:
         from .tests import english, german, english_custom
-        yield TestReport.attach_source_file(english)
-        yield from english(api, tc)
-        yield from german(api, tc)
-        yield from english_custom(api, tc)
+        yield from english()
+        yield from german()
+        yield from english_custom()
 
 
 DOCKERFILE = f'''
