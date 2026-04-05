@@ -7,7 +7,7 @@ from avatar.daemon import ChatCommand, SoundCommand, TextEvent, ButtonPressedEve
 from .app import KaiaApp, IAppInitializer
 from dataclasses import dataclass
 from grammatron import Template, TemplatesCollection
-from avatar.server import AvatarApi
+from avatar.app import AvatarApi
 from .avatar_daemon_app_settings import CHARACTERS
 
 
@@ -22,9 +22,10 @@ class AssistantFactory(IAssistantFactory):
 
     def create_timer_register(self):
         if self.avatar_api is not None:
-            self.avatar_api.file_cache.upload(
+            self.avatar_api.cache.upload(
+                'alarm.wav',
                 FileIO.read_bytes(Path(__file__).parent / 'files/alarm.wav'),
-                'alarm.wav')
+            )
         timer_register = skills.NotificationRegister(
             (SoundCommand('alarm.wav'), ChatCommand("alarm ringing", ChatCommand.MessageType.system)),
             (ChatCommand("alarm stopped", ChatCommand.MessageType.system),)

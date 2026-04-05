@@ -23,7 +23,7 @@ class MessagingTestCase(TestCase):
 
         with TestEnvironmentFactory(HTML_COUNT, headless=False) as env:
             # Put one message in the queue
-            env.client.put(TestInput())
+            env.client.push(TestInput())
 
             count_btn = env.driver.find_element(By.ID, "countBtn")
             count_display = env.driver.find_element(By.ID, "countDisplay")

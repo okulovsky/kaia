@@ -16,7 +16,7 @@ class FullTestCase(TestCase):
             helper = Helper(folder, self, True)
             with helper.app.get_fork_app(None):
                 helper.init()
-                helper.client.put(ChatCommand("Test"))
+                helper.client.push(ChatCommand("Test"))
                 with SeleniumDriver(helper.app.avatar_api, True) as driver:
                     WebDriverWait(driver, 10).until(
                         EC.presence_of_element_located((By.CSS_SELECTOR, "#chat p"))
@@ -36,7 +36,7 @@ class FullTestCase(TestCase):
                     paras = driver.find_elements(By.CSS_SELECTOR, "#chat p")
                     self.assertEqual(len(paras), 3)
 
-                    helper.client.put(ServerStartedEvent())
+                    helper.client.push(ServerStartedEvent())
                     helper.client.query(10).where(lambda z: isinstance(z, InitializationEvent)).first()
 
 

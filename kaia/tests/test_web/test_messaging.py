@@ -20,7 +20,7 @@ class TestReply(IMessage):
 class MessagingTestCase(TestCase):
     def test_messaging(self):
         with TestEnvironmentFactory(HTML, aliases=dict(TestReply = TestReply, Confirmation = Confirmation)) as env:
-            env.client.put(TestInput())
+            env.client.push(TestInput())
 
             # 3) Click the \"Fetch & Process\" button
             process_btn = env.driver.find_element(By.ID, "processBtn")

@@ -15,7 +15,7 @@ class PingBrainlessTestCase(TestCase):
             with helper.app.get_fork_app(None):
                 client = helper.app.create_avatar_client()
                 client.initialize()
-                client.put(TextEvent(PingIntents.question()))
+                client.push(TextEvent(PingIntents.question()))
 
                 result = client.query(5).where(lambda z: isinstance(z, ChatCommand)).take(2).to_list()
                 self.assertEqual("Are you here?", result[0].text)
@@ -32,7 +32,7 @@ class PingBrainlessTestCase(TestCase):
                 client = helper.app.create_avatar_client()
                 client.initialize()
 
-                utterance = client.put(TextEvent(PingIntents.question()))
+                utterance = client.push(TextEvent(PingIntents.question()))
                 self.assertIsInstance(client.pull()[0], TextEvent)
 
                 result = client.query(5).where(lambda z: isinstance(z, ChatCommand)).take(2).to_list()

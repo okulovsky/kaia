@@ -40,7 +40,7 @@ class ContainerTestCase(TestCase):
                 api.wait()
 
                 client = AvatarStream(api).create_client()
-                client.put(GenericMessage(
+                client.push(GenericMessage(
                     payload=dict(test="Hello, world"),
                     message_type='MyType'
                 ))

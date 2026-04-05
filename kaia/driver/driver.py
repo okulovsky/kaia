@@ -1,8 +1,8 @@
 from typing import Type
 import time
 from typing import Callable, Any
-from avatar.messaging import StreamClient
-from avatar.daemon import TextCommand, STTService, TickEvent, SoundCommand
+from avatar.messaging import AvatarClient
+from avatar.daemon import TextCommand, STTService, SoundCommand
 from loguru import logger
 from ..assistant import KaiaContext
 from eaglesong import Automaton
@@ -39,7 +39,7 @@ class DefaultAssistantFactory(IAssistantFactory):
 class KaiaDriver:
     def __init__(self,
                  assistant_factory: IAssistantFactory,
-                 client: StreamClient,
+                 client: AvatarClient,
                  expect_confirmations_for_types: tuple[Type,...] = (TextCommand, SoundCommand),
                  context_setup: Callable[[KaiaContext], None] = None,
                  ):
@@ -63,7 +63,7 @@ class KaiaDriver:
             if not self.rhasspy_training_is_done:
                 logger.info("Sending Rhasspy Train Command")
                 packs = assistant.get_intents()
-                context.get_client().put(STTService.RhasspyTrainingCommand(packs))
+                context.get_client().push(STTService.RhasspyTrainingCommand(packs))
 
         assistant = self.assistant_factory.wrap_assistant(assistant)
         automaton = Automaton(assistant, context)
@@ -87,7 +87,7 @@ class KaiaDriver:
             self.interpreter.process(message)
         except:
             err = traceback.format_exc()
-            self.client.put(ChatCommand(err, ChatCommand.MessageType.error))
+            self.client.push(ChatCommand(err, ChatCommand.MessageType.error))
             self.interpreter = None
             logger.error(f'Error occured, interpreter is nullified:\n{err}')
 
@@ -96,7 +96,8 @@ class KaiaDriver:
             self.initialize()
 
     def run(self):
-        self.client.initialize()
+        self.client.wait_for_availability()
+        self.client.scroll_to_end()
         while True:
             messages = self.client.pull()
             for message in messages:

@@ -2,6 +2,5 @@ from .avatar_daemon_app_settings import AvatarDaemonAppSettings
 from .avatar_server_app_settings import AvatarServerAppSettings, ServerStartedEvent
 from .brainbox_app_settings import BrainboxAppSettings
 from .kaia_driver_settings import KaiaDriverSettings, AssistantFactory
-from .phonix_app_settings import PhonixAppSettings
 from .app import KaiaApp
 from .settings import KaiaAppSettings

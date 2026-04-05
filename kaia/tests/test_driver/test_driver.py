@@ -53,30 +53,30 @@ class DriverTestCase(TestCase):
             expect_confirmations_for_types=()
         )
         driver.run_in_thread()
-        client.put(TextEvent('text'))
+        client.push(TextEvent('text'))
         result = client.query(1).take(2).to_list()
         self.assertIsInstance(result[-1], TextCommand)
         self.check_ut(result, str)
 
-        client.put(TextEvent('utterance'))
+        client.push(TextEvent('utterance'))
         result = client.query(1).take(2).to_list()
         self.check_ut(result, Utterance)
 
-        client.put(TextEvent('sequence'))
+        client.push(TextEvent('sequence'))
         result = client.query(1).take(2).to_list()
         self.check_ut(result, UtterancesSequence)
 
-        client.put(TextEvent('message'))
+        client.push(TextEvent('message'))
         result = client.query(1).take(2).to_list()
         self.assertIsInstance(result[-1], ChatCommand)
         self.assertEqual('command',  result[-1].text)
 
-        client.put(TextEvent('error'))
+        client.push(TextEvent('error'))
         result = client.query(1).take(2).to_list()
         self.assertIsInstance(result[-1], ChatCommand)
         self.assertTrue(result[-1].text.startswith('Error when handling'))
 
-        client.put(TextEvent('exit'))
+        client.push(TextEvent('exit'))
         with self.assertRaises(ValueError):
             client.query(1).take(2).to_list()
 

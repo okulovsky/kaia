@@ -3,57 +3,68 @@
 <head>
   <meta charset="UTF-8" />
   <title>Kaia - Kitchen AI Assistant</title>
-  <link rel="stylesheet" href="/static/index.css">
+  <link rel="stylesheet" href="/web/static/index.css">
 </head>
 
 <body>
-  <div id="busy-indicator"></div>
+  <div id="loading">Loading…</div>
   <div id="content">
     <div id="image">
-      <img id="main_image" src="static/style/image.png" alt="main image">
+      <img id="main_image" src=" " alt="main image">
       <div id="overlay"></div>
       <div id="chat_separator">&nbsp;</div>
-      <div id="system-panel"></div>
     </div>
     <div id="chat"></div>
   </div>
 
   <script type="module">
-    import { AvatarClient }             from '/scripts/client.js';
-    import { Dispatcher }               from '/scripts/dispatcher.js';
-    import { ChatCommandHandler }       from '/scripts/chat-command-handler.js';
-    import { ImageCommandHandler }      from '/scripts/image-command-handler.js';
-    import { ButtonGridCommandHandler } from '/scripts/button-grid-command-handler.js';
-    import { ServerStartedEventHandler }  from '/scripts/server-started-event-handler.js'
-    import { ControlPanelController }   from '/scripts/control-panel-controller.js';
-    import { Message }                  from '/scripts/message.js';
-    import { WebCamHandlerSnapshot, WebCamHandlerStream, WebCamHandlerDebugger } from './scripts/web-cam-handler/index.js';
+    import { AvatarClient, Dispatcher, ChatCommandHandler, ImageCommandHandler, ButtonGridCommandHandler,
+             MicInput, MicController, Recorder, StatefulRecorder, SilenceDetector, Automaton, RealAudio } from '/frontend/scripts/index.js';
+    import { WakeWordDetector } from '/frontend/scripts/wakeWordDetector.js';
 
-    const chatDiv     = document.getElementById('chat');
-    const imageDiv    = document.getElementById('main_image');
-    const overlayDiv  = document.getElementById('overlay');
-    const panelDiv    = document.getElementById('system-panel');
+    const loadingDiv = document.getElementById('loading');
 
-    const client      = new AvatarClient(window.location.origin, 'default');
-    const initMessage = new Message('InitializationEvent');
-    client.addMessage(initMessage);
-    client.lastMessageId = initMessage.envelop.id;
+    const chatDiv    = document.getElementById('chat');
+    const imageDiv   = document.getElementById('main_image');
+    const overlayDiv = document.getElementById('overlay');
 
-    const busyEl = document.getElementById('busy-indicator');
-    const dispatcher = new Dispatcher(client, 1, busyEl);
+    const client     = new AvatarClient({ baseUrl: window.location.origin });
 
-    new ChatCommandHandler(dispatcher, chatDiv, window.location.origin);
-    new ImageCommandHandler(dispatcher, imageDiv);
-    new ButtonGridCommandHandler(dispatcher, overlayDiv, client);
-    new ServerStartedEventHandler(dispatcher);
+    const dispatcher = new Dispatcher(client);
 
-    const controlPanel = new ControlPanelController(imageDiv, panelDiv, overlayDiv, client);
-    const webCamHandler = new WebCamHandlerStream(client, window.location.origin);
-    await webCamHandler.start()
-    const webCamHandlerDebugger = new WebCamHandlerDebugger(webCamHandler);
-    controlPanel.addDebugPanel('📷', webCamHandlerDebugger);
+    new ChatCommandHandler({ dispatcher, container: chatDiv, baseUrl: window.location.origin });
+    new ImageCommandHandler({ dispatcher, imgEl: imageDiv });
+    new ButtonGridCommandHandler({ dispatcher, overlay: overlayDiv, client });
+
+    new RealAudio({ dispatcher, baseUrl: window.location.origin });
+
+    const input    = new MicInput();
+    const recorder = new Recorder({ startBufferLength: 1.0, normalBufferLength: 0.3, dispatcher, baseUrl: window.location.origin });
+    const stateful = new StatefulRecorder({ recorder, dispatcher });
+    const silence  = new SilenceDetector({ timeBetweenReportsInSeconds: 1, discretizationInSeconds: 0.1, silenceLevel: 0.01, dispatcher });
+    const wake     = new WakeWordDetector({ sampleRateOfTheModel: 16000, words: ['computer'], modelUrl: '/frontend/models/vosk-model-small-en-us-0.15.zip?v=5', dispatcher });
+    const automaton   = new Automaton({ silenceDetector: silence, wakeWordDetector: wake, statefulRecorder: stateful, dispatcher });
+    const controller  = new MicController(input, m => automaton.process(m));
 
     dispatcher.start();
+    await controller.start();
+
+    // detectWakeWord triggers lazy _initialize(); errors inside are swallowed
+    // with .catch(console.error), so we poll with a timeout fallback.
+    const wakeReady = await Promise.race([
+      new Promise(resolve => {
+        const check = setInterval(() => {
+          if (wake.isInitialized()) { clearInterval(check); resolve(true); }
+        }, 500);
+      }),
+      new Promise(resolve => setTimeout(() => resolve(false), 30_000)),
+    ]);
+
+    if (wakeReady) {
+      loadingDiv.remove();
+    } else {
+      loadingDiv.textContent = 'Wake word detector failed to initialize — voice input unavailable';
+    }
   </script>
 </body>
 </html>

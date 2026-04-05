@@ -13,18 +13,18 @@ class ActivitySkillTestCase(TestCase):
             with helper.app.get_fork_app(None):
                 client = helper.app.create_avatar_client()
                 client.initialize()
-                client.put(InitializationEvent())
+                client.push(InitializationEvent())
                 initial_state = client.query(5).where(lambda z: isinstance(z, State)).first()
 
                 for new_character in helper.settings.avatar_processor.characters:
                     if new_character != initial_state.character:
                         break
 
-                client.put(TextEvent(ChangeCharacterIntents.change_character(new_character)))
+                client.push(TextEvent(ChangeCharacterIntents.change_character(new_character)))
                 after = client.query(5).where(lambda z: isinstance(z, State)).first()
                 self.assertEqual(new_character, after.character)
 
-                client.put(TextEvent(ChangeCharacterIntents.change_character()))
+                client.push(TextEvent(ChangeCharacterIntents.change_character()))
                 after = client.query(5).where(lambda z: isinstance(z, State)).first()
                 self.assertNotEqual(new_character, after.character)
 

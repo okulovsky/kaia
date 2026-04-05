@@ -250,6 +250,19 @@ body {
 }
 
 
+#loading {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20, 20, 20, 0.92);
+  color: #fdfdfd;
+  font-size: 2vw;
+  z-index: 2147483647;
+  pointer-events: none;
+}
+
 #busy-indicator {
   position: fixed;
   top: 10px;

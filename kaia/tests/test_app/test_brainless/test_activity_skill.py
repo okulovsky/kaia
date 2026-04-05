@@ -14,11 +14,11 @@ class ActivitySkillTestCase(TestCase):
             with helper.app.get_fork_app(None):
                 client = helper.app.create_avatar_client()
                 client.initialize()
-                client.put(InitializationEvent())
+                client.push(InitializationEvent())
                 intro = client.query(5).feed(slice(lambda z: isinstance(z, ChatCommand)))
                 #self.assertEqual(9, len(intro))
 
-                client.put(TextEvent(ActivityIntents.change_activity()))
+                client.push(TextEvent(ActivityIntents.change_activity()))
                 client.query(5).feed(slice(lambda z: isinstance(z, ImageService.NewImageCommand)))
                 after = client.query(5).feed(slice(lambda z: isinstance(z, TextCommand)))
                 self.assertEqual(
@@ -26,7 +26,7 @@ class ActivitySkillTestCase(TestCase):
                     ActivityReplies.activity_changed
                 )
 
-                client.put(TextEvent(ActivityIntents.activity_request()))
+                client.push(TextEvent(ActivityIntents.activity_request()))
                 after = client.query(5).feed(slice(lambda z: isinstance(z, TextCommand)))
                 self.assertEqual(
                     after[-1].text.template,

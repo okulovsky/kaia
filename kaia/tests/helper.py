@@ -86,7 +86,7 @@ class Helper:
 
     def init(self):
         self.client.initialize()
-        self.client.put(TickEvent(datetime.now()))
+        self.client.push(TickEvent(datetime.now()))
         kaldi_training = (
             self.client
             .query(10)
@@ -104,7 +104,7 @@ class Helper:
 
 
     def say(self, file):
-        self.client.put(SoundInjectionCommand(self.upload(file)))
+        self.client.push(SoundInjectionCommand(self.upload(file)))
         return self.client
 
     def wakeword(self):

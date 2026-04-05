@@ -1,4 +1,4 @@
-from avatar.messaging import StreamClient
+from avatar.messaging import AvatarClient
 from avatar.daemon import NarrationService, State
 from dataclasses import dataclass
 from enum import Enum
@@ -20,7 +20,7 @@ class UserIdentification:
 
 
 class KaiaContext:
-    def __init__(self, client: StreamClient):
+    def __init__(self, client: AvatarClient):
         self._client = client
         self.user: str|None = None
         self.language: str|None = None

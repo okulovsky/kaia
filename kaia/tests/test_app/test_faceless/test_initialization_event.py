@@ -14,6 +14,6 @@ class FacelessTestCase(TestCase):
             helper = Helper(folder, self)
             with helper.app.get_fork_app(None):
                 helper.client.initialize()
-                helper.client.put(InitializationEvent())
+                helper.client.push(InitializationEvent())
                 reaction = helper.parse_reaction(TextCommand)
                 self.assertFalse(Query.en(reaction).where(lambda z: isinstance(z, ExceptionEvent)).any())

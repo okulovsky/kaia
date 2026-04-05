@@ -9,14 +9,12 @@ from avatar.messaging import AvatarDaemon
 from avatar import daemon as s
 from avatar.daemon.common import content_manager as cm, AvatarService
 import inspect
-from brainbox.deciders import Piper, RhasspyKaldi, Whisper, Resemblyzer
-from pathlib import Path
+from brainbox.deciders import Piper, RhasspyKaldi, Whisper, Resemblyzer, InsightFace
 from kaia.assistant import KaiaAssistant
-from yo_fluq import FileIO
 
 class DemoDubTaskFactory(s.TTSService.TaskFactory):
-    def create_task(self, s: str, info: s.TTSService.Command.Settings) -> BrainBox.ITask:
-        return BrainBox.Task.call(Piper).voiceover(s, info.language)
+    def create_task(self, s: str, info: s.TTSService.Command.Settings) -> BrainBox.Task:
+        return Piper.new_task().voiceover(s, info.language)
 
 def _speaker_to_image_url(speaker):
     return f'/static/unknown.png'
@@ -43,14 +41,15 @@ class AvatarDaemonAppSettings(IAppInitializer):
 
 
     def create_brainbox_service(self, app: KaiaApp, state: s.State):
-        bbox = s.BrainBoxService(
-            app.brainbox_api,
-            ControllersSetup((
-                 ControllersSetup.Instance(RhasspyKaldi),
-                 ControllersSetup.Instance(Whisper, None, 'base'),
-                 ControllersSetup.Instance(Piper),
-                 ControllersSetup.Instance(Resemblyzer),
-            )))
+        setup = (
+            ControllersSetup()
+            .up(RhasspyKaldi)
+            .up(Whisper, model = 'base')
+            .up(Piper)
+            .up(Resemblyzer)
+            .up(InsightFace)
+        )
+        bbox = s.BrainBoxService(app.brainbox_api, setup)
         bbox.binding_settings.asynchronous(True)
         return bbox
 
