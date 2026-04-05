@@ -4,7 +4,7 @@ from avatar.utils.web_test_environment import WebTestEnvironmentFactory
 from avatar.daemon.common import SoundLevelReport
 from pathlib import Path
 from avatar.messaging import AvatarClient
-from avatar.utils.sine_wav import sine_wav
+from avatar.utils import Sine
 import numpy as np
 
 FOLDER = Path(__file__).parent/'files'
@@ -30,8 +30,8 @@ def slice(client: AvatarClient):
 class LevelReportingTestCase(TestCase):
     def test_louder_sample_reports_higher_level(self):
         with WebTestEnvironmentFactory(HTML) as env:
-            env.api.cache.upload('sample1', sine_wav(1000))
-            env.api.cache.upload('sample2', sine_wav(5000))
+            env.api.cache.upload('sample1', Sine().segment(0.1).bytes())
+            env.api.cache.upload('sample2', Sine().segment(0.5).bytes())
             reader = env.client.clone()
 
             env.client.run_synchronously(SoundInjectionCommand('sample1'), time_limit_in_seconds=30)
@@ -68,9 +68,9 @@ HTML = '''<!DOCTYPE html>
 
   const client = new AvatarClient({ baseUrl: window.location.origin });
   const dispatcher = new Dispatcher(client);
-  const input = new FakeInput({ sampleRate: 22050, frameSize: 512, dispatcher, baseUrl: window.location.origin });
-  const levels = new SilenceDetector({ timeBetweenReportsInSeconds: 0.5, discretizationInSeconds: 0.05, dispatcher });
-  const controller = new MicController(input, m => levels.isSilence(m));
+  const input = new FakeInput({ sampleRate: 22050, frameSize: 512, acceleration: 10, dispatcher, baseUrl: window.location.origin });
+  const levels = new SilenceDetector({ timeBetweenReportsInSeconds: 0.5, reportingWindowSeconds: 0.05, dispatcher });
+  const controller = new MicController(input, m => levels.detect(m));
   dispatcher.start();
   controller.start().catch(console.error);
 </script>

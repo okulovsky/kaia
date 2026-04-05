@@ -1,6 +1,7 @@
 from .test_time_factory import TestTimeFactory
 from .web_test_environment import WebTestEnvironment, WebTestEnvironmentFactory
-from .wav_utils import split_wav_by_amplitude
+from .wav_utils import split_wav_by_amplitude, AudioSegment
+from .sine import Sine
 
 def slice(condition, hit_count: int = 1):
     def _(q):

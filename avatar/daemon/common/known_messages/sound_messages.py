@@ -11,10 +11,12 @@ class SetSilenceLevelCommand(IMessage):
 
 @dataclass
 class SoundLevelReport(IMessage):
+    decision_level: float | None
+    silence_level: float
     begin_timestamp: datetime
-    end_timestamp: datetime|None = None
-    levels: list[float] = field(default_factory=list)
-    silence_level: float = 0.1
+    end_timestamp: datetime
+    levels: list[float]
+
 
 
 @dataclass
@@ -26,6 +28,7 @@ class SoundCommand(IMessage):
 @dataclass
 class SoundConfirmation(IMessage):
     terminated: bool = False
+    error: str | None = None
 
 
 @dataclass
@@ -40,6 +43,11 @@ class SoundStartEvent(IMessage):
 
 @dataclass
 class SoundInjectionCommand(IMessage):
+    file_id: str
+
+
+@dataclass
+class SoundInjectionStartedEvent(IMessage):
     file_id: str
 
 

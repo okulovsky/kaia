@@ -1,11 +1,9 @@
 from pathlib import Path
 from unittest import TestCase
 
-from selenium.webdriver.support.ui import WebDriverWait
+from avatar.daemon.common.known_messages import SoundInjectionCommand, WakeWordEvent, SoundStartEvent, InitializationEvent
+from avatar.utils import WebTestEnvironmentFactory, Sine
 
-from avatar.daemon.common.known_messages import SoundInjectionCommand, WakeWordEvent, SoundStartEvent
-from avatar.utils.web_test_environment import WebTestEnvironmentFactory
-from avatar.utils.sine_wav import sine_wav
 
 
 FOLDER = Path(__file__).parent / 'files'
@@ -14,15 +12,13 @@ ENABLE_DEBUG = 'false'
 class WakeWordTestCase(TestCase):
     def test_wake_word_detected(self):
         with WebTestEnvironmentFactory(HTML) as env:
-            env.api.cache.upload('noise', sine_wav(1000))
+            env.api.cache.upload('noise', Sine().segment(0.5).bytes())
             env.api.cache.upload('computer', (FOLDER / 'computer.wav').read_bytes())
 
             reader = env.client.clone()
 
-            # Wait until VoskWakeWordUnit has loaded the model
-            WebDriverWait(env.driver, 120).until(
-                lambda d: d.execute_script('return window.voskReady === true')
-            )
+            # Wait until WakeWordDetector has loaded the model
+            env.client.query(120).where(lambda z: isinstance(z, InitializationEvent)).first()
 
             FILE = None
             if ENABLE_DEBUG != 'false':
@@ -54,8 +50,9 @@ class WakeWordTestCase(TestCase):
 HTML = '''<!DOCTYPE html>
 <html><head><meta charset="UTF-8"></head><body>
 <script type="module">
-  import { AvatarClient, Dispatcher, FakeInput, MicController } from '/frontend/scripts/index.js';
+  import { AvatarClient, Dispatcher, FakeInput, MicController, Message, Envelop } from '/frontend/scripts/index.js';
   import { WakeWordDetector } from '/frontend/scripts/wakeWordDetector.js';
+  import { LoadingScreen } from '/frontend/scripts/loadingScreen.js';
 
   const client = new AvatarClient({ baseUrl: window.location.origin });
   const dispatcher = new Dispatcher(client);
@@ -64,14 +61,12 @@ HTML = '''<!DOCTYPE html>
   const controller = new MicController(input, m => wake.detectWakeWord(m));
 
   dispatcher.start();
-  controller.start().catch(console.error);
-
-  const readyCheck = setInterval(() => {
-    if (wake.isInitialized()) {
-      window.voskReady = true;
-      clearInterval(readyCheck);
-    }
-  }, 500);
+  const loadingDiv = document.createElement('div');
+  document.body.appendChild(loadingDiv);
+  new LoadingScreen(loadingDiv, [wake], () => {
+    dispatcher.push(new Message('InitializationEvent', new Envelop(), {}));
+    controller.start().catch(console.error);
+  });
 </script>
 </body></html>
 '''

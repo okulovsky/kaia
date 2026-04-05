@@ -1,60 +1,71 @@
 import struct
+from dataclasses import dataclass
 import numpy as np
 
 
-def split_wav_by_amplitude(
-    wav_bytes: bytes,
-    block_size: int = 512,
-    silence_threshold: float = 0.01,
-) -> list[float]:
-    """
-    Split WAV audio into contiguous segments of silence / non-silence and return
-    the mean normalised amplitude of each segment.
+@dataclass
+class AudioSegment:
+    amplitude: float
+    duration: float
 
-    Tolerant of streaming WAV files where RIFF/data chunk sizes are 0 or
-    placeholder values — the data chunk is read until end-of-file regardless of
-    the declared size.
 
-    Args:
-        wav_bytes:         Raw bytes of a WAV file.
-        block_size:        Number of samples per analysis block.
-        silence_threshold: Normalised amplitude below which a block is silence.
-
-    Returns:
-        List of mean normalised amplitudes, one entry per contiguous segment
-        (silence and non-silence segments both appear).
-    """
-    _, samples = _parse_pcm(wav_bytes)
+def split_wav_by_amplitude(wav_bytes: bytes, block_size: int = 512) -> list[AudioSegment]:
+    sample_rate, samples = _parse_pcm(wav_bytes)
     if len(samples) == 0:
         return []
 
     normalised = samples.astype(np.float32) / 32767.0
-
-    # Compute per-block mean absolute amplitude
     n_blocks = len(normalised) // block_size
     if n_blocks == 0:
-        return [float(np.mean(np.abs(normalised)))]
+        amp = round(float(np.mean(np.abs(normalised))), 2)
+        return [AudioSegment(amp, len(samples) / sample_rate)]
 
     block_amps = [
         float(np.mean(np.abs(normalised[i * block_size:(i + 1) * block_size])))
         for i in range(n_blocks)
     ]
 
-    # Group consecutive blocks with the same silence/non-silence status
-    segments: list[float] = []
-    current: list[float] = [block_amps[0]]
-    current_silent = block_amps[0] < silence_threshold
+    _CHANGE_RATIO = 0.3
+    _CONFIRM_BLOCKS = 2
+
+    def _changed(new_amp, ref_amp):
+        return abs(new_amp - ref_amp) / max(ref_amp, 1e-4) > _CHANGE_RATIO
+
+    segments: list[AudioSegment] = []
+    seg_amps = [block_amps[0]]
+    pending: list[float] = []
 
     for amp in block_amps[1:]:
-        is_silent = amp < silence_threshold
-        if is_silent == current_silent:
-            current.append(amp)
+        if not pending:
+            if _changed(amp, float(np.mean(seg_amps))):
+                pending = [amp]
+            else:
+                seg_amps.append(amp)
         else:
-            segments.append(float(np.mean(current)))
-            current = [amp]
-            current_silent = is_silent
+            pending_mean = float(np.mean(pending))
+            if not _changed(amp, pending_mean):
+                pending.append(amp)
+                if len(pending) >= _CONFIRM_BLOCKS:
+                    segments.append(AudioSegment(round(float(np.mean(seg_amps)), 2), len(seg_amps) * block_size / sample_rate))
+                    seg_amps = pending
+                    pending = []
+            else:
+                # Transition block didn't stabilise: absorb it into the current segment
+                seg_amps.extend(pending)
+                pending = []
+                if _changed(amp, float(np.mean(seg_amps))):
+                    pending = [amp]
+                else:
+                    seg_amps.append(amp)
 
-    segments.append(float(np.mean(current)))
+    if pending:
+        if len(pending) >= _CONFIRM_BLOCKS:
+            segments.append(AudioSegment(round(float(np.mean(seg_amps)), 2), len(seg_amps) * block_size / sample_rate))
+            seg_amps = pending
+        else:
+            seg_amps.extend(pending)
+
+    segments.append(AudioSegment(round(float(np.mean(seg_amps)), 2), len(seg_amps) * block_size / sample_rate))
     return segments
 
 

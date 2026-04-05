@@ -7,18 +7,17 @@ from avatar.daemon.common.known_messages import (
     StatefulRecorderStateCommand,
     StatefulRecorderState
 )
-from avatar.utils.web_test_environment import WebTestEnvironmentFactory
-from avatar.utils.wav_utils import split_wav_by_amplitude
-from avatar.utils.sine_wav import sine_wav
+from avatar.utils import WebTestEnvironmentFactory, split_wav_by_amplitude, Sine
+
 
 
 
 class RecorderTestCase(TestCase):
     def test_recorder(self):
         with WebTestEnvironmentFactory(HTML) as env:
-            env.api.cache.upload('amp1000', sine_wav(1000))
-            env.api.cache.upload('amp2500', sine_wav(2500))
-            env.api.cache.upload('amp5000', sine_wav(5000))
+            env.api.cache.upload('amp1000', Sine().segment(0.03).bytes())
+            env.api.cache.upload('amp2500', Sine().segment(0.15).bytes())
+            env.api.cache.upload('amp5000', Sine().segment(0.5).bytes())
 
             reader = env.client.clone()
 
@@ -61,18 +60,18 @@ class RecorderTestCase(TestCase):
 
         # --- Verify snapshot 1 ---
         segments1 = split_wav_by_amplitude(snapshot1)
-        non_silent1 = [s for s in segments1 if s > 0.01]
+        non_silent1 = [s for s in segments1 if s.amplitude > 0.01]
         self.assertGreater(len(non_silent1), 0, 'Snapshot 1 has no non-silent segments')
         self.assertEqual(1, len(non_silent1),
                          f'Snapshot 1 should have exactly one non-silent segment, got {non_silent1}')
 
         # --- Verify snapshot 2 ---
         segments2 = split_wav_by_amplitude(snapshot2)
-        non_silent2 = [s for s in segments2 if s > 0.01]
+        non_silent2 = [s for s in segments2 if s.amplitude > 0.01]
         self.assertEqual(2, len(non_silent2),
                          f'Snapshot 2 should have two non-silent segments (amp2500 + amp5000), got {non_silent2}')
         # amp5000 segment should be louder than amp2500 segment
-        self.assertGreater(non_silent2[1], non_silent2[0],
+        self.assertGreater(non_silent2[1].amplitude, non_silent2[0].amplitude,
                            'Second segment should be louder (amp5000 > amp2500)')
 
 

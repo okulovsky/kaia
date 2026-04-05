@@ -1,18 +1,15 @@
 from pathlib import Path
 from unittest import TestCase
 
-from selenium.webdriver.support.ui import WebDriverWait
-
 from avatar.daemon import (
     SoundInjectionCommand,
     SoundEvent,
     SetSilenceLevelCommand,
     StatefulRecorderStateEvent,
-    StatefulRecorderState
+    StatefulRecorderState,
+    InitializationEvent,
 )
-from avatar.utils.web_test_environment import WebTestEnvironmentFactory
-from avatar.utils.wav_utils import split_wav_by_amplitude
-from avatar.utils.sine_wav import sine_wav
+from avatar.utils import WebTestEnvironmentFactory, split_wav_by_amplitude, Sine
 
 FOLDER = Path(__file__).parent / 'files'
 
@@ -20,15 +17,14 @@ FOLDER = Path(__file__).parent / 'files'
 class AutomatonTestCase(TestCase):
     def test_automaton(self):
         with WebTestEnvironmentFactory(HTML) as env:
-            env.api.cache.upload('amp1000', sine_wav(1000))
+            env.api.cache.upload('amp1000', Sine().segment(0.01).bytes())
             env.api.cache.upload('computer', (FOLDER / 'computer.wav').read_bytes())
-            env.api.cache.upload('amp2500', sine_wav(2500))
+            env.api.cache.upload('amp2500', Sine().segment(0.1).bytes())
 
             reader = env.client.clone()
 
-            WebDriverWait(env.driver, 120).until(
-                lambda d: d.execute_script('return window.voskReady === true')
-            )
+            # Wait until WakeWordDetector has loaded the model
+            env.client.query(120).where(lambda z: isinstance(z, InitializationEvent)).first()
 
             # Lower silence threshold so amp2500 registers as non-silence
             env.client.push(SetSilenceLevelCommand(level=0.04))
@@ -61,7 +57,7 @@ class AutomatonTestCase(TestCase):
 
             data = env.api.cache.read(sound_event.file_id)
             segments = split_wav_by_amplitude(data)
-            non_silent = [s for s in segments if s > 0.01]
+            non_silent = [s for s in segments if s.amplitude > 0.01]
             self.assertEqual(1, len(non_silent),
                              f'Expected exactly one non-silent segment (amp2500), got {non_silent}')
 
@@ -74,30 +70,30 @@ HTML = '''<!DOCTYPE html>
 <script type="module">
   import {
     AvatarClient, Dispatcher, FakeInput, MicController,
-    Recorder, StatefulRecorder, SilenceDetector, Automaton, FakeAudio,
+    Recorder, StatefulRecorder, SilenceDetector, Automaton, RealAudio,
+    Message, Envelop,
   } from '/frontend/scripts/index.js';
   import { WakeWordDetector } from '/frontend/scripts/wakeWordDetector.js';
+  import { LoadingScreen } from '/frontend/scripts/loadingScreen.js';
 
   const client = new AvatarClient({ baseUrl: window.location.origin });
   const dispatcher = new Dispatcher(client);
-  const input = new FakeInput({ sampleRate: 22050, frameSize: 512, dispatcher, baseUrl: window.location.origin });
+  const input = new FakeInput({ sampleRate: 22050, frameSize: 512, acceleration: 10, dispatcher, baseUrl: window.location.origin });
   const recorder = new Recorder({ startBufferLength: 1.0, normalBufferLength: 0.3, dispatcher, baseUrl: window.location.origin });
   const stateful = new StatefulRecorder({ recorder, dispatcher });
-  const silence = new SilenceDetector({ timeBetweenReportsInSeconds: 1, discretizationInSeconds: 0.05, dispatcher });
+  const silence = new SilenceDetector({ timeBetweenReportsInSeconds: 1, reportingWindowSeconds: 0.05, dispatcher });
   const wake = new WakeWordDetector({ sampleRateOfTheModel: 16000, words: ['computer'], modelUrl: '/frontend/models/vosk-model-small-en-us-0.15.zip', dispatcher });
-  const fakeAudio = new FakeAudio({ dispatcher });
+  new RealAudio({ dispatcher, baseUrl: window.location.origin, silent: true, acceleration: 10 });
   const automaton = new Automaton({ silenceDetector: silence, wakeWordDetector: wake, statefulRecorder: stateful, dispatcher });
   const controller = new MicController(input, m => automaton.process(m));
 
   dispatcher.start();
-  controller.start().catch(console.error);
-
-  const readyCheck = setInterval(() => {
-    if (wake.isInitialized()) {
-      window.voskReady = true;
-      clearInterval(readyCheck);
-    }
-  }, 500);
+  const loadingDiv = document.createElement('div');
+  document.body.appendChild(loadingDiv);
+  new LoadingScreen(loadingDiv, [wake], () => {
+    dispatcher.push(new Message('InitializationEvent', new Envelop(), {}));
+    controller.start().catch(console.error);
+  });
 </script>
 </body></html>
 '''

@@ -1,4 +1,4 @@
-export { SilenceDetector } from './silenceDetector.js'
+export { SilenceDetector, VoicePresence } from './silenceDetector.js'
 export { WakeWordDetector } from './wakeWordDetector.js'
 export { Recorder } from './recorder.js'
 export { RecorderState, StatefulRecorder } from './statefulRecorder.js'

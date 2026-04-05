@@ -2,17 +2,17 @@ from time import sleep
 from unittest import TestCase
 
 from avatar.daemon import SoundCommand, SoundConfirmation
-from avatar.utils.web_test_environment import WebTestEnvironmentFactory
-from avatar.utils.sine_wav import sine_wav
+from avatar.utils import WebTestEnvironmentFactory, Sine
+
 
 
 class RealAudioTestCase(TestCase):
     def test_interruption(self):
         with WebTestEnvironmentFactory(HTML) as env:
             # 3-second file for the first command so it's still playing when interrupted
-            env.api.cache.upload('long', sine_wav(5000, 3.0))
+            env.api.cache.upload('long', Sine().segment(0.5, 100.0).bytes())
             # 1-second file for the second command
-            env.api.cache.upload('short', sine_wav(5000, 1.0))
+            env.api.cache.upload('short', Sine().segment(0.3, 2).bytes())
 
             reader = env.client.clone()
 
@@ -54,7 +54,7 @@ HTML = '''<!DOCTYPE html>
 
   const client = new AvatarClient({ baseUrl: window.location.origin });
   const dispatcher = new Dispatcher(client);
-  new RealAudio({ dispatcher, baseUrl: window.location.origin });
+  new RealAudio({ dispatcher, baseUrl: window.location.origin, silent: true });
   dispatcher.start();
 </script>
 </body></html>

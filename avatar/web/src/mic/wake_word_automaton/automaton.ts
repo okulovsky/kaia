@@ -1,7 +1,7 @@
 import { Dispatcher } from '../../core/dispatcher.js'
 import { Message, Envelop } from '../../core/message.js'
 import { MicData } from '../input/micData.js'
-import { SilenceDetector } from './silenceDetector.js'
+import { SilenceDetector, VoicePresence } from './silenceDetector.js'
 import { WakeWordDetector } from './wakeWordDetector.js'
 import { StatefulRecorder, RecorderState } from './statefulRecorder.js'
 import { SystemSoundSlot } from './systemSoundSlot.js'
@@ -18,12 +18,14 @@ export class Automaton {
     private openedAt: number | null = null
     private lastOpeningWakeWordAt: number | null = null
     private openMicRequested = false
+    private currentMicTime = 0
     private silenceDetector: SilenceDetector
-    private wakeWordDetector: WakeWordDetector
+    private wakeWordDetector: WakeWordDetector | null
     private statefulRecorder: StatefulRecorder
     private dispatcher: Dispatcher
     private maxSilenceInOpenTillError: number
     private maxNonSilenceAfterWakeWordTillReset: number
+    
 
     constructor({
         silenceDetector,
@@ -34,7 +36,7 @@ export class Automaton {
         maxNonSilenceAfterWakeWordTillReset = 1,
     }: {
         silenceDetector: SilenceDetector,
-        wakeWordDetector: WakeWordDetector,
+        wakeWordDetector: WakeWordDetector | null,
         statefulRecorder: StatefulRecorder,
         dispatcher: Dispatcher,
         maxSilenceInOpenTillError?: number,
@@ -53,30 +55,31 @@ export class Automaton {
     }
 
     async process(micData: MicData): Promise<void> {
-        const isSilence = this.silenceDetector.isSilence(micData)
-        const wakeWord = this.wakeWordDetector.detectWakeWord(micData)
-        const nextState = this._getNextState(isSilence, wakeWord)
+        this.currentMicTime = micData.micTimestamp
+        const presence = this.silenceDetector.detect(micData)
+        const wakeWord = this.wakeWordDetector?.detectWakeWord(micData) ?? false
+        const nextState = this._getNextState(presence, wakeWord)
         if (nextState !== null) {
             this.statefulRecorder.setState(nextState)
         }
         await this.statefulRecorder.process(micData)
     }
 
-    private _getNextState(isSilence: boolean, wakeWord: boolean): RecorderState | null {
+    private _getNextState(presence: VoicePresence, wakeWord: boolean): RecorderState | null {
         switch (this.statefulRecorder.state) {
             case RecorderState.Standby:
-                return this._getNextStateStandBy(isSilence, wakeWord)
+                return this._getNextStateStandBy(presence, wakeWord)
             case RecorderState.Open:
-                if (!isSilence) return RecorderState.Record
+                if (presence === VoicePresence.Sound) return RecorderState.Record
                 if (this.openedAt !== null &&
-                    Date.now() - this.openedAt > this.maxSilenceInOpenTillError * 1000) {
+                    this.currentMicTime - this.openedAt > this.maxSilenceInOpenTillError * 1000) {
                     this.dispatcher.push(new Message('SystemSoundCommand', new Envelop(), { sound_name: 'error' }))
                     this.standbyPhase = StandbyPhase.WaitingForWakeWord
                     return RecorderState.Standby
                 }
                 return null
             case RecorderState.Record:
-                if (isSilence) {
+                if (presence === VoicePresence.Silence) {
                     this.dispatcher.push(new Message('SystemSoundCommand', new Envelop(), { sound_name: 'close' }))
                     return RecorderState.Commit
                 }
@@ -87,23 +90,23 @@ export class Automaton {
         }
     }
 
-    private _getNextStateStandBy(isSilence: boolean, wakeWord: boolean): RecorderState | null {
+    private _getNextStateStandBy(presence: VoicePresence, wakeWord: boolean): RecorderState | null {
         switch (this.standbyPhase) {
             case StandbyPhase.WaitingForWakeWord:
                 if (wakeWord || this.openMicRequested) {
                     this.openMicRequested = false
-                    this.lastOpeningWakeWordAt = Date.now()
+                    this.lastOpeningWakeWordAt = this.currentMicTime
                     this.standbyPhase = StandbyPhase.WaitingForSilence
                 }
                 return null
             case StandbyPhase.WaitingForSilence:
                 if (this.lastOpeningWakeWordAt !== null &&
-                    Date.now() - this.lastOpeningWakeWordAt > this.maxNonSilenceAfterWakeWordTillReset * 1000) {
+                    this.currentMicTime - this.lastOpeningWakeWordAt > this.maxNonSilenceAfterWakeWordTillReset * 1000) {
                     this.lastOpeningWakeWordAt = null
                     this.standbyPhase = StandbyPhase.WaitingForWakeWord
                     return null
                 }
-                if (isSilence) {
+                if (presence === VoicePresence.Silence) {
                     this.lastOpeningWakeWordAt = null
                     this.openSlot.send()
                     this.standbyPhase = StandbyPhase.WaitingForConfirmation
@@ -113,7 +116,7 @@ export class Automaton {
                 if (this.openSlot.confirmed) {
                     this.openSlot.reset()
                     this.standbyPhase = StandbyPhase.WaitingForWakeWord
-                    this.openedAt = Date.now()
+                    this.openedAt = this.currentMicTime
                     return RecorderState.Open
                 }
                 return null

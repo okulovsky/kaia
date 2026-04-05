@@ -25,6 +25,8 @@ export class MicInput implements IAudioInput {
     private workletNode?: AudioWorkletNode
     private stream?: MediaStream
     private running = false
+    private startTimeMs: number | null = null
+    private samplesProduced = 0
 
     constructor({ frameSize = 512 }: { frameSize?: number } = {}) {
         this.frameSize = frameSize
@@ -59,12 +61,18 @@ export class MicInput implements IAudioInput {
 
         const source = ctx.createMediaStreamSource(this.stream)
         source.connect(this.workletNode)
+        this.startTimeMs = Date.now()
+        this.samplesProduced = 0
         this.running = true
     }
 
-    read(): MicData {
-        const buffer = this.queue.shift() ?? new Float32Array(this.frameSize)
-        return { sampleRate: this.sampleRate || 48000, buffer }
+    read(): MicData | null {
+        const buffer = this.queue.shift()
+        if (buffer === undefined) return null
+        const sr = this.sampleRate || 48000
+        const micTimestamp = this.startTimeMs! + (this.samplesProduced / sr) * 1000
+        this.samplesProduced += buffer.length
+        return { sampleRate: sr, buffer, micTimestamp }
     }
 
     stop(): void {

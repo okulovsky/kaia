@@ -4,15 +4,15 @@ import { Message, Envelop } from '../../core/message.js'
 import { Dispatcher } from '../../core/dispatcher.js'
 import { MicData } from '../input/micData.js'
 import { Recorder } from './recorder.js'
+import type { ILoadingScreenComponent } from '../../loadingScreen/iLoadingScreenComponent.js'
 
-export class WakeWordDetector {
+export class WakeWordDetector implements ILoadingScreenComponent {
     private sampleRateOfTheModel: number
     private words: string[]
     private modelUrl: string
     private recognizer?: KaldiRecognizer
     private recognizerPort?: MessagePort
     private recognizerId?: number
-    private initializing = false
     private initialized = false
     private _detected = false
     private dispatcher: Dispatcher
@@ -39,7 +39,7 @@ export class WakeWordDetector {
         return this.initialized
     }
 
-    private async _initialize(): Promise<void> {
+    async initialize(): Promise<void> {
         const channel = new MessageChannel()
         const model: Model = await createModel(this.modelUrl)
         model.registerPort(channel.port1)
@@ -77,13 +77,7 @@ export class WakeWordDetector {
     }
 
     detectWakeWord(micData: MicData): boolean {
-        if (!this.initialized) {
-            if (!this.initializing) {
-                this.initializing = true
-                this._initialize().catch(console.error)
-            }
-            return false
-        }
+        if (!this.initialized) return false
 
         const float32 = this._resample(micData.buffer, micData.sampleRate)
 

@@ -1,90 +1,141 @@
 import { Dispatcher } from '../core/dispatcher.js'
 import { Message, Envelop } from '../core/message.js'
+import { soundUrl, wavDurationSeconds } from './soundFetcher.js'
 
 export class RealAudio {
     private dispatcher: Dispatcher
-    private baseUrl: string
-    private context: AudioContext
+    private context: AudioContext | null = null
     private currentSource: AudioBufferSourceNode | null = null
     private currentMsg: Message | null = null
+    private silentTimeoutId: ReturnType<typeof setTimeout> | null = null
     private generation = 0
+    private silent: boolean
+    private acceleration: number
 
-    constructor({ dispatcher, baseUrl }: { dispatcher: Dispatcher, baseUrl: string }) {
+    constructor({ dispatcher, baseUrl, silent = false, acceleration = 1 }: {
+        dispatcher: Dispatcher,
+        baseUrl: string,
+        silent?: boolean,
+        acceleration?: number,
+    }) {
         this.dispatcher = dispatcher
-        this.baseUrl = baseUrl
-        this.context = new AudioContext()
+        this.silent = silent
+        this.acceleration = acceleration
+        if (!silent) {
+            this.context = new AudioContext()
+        }
         const base = baseUrl.replace(/\/+$/, '')
-        dispatcher.subscribe('SoundCommand', (msg) =>
-            this._handle(msg, `${base}/cache/open/${encodeURIComponent(msg.payload.file_id)}`)
+        dispatcher.subscribe('SoundCommand', (msg) => {
+            if (msg.message_type.endsWith('SystemSoundCommand')) return Promise.resolve()
+            return this._handle(msg, soundUrl(base, msg))
+        })
+        dispatcher.subscribe('SystemSoundCommand', (msg) => this._handle(msg, soundUrl(base, msg)))
+    }
+
+    private _interrupt(): void {
+        if (this.currentMsg === null) return
+        const oldMsg = this.currentMsg
+        this.currentMsg = null
+        if (this.currentSource !== null) {
+            this.currentSource.onended = null
+            this.currentSource.stop()
+            this.currentSource = null
+        }
+        if (this.silentTimeoutId !== null) {
+            clearTimeout(this.silentTimeoutId)
+            this.silentTimeoutId = null
+        }
+        this.dispatcher.push(
+            new Message('SoundConfirmation', new Envelop(), { terminated: true })
+                .asConfirmationFor(oldMsg)
         )
-        dispatcher.subscribe('SystemSoundCommand', (msg) =>
-            this._handle(msg, `${base}/frontend/system-sounds/${encodeURIComponent(msg.payload.sound_name)}.wav`)
+    }
+
+    private _confirm(msg: Message, terminated: boolean, error?: string): void {
+        this.dispatcher.push(
+            new Message('SoundConfirmation', new Envelop(), {
+                terminated,
+                error: error ?? null,
+            }).asConfirmationFor(msg)
         )
     }
 
     private async _handle(msg: Message, url: string): Promise<void> {
-        // Interrupt currently playing audio
-        if (this.currentSource !== null) {
-            const oldSource = this.currentSource
-            const oldMsg = this.currentMsg!
-            this.currentSource = null
-            this.currentMsg = null
-            oldSource.onended = null  // prevent natural-end handler from firing
-            oldSource.stop()
-            this.dispatcher.push(
-                new Message('SoundConfirmation', new Envelop(), { terminated: true })
-                    .asConfirmationFor(oldMsg)
-            )
-        }
+        this._interrupt()
 
         const gen = ++this.generation
 
-        // Fetch audio bytes
         let arrayBuffer: ArrayBuffer
         try {
             const resp = await fetch(url)
             if (!resp.ok) {
-                console.error(`[RealAudio] fetch failed ${url}: ${resp.status}`)
+                const error = `fetch failed ${url}: ${resp.status}`
+                console.error(`[RealAudio] ${error}`)
+                if (gen === this.generation) this._confirm(msg, false, error)
                 return
             }
             arrayBuffer = await resp.arrayBuffer()
         } catch (e) {
-            console.error('[RealAudio] fetch error:', e)
+            const error = `fetch error: ${e}`
+            console.error(`[RealAudio] ${error}`)
+            if (gen === this.generation) this._confirm(msg, false, error)
             return
         }
 
-        // Bail if another command arrived while we were fetching
         if (gen !== this.generation) return
 
-        // Decode
+        this.currentMsg = msg
+
+        if (this.silent) {
+            let duration: number
+            try {
+                duration = wavDurationSeconds(arrayBuffer)
+            } catch (e) {
+                const error = `wavDurationSeconds failed: ${e}`
+                console.error(`[RealAudio] ${error}`)
+                this.currentMsg = null
+                this._confirm(msg, false, error)
+                return
+            }
+            this.silentTimeoutId = setTimeout(() => {
+                if (this.currentMsg === msg) {
+                    this.currentMsg = null
+                    this.silentTimeoutId = null
+                    this._confirm(msg, false)
+                }
+            }, duration * 1000 / this.acceleration)
+            return
+        }
+
         let audioBuffer: AudioBuffer
         try {
-            audioBuffer = await this.context.decodeAudioData(arrayBuffer)
+            audioBuffer = await this.context!.decodeAudioData(arrayBuffer)
         } catch (e) {
-            console.error('[RealAudio] decode error:', e)
+            const error = `decode error: ${e}`
+            console.error(`[RealAudio] ${error}`)
+            if (gen === this.generation) {
+                this.currentMsg = null
+                this._confirm(msg, false, error)
+            }
             return
         }
 
         if (gen !== this.generation) return
 
-        if (this.context.state === 'suspended') {
-            await this.context.resume()
+        if (this.context!.state === 'suspended') {
+            await this.context!.resume()
         }
 
-        const source = this.context.createBufferSource()
+        const source = this.context!.createBufferSource()
         source.buffer = audioBuffer
-        source.connect(this.context.destination)
+        source.connect(this.context!.destination)
         this.currentSource = source
-        this.currentMsg = msg
 
         source.onended = () => {
             if (this.currentMsg === msg) {
                 this.currentSource = null
                 this.currentMsg = null
-                this.dispatcher.push(
-                    new Message('SoundConfirmation', new Envelop(), { terminated: false })
-                        .asConfirmationFor(msg)
-                )
+                this._confirm(msg, false)
             }
         }
 

@@ -25,14 +25,26 @@ function parseWav(buffer: ArrayBuffer): { sampleRate: number, samples: Int16Arra
 export class FakeInput implements IAudioInput {
     private frameSize: number
     private sampleRate: number
+    private acceleration: number
     private currentBuffer: Float32Array | null = null
     private currentPosition = 0
     private dispatcher?: Dispatcher
     private pendingConfirmation: Message | null = null
+    private pendingStartedEvent: string | null = null
+    private startRealTimeMs: number | null = null
+    private startMicTimeMs: number | null = null
+    private samplesProduced = 0
 
-    constructor({ sampleRate, frameSize = 512, dispatcher, baseUrl }: { sampleRate: number, frameSize?: number, dispatcher?: Dispatcher, baseUrl?: string }) {
+    constructor({ sampleRate, frameSize = 512, acceleration = 1, dispatcher, baseUrl }: {
+        sampleRate: number,
+        frameSize?: number,
+        acceleration?: number,
+        dispatcher?: Dispatcher,
+        baseUrl?: string,
+    }) {
         this.sampleRate = sampleRate
         this.frameSize = frameSize
+        this.acceleration = acceleration
         this.dispatcher = dispatcher
 
         if (dispatcher && baseUrl) {
@@ -45,6 +57,7 @@ export class FakeInput implements IAudioInput {
                     return
                 }
                 this.pendingConfirmation = msg
+                this.pendingStartedEvent = fileId
                 this.setSample(await resp.arrayBuffer())
             })
         }
@@ -71,10 +84,29 @@ export class FakeInput implements IAudioInput {
 
     stop(): void {}
 
-    read(): MicData {
-        if (this.isBufferEmpty()) {
-            return { sampleRate: this.sampleRate, buffer: new Float32Array(this.frameSize) }
+    read(): MicData | null {
+        const now = Date.now()
+        if (this.startRealTimeMs === null) {
+            this.startRealTimeMs = now
+            this.startMicTimeMs = now
         }
+
+        const elapsedRealSec = (now - this.startRealTimeMs) / 1000
+        const samplesExpected = Math.floor(elapsedRealSec * this.sampleRate * this.acceleration)
+        if (samplesExpected - this.samplesProduced < this.frameSize) return null
+
+        const micTimestamp = this.startMicTimeMs! + (this.samplesProduced / this.sampleRate) * 1000
+        this.samplesProduced += this.frameSize
+
+        if (this.isBufferEmpty()) {
+            return { sampleRate: this.sampleRate, buffer: new Float32Array(this.frameSize), micTimestamp }
+        }
+
+        if (this.pendingStartedEvent !== null && this.dispatcher) {
+            this.dispatcher.push(new Message('SoundInjectionStartedEvent', new Envelop(), { file_id: this.pendingStartedEvent }))
+            this.pendingStartedEvent = null
+        }
+
         const end = Math.min(this.currentPosition + this.frameSize, this.currentBuffer!.length)
         const chunk = this.currentBuffer!.slice(this.currentPosition, end)
         this.currentPosition += this.frameSize
@@ -89,9 +121,9 @@ export class FakeInput implements IAudioInput {
         if (chunk.length < this.frameSize) {
             const padded = new Float32Array(this.frameSize)
             padded.set(chunk)
-            return { sampleRate: this.sampleRate, buffer: padded }
+            return { sampleRate: this.sampleRate, buffer: padded, micTimestamp }
         }
-        return { sampleRate: this.sampleRate, buffer: chunk }
+        return { sampleRate: this.sampleRate, buffer: chunk, micTimestamp }
     }
 
     isRunning(): boolean {
