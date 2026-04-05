@@ -3,6 +3,7 @@ from pathlib import Path
 from .paraphrase_case import ParaphraseCase
 from .llm_tools import BulletPointDivider, PromptTaskBuilder
 from avatar.daemon import ParaphraseRecord
+import traceback
 
 
 class ParaphraseCache(ICache[list[ParaphraseRecord]]):
@@ -31,13 +32,14 @@ class ParaphrasePipeline:
         for case, option in cache.llm.read_cases_and_options():
             try:
                 result.append(ParaphrasePipeline.case_and_option_to_record(case, option))
-            except:
+            except Exception as e:
                 logger.log(f"Option `{option}` failed")
+                logger.log(traceback.format_exc())
 
         cache.write_result(result)
 
     @staticmethod
-    def clean_option(self, s):
+    def clean_option(s):
         while s[0] in EXCLUDE_SYMBOLS:
             s = s[1:]
         while s[-1] in EXCLUDE_SYMBOLS:

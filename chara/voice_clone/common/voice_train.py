@@ -3,7 +3,7 @@ import shutil
 
 from chara.common import ICache, FolderCache, ListCache, BrainBoxCache, logger, BrainBoxUnit
 from chara.common.tools import Wav
-from typing import Iterable
+from typing import Iterable, Callable
 
 from abc import ABC, abstractmethod
 from typing import Any
@@ -67,13 +67,23 @@ class VoiceTrain(ABC):
         result = '/'.join(hash)
         return md5(result.encode()).hexdigest()[:24]
 
+    def get_metadata_extensions(self) -> tuple[str,...]:
+        return ()
+
+    def aggregate_metadata(self, data: list[dict]) -> dict:
+        return {}
 
     @abstractmethod
-    def create_train_task_and_reference(self, samples: list[Path], metadata: VoiceTrainMetadata|None = None) -> tuple[BrainBox.ITask, VoiceModel]:
+    def create_train_task_and_reference(
+            self,
+            samples: list[Path],
+            samples_metadata: list[dict],
+            metadata: VoiceTrainMetadata|None = None
+    ) -> tuple[BrainBox.ITask, VoiceModel]:
         pass
 
 
-    def recode_in_proper_format(self, file: Path, folder: Path):
+    def recode_in_proper_format(self, file: Path, folder: Path) -> str:
         target_path = folder/(file.name.split('.')[0]+'.wav')
         subprocess.call([
             'ffmpeg',
@@ -84,13 +94,18 @@ class VoiceTrain(ABC):
         ])
         if not target_path.is_file():
             raise ValueError(f"Conversion failed on file {file}.")
+        return target_path.name
 
     @abstractmethod
     def requires_train_single_file_with_extension(self) -> str | None:
         pass
 
     @staticmethod
-    def _preprocess(cache: VoiceTrainPreprocessingCache, trainer: 'VoiceTrain', source: Path):
+    def _preprocess(
+            cache: VoiceTrainPreprocessingCache,
+            trainer: 'VoiceTrain',
+            source: Path,
+        ):
         @logger.phase(cache.recoded)
         def _():
             if source.is_file():
@@ -102,7 +117,14 @@ class VoiceTrain(ABC):
             os.makedirs(cache.recoded.working_folder, exist_ok=True)
             for file in files:
                 if file.name.endswith('.wav') or file.name.endswith('.mp3') or file.name.endswith('.aac'):
-                    trainer.recode_in_proper_format(file, cache.recoded.working_folder)
+                    name = trainer.recode_in_proper_format(file, cache.recoded.working_folder)
+                    metadata = dict()
+                    for extension in trainer.get_metadata_extensions():
+                        metadata_path = Path(str(file)+'.'+extension)
+                        if not metadata_path.is_file():
+                            raise ValueError(f"Missing mandatory metadata extension {extension} for file {file}")
+                        metadata[extension] = metadata_path.read_text()
+                    cache.recoded.write_metadata(name, metadata)
             cache.recoded.finalize()
 
         @logger.phase(cache.train_samples)
@@ -110,13 +132,21 @@ class VoiceTrain(ABC):
             os.makedirs(cache.train_samples.working_folder, exist_ok=True)
             ex = trainer.requires_train_single_file_with_extension()
             if ex is not None and len(cache.recoded.read_paths()) > 1:
+                paths = []
+                metadatas = []
+                for path in cache.recoded.read_paths():
+                    paths.append(path)
+                    metadatas.append(cache.recoded.read_metadata(path.name))
+
                 Wav.concat_with_ffmpeg(
                     cache.recoded.read_paths(),
                     cache.train_samples.working_folder/f'sample.{ex}'
                 )
+                aggregated_metadatas = trainer.aggregate_metadata(metadatas)
+                cache.train_samples.write_metadata('sample.'+ex, aggregated_metadatas)
             else:
-                for path in cache.recoded.read_paths():
-                    shutil.copy(path, cache.train_samples.working_folder/path.name)
+                for file in cache.recoded.read_files():
+                    cache.train_samples.write(file)
             cache.train_samples.finalize()
 
         cache.finalize()
@@ -147,14 +177,22 @@ class VoiceTrain(ABC):
                 def _():
                     VoiceTrain._preprocess(subcache, trainer, source_path)
 
-                train_samples = subcache.train_samples.read_paths()
+                train_samples = []
+                metadatas = []
+
+                for sample in subcache.train_samples.read_paths():
+                    train_samples.append(sample)
+                    metadatas.append(subcache.train_samples.read_metadata(sample.name))
 
                 task, model = trainer.create_train_task_and_reference(
                     train_samples,
+                    metadatas,
                     VoiceTrainMetadata(original_samples_path=source_path)
                 )
                 tasks.append(task)
                 models.append(model)
+
+        cache.preprocessing.finalize()
 
         @logger.phase(cache.training)
         def _():

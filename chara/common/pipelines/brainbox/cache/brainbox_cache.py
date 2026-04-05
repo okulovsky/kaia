@@ -61,6 +61,16 @@ class BrainBoxCache(Generic[TCase, TOption], ICache[None]):
         return self.files.read_file(option)
 
 
+    def _read_errors(self):
+        for case in self.result.read():
+            if case.options is None:
+                yield case
+
+    def read_errors(self) -> Queryable[BrainBoxUnitResultItem[TCase, TOption]]:
+        return Queryable(self._read_errors())
+
+
+
 
 
 

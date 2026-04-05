@@ -62,7 +62,7 @@ class UtteranceParaphrasePipelineTestCase(TestCase):
                     pipe = UtteranceParaphrasePipeline(buider, first_run, 2, 1)
                     pipe(cache)
 
-                    stats = cache.stats.read()
+                    stats = cache.stats_after.read()
                     self.check_stats(stats, 0, 0, 0, 0)
 
                 state = State(None, None, None, 'en')

@@ -20,7 +20,7 @@ def _default_builder(x):
 
 class BrainBoxUnit(Generic[TCase, TOption]):
     def __init__(self,
-                 task_builder: Callable[[TCase], BrainBox.ITask]|None = None,
+                 task_builder: Callable[[TCase], BrainBox.Task]|None = None,
                  merger: Callable[[TCase, Any], TOption] | None = None,
                  divider: Callable[[Any], list] | None = None,
                  options_as_files: bool = False,
@@ -33,7 +33,7 @@ class BrainBoxUnit(Generic[TCase, TOption]):
     def _match_tasks(self,
                      cases,
                      brainbox_collective_result: dict,
-                     task_objects: list[BrainBox.ITask],
+                     task_objects: list[BrainBox.Task],
                      stats: BrainBoxStats) -> Iterable[BrainBoxUnitResultItem]:
         index_to_result = {}
         for item in brainbox_collective_result:
@@ -59,6 +59,7 @@ class BrainBoxUnit(Generic[TCase, TOption]):
         except Exception as e:
             merge.divider_error = e
             stats.cases_with_divider_errors += 1
+            logger.error(e)
             return
 
         stats.cases_success += 1
@@ -73,6 +74,7 @@ class BrainBoxUnit(Generic[TCase, TOption]):
             except Exception as exception:
                 option.merge_error = exception
                 stats.options_with_errors += 1
+                logger.error(exception)
             merge.options.append(option)
 
 
@@ -125,6 +127,7 @@ class BrainBoxUnit(Generic[TCase, TOption]):
             with cache.result.session():
                 for merge in self._match_tasks(cases_2, result, tasks, stats):
                     cache.result.write(merge)
+
             logger.log(stats)
 
         if self.options_as_files:

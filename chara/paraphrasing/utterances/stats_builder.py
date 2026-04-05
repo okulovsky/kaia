@@ -79,7 +79,7 @@ def _fill_statistics(
             continue
         if 'seen' not in fb:
             continue
-        fp_to_stat[fp].seen = fb['seen']
+        fp_to_stat[fp].seen += fb['seen']
 
     stats = list(fp_to_stat.values())
     return stats
