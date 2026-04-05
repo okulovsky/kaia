@@ -8,7 +8,7 @@ from .common import AvatarService, InitializationEvent
 
 @dataclass
 class BrainBoxServiceCommand(IMessage):
-    task: BrainBox.ITask
+    task: BrainBox.Task
     metadata: Any = None
 
 TResult = TypeVar("TResult")
@@ -25,15 +25,10 @@ class BrainBoxService(AvatarService):
     Confirmation = BrainBoxServiceConfirmation
 
     def __init__(self,
-                 api: Union[BrainBox.Api, Callable],
+                 api: BrainBox.Api,
                  setup: ControllersSetup|None = None
                  ):
-        self.api: BrainBox.Api|None = None
-        if isinstance(api, BrainBox.Api):
-            self.api: BrainBox.Api = api
-            self.api_call = api.execute
-        else:
-            self.api_call = api
+        self.api = api
         self.setup = setup
 
     def requires_brainbox(self):
@@ -42,7 +37,7 @@ class BrainBoxService(AvatarService):
     @message_handler
     def execute(self, input: BrainBoxServiceCommand) -> BrainBoxServiceConfirmation:
         try:
-            result = self.api_call(input.task)
+            result = self.api.execute(input.task)
             reply: IMessage = BrainBoxServiceConfirmation(result, None)
             return reply.as_confirmation_for(input)
         except Exception as ex:
@@ -52,4 +47,4 @@ class BrainBoxService(AvatarService):
     @message_handler
     def initialize(self, initialization: InitializationEvent) -> None:
         if self.api is not None and self.setup is not None:
-            self.api.controller_api.setup(self.setup)
+            self.api.controllers.setup(self.setup)

@@ -1,7 +1,7 @@
 import queue
 import threading
 from typing import Iterable
-from ..stream import StreamClient, IMessage
+from ..core import AvatarClient, IMessage
 from ..rules import Rule
 from .rule_processor import RuleProcessor
 from .processing_event import ProcessingEvent
@@ -10,10 +10,10 @@ from pathlib import Path
 
 class RuleGroupProcessor:
     def __init__(self,
-                 client: StreamClient,
+                 client: AvatarClient,
                  rules: Iterable[Rule],
                  event_queue: queue.Queue,
-                 working_folder: Path|None
+                 resources_folder: Path|None
                  ):
         self.rules = tuple(rules)
         host = self.rules[0].host_object
@@ -25,7 +25,7 @@ class RuleGroupProcessor:
         self._queue = queue.Queue()
         self._event_queue = event_queue
         self._stop_event = threading.Event()
-        self.working_folder = working_folder
+        self.resources_folder = resources_folder
 
 
     def put(self, message: IMessage):
@@ -38,8 +38,8 @@ class RuleGroupProcessor:
     def run(self):
         if isinstance(self.host_object, IService):
             self.host_object.set_client(self.client)
-            if self.working_folder is not None:
-                self.host_object.set_resources_folder(self.working_folder/type(self.host_object).__name__.split('.')[-1])
+            if self.resources_folder is not None:
+                self.host_object.set_resources_folder(self.resources_folder/type(self.host_object).__name__.split('.')[-1])
         while not self._stop_event.is_set():
             message: IMessage = self._queue.get()
 

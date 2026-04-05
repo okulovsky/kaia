@@ -1,35 +1,33 @@
 from unittest import TestCase
-from avatar.daemon.common.known_messages import SoundCommand
 from avatar.daemon import MockSoundService, BrainBoxService, TTSService, Confirmation
-from avatar.messaging import AvatarDaemon, TestStream, ThreadCollection
-from brainbox import BrainBox
+from avatar.daemon.tts_service import TTSSettings
+from avatar.messaging import AvatarDaemon, AvatarClient
+from brainbox import BrainBox, ISelfManagingDecider, File
+from brainbox.deciders import Piper
 
+class PiperMock(ISelfManagingDecider):
+    def get_name(self):
+        return 'Piper'
 
-def brain_box_mock(task: BrainBox.ExtendedTask):
-    if task.task.decider != 'Mock':
-        raise ValueError("Mock task is expected")
-    text = task.task.arguments['text']
-    return SoundCommand('FILE: ' + text, text)
+    def voiceover(self, text: str, **kwargs):
+        return File(text + '.wav', text.encode('utf-8'))
 
+class PiperTaskFactory(TTSService.TaskFactory):
+    def create_task(self, s: str, info: TTSSettings) -> BrainBox.Task:
+        return Piper.new_task().voiceover(s)
 
 class VoiceoverServiceTestCase(TestCase):
     def test_voiceover(self):
-        voiceover_service = TTSService(TTSService.MockTaskFactory())
-        brainbox_service = BrainBoxService(brain_box_mock)
-        sound_processor = MockSoundService()
+        with BrainBox.Api.test([PiperMock()]) as api:
+            voiceover_service = TTSService(PiperTaskFactory())
+            brainbox_service = BrainBoxService(api)
+            sound_processor = MockSoundService()
 
-        client = TestStream().create_client()
-        client.put(TTSService.Command(('a','b'), TTSService.Command.Settings('x','y')))
-        app = AvatarDaemon(client)
-        app.rules.bind(voiceover_service)
-        app.rules.bind(brainbox_service)
-        app.rules.bind(sound_processor)
-        result = app.debug_and_stop_by_message_type(Confirmation)
-        collection = ThreadCollection()
-        collection.pull_changes(result.messages)
-        topics = collection.get_top_topics()
-        self.assertEqual(1, len(topics))
-        topics[0].print()
-
-
-
+            client = AvatarClient.default()
+            client.push(TTSService.Command(('a', 'b'), TTSService.Command.Settings('x', 'y')))
+            proc = AvatarDaemon(client)
+            proc.rules.bind(voiceover_service)
+            proc.rules.bind(brainbox_service)
+            proc.rules.bind(sound_processor)
+            result = proc.debug_and_stop_by_message_type(Confirmation)
+            self.assertEqual(1, len([m for m in result.messages if isinstance(m, Confirmation)]))

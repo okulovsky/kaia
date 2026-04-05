@@ -2,6 +2,7 @@ import unittest
 from dataclasses import dataclass
 from avatar.messaging import *
 
+
 @dataclass
 class In(IMessage):
     pass
@@ -13,8 +14,8 @@ class Out(IMessage):
 
 class TestWrongOutputType(unittest.TestCase):
     def check(self, function):
-        client = TestStream().create_client()
-        client.put(In())
+        client = AvatarClient.default()
+        client.push(In())
 
         processor = AvatarDaemon(client)
         processor.rules.bind(function)
@@ -42,12 +43,8 @@ class TestWrongOutputType(unittest.TestCase):
         self.assertEqual(2, result[2].content)
 
     def test_no_messages(self):
-        def no_messages(_:In):
+        def no_messages(_: In):
             return ()
         result = self.check(no_messages)
         self.assertEqual(1, len(result))
         self.assertIsInstance(result[0], In)
-
-
-
-

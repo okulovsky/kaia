@@ -7,8 +7,7 @@ from grammatron import Template, Utterance
 from avatar.daemon.common.content_manager import NewContentStrategy
 from avatar.daemon.common import TextCommand, InitializationEvent
 from foundation_kaia.misc import Loc
-from avatar.server import AvatarApi, AvatarServerSettings, MessagingComponent, AvatarStream
-from avatar.server.components import ResourcesComponent
+from avatar.app import AvatarApi
 
 
 class ParaphraseTestCase(TestCase):
@@ -35,19 +34,16 @@ class ParaphraseTestCase(TestCase):
 
 
         with Loc.create_test_folder() as folder:
-            settings = AvatarServerSettings((
-                MessagingComponent(),
-                ResourcesComponent(folder)
-            ))
-            with AvatarApi.Test(settings) as api:
-                api.resources(ParaphraseService).upload(
+            with AvatarApi.test(folder) as api:
+                api.resources.upload(
+                    ParaphraseService,
+                    "paraphrases_000.pkl",
                     pickle.dumps(records),
-                    "paraphrases_000.pkl"
                 )
 
                 state = State(character='character_0', language='en')
-                stream = AvatarStream(api)
-                proc = AvatarDaemon(stream.create_client(), working_folder=folder)
+                client = api.create_client()
+                proc = AvatarDaemon(client.clone(), resources_folder=folder/'resources')
                 proc.rules.bind(
                     StateToUtterancesApplicationService(state),
                 )
@@ -58,14 +54,14 @@ class ParaphraseTestCase(TestCase):
                 )
                 proc.run_in_thread()
 
-                client = stream.create_client().scroll_to_end()
-                api.messaging.add('default', InitializationEvent())
-                api.messaging.add('default', TextCommand(templates[0].utter()))
+                client = client.scroll_to_end()
+                client.push(InitializationEvent())
+                client.push(TextCommand(templates[0].utter()))
                 result = client.query(5).where(lambda z: isinstance(z, InternalTextCommand)).take(2).to_list()
 
                 self.assertEqual('Test_1/character_0/0.', result[-1].get_text(True))
 
-                self.assertTrue(api.resources(ParaphraseService).is_file('paraphrases-feedback.json'))
+                self.assertTrue(api.resources.is_file(ParaphraseService, 'paraphrases-feedback.json'))
                 self.assertTrue(folder/'ParaphrasesService/paraphrases-feedback.json')
 
 

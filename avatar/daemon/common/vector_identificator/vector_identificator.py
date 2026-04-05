@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from brainbox.framework import FileLike
+from foundation_kaia.marshalling_2 import FileLike
 from typing import Callable
 from yo_fluq import FileIO
 import numpy as np
@@ -23,7 +23,7 @@ class VectorIdentificator:
     def __init__(self,
                  folder: Path,
                  strategy: IStrategy,
-                 sample_to_vector: Callable[[FileLike.Type], list[float]],
+                 sample_to_vector: Callable[[FileLike], list[float]],
                  content_retriever: Callable[[str], bytes]
                  ):
         self.folder = folder
@@ -65,7 +65,7 @@ class VectorIdentificator:
         self.base = base
         self.df = pd.DataFrame(array, index=classes)
 
-    def analyze(self, file: FileLike.Type) -> str|None:
+    def analyze(self, file: FileLike) -> str|None:
         if self.df is None:
             return None
         vector = self.sample_to_vector(file)

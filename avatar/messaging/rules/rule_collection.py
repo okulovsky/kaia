@@ -4,7 +4,7 @@ from .rule import Rule
 from .binding_settings import BindingSettings
 from .service import IService
 from .rule_creator import RuleCreator, MessageHandlerAttributes, SyncCallSpec
-from ..stream import IMessage, Confirmation
+from ..core import IMessage, Confirmation
 
 class MessageHandlerWithCall():
     def __init__(self):

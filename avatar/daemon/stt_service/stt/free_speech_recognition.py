@@ -1,12 +1,11 @@
 from grammatron import TemplateBase, AStarParser
-from brainbox import IPostprocessor
-from .recognition_setup import STTConfirmation
+from .recognition_setup import STTConfirmation, IPostprocessor
 
 class FreeSpeechPostprocessor(IPostprocessor):
     def __init__(self, template: TemplateBase|None):
         self.template = template
 
-    def postprocess(self, result, api):
+    def postprocess(self, result):
         try:
             if self.template is None:
                 recognized = result

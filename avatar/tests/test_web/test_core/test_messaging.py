@@ -1,0 +1,107 @@
+from avatar.utils.web_test_environment import WebTestEnvironmentFactory
+from unittest import TestCase
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from dataclasses import dataclass
+from avatar.messaging import IMessage, Confirmation
+
+
+@dataclass
+class TestInput(IMessage):
+    field: str = ''
+
+@dataclass
+class TestReply(IMessage):
+    pass
+
+class MessagingTestCase(TestCase):
+    def test_messaging(self):
+        with WebTestEnvironmentFactory(HTML, aliases=dict(TestReply=TestReply, Confirmation=Confirmation)) as env:
+            env.client.push(TestInput())
+
+            # 3) Click the \"Fetch & Process\" button
+            process_btn = env.driver.find_element(By.ID, "processBtn")
+            process_btn.click()
+
+            # 4) Wait until the log shows that messages were fetched
+            WebDriverWait(env.driver, 1).until(
+                EC.text_to_be_present_in_element(
+                    (By.ID, "log"),
+                    "Sent confirmation"
+                )
+            )
+
+            messages = env.client.pull()
+            self.assertIsInstance(messages[0], TestInput)
+            self.assertIsInstance(messages[1], TestReply)
+            self.assertEqual(messages[0].envelop.id, messages[1].envelop.reply_to)
+            self.assertEqual('console', messages[1].envelop.publisher)
+
+            self.assertIsInstance(messages[2], Confirmation)
+            self.assertEqual((messages[0].envelop.id,), messages[2].envelop.confirmation_for)
+            self.assertEqual('console', messages[2].envelop.publisher)
+
+
+
+
+HTML = '''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TestInput Processor</title>
+</head>
+<body>
+  <h1>TestInput Processor</h1>
+  <button id="processBtn">Fetch & Process</button>
+  <div id="log"></div>
+
+  <script type="module">
+    import { AvatarClient, Message } from '/frontend/scripts/index.js';
+
+    const processBtn = document.getElementById('processBtn');
+    const logContainer = document.getElementById('log');
+
+    /** Append a message to the log area */
+    function logMessage(text) {
+      const p = document.createElement('p');
+      p.textContent = text;
+      logContainer.appendChild(p);
+      console.log(text);
+    }
+
+    processBtn.addEventListener('click', async () => {
+      logContainer.innerHTML = '';
+      const client = new AvatarClient({baseUrl: window.location.origin});
+
+      try {
+        const messages = await client.pull(0);
+        logMessage(`Fetched ${messages.length} messages.`);
+
+        for (const msg of messages) {
+          logMessage(`Message: type=${msg.message_type}, id=${msg.envelop.id}`);
+          if (msg.message_type.endsWith('.TestInput')) {
+            // Create and send a reply message
+            const reply = new Message('TestReply');
+            reply.asReplyTo(msg);
+            await client.push(reply);
+            logMessage(`Sent reply to ${msg.envelop.id}`);
+
+            // Create and send a confirmation message
+            const confirmation = new Message('Confirmation');
+            confirmation.asConfirmationFor(msg);
+            await client.push(confirmation);
+            logMessage(`Sent confirmation for ${msg.envelop.id}`);
+          }
+        }
+      } catch (error) {
+        console.error(error);
+        logMessage(`Error: ${error.message}\n${error.stack}`);
+      }
+    });
+  </script>
+</body>
+</html>
+'''

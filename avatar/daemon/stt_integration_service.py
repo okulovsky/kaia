@@ -18,7 +18,7 @@ class STTIntegrationService(AvatarService):
             file = event.file_id,
             language = self.state.language
         ).as_reply_to(event)
-        self.client.put(command)
+        self.client.push(command)
 
         if self.enable_speaker_identification:
             id_command = SpeakerIdentificationService.Command(event.file_id)

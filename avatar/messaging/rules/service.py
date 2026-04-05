@@ -1,9 +1,9 @@
-from ..stream import StreamClient
+from ..core import AvatarClient
 from .binding_settings import BindingSettings
 from pathlib import Path
 
 class IService:
-    def set_client(self, client: StreamClient):
+    def set_client(self, client: AvatarClient):
         self._client = client
 
     def set_resources_folder(self, folder: Path):
@@ -11,7 +11,7 @@ class IService:
 
 
     @property
-    def client(self) -> StreamClient:
+    def client(self) -> AvatarClient:
         return self._client
 
     @property

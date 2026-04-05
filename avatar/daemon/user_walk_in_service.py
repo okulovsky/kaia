@@ -3,7 +3,7 @@ from .common.vector_identificator import VectorIdentificator, IStrategy
 from .brainbox_service import BrainBoxService
 from brainbox import BrainBox
 from brainbox.deciders import InsightFace
-from ..server import AvatarApi
+from ..app import AvatarApi
 from dataclasses import dataclass
 from loguru import logger
 
@@ -38,7 +38,7 @@ class UserWalkInService(AvatarService):
             self.resources_folder,
             self.identification_strategy,
             self.image_to_vector,
-            self.api.file_cache.open
+            self.api.cache.read
         )
         self.identificator.initialize()
 

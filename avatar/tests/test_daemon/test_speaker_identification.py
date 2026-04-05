@@ -1,10 +1,8 @@
 import os
-import time
 from unittest import TestCase
 from avatar.messaging import *
 from avatar.daemon import SpeakerIdentificationService, BrainBoxService, State, SoundEvent, InitializationEvent
-from avatar.server import AvatarApi, AvatarStream, AvatarServerSettings, MessagingComponent
-from avatar.server.components import FileCacheComponent
+from avatar.app import AvatarApi
 from avatar.daemon.common.vector_identificator import BestOfStrategy
 from yo_fluq import Query
 from foundation_kaia.misc import Loc
@@ -30,14 +28,14 @@ def prepare_folder(folder):
 
 class SpeakerIdentificationTestCase(TestCase):
     def test_speaker_identification(self):
-        with AvatarApi.Test() as api:
+        with AvatarApi.test() as api:
             with Loc.create_test_folder() as folder:
                 prepare_folder(folder)
 
                 service = SpeakerIdentificationService(api, BestOfStrategy(4))
                 service.set_resources_folder(folder)
                 service.sample_to_vector = make_sample_to_vector
-                client = AvatarStream(api).create_client()
+                client = api.create_client()
                 proc = AvatarDaemon(client.clone())
                 proc.rules.bind(service)
                 proc.debug_and_stop_by_count(1, InitializationEvent())
@@ -53,23 +51,20 @@ class SpeakerIdentificationTestCase(TestCase):
 
     def test_train(self):
         with Loc.create_test_folder() as avatar_cache_folder:
-            settings = AvatarServerSettings((
-                MessagingComponent(avatar_cache_folder/'db'),
-                FileCacheComponent(avatar_cache_folder)
-            ))
-            with AvatarApi.Test(settings) as api:
+            with AvatarApi.test(avatar_cache_folder) as api:
                 with Loc.create_test_folder() as folder:
                     prepare_folder(folder)
 
                     service = SpeakerIdentificationService(api, BestOfStrategy(4))
                     service.sample_to_vector = make_sample_to_vector
                     service.set_resources_folder(folder)
-                    client = AvatarStream(api).create_client()
+                    client = api.create_client()
                     proc = AvatarDaemon(client.clone())
                     proc.rules.bind(service)
                     proc.debug_and_stop_by_count(1, InitializationEvent())
 
-                    file_id = api.file_cache.upload(b'','0_4')
+                    api.cache.upload('0_4', b'')
+                    file_id = '0_4'
                     proc.debug_and_stop_by_count(1, SpeakerIdentificationService.Train(file_id, 'A'))
 
                     self.assertIn('0_4', service.vector_identificator.base['A'])
