@@ -5,6 +5,7 @@ import mimetypes
 import requests
 from ..common import ApiError
 from uuid import uuid4
+import traceback
 
 class FileCacheApi:
     TIMEOUT = 60  # seconds
@@ -43,11 +44,16 @@ class FileCacheApi:
         ApiError.check(resp)
         return filepath
 
-    def open(self, filepath: str) -> bytes:
+    def read(self, filepath: str) -> bytes:
         url = self._url_file(filepath)
         resp = requests.get(url, timeout=self.TIMEOUT)
         ApiError.check(resp)
         return resp.content
+
+    def open(self, filepath: str) -> bytes:
+        print("`Open` method will be repurposed, adjust your code")
+        print("\n".join(traceback.format_stack()))
+        return self.read(filepath)
 
     def download(self, filepath: str, dest_path: Union[str, Path]) -> Path:
         url = self._url_file(filepath)
@@ -69,14 +75,14 @@ class FileCacheApi:
     def is_file(self, filepath: str) -> bool:
         url = self._url_file(filepath)
         resp = requests.head(url, timeout=self.TIMEOUT)
-        if resp.status_code == 404:
+        if resp.status_code == 422:
             return False
         elif resp.status_code == 200:
             return True
         else:
             ApiError.check(resp)
 
-    def list(self, path: str = '/', *, prefix: Optional[str] = None, suffix: Optional[str] = None, recursive: bool = False) -> list[str]|None:
+    def list(self, path: str = '/', *, prefix: Optional[str] = None, suffix: Optional[str] = None, recursive: bool = False, details: bool = False) -> list[str]|list[dict]|None:
         url = self._url_dir(path)
         params = {}
         if prefix is not None:
@@ -85,15 +91,17 @@ class FileCacheApi:
             params["suffix"] = suffix
         if recursive:
             params["recursive"] = "1"
+        if details:
+            params["details"] = "1"
         resp = requests.get(url, params=params, timeout=self.TIMEOUT)
-        if resp.status_code == 404:
+        if resp.status_code == 422:
             return None
         return ApiError.check(resp).json()
 
     def is_folder(self, filepath: str) -> bool:
         url = self._url_dir(filepath)
         resp = requests.head(url, timeout=self.TIMEOUT)
-        if resp.status_code == 404:
+        if resp.status_code == 422:
             return False
         elif resp.status_code == 200:
             return True

@@ -6,7 +6,12 @@ from pathlib import Path
 import subprocess
 import sys
 import os
-from yo_fluq import FileIO, Query
+
+
+def file_io_write_text(text, file):
+    with open(file, 'w', encoding='utf-8') as f:
+        f.write(text)
+
 
 @dataclass
 class Releaser:
@@ -41,7 +46,9 @@ class Releaser:
         if len(self.inner_dependencies) > 0:
             commands_pre.append('commands_pre =')
             for d in self.inner_dependencies:
-                location = Query.folder(Loc.temp_folder/f"pypi/{d}/dist/",'*.whl').single()
+                location = next(
+                    p for p in (Loc.temp_folder / f"pypi/{d}/dist/").glob("*.whl")
+                )
                 commands_pre.append(f'    pip install {location}')
 
         tox_file = TOX_FILE.format(directory = self.module_name, commands_pre = '\n'.join(commands_pre), pythons = ', '.join(self.tox_versions))
@@ -49,7 +56,7 @@ class Releaser:
         shutil.rmtree(folder, ignore_errors=True)
 
         shutil.copytree(self.root_folder/self.module_name, folder / self.module_name)
-        FileIO.write_text(self.fix_toml_for_tox(self.root_folder/self.module_name/ 'pyproject.toml'), folder/'pyproject.toml')
+        file_io_write_text(self.fix_toml_for_tox(self.root_folder/self.module_name/ 'pyproject.toml'), folder/'pyproject.toml')
 
         with open(folder / 'tox.ini', 'w') as stream:
             stream.write(tox_file)
@@ -91,14 +98,14 @@ class Releaser:
 
         if self.readme_md_generator is not None:
             doc = self.readme_md_generator()
-            FileIO.write_text(doc, src_folder/'README.md')
-            FileIO.write_text(doc, release_folder / 'README.md')
+            file_io_write_text(doc, src_folder/'README.md')
+            file_io_write_text(doc, release_folder / 'README.md')
         else:
             shutil.copyfile(src_folder/'README.md', release_folder/'README.md')
 
         toml = self.fix_toml_for_packaging(src_folder/'pyproject.toml')
-        FileIO.write_text(toml, src_folder/'pyproject.toml')
-        FileIO.write_text(toml, release_folder / 'pyproject.toml')
+        file_io_write_text(toml, src_folder/'pyproject.toml')
+        file_io_write_text(toml, release_folder / 'pyproject.toml')
 
         os.chdir(release_folder)
         subprocess.check_call([sys.executable, "-m", "build"])

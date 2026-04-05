@@ -41,7 +41,7 @@ class FileApiBlueprintTests(unittest.TestCase):
         self.api.upload(data, "new/new.bin")
         on_disk = (self.base_dir / "new" / "new.bin").read_bytes()
         self.assertEqual(data, on_disk)
-        got = self.api.open("new/new.bin")
+        got = self.api.read("new/new.bin")
         self.assertEqual(data, got)
 
     def test_upload_without_name(self):
@@ -49,7 +49,7 @@ class FileApiBlueprintTests(unittest.TestCase):
         result = self.api.upload(data)
         on_disk = (self.base_dir/result).read_bytes()
         self.assertEqual(data, on_disk)
-        self.assertEqual(data, self.api.open(result))
+        self.assertEqual(data, self.api.read(result))
 
 
     def test_download_to_path(self):
@@ -69,7 +69,7 @@ class FileApiBlueprintTests(unittest.TestCase):
         self.assertFalse((self.base_dir / "a" / "will_delete.bin").exists())
         with self.assertRaises(ApiError) as ctx:
             self.api.delete("a/will_delete.bin")
-        self.assertIn("404", str(ctx.exception))
+        self.assertIn("422", str(ctx.exception))
 
 
     def test_list_nonrecursive_and_filters(self):
@@ -92,10 +92,51 @@ class FileApiBlueprintTests(unittest.TestCase):
         self.assertIn("img_2.png", lst)
         self.assertIn(str(Path("sub") / "y.bin"), lst)
 
+    def test_list_details_nonrecursive(self):
+        lst = self.api.list("a", details=True)
+        self.assertIsInstance(lst, list)
+        self.assertEqual(len(lst), 3)
+        names = [e["name"] for e in lst]
+        self.assertCountEqual(names, ["x.txt", "img_1.png", "img_2.png"])
+        for entry in lst:
+            self.assertIn("name", entry)
+            self.assertIn("updated_at", entry)
+            self.assertIsInstance(entry["updated_at"], str)
+
+    def test_list_details_recursive(self):
+        lst = self.api.list("a", recursive=True, details=True)
+        names = [e["name"] for e in lst]
+        self.assertIn("x.txt", names)
+        self.assertIn("img_1.png", names)
+        self.assertIn(str(Path("sub") / "y.bin"), names)
+        for entry in lst:
+            self.assertIn("name", entry)
+            self.assertIn("updated_at", entry)
+
+    def test_list_details_with_filters(self):
+        lst = self.api.list("a", prefix="img_", details=True)
+        names = [e["name"] for e in lst]
+        self.assertCountEqual(names, ["img_1.png", "img_2.png"])
+
+        lst = self.api.list("a", suffix=".txt", details=True)
+        self.assertEqual(len(lst), 1)
+        self.assertEqual(lst[0]["name"], "x.txt")
+
     def test_head_dir_exists_and_404(self):
         ok = self.api.is_folder("a")
         self.assertTrue(ok)
         self.assertFalse(self.api.is_folder("no_such_dir"))
+
+    def test_list_root_directory(self):
+        # Test that listing the root directory works (regression test for 404 on /dir/)
+        lst = self.api.list("/")
+        self.assertIsInstance(lst, list)
+        # Root should contain at least "a" directory's files or subdirectories we created
+        # Since list only returns files (not dirs), we check it doesn't raise 404
+
+    def test_is_folder_root(self):
+        # Test that checking if root is a folder works
+        self.assertTrue(self.api.is_folder("/"))
 
 
 

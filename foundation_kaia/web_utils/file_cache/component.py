@@ -1,7 +1,8 @@
 from __future__ import annotations
 import os
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Iterable, List
+from typing import Iterable, List, Union
 from flask import abort, jsonify, request, send_file, Blueprint
 from ..common import BlueprintComponent
 
@@ -24,6 +25,13 @@ class FileCacheComponent(BlueprintComponent):
             "/file/<path:filepath>",
             view_func=self.file_resource,
             methods=["GET", "PUT", "DELETE", "HEAD"]
+        )
+
+        bp.add_url_rule(
+            "/dir/",
+            view_func=self.dir_resource,
+            defaults={'dirpath': ''},
+            methods=["GET", "HEAD"]
         )
 
         bp.add_url_rule(
@@ -59,7 +67,7 @@ class FileCacheComponent(BlueprintComponent):
 
         if request.method == "HEAD":
             if not path.is_file():
-                abort(404)
+                abort(422)
             resp = jsonify()
             resp.headers["Content-Length"] = path.stat().st_size
             resp.status_code = 200
@@ -67,7 +75,7 @@ class FileCacheComponent(BlueprintComponent):
 
         if request.method == "GET":
             if not path.is_file():
-                abort(404, description="File not found.")
+                abort(422, description="File not found.")
             return send_file(path, as_attachment=False, conditional=True)
 
         if request.method == "PUT":
@@ -83,7 +91,7 @@ class FileCacheComponent(BlueprintComponent):
 
         if request.method=='DELETE':
             if not path.is_file():
-                abort(404, description="File not found.")
+                abort(422, description="File not found.")
             path.unlink()
             return jsonify({"status": "ok"})
 
@@ -94,18 +102,19 @@ class FileCacheComponent(BlueprintComponent):
 
         if request.method == "HEAD":
             if not path.is_dir():
-                abort(404)
+                abort(422)
             return ("", 200)
 
         if request.method == "GET":
             if not path.is_dir():
-                abort(404, description="Directory not found.")
+                abort(422, description="Directory not found.")
 
             name_prefix = request.args.get("prefix")
             name_suffix = request.args.get("suffix")
             recursive = request.args.get("recursive", "0") in {"1", "true", "True", "yes"}
+            details = request.args.get("details", "0") in {"1", "true", "True", "yes"}
 
-            results: List[str] = []
+            results: List[Union[str, dict]] = []
             if recursive:
                 for root, _, files in os.walk(path):
                     for fn in files:
@@ -114,8 +123,15 @@ class FileCacheComponent(BlueprintComponent):
                         if name_suffix and not fn.endswith(name_suffix):
                             continue
                         abs_path = Path(root) / fn
-                        rel_to_dir = abs_path.relative_to(path)
-                        results.append(str(rel_to_dir))
+                        rel_to_dir = str(abs_path.relative_to(path))
+                        if details:
+                            mtime = abs_path.stat().st_mtime
+                            results.append(dict(
+                                name=rel_to_dir,
+                                updated_at=datetime.fromtimestamp(mtime, tz=timezone.utc).isoformat(),
+                            ))
+                        else:
+                            results.append(rel_to_dir)
             else:
                 for p in path.iterdir():
                     if p.is_file():
@@ -124,7 +140,15 @@ class FileCacheComponent(BlueprintComponent):
                             continue
                         if name_suffix and not fn.endswith(name_suffix):
                             continue
-                        results.append(fn)
+                        if details:
+                            mtime = p.stat().st_mtime
+                            results.append(dict(
+                                name=fn,
+                                updated_at=datetime.fromtimestamp(mtime, tz=timezone.utc).isoformat(),
+                            ))
+                        else:
+                            results.append(fn)
 
-            return jsonify(sorted(results))
+            key = (lambda x: x["name"]) if details else None
+            return jsonify(sorted(results, key=key))
 

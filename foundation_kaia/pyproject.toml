@@ -13,12 +13,17 @@ authors = [
 ]
 
 dependencies = [
-    "yo_fluq",
     "requests",
     "jsonpickle",
     "Jinja2",
     "flask",
-    "python-dotenv"
+    "fastapi",
+    "uvicorn",
+    "python-multipart",
+    "websocket-client",
+    "python-dotenv",
+    "websockets",
+    "pyyaml"
 ]
 
 classifiers = [
@@ -38,3 +43,6 @@ repository = "https://github.com/okulovsky/kaia/tree/main/foundation_kaia"
 
 [tool.setuptools.packages.find]
 where = ["."]
+
+[tool.setuptools.package-data]
+"*" = ["**/example"]
