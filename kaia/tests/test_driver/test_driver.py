@@ -4,7 +4,7 @@ from kaia.driver import *
 from eaglesong import Listen, Automaton, Return, Terminate
 from grammatron import Template, Utterance, TemplatesCollection, UtterancesSequence
 from avatar.daemon import TextEvent, ChatCommand, TextCommand
-from avatar.messaging import TestStream, IMessage
+from avatar.messaging import AvatarClient, IMessage
 from unittest import TestCase
 from typing import cast
 
@@ -46,10 +46,10 @@ class DriverTestCase(TestCase):
 
 
     def test_driver(self):
-        client = TestStream().create_client(None).with_name('main')
+        client = AvatarClient.default()
         driver = KaiaDriver(
             DefaultAssistantFactory(lambda _: mock_routine),
-            client.clone('driver'),
+            client.clone(),
             expect_confirmations_for_types=()
         )
         driver.run_in_thread()

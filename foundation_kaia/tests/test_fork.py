@@ -1,6 +1,6 @@
 from unittest import TestCase
 from foundation_kaia.fork import Fork
-from foundation_kaia.marshalling import ApiUtils
+from foundation_kaia.marshalling_2 import ApiUtils
 import requests
 import time
 from flask import Flask
