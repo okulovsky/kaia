@@ -1,7 +1,7 @@
 import requests
 from foundation_kaia.marshalling_2 import service, FileLike, FileLikeHandler
 from foundation_kaia.brainbox_utils import brainbox_endpoint
-from ....framework import DockerWebServiceApi, EntryPoint, TaskBuilder
+from ....framework import DockerWebServiceApi, EntryPoint, TaskBuilder, brainbox_file_like_to_bytes_iterable
 from .controller import RhasspyKaldiController
 from .settings import RhasspyKaldiSettings
 from .model import RhasspyKaldiModel
@@ -37,9 +37,10 @@ class RhasspyKaldiApi(DockerWebServiceApi[RhasspyKaldiSettings, RhasspyKaldiCont
         return reply.json()
 
     def transcribe(self, file: FileLike, model: str):
+        file_iterable = b''.join(brainbox_file_like_to_bytes_iterable(file, self.cache_folder))
         reply = requests.post(
             f'http://{self.address}/transcribe/{model}',
-            files=(('file', FileLikeHandler.to_bytes(file)),)
+            files=(('file', file_iterable),)
         )
         if reply.status_code != 200:
             raise ValueError(f"RhasspyKaldi couldn't transcribe for {model}\n{reply.text}")

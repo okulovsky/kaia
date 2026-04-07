@@ -34,7 +34,6 @@ class WhisperController(DockerMarshallingController[WhisperSettings]):
         return RunConfiguration(
             None,
             publish_ports={self.connection_settings.port: 8080},
-            dont_rm=False
         )
 
     def get_default_settings(self):

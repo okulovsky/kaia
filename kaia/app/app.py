@@ -49,7 +49,7 @@ class KaiaApp:
     def create_avatar_client(self) -> AvatarClient|None:
         if self._avatar_client is None:
             return None
-        return self._avatar_client.clone()
+        return self._avatar_client.clone_client()
 
 
     kaia_driver: KaiaDriver|None = None

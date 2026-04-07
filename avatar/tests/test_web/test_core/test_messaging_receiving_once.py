@@ -53,7 +53,7 @@ HTML_COUNT = '''
   <div id="countDisplay">Count: 0</div>
 
   <script type="module">
-    import { AvatarClient } from '/frontend/scripts/index.js';
+    import { AvatarClient } from '/frontend/scripts/kaia-frontend.js';
 
     const countBtn = document.getElementById('countBtn');
     const display = document.getElementById('countDisplay');

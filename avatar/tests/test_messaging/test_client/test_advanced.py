@@ -90,7 +90,8 @@ class TestClone(TestCase):
             client.push(MsgA(str(i)))
         client.pull(timeout_in_seconds=0)           # advance to end
 
-        clone = client.clone()
+        clone = client.clone_client()
+        clone.set_last_id()
         result = clone.pull(timeout_in_seconds=0)
         self.assertEqual(3, len(result))            # clone sees all messages
 
@@ -102,7 +103,8 @@ class TestClone(TestCase):
         client.pull(timeout_in_seconds=0)
         original_last_id = client.last_id
 
-        clone = client.clone()
+        clone = client.clone_client()
+        clone.set_last_id()
         clone.pull(timeout_in_seconds=0)            # clone advances its own last_id
 
         self.assertEqual(original_last_id, client.last_id)
@@ -110,7 +112,7 @@ class TestClone(TestCase):
     def test_clone_shares_service_and_session(self):
         svc = AvatarMessagingService()
         client = make_client(svc)
-        clone = client.clone()
+        clone = client.clone_client()
         clone.push(MsgA('from_clone'))
         result = client.pull(timeout_in_seconds=0)
         self.assertEqual(1, len(result))
@@ -120,7 +122,7 @@ class TestClone(TestCase):
         full_a = TypeTools.type_to_full_name(MsgA)
         svc = AvatarMessagingService()
         client = AvatarClient(AvatarMessageRepository(svc), 'sess', allowed_types=[full_a])
-        clone = client.clone()
+        clone = client.clone_client()
         self.assertEqual(client.allowed_types, clone.allowed_types)
 
 

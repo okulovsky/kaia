@@ -1,4 +1,4 @@
-import { IAudioInput } from '../input/iAudioInput.js'
+import { IMicrophone } from '../input/iMicrophone.js'
 import { MicData } from '../input/micData.js'
 
 export type Processor<T = void> = (micData: MicData) => T
@@ -8,7 +8,7 @@ export class MicController {
     private running = false
 
     constructor(
-        private input: IAudioInput,
+        private input: IMicrophone,
         private processor: Processor,
     ) {}
 

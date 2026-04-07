@@ -125,7 +125,7 @@ class TestClient(TestCase):
 
     def test_with_types_stores_full_type_names(self):
         client = self._client()
-        client.with_types(MsgA, MsgB)
+        client.set_allowed_types(MsgA, MsgB)
         full_a = TypeTools.type_to_full_name(MsgA)
         full_b = TypeTools.type_to_full_name(MsgB)
         self.assertIn(full_a, client.allowed_types)
@@ -133,7 +133,7 @@ class TestClient(TestCase):
 
     def test_with_types_filters_pull(self):
         client = self._client()
-        client.with_types(MsgA)
+        client.set_allowed_types(MsgA)
         client.push(MsgA('keep'))
         client.push(MsgB('drop'))
         result = client.pull(timeout_in_seconds=0)

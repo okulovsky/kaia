@@ -73,18 +73,18 @@ def HTML(maxNonSilenceAfterWakeWordTillReset = 1):
 <html><head><meta charset="UTF-8"></head><body>
 <script type="module">
   import {
-    AvatarClient, Dispatcher, FakeInput, MicController,
-    Recorder, StatefulRecorder, SilenceDetector, Automaton, RealAudio,
-  } from '/frontend/scripts/index.js';
-  import { WakeWordDetector } from '/frontend/scripts/wakeWordDetector.js';
+    AvatarClient, Dispatcher, FakeMicrophone, MicController,
+    Recorder, StatefulRecorder, SilenceDetector, Automaton, AudioController,
+  } from '/frontend/scripts/kaia-frontend.js';
+  import { KaldiWakeWordDetector } from '/frontend/scripts/kaldi-wake-word-detector.js';
 
   const client = new AvatarClient({ baseUrl: window.location.origin });
   const dispatcher = new Dispatcher(client);
-  const input = new FakeInput({ sampleRate: 22050, frameSize: 512, dispatcher, baseUrl: window.location.origin, acceleration: 10 });
+  const input = new FakeMicrophone({ sampleRate: 22050, frameSize: 512, dispatcher, baseUrl: window.location.origin, acceleration: 10 });
   const recorder = new Recorder({ startBufferLength: 1.0, normalBufferLength: 0.3, dispatcher, baseUrl: window.location.origin });
   const stateful = new StatefulRecorder({ recorder, dispatcher });
   const silence = new SilenceDetector({ timeBetweenReportsInSeconds: 1, reportingWindowSeconds: 0.05, dispatcher });
-  new RealAudio({ dispatcher, baseUrl: window.location.origin, silent: true, acceleration: 10});
+  new AudioController({ dispatcher, baseUrl: window.location.origin, silent: true, acceleration: 10});
   const automaton = new Automaton({ 
     silenceDetector: silence, 
     wakeWordDetector: null, 

@@ -27,7 +27,7 @@ class KaiaContext:
         self.previous_identification: UserIdentification|None = None
 
     def get_client(self):
-        return self._client.clone()
+        return self._client.clone_client()
 
     def get_state(self) -> State:
         return self.get_client().run_synchronously(NarrationService.StateRequest(), State)

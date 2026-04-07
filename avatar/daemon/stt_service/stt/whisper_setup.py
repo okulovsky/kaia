@@ -20,7 +20,7 @@ class WhisperRecognitionSetup(IRecognitionSetup):
         task = (
             Whisper
             .new_task(id=context.command.file.split('.')[0] + '.whisper')
-            .transcribe(
+            .transcribe_text(
                 file=context.command.file,
                 initial_prompt=self.prompt,
                 model=self.model,

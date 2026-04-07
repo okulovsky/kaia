@@ -53,7 +53,7 @@ HTML = '''<!DOCTYPE html>
   <button id="processBtn">Start</button>
   <div id="chat"></div>
   <script type="module">
-    import { AvatarClient, Dispatcher, ChatCommandHandler } from '/frontend/scripts/index.js';
+    import { AvatarClient, Dispatcher, ChatCommandHandler } from '/frontend/scripts/kaia-frontend.js';
     const btn     = document.getElementById('processBtn');
     const chatDiv = document.getElementById('chat');
     btn.addEventListener('click', () => {

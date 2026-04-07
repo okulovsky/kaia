@@ -41,7 +41,6 @@ class LlamaLoraSFTTrainerController(DockerMarshallingController[LlamaLoraSFTTrai
     def get_service_run_configuration(self, parameter: str | None) -> RunConfiguration:
         return RunConfiguration(
             publish_ports={self.connection_settings.port: 8080},
-            dont_rm=False,
             set_env_variables={"HF_HOME": "/resources/models"},
         )
 

@@ -19,7 +19,7 @@ class RecorderTestCase(TestCase):
             env.api.cache.upload('amp2500', Sine().segment(0.15).bytes())
             env.api.cache.upload('amp5000', Sine().segment(0.5).bytes())
 
-            reader = env.client.clone()
+            reader = env.client.clone_client()
 
             # Standby: amp1000 should be ignored by the recorder
             env.client.run_synchronously(SoundInjectionCommand('amp1000'), time_limit_in_seconds=30)
@@ -78,11 +78,11 @@ class RecorderTestCase(TestCase):
 HTML = '''<!DOCTYPE html>
 <html><head><meta charset="UTF-8"></head><body>
 <script type="module">
-  import { AvatarClient, Dispatcher, FakeInput, MicController, Recorder, StatefulRecorder } from '/frontend/scripts/index.js';
+  import { AvatarClient, Dispatcher, FakeMicrophone, MicController, Recorder, StatefulRecorder } from '/frontend/scripts/kaia-frontend.js';
 
   const client = new AvatarClient({ baseUrl: window.location.origin });
   const dispatcher = new Dispatcher(client);
-  const input = new FakeInput({ sampleRate: 22050, frameSize: 512, dispatcher, baseUrl: window.location.origin });
+  const input = new FakeMicrophone({ sampleRate: 22050, frameSize: 512, dispatcher, baseUrl: window.location.origin });
   const recorder = new Recorder({ startBufferLength: 1.0, normalBufferLength: 0.3, dispatcher, baseUrl: window.location.origin });
   const stateful = new StatefulRecorder({ recorder, dispatcher, subscribeToDirectStateChange: true });
   const controller = new MicController(input, m => stateful.process(m));

@@ -1,7 +1,7 @@
 from typing import Callable, Any
 from dataclasses import dataclass, field
 
-from avatar.daemon import TextCommand
+from avatar.daemon import TextCommand, MockSoundService
 from brainbox import BrainBox
 from brainbox.framework import ControllersSetup
 from .app import KaiaApp, IAppInitializer
@@ -37,6 +37,7 @@ class AvatarDaemonAppSettings(IAppInitializer):
     initialize_volume: bool = False
     report_to_session: str|None = None
     default_volume: float = 0.1
+    mock_sound_service: bool = False
 
 
 
@@ -115,6 +116,11 @@ class AvatarDaemonAppSettings(IAppInitializer):
     def create_autoconfirm(self, app: KaiaApp, state: s.State):
         if app.brainbox_api is None:
             return s.MockVoiceoverService()
+
+    def create_mock_sound_service(self, app: KaiaApp, state: s.State):
+        if self.mock_sound_service:
+            return MockSoundService()
+
 
     def create_sound_command_unblocker(self, app: KaiaApp, state: s.State):
         return s.SoundPlayUnblockerService()

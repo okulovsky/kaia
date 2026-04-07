@@ -7,9 +7,8 @@ export default defineConfig({
         rollupOptions: {
             preserveEntrySignatures: 'exports-only',
             input: {
-                'index': 'src/index.ts',
-                'wakeWordDetector': 'src/mic/wake_word_automaton/wakeWordDetector.ts',
-                'loadingScreen': 'src/loadingScreen/loadingScreen.ts',
+                'kaia-frontend': 'src/index.ts',
+                'kaldi-wake-word-detector': 'src/mic/kaldiWakeWordDetector.ts',
             },
             output: {
                 entryFileNames: '[name].js',

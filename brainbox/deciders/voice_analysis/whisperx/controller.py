@@ -32,7 +32,6 @@ class WhisperXController(DockerMarshallingController[WhisperXSettings]):
     def get_service_run_configuration(self, parameter: str | None) -> RunConfiguration:
         return RunConfiguration(
             publish_ports={self.connection_settings.port: 8080},
-            dont_rm=False,
         )
 
     def create_api(self):

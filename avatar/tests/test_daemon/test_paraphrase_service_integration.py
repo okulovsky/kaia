@@ -43,7 +43,7 @@ class ParaphraseTestCase(TestCase):
 
                 state = State(character='character_0', language='en')
                 client = api.create_client()
-                proc = AvatarDaemon(client.clone(), resources_folder=folder/'resources')
+                proc = AvatarDaemon(client.clone_client(), resources_folder=folder/'resources')
                 proc.rules.bind(
                     StateToUtterancesApplicationService(state),
                 )
@@ -54,7 +54,7 @@ class ParaphraseTestCase(TestCase):
                 )
                 proc.run_in_thread()
 
-                client = client.scroll_to_end()
+                client.scroll_to_end()
                 client.push(InitializationEvent())
                 client.push(TextCommand(templates[0].utter()))
                 result = client.query(5).where(lambda z: isinstance(z, InternalTextCommand)).take(2).to_list()

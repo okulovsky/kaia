@@ -49,7 +49,7 @@ class DriverTestCase(TestCase):
         client = AvatarClient.default()
         driver = KaiaDriver(
             DefaultAssistantFactory(lambda _: mock_routine),
-            client.clone(),
+            client.clone_client(),
             expect_confirmations_for_types=()
         )
         driver.run_in_thread()

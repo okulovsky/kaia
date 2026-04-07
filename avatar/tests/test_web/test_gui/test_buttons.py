@@ -49,7 +49,7 @@ HTML = '''<!DOCTYPE html>
   <button id="processBtn">Start</button>
   <div id="buttonOverlay"></div>
   <script type="module">
-    import { AvatarClient, Dispatcher, ButtonGridCommandHandler } from '/frontend/scripts/index.js';
+    import { AvatarClient, Dispatcher, ButtonGridCommandHandler } from '/frontend/scripts/kaia-frontend.js';
 
     const startBtn = document.getElementById('processBtn');
     const overlay  = document.getElementById('buttonOverlay');

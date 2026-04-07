@@ -32,7 +32,6 @@ class WD14TaggerController(DockerMarshallingController[WD14TaggerSettings]):
             raise ValueError(f"`parameter` must be None for {self.get_name()}")
         config = RunConfiguration(
             publish_ports={self.connection_settings.port: 8080},
-            dont_rm=False,
         )
         if self.settings.cpu_share is not None:
             config.custom_flags = [f'--cpus={self.settings.cpu_share * os.cpu_count()}']

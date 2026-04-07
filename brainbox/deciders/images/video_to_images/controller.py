@@ -34,7 +34,6 @@ class VideoToImagesController(DockerMarshallingController[VideoToImagesSettings]
     def get_service_run_configuration(self, parameter: str | None) -> RunConfiguration:
         return RunConfiguration(
             publish_ports={self.connection_settings.port: 8080},
-            dont_rm=False,
             mount_resource_folders={'cache': '/home/app/.cache'},
         )
 

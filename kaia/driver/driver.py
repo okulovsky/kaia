@@ -4,6 +4,8 @@ from typing import Callable, Any
 from avatar.messaging import AvatarClient
 from avatar.daemon import TextCommand, STTService, SoundCommand
 from loguru import logger
+
+from chara.common import Logger
 from ..assistant import KaiaContext
 from eaglesong import Automaton
 from .interpreter import KaiaInterpreter
@@ -85,6 +87,7 @@ class KaiaDriver:
         try:
             logger.info(f"Item to interpreter: {self._trim(message)}")
             self.interpreter.process(message)
+            logger.info(f"Item processed by interpreted: {self._trim(message)}")
         except:
             err = traceback.format_exc()
             self.client.push(ChatCommand(err, ChatCommand.MessageType.error))
@@ -102,8 +105,8 @@ class KaiaDriver:
             messages = self.client.pull()
             for message in messages:
                 self.process(message)
-            if len(messages) == 0:
-                time.sleep(0.1)
+
+
 
     def __call__(self):
         self.run()

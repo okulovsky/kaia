@@ -43,7 +43,6 @@ class ChatterboxController(DockerMarshallingController[ChatterboxSettings]):
                 'speakers': '/speakers',
                 'file_cache': '/file_cache',
             },
-            dont_rm=False
         )
 
     def get_default_settings(self):

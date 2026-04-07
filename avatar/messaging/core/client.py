@@ -6,6 +6,7 @@ import time
 from yo_fluq import Query, Queryable
 from typing import Type, TypeVar
 from .message_repository import IMessageRepository
+from loguru import logger
 
 T = TypeVar('T')
 
@@ -19,12 +20,13 @@ class AvatarClient:
     def __init__(self,
                  repo: IMessageRepository,
                  session: str,
-                 allowed_types: list[str] | None = None
+                 allowed_types: list[str] | None = None,
+                 last_id: str|None = None
                  ):
         self.repo = repo
         self.session = session
         self.allowed_types = allowed_types
-        self.last_id: str|None = None
+        self.last_id = last_id
 
     def base_pull(self, *, timeout_in_seconds: float|None = None, max_messages: int|None = None) -> AvatarMessageSet[IMessage]:
         result = self.repo.get(self.session, self.last_id, timeout_in_seconds, max_messages, self.allowed_types)
@@ -38,26 +40,26 @@ class AvatarClient:
     def base_tail(self, count: int|None = None, *, from_timestamp=None) -> AvatarMessageSet[IMessage]:
         return self.repo.tail(self.session, count, from_timestamp=from_timestamp)
 
-    def set_last_id(self, last_id: str|None) -> 'AvatarClient':
+    def set_last_id(self, last_id: str|None = None):
         self.last_id = last_id
-        return self
 
     def wait_for_availability(self):
         self.repo.wait_for_availability()
 
+    def set_allowed_types(self, *allowed_types: type):
+        if len(allowed_types) > 0:
+            prefixes = []
+            for t in allowed_types:
+                if isinstance(t, type):
+                    prefixes.append(TypeTools.type_to_full_name(t))
+                else:
+                    raise ValueError(f"Expected type, but was {t}")
+            self.allowed_types = tuple(prefixes)
+        else:
+            self.allowed_types = None
 
-    def with_types(self, *allowed_types: type) -> 'AvatarClient':
-        prefixes = []
-        for t in allowed_types:
-            if isinstance(t, type):
-                prefixes.append(TypeTools.type_to_full_name(t))
-            else:
-                raise ValueError(f"Expected type, but was {t}")
-        self.allowed_types = tuple(prefixes)
-        return self
-
-    def clone(self) -> 'AvatarClient':
-        return AvatarClient(self.repo, self.session, self.allowed_types)
+    def clone_client(self) -> 'AvatarClient':
+        return AvatarClient(self.repo, self.session, self.allowed_types, self.last_id)
 
     def pull(self, *, timeout_in_seconds: float|None = None, max_messages: int|None = None) -> list[IMessage]:
         return self.base_pull(timeout_in_seconds=timeout_in_seconds, max_messages=max_messages).messages
@@ -94,11 +96,17 @@ class AvatarClient:
                               message: IMessage,
                               _type: Type[T] = IMessage,
                               time_limit_in_seconds: float|None = None,
-                              no_exceptions: bool = False) -> T:
-        client = self.clone()
+                              no_exceptions: bool = False,
+                              debugging_print: bool = False
+                              ) -> T:
+        client = self.clone_client()
         client.set_last_id(message.envelop.id)
+        client.set_allowed_types()
         for received in client.query(time_limit_in_seconds, no_exceptions):
-            if received.is_confirmation_of(message):
+            is_confirmation = received.is_confirmation_of(message)
+            if debugging_print:
+                logger.info(f"Received {received}, is_confirmation {is_confirmation}")
+            if is_confirmation:
                 if not isinstance(received, _type):
                     raise ValueError(f"Expecting type {_type}, but was confirmed by {received}")
                 return received
@@ -108,13 +116,12 @@ class AvatarClient:
         self.push(message)
         return self.wait_for_confirmation(message, _type, time_limit_in_seconds)
 
-    def scroll_to_end(self) -> 'AvatarClient':
+    def scroll_to_end(self):
         last = self.tail(1)
         if len(last) == 0:
             self.set_last_id(None)
         else:
             self.set_last_id(last[-1].envelop.id)
-        return self
 
     @staticmethod
     def default():

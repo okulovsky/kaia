@@ -1,5 +1,5 @@
 from .test_time_factory import TestTimeFactory
-from .web_test_environment import WebTestEnvironment, WebTestEnvironmentFactory
+from .web_test_environment import WebTestEnvironment, WebTestEnvironmentFactory, FrontendTestEnvironmentFactory
 from .wav_utils import split_wav_by_amplitude, AudioSegment
 from .sine import Sine
 

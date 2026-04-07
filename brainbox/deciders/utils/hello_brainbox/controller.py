@@ -29,7 +29,6 @@ class HelloBrainBoxController(DockerMarshallingController[HelloBrainBoxSettings]
         return RunConfiguration(
             parameter,
             publish_ports={self.connection_settings.port:8080},
-            dont_rm=False
         )
 
     def get_installer(self) -> Installer|None:

@@ -3,7 +3,7 @@ from eaglesong.core import IAutomaton, Interpreter, primitives as prim
 from avatar.messaging import IMessage, AvatarClient
 from avatar.daemon import ChatCommand, TextCommand
 from grammatron import Utterance, UtterancesSequence
-
+from loguru import logger
 
 
 class Confirmation:
@@ -40,10 +40,12 @@ class KaiaInterpreter(Interpreter):
     def _process_message(self, message):
         if self.current_message is not None:
             message = message.as_reply_to(self.current_message)
+        logger.info(f"Interpreter posts output: {message}")
+        self.client.push(message)
         if isinstance(message, self.expect_confirmations_for_types):
-            self.client.run_synchronously(message)
-        else:
-            self.client.push(message)
+            logger.info(f"Interpreter waits to confirm output: {message}")
+            self.client.wait_for_confirmation(message)
+        logger.info(f"Interpreter finished with output: {message}")
         return Interpreter.continue_cycle()
 
     def _process_native_text(self, message):

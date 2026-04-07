@@ -263,17 +263,62 @@ body {
   pointer-events: none;
 }
 
-#busy-indicator {
+/* Debug view */
+
+#debug-settings-btn {
   position: fixed;
-  top: 10px;
-  left: 10px;
-
-  width: 14px;
-  height: 14px;
+  bottom: 12px;
+  left: 12px;
+  width: 2.2vw;
+  height: 2.2vw;
+  min-width: 32px;
+  min-height: 32px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border: 2px solid #fff;
   border-radius: 50%;
-  background: red;
+  font-size: 1.2vw;
+  cursor: pointer;
+  z-index: 2147483646;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-  z-index: 2147483647; /* above everything */
-  pointer-events: none;
+#debug-div {
+  position: fixed;
+  bottom: 60px;
+  left: 12px;
+  width: 50vw;
+  height: 70vh;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 2147483645;
+  display: none;
+  padding: 8px;
+  box-sizing: border-box;
+  gap: 6px;
+}
 
+.debug-button-component {
+  display: block;
+  width: 100%;
+  padding: 0.5vw 1vw;
+  margin-bottom: 6px;
+  background: #c0000080;
+  color: #fff;
+  border: 2px solid #ff4444;
+  border-radius: 0.4vw;
+  font-size: 1.2vw;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 120ms ease;
+}
+
+.debug-button-component:hover {
+  background: #e00000a0;
+}
+
+.debug-button-component:active {
+  background: #ff0000c0;
+  transform: translateY(1px);
 }

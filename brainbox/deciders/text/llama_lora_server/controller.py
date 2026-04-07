@@ -65,7 +65,6 @@ class LlamaLoraServerController(
                 "models": "/app/models",
             },
             command_line_arguments=cmd_args,
-            dont_rm=False
         )
 
     def get_default_settings(self):

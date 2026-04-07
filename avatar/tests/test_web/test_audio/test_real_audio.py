@@ -14,7 +14,7 @@ class RealAudioTestCase(TestCase):
             # 1-second file for the second command
             env.api.cache.upload('short', Sine().segment(0.3, 2).bytes())
 
-            reader = env.client.clone()
+            reader = env.client.clone_client()
 
             cmd_a = SoundCommand(file_id='long')
             env.client.push(cmd_a)
@@ -50,11 +50,11 @@ class RealAudioTestCase(TestCase):
 HTML = '''<!DOCTYPE html>
 <html><head><meta charset="UTF-8"></head><body>
 <script type="module">
-  import { AvatarClient, Dispatcher, RealAudio } from '/frontend/scripts/index.js';
+  import { AvatarClient, Dispatcher, AudioController } from '/frontend/scripts/kaia-frontend.js';
 
   const client = new AvatarClient({ baseUrl: window.location.origin });
   const dispatcher = new Dispatcher(client);
-  new RealAudio({ dispatcher, baseUrl: window.location.origin, silent: true });
+  new AudioController({ dispatcher, baseUrl: window.location.origin, silent: true });
   dispatcher.start();
 </script>
 </body></html>

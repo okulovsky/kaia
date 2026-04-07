@@ -8,6 +8,8 @@
 
 <body>
   <div id="loading">Loading…</div>
+  <button id="debug-settings-btn" title="Debug">⚙</button>
+  <div id="debug-div"></div>
   <div id="content">
     <div id="image">
       <img id="main_image" src=" " alt="main image">
@@ -19,12 +21,17 @@
 
   <script type="module">
     import { AvatarClient, Dispatcher, ChatCommandHandler, ImageCommandHandler, ButtonGridCommandHandler,
-             MicInput, MicController, Recorder, StatefulRecorder, SilenceDetector, Automaton, RealAudio,
-             Message, Envelop } from '/frontend/scripts/index.js';
-    import { WakeWordDetector } from '/frontend/scripts/wakeWordDetector.js';
-    import { LoadingScreen } from '/frontend/scripts/loadingScreen.js';
+             Microphone, MicController, Recorder, StatefulRecorder, SilenceDetector, Automaton, AudioController,
+             Message, Envelop, DebugViewController, MicDebugView, LoadingScreen,
+             Webcam, WebcamProcessor } from '/frontend/scripts/kaia-frontend.js';
+    import { KaldiWakeWordDetector } from '/frontend/scripts/kaldi-wake-word-detector.js';
 
-    const loadingDiv = document.getElementById('loading');
+    const loadingDiv    = document.getElementById('loading');
+    const debugSettingsBtn = document.getElementById('debug-settings-btn');
+    const debugDiv      = document.getElementById('debug-div');
+
+    const debugViewController = new DebugViewController(debugSettingsBtn, debugDiv);
+    debugViewController.register(new MicDebugView(window.location.origin));
 
     const chatDiv    = document.getElementById('chat');
     const imageDiv   = document.getElementById('main_image');
@@ -38,20 +45,26 @@
     new ImageCommandHandler({ dispatcher, imgEl: imageDiv });
     new ButtonGridCommandHandler({ dispatcher, overlay: overlayDiv, client });
 
-    new RealAudio({ dispatcher, baseUrl: window.location.origin });
+    new AudioController({ dispatcher, baseUrl: window.location.origin });
 
-    const input    = new MicInput();
+    const input    = new Microphone();
     const recorder = new Recorder({ startBufferLength: 1.0, normalBufferLength: 0.3, dispatcher, baseUrl: window.location.origin });
     const stateful = new StatefulRecorder({ recorder, dispatcher });
     const silence  = new SilenceDetector({ timeBetweenReportsInSeconds: 0.5, decisionWindowSeconds: 1.0, reportingWindowSeconds: 0.1, silenceLevel: 0.01, dispatcher });
-    const wake     = new WakeWordDetector({ sampleRateOfTheModel: 16000, words: ['computer'], modelUrl: '/frontend/models/vosk-model-small-en-us-0.15.zip?v=5', dispatcher });
+    const wake     = new KaldiWakeWordDetector({ sampleRateOfTheModel: 16000, words: ['computer'], modelUrl: '/frontend/models/vosk-model-small-en-us-0.15.zip?v=5', dispatcher });
     const automaton   = new Automaton({ silenceDetector: silence, wakeWordDetector: wake, statefulRecorder: stateful, dispatcher });
     const controller  = new MicController(input, m => automaton.process(m));
 
+    const webcam = new Webcam();
+    const webcamProcessor = new WebcamProcessor({ webcam, client, baseUrl: window.location.origin });
+    debugViewController.register(webcamProcessor);
+
+
     dispatcher.start();
-    new LoadingScreen(loadingDiv, [wake], () => {
+    new LoadingScreen(loadingDiv, [wake, webcam], () => {
       dispatcher.push(new Message('InitializationEvent', new Envelop(), {}));
       controller.start().catch(console.error);
+      webcamProcessor.start().catch(console.error);
     });
   </script>
 </body>

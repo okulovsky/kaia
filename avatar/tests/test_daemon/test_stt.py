@@ -9,7 +9,7 @@ class WhisperMock(ISelfManagingDecider):
     def get_name(self):
         return 'Whisper'
 
-    def transcribe(self, file, model=None, initial_prompt=None, options=None):
+    def transcribe_text(self, file, model=None, initial_prompt=None, options=None):
         return file
 
 

@@ -4,7 +4,7 @@ from brainbox.framework import Loc, Locator
 from foundation_kaia.marshalling_2.marshalling.server import Server, ServiceComponent, TestApi
 from foundation_kaia.marshalling_2.marshalling.server.api_call import ApiCall
 from pathlib import Path
-from .dto import InstallationReport, SelfTestResult
+from .dto import InstallationReport, SelfTestResult, ControllersSetup
 from .interface import IControllersService
 from .service import ControllersService
 
@@ -47,6 +47,11 @@ class ControllersApi:
 
     def delete_self_test(self, decider: str | ControllerLike) -> None:
         return self._internal.delete_self_test(self._name(decider))
+
+    def setup(self, setup: ControllersSetup):
+        return self._internal.setup(setup)
+
+
 
     @staticmethod
     def test(services: Iterable[ControllerLike] | None = None,

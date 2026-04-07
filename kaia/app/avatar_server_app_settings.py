@@ -14,10 +14,9 @@ class ServerStartedEvent(IMessage):
 @dataclass
 class AvatarServerAppSettings(IAppInitializer):
     additional_static_folders: dict[str, Path] = field(default_factory=dict)
-    compile_scripts: bool = False
-    add_chunks_component: bool = False
-    add_phonix_component: bool = True
     hide_logs: bool = True
+    custom_frontend_folder: Path|None = None
+    custom_html: str|None = None
 
 
     def bind_app(self, app: 'KaiaApp'):
@@ -28,17 +27,19 @@ class AvatarServerAppSettings(IAppInitializer):
 
         settings = AvatarServerSettings(
             PORT,
-            True,
+            self.hide_logs,
             ("avatar.messaging", "avatar.daemon", "kaia"),
             60*60*2,
             app.brainbox_cache_folder,
             Loc.root_folder/'kaia/web',
-            app.working_folder/'avatar/frontend',
+            app.working_folder/'avatar/frontend' if self.custom_frontend_folder is None else self.custom_frontend_folder,
             Path(__file__).parent/'avatar-resources',
+            custom_html=self.custom_html
         )
 
         app.avatar_api = AvatarApi(f'http://127.0.0.1:{PORT}')
-        app._avatar_client = app.avatar_api.create_client().set_last_id(start_message_id)
+        app._avatar_client = app.avatar_api.create_client()
+        app._avatar_client.set_last_id(start_message_id)
         app.avatar_server = AvatarServer(settings)
 
 

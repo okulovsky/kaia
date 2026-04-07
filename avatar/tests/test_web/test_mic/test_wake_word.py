@@ -15,7 +15,7 @@ class WakeWordTestCase(TestCase):
             env.api.cache.upload('noise', Sine().segment(0.5).bytes())
             env.api.cache.upload('computer', (FOLDER / 'computer.wav').read_bytes())
 
-            reader = env.client.clone()
+            reader = env.client.clone_client()
 
             # Wait until WakeWordDetector has loaded the model
             env.client.query(120).where(lambda z: isinstance(z, InitializationEvent)).first()
@@ -50,15 +50,14 @@ class WakeWordTestCase(TestCase):
 HTML = '''<!DOCTYPE html>
 <html><head><meta charset="UTF-8"></head><body>
 <script type="module">
-  import { AvatarClient, Dispatcher, FakeInput, MicController, Message, Envelop } from '/frontend/scripts/index.js';
-  import { WakeWordDetector } from '/frontend/scripts/wakeWordDetector.js';
-  import { LoadingScreen } from '/frontend/scripts/loadingScreen.js';
-
+  import { AvatarClient, Dispatcher, FakeMicrophone, MicController, Message, Envelop, LoadingScreen } from '/frontend/scripts/kaia-frontend.js';
+  import { KaldiWakeWordDetector } from '/frontend/scripts/kaldi-wake-word-detector.js';
+  
   const client = new AvatarClient({ baseUrl: window.location.origin });
   const dispatcher = new Dispatcher(client);
-  const input = new FakeInput({ sampleRate: 22050, frameSize: 512, dispatcher, baseUrl: window.location.origin });
-  const wake = new WakeWordDetector({ sampleRateOfTheModel: 16000, words: ['computer'], modelUrl: '/frontend/models/vosk-model-small-en-us-0.15.zip', dispatcher, uploadDebugSound: ''' + ENABLE_DEBUG + ''' });
-  const controller = new MicController(input, m => wake.detectWakeWord(m));
+  const input = new FakeMicrophone({ sampleRate: 22050, frameSize: 512, dispatcher, baseUrl: window.location.origin });
+  const wake = new KaldiWakeWordDetector({ sampleRateOfTheModel: 16000, words: ['computer'], modelUrl: '/frontend/models/vosk-model-small-en-us-0.15.zip', dispatcher, uploadDebugSound: ''' + ENABLE_DEBUG + ''' });
+  const controller = new MicController(input, m => wake.detect(m));
 
   dispatcher.start();
   const loadingDiv = document.createElement('div');

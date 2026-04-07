@@ -32,7 +32,7 @@ class LevelReportingTestCase(TestCase):
         with WebTestEnvironmentFactory(HTML) as env:
             env.api.cache.upload('sample1', Sine().segment(0.1).bytes())
             env.api.cache.upload('sample2', Sine().segment(0.5).bytes())
-            reader = env.client.clone()
+            reader = env.client.clone_client()
 
             env.client.run_synchronously(SoundInjectionCommand('sample1'), time_limit_in_seconds=30)
             levels1 = slice(reader)
@@ -48,7 +48,7 @@ class LevelReportingTestCase(TestCase):
 
     def test_silence_level_is_reported(self):
         with WebTestEnvironmentFactory(HTML) as env:
-            reader = env.client.clone()
+            reader = env.client.clone_client()
 
             env.client.push(SetSilenceLevelCommand(level=0.5))
 
@@ -64,11 +64,11 @@ class LevelReportingTestCase(TestCase):
 HTML = '''<!DOCTYPE html>
 <html><head><meta charset="UTF-8"></head><body>
 <script type="module">
-  import { AvatarClient, Dispatcher, FakeInput, MicController, SilenceDetector } from '/frontend/scripts/index.js';
+  import { AvatarClient, Dispatcher, FakeMicrophone, MicController, SilenceDetector } from '/frontend/scripts/kaia-frontend.js';
 
   const client = new AvatarClient({ baseUrl: window.location.origin });
   const dispatcher = new Dispatcher(client);
-  const input = new FakeInput({ sampleRate: 22050, frameSize: 512, acceleration: 10, dispatcher, baseUrl: window.location.origin });
+  const input = new FakeMicrophone({ sampleRate: 22050, frameSize: 512, acceleration: 10, dispatcher, baseUrl: window.location.origin });
   const levels = new SilenceDetector({ timeBetweenReportsInSeconds: 0.5, reportingWindowSeconds: 0.05, dispatcher });
   const controller = new MicController(input, m => levels.detect(m));
   dispatcher.start();

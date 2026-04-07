@@ -8,7 +8,8 @@ from datetime import datetime, timedelta
 
 class DataReader:
     def __init__(self, client: AvatarClient, past_span_in_seconds: int = 10):
-        self.client = client.clone().with_types(
+        self.client = client.clone_client()
+        self.client.set_allowed_types(
             SoundLevelReport, StatefulRecorderStateEvent,
             SoundCommand, SoundConfirmation, SystemSoundCommand,
             SoundStartEvent, SoundEvent,

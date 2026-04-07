@@ -59,7 +59,7 @@ HTML = '''
   <div id="log"></div>
 
   <script type="module">
-    import { AvatarClient, Message } from '/frontend/scripts/index.js';
+    import { AvatarClient, Message } from '/frontend/scripts/kaia-frontend.js';
 
     const processBtn = document.getElementById('processBtn');
     const logContainer = document.getElementById('log');

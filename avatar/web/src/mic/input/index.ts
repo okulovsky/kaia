@@ -1,4 +1,4 @@
 export type { MicData } from './micData.js'
-export type { IAudioInput } from './iAudioInput.js'
-export { FakeInput } from './fakeInput.js'
-export { MicInput } from './micInput.js'
+export type { IMicrophone } from './iMicrophone.js'
+export { FakeMicrophone } from './fakeMicrophone.js'
+export { Microphone } from './microphone.js'

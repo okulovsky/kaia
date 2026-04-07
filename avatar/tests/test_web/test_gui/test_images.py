@@ -28,7 +28,7 @@ HTML = '''<!DOCTYPE html>
   <button id="processBtn">Start</button>
   <img id="preview" />
   <script type="module">
-    import { AvatarClient, Dispatcher, ImageCommandHandler } from '/frontend/scripts/index.js';
+    import { AvatarClient, Dispatcher, ImageCommandHandler } from '/frontend/scripts/kaia-frontend.js';
 
     const btn   = document.getElementById('processBtn');
     const imgEl = document.getElementById('preview');

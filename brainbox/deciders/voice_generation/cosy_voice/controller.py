@@ -38,7 +38,6 @@ class CosyVoiceController(DockerMarshallingController[CosyVoiceSettings]):
             raise ValueError(f"`parameter` must be None for {self.get_name()}")
         return RunConfiguration(
             publish_ports={self.connection_settings.port:8080},
-            dont_rm=False
         )
 
     def get_installer(self) -> Installer|None:

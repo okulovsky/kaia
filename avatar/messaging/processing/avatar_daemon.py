@@ -134,7 +134,7 @@ class AvatarDaemon:
         for message in messages:
             self.client.push(message)
         start = time.perf_counter()
-        client = self.client.clone()
+        client = self.client.clone_client()
         client.set_last_id(last_id_before)
         self.run(filters)
         end = time.perf_counter()

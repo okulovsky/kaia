@@ -24,6 +24,30 @@ class WebTestEnvironment:
             print(f"[{entry['level']}] {entry['message']}")
 
 
+class FrontendTestEnvironmentFactory:
+    def __init__(self, base_url: str, headless: bool = True):
+        self.base_url = base_url
+        self.headless = headless
+        self._driver: webdriver.Chrome | None = None
+
+
+    def __enter__(self) -> webdriver.Chrome:
+        opts = Options()
+        if self.headless:
+            opts.add_argument('--headless')
+        opts.add_argument('--disable-gpu')
+        opts.add_argument('--autoplay-policy=no-user-gesture-required')
+        opts.set_capability('goog:loggingPrefs', {'browser': 'ALL'})
+        self._driver = webdriver.Chrome(options=opts)
+        self._driver.get(self.base_url)
+        return self._driver
+
+    def __exit__(self, exc_type, exc, tb):
+        if self._driver is not None:
+            self._driver.quit()
+
+
+
 class WebTestEnvironmentFactory:
     def __init__(
         self,
@@ -61,7 +85,7 @@ class WebTestEnvironmentFactory:
         )
         client = api.create_client()
 
-        driver = self._stack.enter_context(_SeleniumDriver(api.base_url, self.headless))
+        driver = self._stack.enter_context(FrontendTestEnvironmentFactory(api.base_url, self.headless))
 
         self._env = WebTestEnvironment(api=api, client=client, driver=driver)
         return self._env
@@ -72,23 +96,3 @@ class WebTestEnvironmentFactory:
         return self._stack.__exit__(exc_type, exc, tb)
 
 
-class _SeleniumDriver:
-    def __init__(self, base_url: str, headless: bool):
-        self.base_url = base_url
-        self.headless = headless
-        self._driver: webdriver.Chrome | None = None
-
-    def __enter__(self) -> webdriver.Chrome:
-        opts = Options()
-        if self.headless:
-            opts.add_argument('--headless')
-        opts.add_argument('--disable-gpu')
-        opts.add_argument('--autoplay-policy=no-user-gesture-required')
-        opts.set_capability('goog:loggingPrefs', {'browser': 'ALL'})
-        self._driver = webdriver.Chrome(options=opts)
-        self._driver.get(self.base_url)
-        return self._driver
-
-    def __exit__(self, exc_type, exc, tb):
-        if self._driver is not None:
-            self._driver.quit()
