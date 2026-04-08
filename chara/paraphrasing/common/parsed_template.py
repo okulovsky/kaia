@@ -127,7 +127,7 @@ class ParsedTemplate:
 
         argument = SequenceDub(tuple(sequence))
 
-        template = Template(argument).with_name(self.template.get_name())
+        template = Template(**{self.language: argument}).with_name(self.template.get_name())
         if self.template.get_type() is not None:
             template = template.with_type(self.template.get_type())
         template._context = self.template.get_context()
