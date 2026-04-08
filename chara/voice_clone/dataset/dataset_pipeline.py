@@ -47,7 +47,7 @@ class DatasetPipeline:
         self.banned_words = set(banned_words)
 
     def _create_phonemization_task(self, case):
-        return BrainBox.Task.call(EspeakPhonemizer).phonemize_to_file(case, self.language.espeak_name)
+        return EspeakPhonemizer.new_task().phonemize_to_file(case, self.language.espeak_name)
 
     def __call__(self,
                  cache: DatasetCache,

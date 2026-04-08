@@ -3,7 +3,7 @@ from unittest import TestCase
 
 from avatar.daemon import (
     SoundInjectionCommand,
-    SoundEvent,
+    SoundStreamingEndEvent,
     SetSilenceLevelCommand,
     StatefulRecorderStateEvent,
     StatefulRecorderState,
@@ -50,7 +50,7 @@ class AutomatonTestCase(TestCase):
             # Wait for SoundEvent (recorder committed)
             sound_event = None
             for msg in reader.query(time_limit_in_seconds=30, no_exception=True):
-                if isinstance(msg, SoundEvent):
+                if isinstance(msg, SoundStreamingEndEvent):
                     sound_event = msg
                     break
             self.assertIsNotNone(sound_event, 'SoundEvent not received')

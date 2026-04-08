@@ -2,13 +2,14 @@ from chara.paraphrasing.common import *
 from chara.common import CharaApis
 from grammatron import Template, CardinalDub
 from unittest import TestCase
-from brainbox.deciders import Mock, Collector
+from brainbox.deciders import Collector
+from brainbox.framework import ISelfManagingDecider
 from brainbox import BrainBox
 from foundation_kaia.misc import Loc
 
-class OllamaMock(Mock):
-    def __init__(self):
-        super().__init__("Ollama")
+class OllamaMock(ISelfManagingDecider):
+    def get_name(self):
+        return "Ollama"
 
     def question(self, prompt: str, system_prompt):
         return "* I set the timer for {duration} minutes\n* Your timer will elapse in {duration} minutes"
@@ -24,7 +25,7 @@ class PipelineTestCase(TestCase):
         self.assertEqual(1, len(parsed_template))
         case = ParaphraseCase(parsed_template[0])
         with Loc.create_test_folder() as folder:
-            with BrainBox.Api.Test([OllamaMock(), Collector()]) as api:
+            with BrainBox.Api.test([OllamaMock(), Collector()]) as api:
                 CharaApis.brainbox_api = api
                 cache = ParaphraseCache(folder)
                 pipe = ParaphrasePipeline(

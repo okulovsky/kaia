@@ -2,9 +2,12 @@ import shutil
 import time
 import webbrowser
 
+from avatar.daemon import SoundEvent
 from kaia.app import KaiaAppSettings
 from foundation_kaia.misc import Loc
 from avatar.app.scripts import ScriptsComponent
+from loguru import logger
+from kaia.utils.wav_info import wav_check
 
 if __name__ == '__main__':
     working_folder = Loc.data_folder/'demo'
@@ -20,6 +23,10 @@ if __name__ == '__main__':
     client = app.create_avatar_client()
     while True:
         time.sleep(1)
-        for m in client.pull(timeout_in_seconds=0):
-            print(m)
+        for message in client.pull(timeout_in_seconds=0):
+            if isinstance(message, SoundEvent):
+                with open("sound.wav", 'wb') as f:
+                    f.write(app.avatar_api.cache.read(message.file_id))
+                    wav_check("sound.wav")
+
 

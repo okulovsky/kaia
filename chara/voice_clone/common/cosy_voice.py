@@ -21,7 +21,7 @@ class CosyVoiceTrain(VoiceTrain):
             samples: list[Path],
             samples_metadata: list[dict],
             metadata: VoiceTrainMetadata|None = None
-    ) -> tuple[BrainBox.ITask, VoiceModel]:
+    ) -> tuple[BrainBox.Task, VoiceModel]:
         if len(samples) != 1:
             raise ValueError(f"Cosyvoice requires a single file as a sample, but the sample list was of length {len(samples)}.\n{samples}")
 
@@ -41,7 +41,7 @@ class CosyVoiceTrain(VoiceTrain):
             text
         )
 
-        task = BrainBox.Task.call(CosyVoice).train(model_name, text, train_file)
+        task = CosyVoice.new_task().train(model_name, text, train_file)
         return task, model
 
     def get_metadata_extensions(self) -> tuple[str,...]:
@@ -57,11 +57,11 @@ class CosyVoiceTrain(VoiceTrain):
 class CosyVoiceInference(VoiceInference):
     translanguage: bool
 
-    def create_task(self, model: CosyVoiceModel, text: str) -> BrainBox.ITask:
+    def create_task(self, model: CosyVoiceModel, text: str) -> BrainBox.Task:
         if self.translanguage:
-            return BrainBox.Task.call(CosyVoice).voice_to_text_translingual(model.model_name, text)
+            return CosyVoice.new_task().voice_to_text_translingual(model.model_name, text)
         else:
-            return BrainBox.Task.call(CosyVoice).voice_to_text(model.model_name, text)
+            return CosyVoice.new_task().voice_to_text(model.model_name, text)
 
 
 

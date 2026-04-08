@@ -6,7 +6,7 @@ from unittest import TestCase
 from foundation_kaia.misc import Loc
 from loguru import logger
 import contextlib
-from dataclasses import dataclass, field
+from avatar.app.scripts import ScriptsComponent
 
 class BackendTestEnvironment:
     def __init__(self, tc: TestCase, folder: Path, settings: KaiaAppSettings, app: KaiaApp, client: AvatarClient):
@@ -82,6 +82,7 @@ class BackendTestEnvironmentFactory:
         settings = KaiaAppSettings()
         settings.custom_avatar_resources_folder = Loc.root_folder / 'kaia/app/files/avatar-resources'
         settings.avatar_server.custom_frontend_folder = Loc.data_folder/'demo/avatar/frontend'
+        ScriptsComponent.compile(settings.avatar_server.custom_frontend_folder)
         if self.html is not None:
             settings.avatar_server.custom_html = self.html
         else:

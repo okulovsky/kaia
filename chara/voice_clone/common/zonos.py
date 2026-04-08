@@ -21,7 +21,9 @@ class ZonosTrain(VoiceTrain):
     def create_train_task_and_reference(
             self,
             samples: list[Path],
-            metadata: VoiceTrainMetadata|None = None) -> tuple[BrainBox.ITask, VoiceModel]:
+            samples_metadata: list[dict],
+            metadata: VoiceTrainMetadata|None = None
+    ) -> tuple[BrainBox.Task, VoiceModel]:
 
         if metadata is None:
             metadata = VoiceTrainMetadata()
@@ -36,7 +38,7 @@ class ZonosTrain(VoiceTrain):
             str(metadata.original_samples_path)
         )
 
-        task = BrainBox.Task.call(Zonos).train(model_name, samples)
+        task = Zonos.new_task().train(model_name, samples)
         return task, model
 
     def requires_train_single_file_with_extension(self) -> str | None:
@@ -48,8 +50,8 @@ class ZonosInference(VoiceInference):
     emotion: list[float]|None = None
 
 
-    def create_task(self, model: ZonosModel, text: str) -> BrainBox.ITask:
-        return BrainBox.Task.call(Zonos).voiceover(text, model.model_name, self.language, self.emotion)
+    def create_task(self, model: ZonosModel, text: str) -> BrainBox.Task:
+        return Zonos.new_task().voiceover(text, model.model_name, self.language, self.emotion)
 
 
 

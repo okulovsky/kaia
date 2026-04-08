@@ -23,7 +23,7 @@ class StepPipeline:
     suffix: str = ''
 
     def _create_vosk_task(self, filename: str):
-        return BrainBox.Task.call(Vosk).transcribe_to_array(filename, self.vosk_model_name)
+        return Vosk.new_task().transcribe_to_array(filename, self.vosk_model_name)
 
 
     def __call__(self,

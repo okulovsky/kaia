@@ -2,6 +2,7 @@ from foundation_kaia.marshalling_2 import service, FileLike
 from foundation_kaia.brainbox_utils import BrainboxReportItem, brainbox_websocket
 from typing import Iterable, Any, Literal
 from dataclasses import dataclass, field
+from pathlib import Path
 
 
 @dataclass(frozen=True)
@@ -9,6 +10,7 @@ class TrainingRun:
     model_id: str
     adapter_name: str
     guid: str
+    path: Path
 
 
 @dataclass

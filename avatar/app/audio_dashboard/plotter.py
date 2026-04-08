@@ -9,7 +9,7 @@ def _naive(dt: datetime.datetime) -> datetime.datetime:
 from ...daemon import (
     SoundLevelReport, StatefulRecorderStateEvent,
     SoundCommand, SoundConfirmation, SystemSoundCommand,
-    SoundStartEvent, SoundEvent,
+    SoundStreamingEndEvent, SoundStreamingStartEvent,
 )
 from .handlers import LevelsHandler, StatesHandler, FilesHandler
 from plotly.subplots import make_subplots
@@ -43,9 +43,9 @@ class Plotter:
                 files.file_start('output', f'/cache/{item.file_id}', relative_time, item.envelop.id)
             elif isinstance(item, SoundConfirmation):
                 files.file_end_by_confirmation(item, relative_time)
-            elif isinstance(item, SoundStartEvent):
+            elif isinstance(item, SoundStreamingStartEvent):
                 files.file_start('input', f'/cache/{item.file_id}', relative_time)
-            elif isinstance(item, SoundEvent):
+            elif isinstance(item, SoundStreamingEndEvent):
                 files.file_end_by_name(f'/cache/{item.file_id}', relative_time)
 
         return self.build_plot(levels, states, files)

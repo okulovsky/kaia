@@ -1,7 +1,7 @@
 from pathlib import Path
 from unittest import TestCase
 
-from avatar.daemon.common.known_messages import SoundInjectionCommand, WakeWordEvent, SoundStartEvent, InitializationEvent
+from avatar.daemon.common.known_messages import SoundInjectionCommand, WakeWordEvent, SoundStreamingStartEvent, InitializationEvent
 from avatar.utils import WebTestEnvironmentFactory, Sine
 
 
@@ -22,7 +22,7 @@ class WakeWordTestCase(TestCase):
 
             FILE = None
             if ENABLE_DEBUG != 'false':
-                FILE = reader.query(5).where(lambda z: isinstance(z, SoundStartEvent)).first().file_id
+                FILE = reader.query(5).where(lambda z: isinstance(z, SoundStreamingStartEvent)).first().file_id
 
             # Feed noise — no wake word expected
             env.client.run_synchronously(SoundInjectionCommand('noise'), time_limit_in_seconds=30)

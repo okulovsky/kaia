@@ -10,13 +10,12 @@ def file(s: str):
 
 class BackendAndFrontendInitializationTestCase(TestCase):
     def test_backend_and_frontend(self):
-        with BackendTestEnvironmentFactory(self, html=HTML(0.01)) as env:
-            with FrontendTestEnvironmentFactory(env.base_url, headless=True) as driver:
+        with BackendTestEnvironmentFactory(self, html=HTML) as env:
+            with FrontendTestEnvironmentFactory(env.base_url, headless=False) as driver:
                 try:
                     env.client.wait_for_availability()
                     env.client.scroll_to_end()
-                    env.parse_reaction(
-                        TextCommand)  # "Hello, nice to see you" is triggered by InitilizedEvent, which is triggered by interface after Loading success
+                    env.parse_reaction(TextCommand)  # "Hello, nice to see you" is triggered by InitilizedEvent, which is triggered by interface after Loading success
 
                     env.say(file('computer'))
                     env.wait_for(
@@ -63,10 +62,10 @@ HTML = '''
   import {
     AvatarClient, Dispatcher, FakeMicrophone, MicController,
     Recorder, StatefulRecorder, SilenceDetector, Automaton, AudioController,
-    Message, Envelop, 
-  } from '/frontend/scripts/index.js';
-  import { WakeWordDetector } from '/frontend/scripts/wakeWordDetector.js';
-  import { LoadingScreen } from '/frontend/scripts/loadingScreen.js';
+    Message, Envelop, LoadingScreen 
+  } from '/frontend/scripts/kaia-frontend.js';
+  import { KaldiWakeWordDetector } from '/frontend/scripts/kaldi-wake-word-detector.js';
+  
 
 
 
@@ -76,7 +75,7 @@ HTML = '''
   const recorder = new Recorder({ startBufferLength: 1.0, normalBufferLength: 0.3, dispatcher, baseUrl: window.location.origin });
   const stateful = new StatefulRecorder({ recorder, dispatcher });
   const silence = new SilenceDetector({ timeBetweenReportsInSeconds: 1, reportingWindowSeconds: 0.05, silenceLevel: 0.01, dispatcher });
-  const wake = new WakeWordDetector({ sampleRateOfTheModel: 16000, words: ['computer'], modelUrl: '/frontend/models/vosk-model-small-en-us-0.15.zip', dispatcher });
+  const wake = new KaldiWakeWordDetector({ sampleRateOfTheModel: 16000, words: ['computer'], modelUrl: '/frontend/models/vosk-model-small-en-us-0.15.zip', dispatcher });
   new AudioController({ dispatcher, baseUrl: window.location.origin, silent: true, acceleration: 10 });
   const automaton = new Automaton({ silenceDetector: silence, wakeWordDetector: wake, statefulRecorder: stateful, dispatcher });
   const controller = new MicController(input, m => automaton.process(m));

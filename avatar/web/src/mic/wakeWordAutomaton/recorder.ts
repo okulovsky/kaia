@@ -93,7 +93,7 @@ export class Recorder {
         )
         if (!beginResp.ok) throw new Error(`[Recorder] begin-writing failed: ${beginResp.status}`)
 
-        // Send WAV header as chunk 0 — awaited so it lands on disk before SoundStartEvent fires
+        // Send WAV header as chunk 0 — awaited so it lands on disk before SoundStreamingStartEvent fires
         await this._sendChunk(filename, this.chunkIndex++, buildWavHeader(sampleRate))
 
         // Flush pre-roll — awaited for the same reason
@@ -104,7 +104,7 @@ export class Recorder {
             this.startBuffer.clear()
         }
 
-        this.dispatcher.push(new Message('SoundStartEvent', new Envelop(), { file_id: filename }))
+        this.dispatcher.push(new Message('SoundStreamingStartEvent', new Envelop(), { file_id: filename }))
     }
 
     private _write(micData: MicData): void {
@@ -134,7 +134,7 @@ export class Recorder {
             { method: 'POST' }
         )
         if (!commitResp.ok) throw new Error(`[Recorder] commit failed: ${commitResp.status}`)
-        this.dispatcher.push(new Message('SoundEvent', new Envelop(), { file_id: filename }))
+        this.dispatcher.push(new Message('SoundStreamingEndEvent', new Envelop(), { file_id: filename, success: true }))
         this._cleanup()
     }
 
@@ -146,6 +146,7 @@ export class Recorder {
             `${this.baseUrl}/streaming/delete/${encodeURIComponent(filename)}`,
             { method: 'POST' }
         ).catch(err => console.error('[Recorder] cancel failed:', err))
+        this.dispatcher.push(new Message('SoundStreamingEndEvent', new Envelop(), { file_id: filename, success: false }))
     }
 
     private _cleanup(): void {

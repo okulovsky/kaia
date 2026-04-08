@@ -6,9 +6,11 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 from avatar.app import AvatarApi, AvatarServer, AvatarServerSettings
+from avatar.app.scripts import ScriptsComponent
 from avatar.messaging import AvatarClient
 from foundation_kaia.marshalling_2 import TestApi
 from foundation_kaia.misc import Loc
+
 
 _DEFAULT_SCRIPTS_FOLDER = Loc.root_folder / 'avatar' / 'web' / 'frontend'
 
@@ -70,6 +72,8 @@ class WebTestEnvironmentFactory:
     def __enter__(self) -> WebTestEnvironment:
         import tempfile
         cache_dir = self._stack.enter_context(tempfile.TemporaryDirectory())
+
+        ScriptsComponent.compile(self.scripts_folder)
 
         settings = AvatarServerSettings(
             port=self.port,

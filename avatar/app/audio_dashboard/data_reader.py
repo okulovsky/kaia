@@ -2,7 +2,7 @@ from ...messaging import AvatarClient, IMessage
 from ...daemon import (
     SoundLevelReport, StatefulRecorderStateEvent,
     SoundCommand, SoundConfirmation, SystemSoundCommand,
-    SoundStartEvent, SoundEvent,
+    SoundStreamingStartEvent, SoundStreamingEndEvent,
 )
 from datetime import datetime, timedelta
 
@@ -12,7 +12,7 @@ class DataReader:
         self.client.set_allowed_types(
             SoundLevelReport, StatefulRecorderStateEvent,
             SoundCommand, SoundConfirmation, SystemSoundCommand,
-            SoundStartEvent, SoundEvent,
+            SoundStreamingEndEvent, SoundStreamingStartEvent,
         )
         self.last_update: datetime|None = None
         self.past_span_in_seconds = past_span_in_seconds

@@ -36,6 +36,14 @@ class IStorage(ABC):
     def delete(self, filename: str|Path) -> None:
         ...
 
+    @endpoint(is_pathlike='filename')
+    def is_file(self, filename: str|Path) -> bool:
+        ...
+
+    @endpoint(is_pathlike='filename')
+    def is_dir(self, filename: str|Path) -> bool:
+        ...
+
     def read(self, filename: str|Path) -> bytes:
         return b''.join(self.open(filename))
 
@@ -47,13 +55,7 @@ class IStorage(ABC):
     def read_file(self, filename: str|Path) -> File:
         return File(Path(filename).name, self.read(filename))
 
-    @endpoint(is_pathlike='filename')
-    def is_file(self, filename: str|Path) -> bool:
-        ...
 
-    @endpoint(is_pathlike='filename')
-    def is_dir(self, filename: str|Path) -> bool:
-        ...
 
 
 
@@ -77,10 +79,18 @@ class Storage(IStorage):
 
     def list(self, path: str|Path, prefix: str|None = None, suffix: str|None = None, glob: bool|None = None) -> list[str]:
         full_path = self.folder / path
+        if full_path.is_file():
+            raise ValueError(f"{full_path} is a file")
+        if not full_path.is_dir():
+            return []
         return [str(f.relative_to(full_path)) for f in self._iter_files(full_path, prefix, suffix, glob)]
 
     def list_details(self, path: str|Path, prefix: str|None = None, suffix: str|None = None, glob: bool|None = None) -> list[FileDetails]:
         full_path = self.folder / path
+        if full_path.is_file():
+            raise ValueError(f"{full_path} is a file")
+        if not full_path.is_dir():
+            return []
         result = []
         for f in self._iter_files(full_path, prefix, suffix, glob):
             stat = f.stat()

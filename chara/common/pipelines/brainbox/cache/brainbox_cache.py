@@ -13,7 +13,7 @@ TOption = TypeVar("TOption")
 class BrainBoxCache(Generic[TCase, TOption], ICache[None]):
     def __init__(self, working_folder: Path|None = None):
         super().__init__(working_folder)
-        self.tasks = FileCache[list[BrainBox.ITask]]()
+        self.tasks = FileCache[list[BrainBox.Task]]()
         self.task_id = FileCache[str](FileCache.Type.Text)
         self.result = BrainBoxMultifileCache[TCase, TOption]()
         self.files = FolderCache()

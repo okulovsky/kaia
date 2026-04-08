@@ -5,8 +5,6 @@ from pathlib import Path
 from brainbox import BrainBox
 
 
-
-
 class TrainingCache(ICache):
     def __init__(self, working_folder: Path|None = None):
         super().__init__(working_folder)
@@ -33,26 +31,23 @@ class TrainingPipeline:
         self.text_to_voiceover = text_to_voiceover
 
     def _create_training_task(self, path_to_export_file: Path):
-        return BrainBox.Task.call(PiperTraining).train(self.name, self.base_model, self.parameters, path_to_export_file)
+        return PiperTraining.new_task().train(self.name, self.base_model, self.parameters, path_to_export_file)
 
     def _create_export_task(self, checkpoint):
-        return BrainBox.Task.call(PiperTraining).export(checkpoint)
+        return PiperTraining.new_task().export(checkpoint)
 
     def _create_training_delete_task(self, training_id):
-        return BrainBox.Task.call(PiperTraining).delete(training_id)
+        return PiperTraining.new_task().delete(training_id)
 
     def _create_upload_task(self, filename):
-        return BrainBox.Task.call(Piper).upload_tar_voice(filename, filename)
+        return Piper.new_task().upload_tar_voice(filename, filename)
 
     def _create_voiceover_task(self, filename):
-        return BrainBox.Task.call(Piper).voiceover(self.text_to_voiceover, filename)
+        return Piper.new_task().voiceover(self.text_to_voiceover, filename)
 
     def _create_delete_task(self, filename):
-        return BrainBox.Task.call(Piper).delete_voice(filename)
+        return Piper.new_task().delete_voice(filename)
 
-
-    def _create_voiceover_task(self, filename):
-        return BrainBox.Task.call(Piper).voiceover(self.text_to_voiceover, filename)
 
     def __call__(self, cache: TrainingCache,  path_to_export_file: Path):
         @logger.phase(cache.training)

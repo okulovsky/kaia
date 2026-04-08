@@ -4,11 +4,7 @@ from brainbox import BrainBox
 from .voice_train import VoiceTrain, VoiceTrainMetadata, VoiceModel
 from .voice_inference import VoiceInference
 from dataclasses import dataclass
-from yo_fluq import FileIO
-from hashlib import md5
 from brainbox.deciders import Chatterbox
-import subprocess
-from copy import copy
 
 
 @dataclass
@@ -21,7 +17,9 @@ class ChatterboxTrain(VoiceTrain):
     def create_train_task_and_reference(
             self,
             samples: list[Path],
-            metadata: VoiceTrainMetadata|None = None) -> tuple[BrainBox.ITask, VoiceModel]:
+            samples_metadata: list[dict],
+            metadata: VoiceTrainMetadata|None = None
+    ) -> tuple[BrainBox.Task, VoiceModel]:
         if len(samples) != 1:
             raise ValueError(f"Chatterbox requires a single file as a sample, but the sample list was of length {len(samples)}.")
 
@@ -39,7 +37,7 @@ class ChatterboxTrain(VoiceTrain):
             str(metadata.original_samples_path)
         )
 
-        task = BrainBox.Task.call(Chatterbox).train(model_name, train_file)
+        task = Chatterbox.new_task().train(model_name, train_file)
         return task, model
 
 
@@ -53,8 +51,8 @@ class ChatterboxInference(VoiceInference):
     exaggeration: float = 0.5
 
 
-    def create_task(self, model: ChatterboxModel, text: str) -> BrainBox.ITask:
-        return BrainBox.Task.call(Chatterbox).voiceover(text, model.model_name, self.language, self.exaggeration, self.cfg_weight)
+    def create_task(self, model: ChatterboxModel, text: str) -> BrainBox.Task:
+        return Chatterbox.new_task().voiceover(text, model.model_name, self.language, self.exaggeration, self.cfg_weight)
 
 
 

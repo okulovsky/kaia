@@ -121,12 +121,16 @@ class AvatarDaemonAppSettings(IAppInitializer):
         if self.mock_sound_service:
             return MockSoundService()
 
-
     def create_sound_command_unblocker(self, app: KaiaApp, state: s.State):
         return s.SoundPlayUnblockerService()
 
+    def create_wav_file_fider(self, app: KaiaApp, state: s.State):
+        return s.UploadedWavFixer(app.brainbox_cache_folder, 16000)
+
     def new_state(self):
         return s.State(character=self.characters[0], language='en')
+
+
 
     def bind_app(self, app: KaiaApp):
         reporting_stream = None

@@ -28,7 +28,11 @@ class BrainBoxApi:
         self.batches: IBatchesService = BatchesApi(base_url)
         self.cache: IStorage = StorageApi(base_url, 'cache')
         self.streaming_cache: IStreamingStorage = StreamingStorageApi(base_url, "streaming-cache")
-        self.resources = StorageApiWrap[str|ControllerLike](StorageApi(base_url, 'resources'), ControllerRegistry.to_controller_name)
+        self._resources_storage = StorageApi(base_url, 'resources')
+
+    def resources(self, controller: ControllerLike) -> IStorage:
+        name = ControllerRegistry.to_controller_name(controller)
+        return StorageApiWrap(self._resources_storage, name)
 
     def wait_for_connection(self, time_in_seconds: int = 10) -> None:
         ApiUtils.wait_for_reply(f'{self.base_url}/heartbeat', time_in_seconds)

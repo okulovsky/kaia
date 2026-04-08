@@ -79,7 +79,7 @@ class VoiceTrain(ABC):
             samples: list[Path],
             samples_metadata: list[dict],
             metadata: VoiceTrainMetadata|None = None
-    ) -> tuple[BrainBox.ITask, VoiceModel]:
+    ) -> tuple[BrainBox.Task, VoiceModel]:
         pass
 
 

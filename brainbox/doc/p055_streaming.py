@@ -22,7 +22,7 @@ def model_management(test_case: TestCase, api: BrainBox.Api):
     You can list them using the resources API:
     """
 
-    resources = api.resources.list(HelloBrainBox, 'models', glob=True)
+    resources = api.resources(HelloBrainBox).list('models', glob=True)
     test_case.assertIn('google', resources)
     test_case.assertIn('duckduckgo', resources)
 
@@ -43,7 +43,7 @@ def model_management(test_case: TestCase, api: BrainBox.Api):
             HelloBrainBoxModelSpec('http://google.com')
         )
     )
-    resources = api.resources.list(HelloBrainBox, 'models', glob=True)
+    resources = api.resources(HelloBrainBox).list('models', glob=True)
     test_case.assertIn('my_model', resources)
 
     """

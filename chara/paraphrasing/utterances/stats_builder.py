@@ -30,13 +30,17 @@ def record_to_fingerprint(record) -> ParaphraseFingerprint:
 
 
 def _read_existing() -> list[ParaphraseRecord]:
-    rs = CharaApis.avatar_api.resources(ParaphraseService)
     existing = []
-    files = rs.list(prefix=ParaphraseService.PARAPHRASES_PREFIX, suffix=ParaphraseService.PARAPHRASES_SUFFIX)
+    rs = CharaApis.avatar_api.resources(ParaphraseService)
+    files = rs.list(
+        '/',
+        prefix=ParaphraseService.PARAPHRASES_PREFIX,
+        suffix=ParaphraseService.PARAPHRASES_SUFFIX
+    )
     if files is None:
         files = []
     for file in files:
-        existing.extend(pickle.loads(rs.open(file)))
+        existing.extend(pickle.loads(rs.read(file)))
     return existing
 
 
@@ -44,7 +48,7 @@ def _read_feedback() -> dict[str, dict[str, int]]:
     rs = CharaApis.avatar_api.resources(ParaphraseService)
     if not rs.is_file(ParaphraseService.FEEDBACK_FILENAME):
         return {}
-    return json.loads(rs.open('paraphrases-feedback.json'))
+    return json.loads(rs.read('paraphrases-feedback.json'))
 
 
 def _create_statistics(tasks: list[ParaphraseCase]) -> dict[ParaphraseFingerprint, ParaphraseStats]:

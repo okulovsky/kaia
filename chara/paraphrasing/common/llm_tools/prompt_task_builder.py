@@ -9,6 +9,6 @@ class PromptTaskBuilder:
     model: str
     system_prompt: str|None = None
 
-    def __call__(self, case) -> BrainBox.ITask:
+    def __call__(self, case) -> BrainBox.Task:
         prompt = self.prompter(case)
-        return BrainBox.Task.call(Ollama, self.model).question(prompt, self.system_prompt)
+        return Ollama.new_task(parameter=self.model).question(prompt, self.system_prompt)

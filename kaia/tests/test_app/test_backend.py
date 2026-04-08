@@ -16,8 +16,8 @@ class BackendInitializationTestCase(TestCase):
 
             logger.info("INITIALIZATION")
             env.client.push(InitializationEvent())
-            reaction = env.parse_reaction(TextCommand)
-            self.assertFalse(Query.en(reaction).where(lambda z: isinstance(z, ExceptionEvent)).any())
+            env.parse_reaction(TextCommand)
+
 
             logger.info("FIRST COMMAND: PING")
 

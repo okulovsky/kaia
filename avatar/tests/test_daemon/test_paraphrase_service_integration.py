@@ -35,8 +35,7 @@ class ParaphraseTestCase(TestCase):
 
         with Loc.create_test_folder() as folder:
             with AvatarApi.test(folder) as api:
-                api.resources.upload(
-                    ParaphraseService,
+                api.resources(ParaphraseService).upload(
                     "paraphrases_000.pkl",
                     pickle.dumps(records),
                 )
@@ -61,7 +60,7 @@ class ParaphraseTestCase(TestCase):
 
                 self.assertEqual('Test_1/character_0/0.', result[-1].get_text(True))
 
-                self.assertTrue(api.resources.is_file(ParaphraseService, 'paraphrases-feedback.json'))
+                self.assertTrue(api.resources(ParaphraseService).is_file('paraphrases-feedback.json'))
                 self.assertTrue(folder/'ParaphrasesService/paraphrases-feedback.json')
 
 

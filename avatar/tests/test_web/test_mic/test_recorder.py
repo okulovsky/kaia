@@ -2,8 +2,8 @@ from unittest import TestCase
 
 from avatar.daemon.common.known_messages import (
     SoundInjectionCommand,
-    SoundStartEvent,
-    SoundEvent,
+    SoundStreamingStartEvent,
+    SoundStreamingEndEvent,
     StatefulRecorderStateCommand,
     StatefulRecorderState
 )
@@ -32,12 +32,12 @@ class RecorderTestCase(TestCase):
             env.client.push(StatefulRecorderStateCommand(state=StatefulRecorderState.Record))
 
             # Wait for SoundStartEvent — guarantees header + pre-roll are on disk
-            start_event: SoundStartEvent | None = None
+            start_event: SoundStreamingStartEvent | None = None
             for msg in reader.query(time_limit_in_seconds=30, no_exception=True):
-                if isinstance(msg, SoundStartEvent):
+                if isinstance(msg, SoundStreamingStartEvent):
                     start_event = msg
                     break
-            self.assertIsNotNone(start_event, 'SoundStartEvent not received')
+            self.assertIsNotNone(start_event, 'SoundStreamingStartEvent not received')
 
             # Snapshot 1: pre-roll only (amp2500)
             snapshot1 = env.api.cache.read(start_event.file_id)
@@ -48,12 +48,13 @@ class RecorderTestCase(TestCase):
             # Commit: flushes remaining buffer, fires SoundEvent
             env.client.push(StatefulRecorderStateCommand(state=StatefulRecorderState.Commit))
 
-            sound_event: SoundEvent | None = None
+            sound_event: SoundStreamingEndEvent | None = None
             for msg in reader.query(time_limit_in_seconds=30, no_exception=True):
-                if isinstance(msg, SoundEvent):
+                if isinstance(msg, SoundStreamingEndEvent):
                     sound_event = msg
                     break
-            self.assertIsNotNone(sound_event, 'SoundEvent not received')
+            self.assertIsNotNone(sound_event, 'SoundStreamingEndEvent not received')
+            self.assertTrue(sound_event.success)
 
             # Snapshot 2: pre-roll + amp5000
             snapshot2 = env.api.cache.read(sound_event.file_id)

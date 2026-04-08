@@ -18,12 +18,12 @@ class ResourcesTestCase(TestCase):
                 # After install: installation.yaml + models/google + models/duckduckgo
                 self.assertEqual(3, Query.folder(locator.resources_folder, '**/*').where(lambda z: z.is_file()).count())
 
-                resources_list = api.resources.list(HelloBrainBox, '/', glob=True)
+                resources_list = api.resources(HelloBrainBox).list('/', glob=True)
                 print(resources_list)
                 self.assertEqual(3, len(resources_list))
 
-                api.resources.upload(HelloBrainBox, 'new/file', b'Hello')
-                self.assertEqual(1, len(api.resources.list_details(HelloBrainBox, '/new')))
+                api.resources(HelloBrainBox).upload('new/file', b'Hello')
+                self.assertEqual(1, len(api.resources(HelloBrainBox).list_details('/new')))
 
-                content = api.resources.read_content(HelloBrainBox, 'new/file')
+                content = api.resources(HelloBrainBox).read('new/file')
                 self.assertEqual(b'Hello', content)

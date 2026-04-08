@@ -1,31 +1,35 @@
 from chara.common import CharaApis
 from unittest import TestCase
-from brainbox.deciders import Mock, Collector
+from brainbox.deciders import Collector
+from brainbox.framework import ISelfManagingDecider
 from brainbox import BrainBox
-from brainbox.framework import FileLike
+from foundation_kaia.marshalling_2 import FileLike
 from foundation_kaia.misc import Loc
 from typing import Optional
-from chara.llama_lora.pipeline import (
+from chara.nlu.slm_training.pipeline import (
     LlamaLoraPipeline,
     TrainingSettings,
     LlamaLoraCache,
     TrainingRun,
 )
-from chara.llama_lora.stats import TrainStats, GenerationResult
+from chara.nlu.slm_training.stats import TrainStats, GenerationResult
 from pathlib import Path
 import shutil
 
 
-class LlamaLoraSFTTrainerMock(Mock):
+class LlamaLoraSFTTrainerMock(ISelfManagingDecider):
     def __init__(self, training_run_folder: Path):
-        super().__init__("LlamaLoraSFTTrainer")
         self.training_run_folder = training_run_folder
+
+    def get_name(self):
+        return "LlamaLoraSFTTrainer"
+
 
     def train(
         self,
         model_id: str,
         adapter_name: str,
-        dataset: FileLike.Type,
+        dataset: FileLike,
         settings: TrainingSettings | dict | None = None,
     ) -> TrainingRun:
         gguf_dir = self.training_run_folder / "gguf_checkpoints"
@@ -55,9 +59,10 @@ class LlamaLoraSFTTrainerMock(Mock):
         )
 
 
-class LlamaLoraServerMock(Mock):
-    def __init__(self):
-        super().__init__("LlamaLoraServer")
+class LlamaLoraServerMock(ISelfManagingDecider):
+    def get_name(self):
+        return "LlamaLoraServer"
+
 
     def completion(
         self,
@@ -76,12 +81,13 @@ class LlamaLoraPipelineTestCase(TestCase):
         val_batch_size = 2
         train_dataset = Path(__file__).parent / "mock_train_example.jsonl"
         val_dataset = Path(__file__).parent / "mock_val_example.jsonl"
+        CharaApis.strict_brainbox_errors = True
 
         with (
             Loc.create_test_folder(dont_delete=True) as working_folder,
             Loc.create_test_folder(dont_delete=True) as training_run_folder,
         ):
-            with BrainBox.Api.Test(
+            with BrainBox.Api.test(
                 [LlamaLoraServerMock(), LlamaLoraSFTTrainerMock(training_run_folder), Collector()]
             ) as api:
                 CharaApis.brainbox_api = api

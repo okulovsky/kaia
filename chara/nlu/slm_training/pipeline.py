@@ -51,16 +51,16 @@ class LlamaLoraPipeline:
         self.val_batch_size = val_batch_size
         self.max_tokens = max_tokens
 
-    def _create_training_task(self, train_case: LoraTrainCase) -> BrainBox.ITask:
-        return BrainBox.Task.call(LlamaLoraSFTTrainer).train(
+    def _create_training_task(self, train_case: LoraTrainCase) -> BrainBox.Task:
+        return LlamaLoraSFTTrainer.new_task().train(
             model_id=self.model_id,
             adapter_name=train_case.adapter_name,
             dataset=train_case.train_dataset,
             settings=self.settings,
         )
 
-    def _create_generation_task(self, generation_case: LoraGenerationCase) -> BrainBox.ITask:
-        return BrainBox.Task.call(LlamaLoraServer, self.model_id).completion(
+    def _create_generation_task(self, generation_case: LoraGenerationCase) -> BrainBox.Task:
+        return LlamaLoraServer.new_task(parameter=self.model_id).completion(
             task_name=generation_case.adapter_name,
             prompts=generation_case.inputs,
             max_tokens=self.max_tokens,
@@ -130,8 +130,8 @@ class LlamaLoraPipeline:
                 checkpoint_adapter_dest = (
                     f"models/{self.model_id}/lora_adapters/{checkpoint_task_name}.gguf"
                 )
-                CharaApis.brainbox_api.controller_api.upload_resource(
-                    "LlamaLoraServer", checkpoint_adapter_dest, gguf_checkpoint
+                CharaApis.brainbox_api.resources(LlamaLoraServer).upload(
+                    checkpoint_adapter_dest, gguf_checkpoint
                 )
 
                 subcache = cache.val_outputs.create_subcache(str(checkpoint_number))
@@ -148,8 +148,8 @@ class LlamaLoraPipeline:
                         ),
                     )
 
-                CharaApis.brainbox_api.controller_api.delete_resource(
-                    "LlamaLoraServer", checkpoint_adapter_dest
+                CharaApis.brainbox_api.resources(LlamaLoraServer).delete(
+                    checkpoint_adapter_dest
                 )
             cache.val_outputs.finalize()
 

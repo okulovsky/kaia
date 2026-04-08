@@ -14,7 +14,7 @@ class Phonemization:
 
 
 def merge(case: list[str], option: Any) -> list[dict]:
-    data = json.loads(CharaApis.brainbox_api.open_file(option).content)
+    data = json.loads(CharaApis.brainbox_api.cache.read_file(option).content)
     result = []
     for line, reply in zip(case, data):
         result.append(Phonemization(

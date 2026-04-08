@@ -37,8 +37,15 @@ class SoundEvent(IMessage):
 
 
 @dataclass
-class SoundStartEvent(IMessage):
+class SoundStreamingStartEvent(IMessage):
     file_id: str
+
+@dataclass
+class SoundStreamingEndEvent(IMessage):
+    file_id: str
+    success: bool
+
+
 
 
 @dataclass

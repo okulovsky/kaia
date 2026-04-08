@@ -4,7 +4,7 @@ from unittest import TestCase
 from selenium.webdriver.support.ui import WebDriverWait
 
 from avatar.daemon import SoundLevelReport, SoundInjectionStartedEvent
-from avatar.daemon.common.known_messages import SoundInjectionCommand, WakeWordEvent, SoundEvent, OpenMicCommand
+from avatar.daemon.common.known_messages import SoundInjectionCommand, SoundStreamingEndEvent, OpenMicCommand
 from avatar.messaging import IMessage
 from avatar.utils import WebTestEnvironmentFactory, Sine, WebTestEnvironment, split_wav_by_amplitude
 
@@ -22,7 +22,7 @@ class SilenceMarginsTestCase(TestCase):
         messages = []
         for m in env.client.query(10, no_exception=True):
             messages.append(m)
-            if isinstance(m, SoundEvent):
+            if isinstance(m, SoundStreamingEndEvent):
                 break
         return messages
 
@@ -53,7 +53,7 @@ class SilenceMarginsTestCase(TestCase):
                      )
             messages = self._run(env, sound)
             self.print_messages(messages)
-            self.assertIsInstance(messages[-1], SoundEvent)
+            self.assertIsInstance(messages[-1], SoundStreamingEndEvent)
             segments = split_wav_by_amplitude(env.api.cache.read(messages[-1].file_id))
             self.assertEqual(3, len(segments))
             self.assertAlmostEqual(0.3, segments[1].amplitude, 1)

@@ -116,7 +116,7 @@ class LlamaLoraSFTTrainerController(DockerMarshallingController[LlamaLoraSFTTrai
         latest_gguf_checkpoint = max(gguf_files, key=lambda f: int(f.stem.split("-")[1]))
         temporary_task_name = training_run.guid
         temporary_adapter_dest = f"models/{model_id}/lora_adapters/{temporary_task_name}.gguf"
-        api.resources.upload("LlamaLoraServer", temporary_adapter_dest, latest_gguf_checkpoint)
+        api.resources(LlamaLoraServer).upload(temporary_adapter_dest, latest_gguf_checkpoint)
 
         timer_prompt = "USER:set a timer for 5 seconds\n"
         timer_task_result = api.execute(
@@ -126,4 +126,4 @@ class LlamaLoraSFTTrainerController(DockerMarshallingController[LlamaLoraSFTTrai
         )
         tc.assertEqual(timer_task_result, "HOURS:0\nMINUTES:0\nSECONDS:5")
 
-        api.resources.delete("LlamaLoraServer", temporary_adapter_dest)
+        api.resources(LlamaLoraServer).delete(temporary_adapter_dest)
