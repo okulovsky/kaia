@@ -14,7 +14,7 @@ class ServerStreamingTestCase(TestCase):
 
     def test_streaming_incremental(self):
         with BrainBoxApi.test([IncrementingDecider()], port=18191) as api:
-            storage = StreamingStorage(api.locator.cache_folder)
+            storage = StreamingStorage(api.debug_locations.cache_folder)
             input_filename = f'{uuid.uuid4()}.bin'
             storage.begin_writing(input_filename)
 

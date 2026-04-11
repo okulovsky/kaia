@@ -16,14 +16,14 @@ dependencies = [
     "requests",
     "jsonpickle",
     "Jinja2",
-    "flask",
     "fastapi",
     "uvicorn",
     "python-multipart",
     "websocket-client",
     "python-dotenv",
     "websockets",
-    "pyyaml"
+    "pyyaml",
+    "docutils"
 ]
 
 classifiers = [

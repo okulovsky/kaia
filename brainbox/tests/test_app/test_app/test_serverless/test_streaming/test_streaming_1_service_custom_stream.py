@@ -37,7 +37,7 @@ class StreamingCustomStreamTestCase(TestCase):
     def test_streaming_success(self):
         """Commit input upfront; job produces one ByteRecord per byte in JSONL format."""
         with ServerlessTest(registry=ControllerRegistry([ByteToRecordDecider()])) as api:
-            storage = StreamingStorage(api.locator.cache_folder)
+            storage = StreamingStorage(api.debug_locations.cache_folder)
             input_filename = f'{uuid.uuid4()}.bin'
             storage.begin_writing(input_filename)
             chunk = bytes(range(10))

@@ -16,7 +16,7 @@ export class LoadingScreen {
         div.innerHTML = ''
 
         components.forEach(component => {
-            const name = (component.constructor as { name: string }).name
+            const name = component.name
             const row = document.createElement('div')
             row.textContent = `${name}: loading`
             div.appendChild(row)

@@ -58,6 +58,17 @@ async function post(url) {
   }
 }
 
+async function startSideProcess(type, decider) {
+  const resp = await fetch('/controllers-service/' + type + '/start/' + encodeURIComponent(decider), { method: 'POST' });
+  if (!resp.ok) {
+    const text = await resp.text();
+    alert('Error ' + resp.status + ': ' + text);
+    return;
+  }
+  const key = await resp.json();
+  window.location.href = '/static/side_process_log.html?key=' + encodeURIComponent(key) + '&type=' + encodeURIComponent(type);
+}
+
 async function action(btn, fn) {
   btn.disabled = true;
   try { await fn(); } finally {
@@ -124,8 +135,11 @@ async function loadControllers() {
       // Self-test
       const tdSt = document.createElement('td');
       if (c.has_self_test_report) {
-        tdSt.textContent = c.has_errors_in_self_test_report ? 'Has errors' : 'OK';
-        tdSt.style.color = c.has_errors_in_self_test_report ? '#c62828' : '#2e7d32';
+        const link = document.createElement('a');
+        link.href = '/static/self_test_report.html?decider=' + encodeURIComponent(c.name);
+        link.textContent = c.has_errors_in_self_test_report ? 'Has errors' : 'OK';
+        link.style.color = c.has_errors_in_self_test_report ? '#c62828' : '#2e7d32';
+        tdSt.appendChild(link);
       } else {
         tdSt.textContent = '—';
       }
@@ -140,7 +154,7 @@ async function loadControllers() {
         const btnInstall = document.createElement('button');
         btnInstall.textContent = 'Install';
         btnInstall.className = 'btn-primary';
-        btnInstall.onclick = () => action(btnInstall, () => post('/controllers-service/install/' + encodeURIComponent(c.name)));
+        btnInstall.onclick = () => startSideProcess('install', c.name);
         div.appendChild(btnInstall);
       } else {
         const btnUninstall = document.createElement('button');
@@ -159,7 +173,7 @@ async function loadControllers() {
 
         const btnSelfTest = document.createElement('button');
         btnSelfTest.textContent = 'Self-test';
-        btnSelfTest.onclick = () => action(btnSelfTest, () => post('/controllers-service/self-test/' + encodeURIComponent(c.name)));
+        btnSelfTest.onclick = () => startSideProcess('self-test', c.name);
         div.appendChild(btnSelfTest);
       }
 

@@ -44,7 +44,7 @@ class UserWalkInService(AvatarService):
 
 
     def image_to_vector(self, file_id: str):
-        task = BrainBox.Task.call(InsightFace).analyze(file_id)
+        task = InsightFace.new_task().analyze(file_id)
         command = BrainBoxService.Command(task)
         result: BrainBoxService.Confirmation = self.client.run_synchronously(command, BrainBoxService.Confirmation)
         if len(result.result) != 1:

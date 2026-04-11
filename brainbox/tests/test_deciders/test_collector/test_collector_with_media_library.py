@@ -80,7 +80,7 @@ class CollectorWithMediaLibraryTestCase(TestCase):
                     )
             ))
             result = api.execute(builder.to_collector_pack('to_media_library'))
-            ml = MediaLibrary.read(api.locator.cache_folder/result)
+            ml = MediaLibrary.read(api.debug_locations.cache_folder/result)
             self.assertEqual(5, len(ml.records))
             for rec in ml.records:
                 js = json.loads(rec.get_content())
@@ -99,7 +99,7 @@ class CollectorWithMediaLibraryTestCase(TestCase):
                     z
                 )))
             result = api.execute(builder.to_collector_pack('to_media_library'))
-            ml = MediaLibrary.read(api.locator.cache_folder/result)
+            ml = MediaLibrary.read(api.debug_locations.cache_folder/result)
             self.assertEqual(6, len(ml.records))
             tags = list(sorted( (z.tags['prefix'], z.tags['option_index']) for z in ml.records ) )
             self.assertEqual([(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2)], tags)
@@ -116,7 +116,7 @@ class CollectorWithMediaLibraryTestCase(TestCase):
                     z
             )))
             result = api.execute(builder.to_collector_pack('to_media_library'))
-            ml = MediaLibrary.read(api.locator.cache_folder/result)
+            ml = MediaLibrary.read(api.debug_locations.cache_folder/result)
             self.assertEqual(2, len(ml.records))
             for rec in ml.records:
                 self.assertTrue(rec.inline_content.startswith(f'prefix{rec.tags["prefix"]}'))
@@ -133,7 +133,7 @@ class CollectorWithMediaLibraryTestCase(TestCase):
                     z
             )))
             result = api.execute(builder.to_collector_pack('to_media_library'))
-            with zipfile.ZipFile(api.locator.cache_folder/result,'r') as zip:
+            with zipfile.ZipFile(api.debug_locations.cache_folder/result,'r') as zip:
                 records = pickle.loads(zip.read('description.pkl'))
                 self.assertEqual(5, len(records))
                 for value in records.values():

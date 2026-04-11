@@ -33,7 +33,7 @@ class StreamingStringsTestCase(TestCase):
         The job must produce one string per byte, visible in the output file before commit.
         """
         with ServerlessTest(registry=ControllerRegistry([ByteToStringDecider()])) as api:
-            storage = StreamingStorage(api.locator.cache_folder)
+            storage = StreamingStorage(api.debug_locations.cache_folder)
             input_filename = f'{uuid.uuid4()}.bin'
             storage.begin_writing(input_filename)
 

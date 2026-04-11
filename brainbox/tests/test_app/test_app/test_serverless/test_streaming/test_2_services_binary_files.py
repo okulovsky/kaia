@@ -27,7 +27,7 @@ class TwoServicesStreamingTestCase(TestCase):
             registry=ControllerRegistry([IncrementingDecider(), SecondIncrementingDecider()]),
             planner=AlwaysOnPlanner(),
         ) as api:
-            storage = StreamingStorage(api.locator.cache_folder)
+            storage = StreamingStorage(api.debug_locations.cache_folder)
             input_filename = f'{uuid.uuid4()}.bin'
             storage.begin_writing(input_filename)
 

@@ -1,6 +1,6 @@
 from ...deployment import LocalExecutor, Command
-from ...common import Loc
 from yo_fluq import FileIO
+from foundation_kaia.misc import Loc
 
 class GpuRegistry:
     _are_present = None

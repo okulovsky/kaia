@@ -24,17 +24,14 @@ class IControllersService:
     def stop(self, decider: str, instance_id: str) -> None:
         ...
 
-    @endpoint(method='GET')
-    def join_installation(self) -> InstallationReport:
-        ...
-
-    @endpoint(method='GET')
-    def installation_report(self) -> InstallationReport:
-        ...
-
     @endpoint(method='POST')
     def self_test(self, decider: str) -> SelfTestResult:
         ...
+
+    @endpoint(method='GET')
+    def self_test_report(self, decider: str) -> str:
+        ...
+
 
     @endpoint(method='POST')
     def delete_self_test(self, decider: str) -> None:

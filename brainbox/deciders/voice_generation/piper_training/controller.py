@@ -1,7 +1,7 @@
 import json
 import os
 from unittest import TestCase
-from brainbox.framework import Loc, RunConfiguration
+from brainbox.framework import RunConfiguration
 from foundation_kaia.brainbox_utils import Installer
 from foundation_kaia.marshalling_2 import TypeTools
 from .app.interface import CkptData
@@ -18,6 +18,7 @@ from ....framework import (
 from pathlib import Path
 import zipfile
 from .app.installer import PiperTrainingInstaller
+
 
 
 class PiperTrainingController(DockerMarshallingController[PiperTrainingSettings]):
@@ -66,7 +67,7 @@ class PiperTrainingController(DockerMarshallingController[PiperTrainingSettings]
 
         #preparing zip-file in a dataset format
         src_folder = Path(__file__).parent/'files'
-        dataset = Loc.test_folder/(NAME+'.zip')
+        dataset = Path(__file__).parent/(NAME+'.zip')
         with zipfile.ZipFile(dataset, 'w') as zip:
             for file in os.listdir(src_folder):
                 for instance in range(100):

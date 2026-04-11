@@ -1,9 +1,10 @@
 from threading import Thread
-from brainbox.framework.common import Loc, Locator
+from brainbox.framework.common import BrainBoxLocations
 from brainbox.framework.controllers.architecture import ControllerRegistry
 from brainbox.framework.job_processing import SimplePlanner, IPlanner
 from .api import BrainBoxApi
 from .server import BrainBoxServer, BrainBoxServerSettings, BrainBoxServices
+from foundation_kaia.misc import Loc
 
 
 class ServerlessTest:
@@ -28,7 +29,7 @@ class ServerlessTest:
             settings = BrainBoxServerSettings(
                 registry=self._registry or ControllerRegistry([]),
                 planner=self._planner or SimplePlanner(),
-                locator=Locator(self._temp_folder.path),
+                locations=BrainBoxLocations.default(self._temp_folder.path)
             )
 
         self._services = BrainBoxServer.create_services(settings)
@@ -42,7 +43,8 @@ class ServerlessTest:
         api.cache = self._services.cache
         api.streaming_cache = self._services.streaming_cache
         api.resources = self._services.resources
-        api.locator = settings.locator
+        api.debug_locations = settings.locations
+        api.debug_resources_folder = settings.registry.resources_folder
         api.diagnostics = self._services.diagnostics
         return api
 

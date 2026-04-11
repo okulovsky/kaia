@@ -25,7 +25,7 @@ export class DebugViewController {
             this.div.style.display = 'block'
             for (const view of this.registrations) {
                 const btn = document.createElement('button')
-                btn.textContent = view.constructor.name
+                btn.textContent = view.name
                 btn.className = 'debug-button-component'
                 btn.addEventListener('click', () => {
                     this.div.innerHTML = ''

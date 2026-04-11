@@ -54,7 +54,7 @@ class StartCommand(IPlannerAction):
             else:
                 instance_id, api = self._use_existing_or_start(controller)
 
-            api.context._cache_folder = core.locator.cache_folder
+            api.context._cache_folder = core.cache_folder
             op_state = OperatorState(
                 self.key,
                 controller,

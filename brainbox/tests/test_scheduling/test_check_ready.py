@@ -1,7 +1,9 @@
 from unittest import TestCase
-from brainbox.framework import Job, BrainBox, BrainBoxTask, BrainBoxBase, Loc, Core, ControllerRegistry, ISelfManagingDecider, CheckReadyAction
+from brainbox.framework import Job, BrainBox, BrainBoxTask, BrainBoxBase, Core, ControllerRegistry, \
+    ISelfManagingDecider, CheckReadyAction, BrainBoxLocations
 from sqlalchemy.orm import Session
 from sqlalchemy import select, create_engine
+from foundation_kaia.misc import Loc
 
 class A(ISelfManagingDecider):
     def run(self, a=1, b=2):
@@ -23,8 +25,10 @@ class CheckReadyActionTestCase(TestCase):
             session.commit()
 
     def test_readiness(self):
-        with Loc.create_test_file() as file:
-            engine = create_engine('sqlite:///'+str(file))
+        with Loc.create_test_folder() as folder:
+            locations = BrainBoxLocations.default(folder)
+
+            engine = create_engine('sqlite:///'+str(locations.db_path))
             BrainBoxBase.metadata.create_all(engine)
 
             with Session(engine) as session:
@@ -38,7 +42,7 @@ class CheckReadyActionTestCase(TestCase):
                     session.add(job.to_job())
                 session.commit()
 
-            core = Core(engine, ControllerRegistry([A()]))
+            core = Core(engine, ControllerRegistry([A()]), locations.cache_folder)
 
             CheckReadyAction().apply(core)
             self.check(core, (True, False, False, True))

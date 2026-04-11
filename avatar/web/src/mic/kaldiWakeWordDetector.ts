@@ -7,6 +7,7 @@ import type { ILoadingScreenComponent } from '../../loadingScreen/index.js'
 
 
 export class KaldiWakeWordDetector implements ILoadingScreenComponent, IWakeWordDetector {
+    readonly name = 'KaldiWakeWordDetector'
     private sampleRateOfTheModel: number
     private words: string[]
     private modelUrl: string

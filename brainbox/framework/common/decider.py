@@ -1,6 +1,6 @@
 from uuid import uuid4
 from .api_callback import ApiCallback
-from .loc import Loc
+from .locations import BrainBoxLocations
 from pathlib import Path
 from dataclasses import dataclass, field
 
@@ -25,7 +25,7 @@ class DeciderContext:
     @property
     def cache_folder(self) -> Path:
         if self._cache_folder is None:
-            return Loc.cache_folder
+            return BrainBoxLocations.default_cache_folder()
         return self._cache_folder
 
 

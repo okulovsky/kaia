@@ -1,6 +1,6 @@
 from typing import Iterable, Union, Type
 
-from ...common import IDecider, Loc, Locator, IEntryPoint, ISelfManagingDecider
+from ...common import IDecider, IEntryPoint, ISelfManagingDecider, BrainBoxLocations
 from .controller import IController
 from .controller_over_decider import ControllerOverDecider
 from ...deployment import Command, LocalExecutor
@@ -8,7 +8,7 @@ import json
 import importlib
 import inspect
 from dataclasses import dataclass
-
+from pathlib import Path
 
 @dataclass
 class InstallationStatus:
@@ -22,14 +22,14 @@ ControllerLike = IEntryPoint|IController|ISelfManagingDecider|Type[IController]|
 class ControllerRegistry:
     def __init__(self,
                  controllers: Iterable[ControllerLike],
-                 locator: Locator = Loc
+                 resources_folder: Path|None = None
                  ):
         updated_controllers = []
         for i, c in enumerate(controllers):
             updated_controllers.append(ControllerRegistry.to_controller(c))
         self._controllers = tuple(updated_controllers)
         self._name_to_controller = {c.get_name(): c for c in self._controllers}
-        self.locator = locator
+        self.resources_folder = resources_folder if resources_folder is not None else BrainBoxLocations.default_resources_folder()
 
     @staticmethod
     def to_controller_name(obj: str|ControllerLike):
@@ -76,7 +76,7 @@ class ControllerRegistry:
         if name not in self._name_to_controller:
             raise ValueError(f"The requested controller {name} is not in the list of controllers")
         controller = self._name_to_controller[name]
-        controller.context._resource_folder_root = self.locator.resources_folder
+        controller.context._resource_folder_root = self.resources_folder
         return controller
 
     def get_api_class(self, name: str) -> type | None:
@@ -125,7 +125,7 @@ class ControllerRegistry:
         return result
 
     @staticmethod
-    def discover() -> 'ControllerRegistry':
+    def discover(resources_folder: Path|None = None) -> 'ControllerRegistry':
         module = importlib.import_module('brainbox.deciders')
         controllers = []
         names = set()
@@ -146,10 +146,10 @@ class ControllerRegistry:
             names.add(name)
             controllers.append(ControllerRegistry.to_controller(d))
 
-        return ControllerRegistry(controllers)
+        return ControllerRegistry(controllers, resources_folder)
 
     @staticmethod
-    def discover_or_create(services: Iterable[ControllerLike]|None):
+    def discover_or_create(services: Iterable[ControllerLike]|None, resources_folder: Path|None = None):
         if services is None:
-            return ControllerRegistry.discover()
-        return ControllerRegistry(services)
+            return ControllerRegistry.discover(resources_folder)
+        return ControllerRegistry(services, resources_folder)

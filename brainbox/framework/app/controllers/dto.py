@@ -37,7 +37,6 @@ class ControllerStatus:
 @dataclass
 class ControllersStatus:
     controllers: list[ControllerStatus]
-    currently_installing: str | None
 
 
 @dataclass

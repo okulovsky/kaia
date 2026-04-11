@@ -11,7 +11,7 @@ T = TypeVar('T')
 
 
 class TestApi(Generic[T]):
-    def __init__(self, api_class: Type[T], server: IServer, on_exit: Callable | None = None):
+    def __init__(self, api_class: Type[T]|Callable[[str], T], server: IServer, on_exit: Callable | None = None):
         self.api_class = api_class
         self.server = server
         self.on_exit = on_exit

@@ -1,9 +1,10 @@
 from unittest import TestCase
 from pathlib import Path
-from brainbox.framework.common import ISelfManagingDecider, Loc
+from brainbox.framework.common import ISelfManagingDecider
 from brainbox.framework.brainbox import BrainBox
 from brainbox.framework.app.api import BrainBoxApi
 from foundation_kaia.marshalling_2 import File
+from foundation_kaia.misc import Loc
 
 
 class FileDecider(ISelfManagingDecider):
@@ -20,7 +21,7 @@ class UploadsDownloadsTestCase(TestCase):
             path = api.cache.download('test.txt', download_folder)
             self.assertEqual(download_folder, path.parent)
         else:
-            path = api.cache.download('test.txt', api.locator.cache_folder)
+            path = api.cache.download('test.txt', api.debug_locations.cache_folder)
 
         self.assertEqual(b'Hello', path.read_bytes())
 

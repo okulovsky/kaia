@@ -18,7 +18,6 @@ class KaiaApp:
     session_id: str = 'default'
 
 
-
     brainbox_server: BrainBoxServer|None = None
     brainbox_api: BrainBoxApi|None = None
     custom_brainbox_cache_folder: Path|None = None
@@ -43,8 +42,6 @@ class KaiaApp:
 
     _avatar_client: AvatarClient|None = None
     avatar_reporting_client: AvatarClient|None = None
-
-
 
     def create_avatar_client(self) -> AvatarClient|None:
         if self._avatar_client is None:

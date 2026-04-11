@@ -1,21 +1,32 @@
+from __future__ import annotations
+
+import os
+
 from .diagnostics import IDiagnosticsService, DiagnosticsApi
 from .tasks import TasksApi, ITasksService
-from .controllers import ControllersApi, InternalControllersApi
+from .controllers import ControllersApi
 from .batches import BatchesApi, IBatchesService
 from foundation_kaia.marshalling_2.amenities import StorageApi, IStorage, StorageApiWrap
 from foundation_kaia.marshalling_2 import TestApi
 from foundation_kaia.marshalling_2.marshalling.server.utils import ApiUtils
 from brainbox.framework.common.streaming import StreamingStorageApi, IStreamingStorage
+from brainbox.framework.common import BrainBoxLocations
 from typing import Any, Iterable, Union
 from brainbox.framework.task import IJobRequestFactory
 from ..controllers import ControllerRegistry, ControllerLike
-from ..common import Loc, Locator
 import functools
+from pathlib import Path
+from foundation_kaia.misc import Loc
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .serverless_test import ServerlessTest
 
 
-def _make_brainbox_api(url, locator):
+def _make_brainbox_api(url, locations, resources_folder):
     api = BrainBoxApi(url)
-    api.locator = locator
+    api.debug_locations = locations
+    api.debug_resources_folder = resources_folder
     return api
 
 
@@ -24,11 +35,13 @@ class BrainBoxApi:
         self.base_url = base_url
         self.tasks: ITasksService = TasksApi(base_url)
         self.diagnostics: IDiagnosticsService = DiagnosticsApi(base_url)
-        self.controllers = ControllersApi(InternalControllersApi(base_url))
+        self.controllers = ControllersApi(base_url)
         self.batches: IBatchesService = BatchesApi(base_url)
         self.cache: IStorage = StorageApi(base_url, 'cache')
         self.streaming_cache: IStreamingStorage = StreamingStorageApi(base_url, "streaming-cache")
         self._resources_storage = StorageApi(base_url, 'resources')
+        self.debug_locations: BrainBoxLocations|None = None
+        self.debug_resources_folder: Path|None = None
 
     def resources(self, controller: ControllerLike) -> IStorage:
         name = ControllerRegistry.to_controller_name(controller)
@@ -46,33 +59,40 @@ class BrainBoxApi:
 
     @staticmethod
     def test(services=None,
-             run_controllers_in_default_environment: bool = True,
+             default_resources_folder: bool = True,
              always_on_planner: bool = False,
              stop_containers_at_termination: bool = True,
              port: int = 18090,
-             locator=None,
+             working_folder: Path|None = None,
              ) -> 'TestApi[BrainBoxApi]':
         from .server import BrainBoxServer, BrainBoxServerSettings
         from brainbox.framework.controllers.architecture import ControllerRegistry
         from brainbox.framework.job_processing import AlwaysOnPlanner, SimplePlanner
-        registry = ControllerRegistry.discover_or_create(services)
-        if not run_controllers_in_default_environment and locator is not None:
-            registry.locator = locator
+        resources_folder = None
+        if not default_resources_folder and working_folder is not None:
+            resources_folder = working_folder/'resources'
+            os.makedirs(resources_folder, exist_ok=True)
+        registry = ControllerRegistry.discover_or_create(services, resources_folder)
         planner = AlwaysOnPlanner(AlwaysOnPlanner.Mode.FindThenStart) if always_on_planner else SimplePlanner()
-        temp_folder = None
-        if locator is None:
-            temp_folder = Loc.create_test_folder('brainbox_server_test')
-            locator = Locator(temp_folder.__enter__())
+
+        on_exit = None
+        if working_folder is None:
+            working_folder_factory = Loc.create_test_folder('brainbox_server_test')
+            working_folder = working_folder_factory.__enter__()
+            on_exit = functools.partial(working_folder_factory.__exit__, None, None, None)
+
+        locations = BrainBoxLocations.default(working_folder)
+
         settings = BrainBoxServerSettings(
             registry=registry,
+            locations = locations,
             planner=planner,
             port=port,
-            locator=locator,
             stop_controllers_at_termination=stop_containers_at_termination
         )
-        on_exit = functools.partial(temp_folder.__exit__, None, None, None) if temp_folder is not None else None
+
         return TestApi(
-            functools.partial(_make_brainbox_api, locator=locator),
+            functools.partial(_make_brainbox_api, locations=locations, resources_folder=resources_folder),
             BrainBoxServer(settings),
             on_exit=on_exit
         )

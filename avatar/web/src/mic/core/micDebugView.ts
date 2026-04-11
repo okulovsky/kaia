@@ -1,6 +1,7 @@
 import { IDebugView } from '../../debugView/iDebugView.js'
 
 export class MicDebugView implements IDebugView {
+    readonly name = 'MicDebugView'
     constructor(private baseUrl: string) {}
 
     acceptDiv(div: HTMLDivElement): void {

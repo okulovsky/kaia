@@ -46,12 +46,8 @@ class SpeakerIdentificationService(AvatarService):
 
 
     def sample_to_vector(self, file: FileLike):
-        command = BrainBoxService.Command(
-            BrainBox.Task
-            .call(Resemblyzer).vector(file)
-            .to_task()
-        )
-        return self.client.run_synchronously(command, BrainBoxService.Confirmation).result['vector']
+        command = BrainBoxService.Command(Resemblyzer.new_task().vector(file))
+        return self.client.run_synchronously(command, BrainBoxService.Confirmation).result
 
     @message_handler.with_call(BrainBoxService.Command, BrainBoxService.Confirmation)
     def on_sound_event(self, message: SpeakerIdentificationCommand) -> Confirmation:

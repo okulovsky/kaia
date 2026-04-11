@@ -1,9 +1,11 @@
+import os
 from dataclasses import dataclass
 from ..architecture import ControllerContext, ResourceFolder
-from ...common import Loc
+
 from ...deployment import DockerArgumentsHelper, LocalExecutor, Command
 from copy import deepcopy
 from .gpu_registry import GpuRegistry
+from foundation_kaia.misc import Loc
 
 
 
@@ -52,7 +54,10 @@ class RunConfiguration:
         arguments = ['docker', 'run']
         if self.publish_ports is not None:
             arguments += DockerArgumentsHelper.arg_publish_ports(self.publish_ports)
-        arguments += DockerArgumentsHelper.arg_mount_folders(self._mounts(context.resource_folder))
+        mounts = self._mounts(context.resource_folder)
+        for folder in mounts:
+            os.makedirs(folder, exist_ok=True)
+        arguments += DockerArgumentsHelper.arg_mount_folders(mounts)
         arguments += DockerArgumentsHelper.arg_propagate_env_variables(self.propagate_env_variables)
         arguments += DockerArgumentsHelper.arg_set_env_variables(self.set_env_variables)
         if GpuRegistry.are_present():

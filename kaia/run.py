@@ -5,13 +5,13 @@ import webbrowser
 from avatar.daemon import SoundEvent
 from kaia.app import KaiaAppSettings
 from foundation_kaia.misc import Loc
-from avatar.app.scripts import ScriptsComponent
+from avatar.app import compile_frontend
 from loguru import logger
 from kaia.utils.wav_info import wav_check
 
 if __name__ == '__main__':
     working_folder = Loc.data_folder/'demo'
-    ScriptsComponent.compile(working_folder / 'avatar' / 'frontend')
+    compile_frontend(working_folder / 'avatar' / 'frontend')
 
     settings = KaiaAppSettings()
     settings.brainbox.deciders_files_in_kaia_working_folder = False
@@ -23,10 +23,11 @@ if __name__ == '__main__':
     client = app.create_avatar_client()
     while True:
         time.sleep(1)
-        for message in client.pull(timeout_in_seconds=0):
-            if isinstance(message, SoundEvent):
-                with open("sound.wav", 'wb') as f:
-                    f.write(app.avatar_api.cache.read(message.file_id))
-                    wav_check("sound.wav")
+        if False:
+            for message in client.pull(timeout_in_seconds=0):
+                if isinstance(message, SoundEvent):
+                    with open("sound.wav", 'wb') as f:
+                        f.write(app.avatar_api.cache.read(message.file_id))
+                        wav_check("sound.wav")
 
 

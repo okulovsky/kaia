@@ -1,4 +1,5 @@
 import io
+import os.path
 import subprocess
 import tarfile
 import uuid
@@ -25,22 +26,30 @@ class PiperService(IPiper):
         audio_path = TEMP_DIR / f'{id}.wav'
         model_path = MODEL_DIR / (model + '.onnx')
 
-        with open(text_filename, 'w') as f:
-            f.write(text)
-
-        command = [f'cat {text_filename} | /lsiopy/bin/piper --model {model_path} --output_file {audio_path}']
-        for option, value in [('noise_scale', noise_scale), ('length_scale', length_scale), ('noise_w', noise_w), ('speaker', speaker)]:
-            if value is not None:
-                command.append(f' --{option} {value}')
-        command = ' '.join(command)
-
         try:
-            subprocess.check_output(["sh", "-c", command])
-        except subprocess.CalledProcessError as ex:
-            raise ValueError(f"Exception when called\n{command}\n\nThe error: {ex.output}")
+            with open(text_filename, 'w') as f:
+                f.write(text)
 
-        with open(audio_path, 'rb') as f:
-            return f.read()
+            command = [f'cat {text_filename} | /lsiopy/bin/piper --model {model_path} --output_file {audio_path}']
+            for option, value in [('noise_scale', noise_scale), ('length_scale', length_scale), ('noise_w', noise_w), ('speaker', speaker)]:
+                if value is not None:
+                    command.append(f' --{option} {value}')
+            command = ' '.join(command)
+
+            try:
+                subprocess.check_output(["sh", "-c", command])
+            except subprocess.CalledProcessError as ex:
+                raise ValueError(f"Exception when called\n{command}\n\nThe error: {ex.output}")
+
+            with open(audio_path, 'rb') as f:
+                return f.read()
+        finally:
+            if os.path.isfile(text_filename):
+                os.unlink(text_filename)
+            if os.path.isfile(audio_path):
+                os.unlink(audio_path)
+
+
 
     def upload_tar_voice(self, tar_file: FileLike, name: str | None = None) -> None:
         data = FileLikeHandler.to_bytes(tar_file)

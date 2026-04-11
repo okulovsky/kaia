@@ -1,8 +1,9 @@
 from unittest import TestCase
-from brainbox.framework import Job, BrainBoxBase, Loc
+from brainbox.framework import Job, BrainBoxBase
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 from datetime import datetime
+from foundation_kaia.misc import Loc
 
 
 class DBTestCase(TestCase):

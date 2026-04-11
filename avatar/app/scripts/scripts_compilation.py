@@ -28,9 +28,21 @@ def compile(src_folder: Path, dst_folder: Path):
             return
 
     web_root = src_folder.parent
+
+    node_modules = web_root / 'node_modules'
+    if not node_modules.exists():
+        npm_install = subprocess.run(
+            ['npm', 'install'],
+            cwd=str(web_root),
+            capture_output=True,
+            text=True,
+        )
+        if npm_install.returncode != 0:
+            raise RuntimeError(f"npm install failed:\n{npm_install.stdout}\n{npm_install.stderr}")
+
     vite_js = web_root / 'node_modules' / 'vite' / 'bin' / 'vite.js'
     if not vite_js.exists():
-        raise RuntimeError(f"Vite not found at {vite_js}. Run: npm install -D vite")
+        raise RuntimeError(f"Vite not found at {vite_js} even after npm install")
 
     node = subprocess.check_output(['bash', '-ic', 'which node'], text=True).strip()
     result = subprocess.run(
@@ -43,3 +55,5 @@ def compile(src_folder: Path, dst_folder: Path):
         raise RuntimeError(f"vite build failed:\n{result.stdout}\n{result.stderr}")
 
     hash_file.write_text(src_hash)
+
+

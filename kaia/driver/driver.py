@@ -66,6 +66,8 @@ class KaiaDriver:
                 logger.info("Sending Rhasspy Train Command")
                 packs = assistant.get_intents()
                 context.get_client().push(STTService.RhasspyTrainingCommand(packs))
+            else:
+                logger.info("Training is done, skipping")
 
         assistant = self.assistant_factory.wrap_assistant(assistant)
         automaton = Automaton(assistant, context)

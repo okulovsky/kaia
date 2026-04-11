@@ -1,1 +1,1 @@
-from .component import ScriptsComponent
+from .frontend_compilation import compile_frontend

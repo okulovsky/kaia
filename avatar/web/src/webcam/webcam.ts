@@ -2,6 +2,7 @@ import { IWebcam } from './iWebcam.js'
 import { ILoadingScreenComponent } from '../loadingScreen/iLoadingScreenComponent.js'
 
 export class Webcam implements IWebcam, ILoadingScreenComponent {
+    readonly name = 'Webcam'
     private _width: number
     private _height: number
     private _captureIntervalMs: number

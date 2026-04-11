@@ -4,6 +4,7 @@ import { AvatarClient } from '../core/avatarClient.js'
 import { Message } from '../core/message.js'
 
 export class WebcamProcessor implements IDebugView {
+    readonly name = 'WebcamProcessor'
     private _webcam: IWebcam
     private _rateMs: number
     private _threshold: number

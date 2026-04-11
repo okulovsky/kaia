@@ -1,5 +1,5 @@
 from typing import *
-from ...common import ApiCallback, Loc
+from ...common import ApiCallback, BrainBoxLocations
 from .resource_folder import ResourceFolder
 from ...deployment import Machine, LocalExecutor, IExecutor
 from pathlib import Path
@@ -20,7 +20,7 @@ class ControllerContext(Generic[TSettings]):
     @property
     def resource_folder_root(self) -> Path:
         if self._resource_folder_root is None:
-            return Loc.resources_folder
+            return BrainBoxLocations.default_resources_folder()
         return self._resource_folder_root
 
     @property

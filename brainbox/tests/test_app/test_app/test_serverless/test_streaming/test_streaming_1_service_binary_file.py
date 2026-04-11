@@ -18,7 +18,7 @@ class StreamingTestCase(TestCase):
         blocked waiting for more input — confirming true streaming behaviour.
         """
         with ServerlessTest(registry=ControllerRegistry([IncrementingDecider()])) as api:
-            storage = StreamingStorage(api.locator.cache_folder)
+            storage = StreamingStorage(api.debug_locations.cache_folder)
             input_filename = f'{uuid.uuid4()}.bin'
             storage.begin_writing(input_filename)
 
@@ -46,7 +46,7 @@ class StreamingTestCase(TestCase):
     def test_sentinel_causes_failure(self):
         """Feeding a 0xFF byte must cause the job to fail."""
         with ServerlessTest(registry=ControllerRegistry([IncrementingDecider()])) as api:
-            storage = StreamingStorage(api.locator.cache_folder)
+            storage = StreamingStorage(api.debug_locations.cache_folder)
             input_filename = f'{uuid.uuid4()}.bin'
             storage.begin_writing(input_filename)
             storage.append(input_filename, bytes([0x01, 0xFF, 0x02]))

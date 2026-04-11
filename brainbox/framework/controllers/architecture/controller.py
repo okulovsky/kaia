@@ -2,11 +2,13 @@ import pickle
 from typing import *
 from abc import ABC, abstractmethod
 from unittest import TestCase
-from ...common import Locator, Loc
+from pathlib import Path
 from .resource_folder import ResourceFolder
 from .controller_context import ControllerContext
 from ..self_test import SelfTestCase, logger
 from foundation_kaia.logging import HtmlReport
+from foundation_kaia.misc import Loc
+from ...common import BrainBoxLocations
 
 
 TSettings = TypeVar("TSettings")
@@ -125,13 +127,13 @@ class IController(ABC, Generic[TSettings]):
     def self_test_cases(self) -> Iterable[SelfTestCase]:
         return []
 
-    def _run_self_test(self, api, tc: TestCase, locator: Locator):
-        output_folder = locator.self_test_path
-        html_path = output_folder / (self.get_name() + '.html')
+    def _run_self_test(self, api, tc: TestCase, self_test_folder: Path):
+        html_path = self_test_folder / (self.get_name() + '.html')
         if str(html_path).startswith('/'):
             html_link = f'file://{html_path}'
         else:
             html_link = f'file:///{html_path}'.replace('\\','/')
+        pickle_path = self_test_folder / self.get_name()
 
         items = []
         error = False
@@ -152,8 +154,10 @@ class IController(ABC, Generic[TSettings]):
                     logger.error(ex)
                     raise ValueError(f"Exception has occured during self-test. View the report {html_link}") from ex
                 finally:
-                    with open(output_folder / self.get_name(), 'wb') as f:
+                    #print(items)
+                    with open(pickle_path, 'wb') as f:
                         pickle.dump(items, f)
+                    #print(f"Sucessfully written to {pickle_path}")
                     if not error:
                         print(f"Self-test completed successfully. View the report {html_link}")
 
@@ -162,31 +166,26 @@ class IController(ABC, Generic[TSettings]):
 
     def self_test(self,
                   tc: None|TestCase = None,
-                  locator: Locator = Loc, #Should use a different locator
+                  self_test_folder: Path | None = None,
                   api = None
                   ):
         if tc is None:
             tc = TestCase()
+        if self_test_folder is None:
+            self_test_folder = BrainBoxLocations.default_self_tests_folder()
 
         from brainbox.framework import BrainBoxApi
         if api is not None:
             if not isinstance(api, BrainBoxApi):
                 raise ValueError("Api should be BrainBoxApi")
             else:
-                self._run_self_test(api, tc, locator)
+                self._run_self_test(api, tc, self_test_folder)
                 return
 
-        with BrainBoxApi.test(port=18091, locator=locator, run_controllers_in_default_environment=False) as api:
+        with BrainBoxApi.test(port=18091) as api:
             try:
-                self._run_self_test(api, tc, locator)
+                self._run_self_test(api, tc, self_test_folder)
             finally:
-                #Also cancel all, otherwise the task persists in the database and will be executed next time self-test runs
                 self.stop_all()
-
-
-
-
-
-
 
         # endregion

@@ -8,7 +8,6 @@ from brainbox.framework.common.streaming import StreamingStorage
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse, PlainTextResponse, HTMLResponse
-from .scripts import ScriptsComponent
 from .audio_dashboard import AudioDashboardComponent
 
 @dataclass
@@ -25,7 +24,6 @@ class AvatarServerSettings:
     extra_components: tuple[IComponent,...] = ()
     custom_html: str|None = None
     custom_aliases: dict[str, type]|None = None
-    compile_scripts_on_mount: bool = True
 
 
 
@@ -81,13 +79,13 @@ class AvatarServer(IServer):
             ServiceComponent(component, name).mount(app)
 
         client = AvatarClient(AvatarMessageRepository(messaging_service), 'default')
-        AudioDashboardComponent(client).mount(app)
+        AudioDashboardComponent(client, self.settings.cache_folder).mount(app)
 
         if self.settings.web_folder is not None:
             StaticFilesComponent(self.settings.web_folder, '/web').mount(app)
 
         if self.settings.frontend_folder is not None:
-            ScriptsComponent(self.settings.frontend_folder, self.settings.compile_scripts_on_mount).mount(app)
+            StaticFilesComponent(self.settings.frontend_folder, '/frontend').mount(app)
 
         for component in self.settings.extra_components:
             component.mount(app)
