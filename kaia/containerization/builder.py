@@ -52,6 +52,13 @@ class KaiaImageBuilder:
                     continue
                 dependencies.append(d)
 
+        dockerignore = (
+            '**/__pycache__/',
+            '**/*.pyc',
+            '**/*.pyo',
+            'avatar/web/frontend/',
+            'avatar/web/node_modules/'
+        )
         return SmallImageBuilder(
             build_folder,
             TEMPLATE.replace('#ENTRYPOINT', self.entry_point),
@@ -60,7 +67,9 @@ class KaiaImageBuilder:
             copy_to_code_path=copy_to_code_path,
             write_to_code_path={
                 '/pyproject.toml': final_toml,
-            }
+            },
+            docker_ignore=dockerignore
+
         )
 
 

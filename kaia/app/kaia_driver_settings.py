@@ -97,6 +97,11 @@ class KaiaDriverSettings(IAppInitializer):
         return client
 
     def bind_app(self, app: 'KaiaApp'):
+        if app.avatar_api is None:
+            raise ValueError("KaiaApp.avatar_api must be set before KaiaDriverSettings.bind_app")
+        if app._avatar_client is None:
+            raise ValueError("KaiaApp._avatar_client must be set before KaiaDriverSettings.bind_app")
+
         app.kaia_driver = KaiaDriver(
             AssistantFactory(app.avatar_api),
             self.create_client(app),

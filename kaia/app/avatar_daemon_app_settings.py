@@ -127,12 +127,18 @@ class AvatarDaemonAppSettings(IAppInitializer):
     def create_wav_file_fider(self, app: KaiaApp, state: s.State):
         return s.UploadedWavFixer(app.brainbox_cache_folder, 16000)
 
+    def create_silence_level_controller(self, app: KaiaApp, state: s.State):
+        return s.SilenceLevelService(0.1)
+
     def new_state(self):
         return s.State(character=self.characters[0], language='en')
 
-
-
     def bind_app(self, app: KaiaApp):
+        if app.brainbox_cache_folder is None:
+            raise ValueError("KaiaApp.brainbox_cache_folder must be set before AvatarDaemonAppSettings.bind_app")
+        if app.avatar_resources_folder is None:
+            raise ValueError("KaiaApp.avatar_resources_folder must be set before AvatarDaemonAppSettings.bind_app")
+
         reporting_stream = None
         if self.report_to_session is not None:
             reporting_stream = app.avatar_api.create_messaging_stream(self.report_to_session).create_client().as_asyncronous()

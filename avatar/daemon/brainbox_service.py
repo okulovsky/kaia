@@ -4,7 +4,7 @@ from ..messaging import IMessage, message_handler
 from dataclasses import dataclass
 from brainbox import BrainBox
 from brainbox.framework import ControllersSetup
-from .common import AvatarService, InitializationEvent
+from .common import AvatarService, ServerStartedEvent, ChatCommand
 
 @dataclass
 class BrainBoxServiceCommand(IMessage):
@@ -45,6 +45,6 @@ class BrainBoxService(AvatarService):
             return reply.as_confirmation_for(input)
 
     @message_handler
-    def initialize(self, initialization: InitializationEvent) -> None:
+    def initialize(self, initialization: ServerStartedEvent) -> None:
         if self.api is not None and self.setup is not None:
             self.api.controllers.setup(self.setup)

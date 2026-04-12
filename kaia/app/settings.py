@@ -18,12 +18,15 @@ class KaiaAppSettings:
 
     def create_app(self, working_folder: Path):
         app = KaiaApp(working_folder)
-        app.custom_avatar_resources_folder = self.custom_avatar_resources_folder
         self.bind_app(app)
         return app
 
 
     def bind_app(self, app: KaiaApp):
+        resources_folder = self.custom_avatar_resources_folder
+        if resources_folder is None:
+            resources_folder = app.working_folder/'avatar-resources'
+        app.avatar_resources_folder = resources_folder
         for s in [self.brainbox, self.avatar_server, self.avatar_processor, self.kaia]:
             if s is not None:
                 s.bind_app(app)

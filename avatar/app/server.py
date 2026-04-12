@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
 from .messages import AvatarMessagingService, create_aliases, AvatarMessageRepository
-from ..messaging import AvatarClient
+from ..messaging import AvatarClient, IMessage
 from foundation_kaia.marshalling_2.amenities import Storage, StaticFilesComponent
 from foundation_kaia.marshalling_2 import ServiceComponent, IServer, WebAppEntryPoint, IComponent
 from brainbox.framework.common.streaming import StreamingStorage
@@ -24,6 +24,7 @@ class AvatarServerSettings:
     extra_components: tuple[IComponent,...] = ()
     custom_html: str|None = None
     custom_aliases: dict[str, type]|None = None
+    starting_messages: dict[str, tuple[IMessage,...]]|None = None
 
 
 
@@ -43,7 +44,8 @@ class AvatarServer(IServer):
 
         messaging_service = AvatarMessagingService(
             aliases or None,
-            self.settings.messages_ttl_in_seconds
+            self.settings.messages_ttl_in_seconds,
+            starting_messages=self.settings.starting_messages,
         )
         service_components['messaging'] = messaging_service
 

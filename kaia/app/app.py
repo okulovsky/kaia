@@ -17,25 +17,11 @@ class KaiaApp:
     working_folder: Path
     session_id: str = 'default'
 
-
     brainbox_server: BrainBoxServer|None = None
     brainbox_api: BrainBoxApi|None = None
-    custom_brainbox_cache_folder: Path|None = None
+    brainbox_cache_folder: Path|None = None
 
-    @property
-    def brainbox_cache_folder(self) -> Path:
-        if self.custom_brainbox_cache_folder is not None:
-            return self.custom_brainbox_cache_folder
-        return self.working_folder/'cache'
-
-    custom_avatar_resources_folder: Path | None = None
-
-    @property
-    def avatar_resources_folder(self) -> Path:
-        if self.custom_avatar_resources_folder is not None:
-            return self.custom_avatar_resources_folder
-        return self.working_folder/'avatar-resources'
-
+    avatar_resources_folder: Path | None = None
     avatar_api: AvatarApi|None = None
     avatar_server: AvatarServer|None = None
     avatar_processor: AvatarDaemon|None = None
@@ -45,12 +31,10 @@ class KaiaApp:
 
     def create_avatar_client(self) -> AvatarClient|None:
         if self._avatar_client is None:
-            return None
+            raise ValueError()
         return self._avatar_client.clone_client()
 
-
     kaia_driver: KaiaDriver|None = None
-
 
     _MISSING = object()
 

@@ -29,17 +29,15 @@
     const loadingDiv    = document.getElementById('loading');
     const debugSettingsBtn = document.getElementById('debug-settings-btn');
     const debugDiv      = document.getElementById('debug-div');
-
-    const debugViewController = new DebugViewController(debugSettingsBtn, debugDiv);
-    debugViewController.register(new MicDebugView(window.location.origin));
-
     const chatDiv    = document.getElementById('chat');
     const imageDiv   = document.getElementById('main_image');
     const overlayDiv = document.getElementById('overlay');
 
     const client     = new AvatarClient({ baseUrl: window.location.origin });
-
     const dispatcher = new Dispatcher(client);
+    const debugViewController = new DebugViewController(debugSettingsBtn, debugDiv);
+
+    debugViewController.register(new MicDebugView({baseUrl: window.location.origin, dispatcher}));
 
     new ChatCommandHandler({ dispatcher, container: chatDiv, baseUrl: window.location.origin });
     new ImageCommandHandler({ dispatcher, imgEl: imageDiv });

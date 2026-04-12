@@ -1,5 +1,5 @@
 from .avatar_message import AvatarMessage
-from ...messaging.core import AvatarMessageSet
+from ...messaging.core import AvatarMessageSet, IMessage
 from .interface import IAvatarMessagingService
 from typing import Any
 from .queue import Queue
@@ -10,11 +10,19 @@ from foundation_kaia.marshalling_2 import TypeTools
 class AvatarMessagingService(IAvatarMessagingService):
     def __init__(self,
                  aliases: dict[str, type]|None = None,
-                 ttl_in_seconds: int|None = 60*60
+                 ttl_in_seconds: int|None = 60*60,
+                 starting_messages: dict[str,tuple[IMessage,...]]|None = None
                  ):
         self.ttl_in_seconds = ttl_in_seconds
         self.aliases = aliases
         self.queues: dict[str, Any] = {}
+
+        from .message_repository import AvatarMessageRepository
+        if starting_messages is not None:
+            for session, messages in starting_messages.items():
+                for message in messages:
+                    avatar_message = AvatarMessageRepository._serialize(session, message)
+                    self.put(avatar_message)
 
     def _ensure_full_type(self, t: str):
         if self.aliases is not None and t in self.aliases:
