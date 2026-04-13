@@ -1,6 +1,6 @@
 import requests as _requests
 
-from foundation_kaia.marshalling_2 import ApiUtils, StorageApi, TestApi, StorageApiWrap, IStorage
+from foundation_kaia.marshalling import ApiUtils, StorageApi, TestApi, StorageApiWrap, IStorage
 from .messages import AvatarMessagingApi, AvatarMessageRepository
 from ..messaging import AvatarClient
 from brainbox.framework.common.streaming import StreamingStorageApi

@@ -4,7 +4,7 @@ from .common import SoundEvent, IMessage, message_handler, State, AvatarService,
 from .common.vector_identificator import VectorIdentificator, IStrategy
 from .brainbox_service import BrainBoxService
 from dataclasses import dataclass
-from foundation_kaia.marshalling_2 import FileLike
+from foundation_kaia.marshalling import FileLike
 from ..app import AvatarApi
 from ..messaging import Confirmation
 

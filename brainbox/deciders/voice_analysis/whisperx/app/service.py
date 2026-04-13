@@ -3,7 +3,7 @@ import uuid
 from pathlib import Path
 from typing import Iterable
 
-from foundation_kaia.marshalling_2 import FileLike, FileLikeHandler
+from foundation_kaia.marshalling import FileLike, FileLikeHandler
 from foundation_kaia.brainbox_utils import BrainboxReportItem, LongBrainboxProcess, logger
 from interface import WhisperXInterface
 

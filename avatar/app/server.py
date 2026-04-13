@@ -2,8 +2,8 @@ from dataclasses import dataclass, field
 
 from .messages import AvatarMessagingService, create_aliases, AvatarMessageRepository
 from ..messaging import AvatarClient, IMessage
-from foundation_kaia.marshalling_2.amenities import Storage, StaticFilesComponent
-from foundation_kaia.marshalling_2 import ServiceComponent, IServer, WebAppEntryPoint, IComponent
+from foundation_kaia.marshalling.amenities import Storage, StaticFilesComponent
+from foundation_kaia.marshalling import ServiceComponent, IServer, WebAppEntryPoint, IComponent
 from brainbox.framework.common.streaming import StreamingStorage
 from pathlib import Path
 from fastapi import FastAPI

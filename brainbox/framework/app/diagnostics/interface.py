@@ -1,4 +1,4 @@
-from foundation_kaia.marshalling_2 import service, endpoint
+from foundation_kaia.marshalling import service, endpoint
 from brainbox.framework.controllers.self_test.last_call import LastCallDocumentation
 from brainbox.framework.job_processing import OperatorLogItem
 

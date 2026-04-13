@@ -1,5 +1,5 @@
 from typing import Any
-from foundation_kaia.marshalling_2 import service, endpoint, JSON
+from foundation_kaia.marshalling import service, endpoint, JSON
 from brainbox.framework.task import JobDescription
 from brainbox.framework.job_processing import Job
 from .dto import JobSummary

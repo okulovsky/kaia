@@ -6,7 +6,7 @@ from ...common.streaming import StreamingStorage
 from ..architecture import brainbox_file_like_to_bytes_iterable
 import json
 
-from foundation_kaia.marshalling_2 import FileLikeHandler, ApiCall, ResultType, SerializationContext, CallModel
+from foundation_kaia.marshalling import FileLikeHandler, ApiCall, ResultType, SerializationContext, CallModel
 from brainbox.framework.common.decider_model import DeciderMethodModel
 from foundation_kaia.brainbox_utils import BrainboxReportItem
 import uuid

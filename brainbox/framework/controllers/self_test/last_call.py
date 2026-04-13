@@ -4,7 +4,7 @@ import json as _json
 from dataclasses import dataclass
 from typing import Any
 
-from foundation_kaia.marshalling_2 import JSON, File
+from foundation_kaia.marshalling import JSON, File
 from foundation_kaia.logging import ILogItem
 
 

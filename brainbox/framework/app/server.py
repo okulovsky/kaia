@@ -13,8 +13,7 @@ from brainbox.framework.job_processing.main_loop import CommandQueue
 from brainbox.framework.job_processing.core.job import BrainBoxBase
 from brainbox.framework.common import BrainBoxLocations
 from brainbox.framework.controllers.architecture import ControllerRegistry
-from foundation_kaia.marshalling_2.marshalling.server.components import ServiceComponent
-from foundation_kaia.marshalling_2 import StaticFilesComponent, IServer, WebAppEntryPoint
+from foundation_kaia.marshalling import ServiceComponent, StaticFilesComponent, IServer, WebAppEntryPoint
 
 from .batches.service import BatchesService
 from .diagnostics.service import DiagnosticsService
@@ -23,7 +22,7 @@ from .tasks.service import TasksService
 from .controllers.service import ControllersService
 from .controllers.side_process import SideProcessService, InstallationSideProcess, SelfTestSideProcess, SideProcessPool
 from .deciders.service import DeciderService
-from foundation_kaia.marshalling_2.amenities import Storage
+from foundation_kaia.marshalling.amenities import Storage
 from brainbox.framework.common.streaming import StreamingStorage
 from foundation_kaia.misc import Loc
 

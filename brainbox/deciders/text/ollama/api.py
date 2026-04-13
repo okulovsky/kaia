@@ -1,6 +1,6 @@
 import uuid
 import requests
-from foundation_kaia.marshalling_2 import service
+from foundation_kaia.marshalling import service
 from foundation_kaia.brainbox_utils import brainbox_endpoint
 from ....framework import DockerWebServiceApi, EntryPoint, TaskBuilder
 from .model import OllamaModel

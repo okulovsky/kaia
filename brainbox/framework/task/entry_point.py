@@ -1,8 +1,7 @@
 from .task import BrainBoxTaskOptionals
-from foundation_kaia.marshalling_2 import Signature, JSON, Serializer
-from foundation_kaia.marshalling_2.reflector import DeclaredType
-from foundation_kaia.marshalling_2.marshalling.model.endpoint_decorator import _ENDPOINT_ATTR
-from foundation_kaia.marshalling_2.marshalling.model.service_model import _SERVICE_ATTR
+from foundation_kaia.marshalling import Signature, JSON, Serializer
+from foundation_kaia.marshalling.reflector import DeclaredType
+from foundation_kaia.marshalling import ENDPOINT_ATTR, SERVICE_ATTR
 from typing import Generic, TypeVar, Callable
 from .task_builder import TaskBuilder, TaskBuilderSignature
 from ..common import IEntryPoint
@@ -16,12 +15,12 @@ def _parse_signatures(dt: DeclaredType, decider_name: str, ordering_token: list[
     for mro_elem in dt.mro:
         if mro_elem.type is object:
             continue
-        if service_only and _SERVICE_ATTR not in mro_elem.type.__dict__:
+        if service_only and SERVICE_ATTR not in mro_elem.type.__dict__:
             continue
         for name, member in vars(mro_elem.type).items():
             if name in signatures or name.startswith('_') or not callable(member):
                 continue
-            if service_only and not hasattr(member, _ENDPOINT_ATTR):
+            if service_only and not hasattr(member, ENDPOINT_ATTR):
                 continue
             sig = Signature.parse(member, owner=mro_elem.type, type_map=mro_elem.type_map)
             signatures[name] = TaskBuilderSignature(decider_name, argument_to_ordering_token_position, sig)

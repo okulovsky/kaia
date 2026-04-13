@@ -1,4 +1,4 @@
-from foundation_kaia.marshalling_2 import service, FileLike
+from foundation_kaia.marshalling import service, FileLike
 from foundation_kaia.brainbox_utils import brainbox_endpoint
 
 

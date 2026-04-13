@@ -1,5 +1,5 @@
 from brainbox.framework.controllers.architecture.controller_registry import ControllerRegistry, ControllerLike
-from foundation_kaia.marshalling_2.marshalling.server.api_call import ApiCall
+from foundation_kaia.marshalling import ApiCall
 from .dto import ControllersSetup
 from .interface import IControllersService
 from .side_process import SideProcessApi

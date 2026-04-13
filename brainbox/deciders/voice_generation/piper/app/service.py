@@ -5,7 +5,7 @@ import tarfile
 import uuid
 from pathlib import Path
 
-from foundation_kaia.marshalling_2 import FileLikeHandler
+from foundation_kaia.marshalling import FileLikeHandler
 from interface import IPiper, FileLike
 
 MODEL_DIR = Path('/resources/models')

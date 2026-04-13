@@ -3,7 +3,7 @@ from uuid import uuid4
 
 from interface import IWhisper
 from foundation_kaia.brainbox_utils import SingleModelStorage
-from foundation_kaia.marshalling_2 import FileLike, FileLikeHandler, JSON
+from foundation_kaia.marshalling import FileLike, FileLikeHandler, JSON
 
 
 class WhisperService(IWhisper):

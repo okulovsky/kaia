@@ -1,4 +1,4 @@
-from foundation_kaia.marshalling_2 import service, endpoint, ApiCall, HttpMethod
+from foundation_kaia.marshalling import service, endpoint, ApiCall, HttpMethod
 from typing import Callable
 from threading import Thread
 from ....controllers import ControllerLike, ControllerRegistry

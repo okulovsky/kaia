@@ -1,4 +1,4 @@
-from ..marshalling_2 import Server, ServiceComponent, IComponent
+from ..marshalling import Server, ServiceComponent, IComponent
 import argparse
 import subprocess
 import sys

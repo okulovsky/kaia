@@ -1,6 +1,6 @@
 from typing import Generic, TypeVar, Any
 from pathlib import Path
-from ...marshalling_2 import TypeTools, DeclaredType
+from ...marshalling import TypeTools, DeclaredType
 import yaml
 from dataclasses import dataclass
 from typing import Any

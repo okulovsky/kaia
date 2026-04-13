@@ -1,5 +1,5 @@
-from foundation_kaia.marshalling_2 import JSON
-from foundation_kaia.marshalling_2.reflector import DeclaredType
+from foundation_kaia.marshalling import JSON
+from foundation_kaia.marshalling.reflector import DeclaredType
 from .task import BrainBoxTaskOptionals
 from .task_builder import TaskBuilder
 from .entry_point import _parse_signatures

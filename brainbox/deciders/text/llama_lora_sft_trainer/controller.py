@@ -8,7 +8,7 @@ from ....framework import (
     DockerMarshallingController,
     RunConfiguration,
 )
-from foundation_kaia.marshalling_2 import TypeTools
+from foundation_kaia.marshalling import TypeTools
 from .app.interface import TrainingRun
 from .settings import LlamaLoraSFTTrainerSettings
 from pathlib import Path

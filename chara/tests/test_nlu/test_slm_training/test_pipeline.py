@@ -3,7 +3,7 @@ from unittest import TestCase
 from brainbox.deciders import Collector
 from brainbox.framework import ISelfManagingDecider
 from brainbox import BrainBox
-from foundation_kaia.marshalling_2 import FileLike
+from foundation_kaia.marshalling import FileLike
 from foundation_kaia.misc import Loc
 from typing import Optional
 from chara.nlu.slm_training.pipeline import (

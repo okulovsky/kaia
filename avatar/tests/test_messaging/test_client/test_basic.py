@@ -5,7 +5,7 @@ from unittest import TestCase
 
 from avatar.app.messages import *
 from avatar.messaging.core import AvatarClient, IMessage, Envelop
-from foundation_kaia.marshalling_2 import TypeTools
+from foundation_kaia.marshalling import TypeTools
 
 
 @dataclass

@@ -1,4 +1,4 @@
-from ...marshalling_2 import service, endpoint
+from ...marshalling import service, endpoint
 from .storages import IModelStorage
 
 @service

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from foundation_kaia.marshalling_2 import EndpointModel, ServiceModel, ResultType, DeclaredType
-from foundation_kaia.marshalling_2.marshalling.model.service_model import _SERVICE_ATTR
+from foundation_kaia.marshalling import EndpointModel, ServiceModel, ResultType, DeclaredType, SERVICE_ATTR
+
 
 
 @dataclass
@@ -43,7 +43,7 @@ class DeciderModel:
         seen_methods: set[str] = set()
 
         for mro_elem in dt.mro:
-            if _SERVICE_ATTR not in mro_elem.type.__dict__:
+            if SERVICE_ATTR not in mro_elem.type.__dict__:
                 continue
             tp = mro_elem.generic_type or mro_elem.type
             service = ServiceModel.parse(tp)

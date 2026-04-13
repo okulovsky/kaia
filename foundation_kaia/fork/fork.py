@@ -2,7 +2,7 @@ import threading
 import subprocess
 import sys
 import os
-import pickle
+import cloudpickle
 import atexit
 import time
 from uuid import uuid4
@@ -22,7 +22,7 @@ class Fork:
         try:
             path = Loc.temp_folder / ('fork_' + str(uuid4()))
             with open(path, 'wb') as stream:
-                pickle.dump(self.method, stream)
+                cloudpickle.dump(self.method, stream)
         except Exception as ex:
             raise ValueError(f"Cannot pickle {self.method} to run in fork") from ex
         env = os.environ.copy()

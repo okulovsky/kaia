@@ -6,7 +6,7 @@ from pathlib import Path
 from interface import IChatterbox
 from processing import Model
 from chatterbox.mtl_tts import Conditionals
-from foundation_kaia.marshalling_2 import FileLike, FileLikeHandler
+from foundation_kaia.marshalling import FileLike, FileLikeHandler
 
 
 class ChatterboxService(IChatterbox):

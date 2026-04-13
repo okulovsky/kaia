@@ -3,7 +3,7 @@ import plotly.io as pio
 from fastapi.responses import Response, HTMLResponse
 from starlette.middleware.wsgi import WSGIMiddleware
 
-from foundation_kaia.marshalling_2 import IComponent
+from foundation_kaia.marshalling import IComponent
 from ...messaging import AvatarClient
 from .data_reader import DataReader
 from .plotter import Plotter

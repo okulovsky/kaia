@@ -7,8 +7,7 @@ from sqlalchemy.orm import Session
 from brainbox.framework.job_processing.core.job import Job
 from brainbox.framework.controllers.architecture import ControllerRegistry, brainbox_file_like_to_bytes_iterable
 from brainbox.framework.controllers.self_test.last_call import LastCallDocumentation, ValueDocumentation
-from foundation_kaia.marshalling_2 import File
-from foundation_kaia.marshalling_2.marshalling.model.file_like import FileLikeHandler
+from foundation_kaia.marshalling import File, FileLikeHandler
 from brainbox.framework.common import DeciderModel
 from .interface import IDiagnosticsService
 from ...job_processing.main_loop import MainLoop

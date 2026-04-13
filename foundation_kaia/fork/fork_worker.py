@@ -1,5 +1,5 @@
 import sys
-import pickle
+import cloudpickle
 import os
 import traceback
 
@@ -9,7 +9,7 @@ if __name__ == '__main__':
 
     try:
         with open(file, 'rb') as stream:
-            method = pickle.load(stream)
+            method = cloudpickle.load(stream)
         os.unlink(file)
     except:
         print(f"Subprocess for {name}: cannot read entry point", file=sys.stderr)

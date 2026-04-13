@@ -6,7 +6,7 @@ from brainbox.framework import BrainBox, ISelfManagingDecider
 from brainbox.framework.common.streaming import StreamingStorage
 from brainbox.framework.controllers.architecture import ControllerRegistry
 from brainbox.framework.app.serverless_test import ServerlessTest
-from foundation_kaia.marshalling_2 import websocket, service
+from foundation_kaia.marshalling import websocket, service
 
 from .tool import run_streaming_process, _poll, _wait_for_responding, _read_lines
 

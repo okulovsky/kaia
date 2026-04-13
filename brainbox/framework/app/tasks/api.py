@@ -1,5 +1,4 @@
-from foundation_kaia.marshalling_2.marshalling.server import Server, ServiceComponent, ThreadTestApi
-from foundation_kaia.marshalling_2.marshalling.server.api_call import ApiCall
+from foundation_kaia.marshalling import Server, ServiceComponent, ThreadTestApi, ApiCall
 from brainbox.framework.job_processing.core.command_queue import CommandQueue
 from .interface import ITasksService
 from .service import TasksService

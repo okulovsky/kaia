@@ -1,6 +1,6 @@
 from interface import IInsightFace, FileLike
 from foundation_kaia.brainbox_utils import SingleModelStorage
-from foundation_kaia.marshalling_2 import FileLikeHandler, JSON
+from foundation_kaia.marshalling import FileLikeHandler, JSON
 
 
 class InsightFaceService(IInsightFace):

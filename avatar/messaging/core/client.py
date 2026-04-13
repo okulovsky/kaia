@@ -1,6 +1,6 @@
 from .message_set import AvatarMessageSet
 from .message import IMessage
-from foundation_kaia.marshalling_2 import JSON, TypeTools
+from foundation_kaia.marshalling import JSON, TypeTools
 from dataclasses import dataclass
 import time
 from yo_fluq import Query, Queryable

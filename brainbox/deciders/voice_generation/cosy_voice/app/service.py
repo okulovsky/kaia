@@ -6,7 +6,7 @@ import torchaudio
 
 from interface import ICosyVoice
 from foundation_kaia.brainbox_utils import SingleModelStorage
-from foundation_kaia.marshalling_2 import FileLike, FileLikeHandler
+from foundation_kaia.marshalling import FileLike, FileLikeHandler
 
 
 class CosyVoiceService(ICosyVoice):

@@ -4,7 +4,7 @@ from PIL import Image
 
 from interface import IWD14Tagger, FileLike
 from foundation_kaia.brainbox_utils import SingleModelStorage
-from foundation_kaia.marshalling_2 import FileLikeHandler, JSON
+from foundation_kaia.marshalling import FileLikeHandler, JSON
 
 
 class WD14TaggerService(IWD14Tagger):

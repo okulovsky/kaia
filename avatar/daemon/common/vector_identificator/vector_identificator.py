@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from foundation_kaia.marshalling_2 import FileLike
+from foundation_kaia.marshalling import FileLike
 from typing import Callable
 from yo_fluq import FileIO
 import numpy as np

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from avatar.app.messages import *
 from avatar.messaging import IMessage, Envelop
-from foundation_kaia.marshalling_2 import TypeTools
+from foundation_kaia.marshalling import TypeTools
 
 
 def make_msg(id: str, session: str = 'sess', content_type: str = 'type_a') -> AvatarMessage:

@@ -3,7 +3,7 @@ from pathlib import Path
 from brainbox.framework.common import ISelfManagingDecider
 from brainbox.framework.brainbox import BrainBox
 from brainbox.framework.app.api import BrainBoxApi
-from foundation_kaia.marshalling_2 import File
+from foundation_kaia.marshalling import File
 from foundation_kaia.misc import Loc
 
 

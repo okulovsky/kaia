@@ -4,8 +4,8 @@ from typing import Callable, get_args
 from dataclasses import dataclass
 from .binding_settings import BindingSettings, EndpointBindingSettings
 from .rule import Rule, RuleConnector, SyncCallSpec
-from foundation_kaia.marshalling_2.reflector.signature import Signature, FunctionKind
-from foundation_kaia.marshalling_2.reflector.declared_type import DeclaredType
+from foundation_kaia.marshalling.reflector.signature import Signature, FunctionKind
+from foundation_kaia.marshalling.reflector.declared_type import DeclaredType
 
 
 def _get_input_type(sig: Signature) -> type | None:
@@ -29,7 +29,7 @@ def _unroll(dt: DeclaredType) -> list[type]:
 
 
 def _unroll_raw(tp) -> list[type]:
-    from foundation_kaia.marshalling_2.reflector.annotation import Annotation
+    from foundation_kaia.marshalling.reflector.annotation import Annotation
     ann = Annotation.parse(tp)
     result = []
     for dt in ann.types:

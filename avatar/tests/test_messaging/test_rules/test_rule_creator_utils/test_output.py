@@ -1,5 +1,5 @@
 import unittest
-from foundation_kaia.marshalling_2.reflector.signature import Signature
+from foundation_kaia.marshalling.reflector.signature import Signature
 from avatar.messaging.rules.rule_creator import _get_output_types
 from typing import Union, Tuple
 

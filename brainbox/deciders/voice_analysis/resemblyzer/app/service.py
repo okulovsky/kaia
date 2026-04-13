@@ -4,7 +4,7 @@ import uuid
 from pathlib import Path
 from resemblyzer import preprocess_wav, VoiceEncoder
 
-from foundation_kaia.marshalling_2 import FileLikeHandler
+from foundation_kaia.marshalling import FileLikeHandler
 from interface import IResemblyzer, FileLike
 from resemblyzer import preprocess_wav, VoiceEncoder
 

@@ -3,7 +3,7 @@ from brainbox.framework import ISelfManagingDecider
 from brainbox.framework.common.streaming import StreamingStorage
 from brainbox.framework.common import DeciderModel
 from brainbox.framework.controllers import DockerMarshallingApiCall
-from foundation_kaia.marshalling_2 import websocket, service, ApiCall
+from foundation_kaia.marshalling import websocket, service, ApiCall
 from typing import Iterable
 
 

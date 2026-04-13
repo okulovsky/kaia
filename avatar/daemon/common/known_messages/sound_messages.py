@@ -8,7 +8,6 @@ from enum import Enum
 class SetSilenceLevelCommand(IMessage):
     level: float = 0.1
 
-
 @dataclass
 class SoundLevelReport(IMessage):
     decision_level: float | None

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from foundation_kaia.marshalling_2 import JSON
+from foundation_kaia.marshalling import JSON
 from ...messaging import Envelop
 
 @dataclass

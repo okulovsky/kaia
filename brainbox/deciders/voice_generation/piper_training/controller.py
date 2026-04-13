@@ -3,7 +3,7 @@ import os
 from unittest import TestCase
 from brainbox.framework import RunConfiguration
 from foundation_kaia.brainbox_utils import Installer
-from foundation_kaia.marshalling_2 import TypeTools
+from foundation_kaia.marshalling import TypeTools
 from .app.interface import CkptData
 from .settings import PiperTrainingSettings
 from ...common import VOICEOVER_TEXT

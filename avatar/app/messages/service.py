@@ -5,7 +5,7 @@ from typing import Any
 from .queue import Queue
 from datetime import datetime
 from time import monotonic, sleep
-from foundation_kaia.marshalling_2 import TypeTools
+from foundation_kaia.marshalling import TypeTools
 
 class AvatarMessagingService(IAvatarMessagingService):
     def __init__(self,

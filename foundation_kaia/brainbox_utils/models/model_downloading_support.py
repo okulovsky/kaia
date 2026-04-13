@@ -1,6 +1,6 @@
 from typing import Generic
 
-from ...marshalling_2 import service, endpoint
+from ...marshalling import service, endpoint
 from .installer import Installer, TModelSpec
 from .installing_support import IInstallingSupport, InstallingSupport
 

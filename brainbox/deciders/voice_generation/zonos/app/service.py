@@ -3,7 +3,7 @@ import pickle
 from pathlib import Path
 
 from foundation_kaia.brainbox_utils import UniqueModelStorage
-from foundation_kaia.marshalling_2 import FileLikeHandler
+from foundation_kaia.marshalling import FileLikeHandler
 from interface import IZonos, FileLike
 
 SPEAKERS_DIR = Path('/resources/speakers')

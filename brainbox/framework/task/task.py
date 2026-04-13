@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from foundation_kaia.marshalling_2 import JSON
+from foundation_kaia.marshalling import JSON
 from typing import Dict, Union, List, Iterable
 from .job_request import JobRequest, JobDescription, IJobRequestFactory
 from uuid import uuid4

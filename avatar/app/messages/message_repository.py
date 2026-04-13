@@ -1,7 +1,7 @@
 from .interface import IAvatarMessagingService
 from ...messaging import IMessageRepository, IMessage, AvatarMessageSet
 from .avatar_message import AvatarMessage
-from foundation_kaia.marshalling_2 import Serializer, TypeTools, JSON, ApiUtils
+from foundation_kaia.marshalling import Serializer, TypeTools, JSON, ApiUtils
 from dataclasses import dataclass
 
 @dataclass

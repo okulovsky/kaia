@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Iterable
-from foundation_kaia.marshalling_2 import endpoint, service
+from foundation_kaia.marshalling import endpoint, service
 
 @service
 class IStreamingStorage:

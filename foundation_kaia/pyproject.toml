@@ -23,7 +23,8 @@ dependencies = [
     "python-dotenv",
     "websockets",
     "pyyaml",
-    "docutils"
+    "docutils",
+    "cloudpickle"
 ]
 
 classifiers = [

@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Iterable
 
 from foundation_kaia.brainbox_utils import LongBrainboxProcess, BrainboxReportItem, logger, subprocess_streaming_call
-from foundation_kaia.marshalling_2 import FileLike, FileLikeHandler
+from foundation_kaia.marshalling import FileLike, FileLikeHandler
 from interface import LlamaLoraSFTTrainerInterface, TrainingRun, TrainingSettings
 
 EXPERIMENTS_ROOT = Path("/resources/experiments")

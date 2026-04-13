@@ -1,4 +1,4 @@
-from foundation_kaia.marshalling_2 import ApiCall
+from foundation_kaia.marshalling import ApiCall
 from .streaming_storage_interface import IStreamingStorage
 
 class StreamingStorageApi(IStreamingStorage):

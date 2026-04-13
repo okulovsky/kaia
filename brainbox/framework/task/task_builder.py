@@ -1,7 +1,7 @@
 import copy
 
 from .task import BrainBoxTask, BrainBoxTaskOptionals
-from foundation_kaia.marshalling_2 import Signature, JSON, Serializer
+from foundation_kaia.marshalling import Signature, JSON, Serializer
 from dataclasses import dataclass
 from typing import Self
 

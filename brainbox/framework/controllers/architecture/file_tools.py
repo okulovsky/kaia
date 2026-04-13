@@ -1,4 +1,4 @@
-from foundation_kaia.marshalling_2 import FileLike, FileLikeHandler
+from foundation_kaia.marshalling import FileLike, FileLikeHandler
 from ...common.streaming import StreamingStorage
 from pathlib import Path
 

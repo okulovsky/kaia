@@ -4,7 +4,7 @@ from typing import Iterable
 from interface import IHelloBrainBox, FileLike
 from training import HelloBrainBoxTrainingProcess
 from foundation_kaia.brainbox_utils import SingleModelStorage, BrainboxReportItem
-from foundation_kaia.marshalling_2 import FileLikeHandler, JSON
+from foundation_kaia.marshalling import FileLikeHandler, JSON
 
 
 class HelloBrainBoxService(IHelloBrainBox):

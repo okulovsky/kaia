@@ -1,4 +1,4 @@
-from foundation_kaia.marshalling_2 import service, endpoint
+from foundation_kaia.marshalling import service, endpoint
 from .dto import (ControllersStatus, InstallationReport, SelfTestResult, ControllersSetup)
 
 

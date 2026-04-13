@@ -1,7 +1,7 @@
 from foundation_kaia.brainbox_utils import Installer
 from ..architecture import TSettings
 from ..docker_web_service_controller import DockerWebServiceController
-from foundation_kaia.marshalling_2 import DeclaredType
+from foundation_kaia.marshalling import DeclaredType
 from typing import Generic
 
 class DockerMarshallingController(DockerWebServiceController, Generic[TSettings]):

@@ -1,5 +1,5 @@
 import requests
-from foundation_kaia.marshalling_2 import service, FileLike, FileLikeHandler
+from foundation_kaia.marshalling import service, FileLike, FileLikeHandler
 from foundation_kaia.brainbox_utils import brainbox_endpoint
 from ....framework import DockerWebServiceApi, EntryPoint, TaskBuilder, brainbox_file_like_to_bytes_iterable
 from .controller import RhasspyKaldiController

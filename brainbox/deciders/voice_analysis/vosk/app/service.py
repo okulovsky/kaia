@@ -6,7 +6,7 @@ from uuid import uuid4
 
 from interface import IVosk, FileLike
 from foundation_kaia.brainbox_utils import SingleModelStorage
-from foundation_kaia.marshalling_2 import FileLikeHandler, JSON
+from foundation_kaia.marshalling import FileLikeHandler, JSON
 from vosk import KaldiRecognizer
 
 

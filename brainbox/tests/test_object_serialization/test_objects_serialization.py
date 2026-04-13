@@ -2,7 +2,7 @@ from brainbox.deciders import Piper
 from brainbox.framework import Job, BrainBox, BrainBoxBase
 from unittest import TestCase
 import pickle
-from foundation_kaia.marshalling_2 import Annotation
+from foundation_kaia.marshalling import Annotation
 
 class MyFactory:
     def generate(self) -> BrainBox.Task:

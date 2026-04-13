@@ -148,10 +148,9 @@ class BrainboxImageBuilder(IImageBuilder):
             shutil.rmtree(target_path)
         shutil.copytree(source_path, target_path)
         return [
-            'COPY --chown=app:app foundation_kaia/marshalling_2 /home/app/foundation_kaia_src/foundation_kaia/marshalling_2',
+            'COPY --chown=app:app foundation_kaia/marshalling /home/app/foundation_kaia_src/foundation_kaia/marshalling',
             'COPY --chown=app:app foundation_kaia/brainbox_utils /home/app/foundation_kaia_src/foundation_kaia/brainbox_utils',
             'COPY --chown=app:app foundation_kaia/logging /home/app/foundation_kaia_src/foundation_kaia/logging',
-            'COPY --chown=app:app foundation_kaia/fork /home/app/foundation_kaia_src/foundation_kaia/fork',
             'COPY --chown=app:app foundation_kaia/misc /home/app/foundation_kaia_src/foundation_kaia/misc',
             'COPY --chown=app:app foundation_kaia/__init__.py /home/app/foundation_kaia_src/foundation_kaia/__init__.py',
             'ENV PYTHONPATH="/home/app/foundation_kaia_src:$PYTHONPATH"',

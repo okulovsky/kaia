@@ -1,4 +1,4 @@
-from foundation_kaia.marshalling_2.marshalling.server.api_call import ApiCall
+from foundation_kaia.marshalling import ApiCall
 from .interface import IAvatarMessagingService
 
 

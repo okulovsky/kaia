@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from docutils.nodes import title
 
-from foundation_kaia.marshalling_2 import Serializer, EndpointDocumentation, JsonSchema
+from foundation_kaia.marshalling import Serializer, EndpointDocumentation, JsonSchema
 from ...common.decider_model import DeciderModel, DeciderMethodModel
 from ...controllers import IController, ControllerOverDecider
 from ...task import JobRequest

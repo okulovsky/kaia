@@ -10,7 +10,7 @@ from brainbox.framework.job_processing.core.job import Job
 from brainbox.framework.job_processing.main_loop.command_queue import CommandQueue
 from brainbox.framework.job_processing.main_loop.new_tasks_action import NewTasksAction
 from brainbox.framework.task import JobDescription
-from foundation_kaia.marshalling_2 import JSON
+from foundation_kaia.marshalling import JSON
 from .dto import JobSummary
 from .interface import ITasksService
 

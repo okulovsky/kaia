@@ -2,7 +2,7 @@ import os
 import shutil
 import tarfile
 from foundation_kaia.logging import Logger, HtmlReport
-from foundation_kaia.marshalling_2 import FileLike, FileLikeHandler
+from foundation_kaia.marshalling import FileLike, FileLikeHandler
 from interface import PiperTrainingInterface, PiperTrainingParameters, CkptData
 from training import Training, Loc
 from installer import PiperTrainingInstaller
