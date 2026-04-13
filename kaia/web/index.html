@@ -22,7 +22,7 @@
   <script type="module">
     import { AvatarClient, Dispatcher, ChatCommandHandler, ImageCommandHandler, ButtonGridCommandHandler,
              Microphone, MicController, Recorder, StatefulRecorder, SilenceDetector, Automaton, AudioController,
-             Message, Envelop, DebugViewController, MicDebugView, LoadingScreen,
+             Message, Envelop, DebugViewController, MicDebugView, ReloadDebugView, LoadingScreen,
              Webcam, WebcamProcessor } from '/frontend/scripts/kaia-frontend.js';
     import { KaldiWakeWordDetector } from '/frontend/scripts/kaldi-wake-word-detector.js';
 
@@ -37,6 +37,7 @@
     const dispatcher = new Dispatcher(client);
     const debugViewController = new DebugViewController(debugSettingsBtn, debugDiv);
 
+    debugViewController.register(new ReloadDebugView());
     debugViewController.register(new MicDebugView({baseUrl: window.location.origin, dispatcher}));
 
     new ChatCommandHandler({ dispatcher, container: chatDiv, baseUrl: window.location.origin });
@@ -58,9 +59,11 @@
     debugViewController.register(webcamProcessor);
 
 
-    dispatcher.start();
     new LoadingScreen(loadingDiv, [wake, webcam], () => {
-      dispatcher.push(new Message('InitializationEvent', new Envelop(), {}));
+      const initMsg = new Message('InitializationEvent', new Envelop(), {});
+      client.setLastId(initMsg.envelop.id);
+      dispatcher.start();
+      dispatcher.push(initMsg);
       controller.start().catch(console.error);
       webcamProcessor.start().catch(console.error);
     });

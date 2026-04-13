@@ -12,6 +12,7 @@ class KaiaRunner(IContainerRunner):
     user_id: str|None = None
     docker_group_id: str|None = None
     debug: bool = False
+    propagate_env_variables: list[str]|None = None
 
 
     def _get_user(self, executor: IExecutor):
@@ -30,6 +31,7 @@ class KaiaRunner(IContainerRunner):
     def run(self, image_name: str, container_name: str, executor: IExecutor):
         restart = ['--restart', 'unless-stopped'] if self.auto_restart and not self.debug else []
 
+        env_variables = DockerArgumentsHelper.arg_propagate_env_variables(self.propagate_env_variables) if self.propagate_env_variables else []
 
         command = [
             'docker',
@@ -43,6 +45,7 @@ class KaiaRunner(IContainerRunner):
             *(['--detach'] if not self.debug else ['--rm']),
             *self._get_user(executor),
             *restart,
+            *env_variables,
             image_name,
             '--data-folder',
             str(self.folder),
