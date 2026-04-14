@@ -3,6 +3,7 @@ import { IDebugView } from './iDebugView.js'
 export class DebugViewController {
     private registrations: IDebugView[] = []
     private open = false
+    private activeView: IDebugView | null = null
 
     constructor(
         private settingsButton: HTMLElement,
@@ -15,8 +16,16 @@ export class DebugViewController {
         this.registrations.push(view)
     }
 
+    private _releaseActive(): void {
+        if (this.activeView) {
+            this.activeView.release()
+            this.activeView = null
+        }
+    }
+
     private _onSettings(): void {
         if (this.open) {
+            this._releaseActive()
             this.div.innerHTML = ''
             this.div.style.display = 'none'
             this.open = false
@@ -28,8 +37,10 @@ export class DebugViewController {
                 btn.textContent = view.name
                 btn.className = 'debug-button-component'
                 btn.addEventListener('click', () => {
+                    this._releaseActive()
                     this.div.innerHTML = ''
                     view.acceptDiv(this.div)
+                    this.activeView = view
                 })
                 this.div.appendChild(btn)
             }

@@ -12,6 +12,7 @@ export class WebcamProcessor implements IDebugView {
     private _client: AvatarClient
     private _baseUrl: string
 
+    private _pixelSamplingStep: number
     private _storedCanvas: HTMLCanvasElement | null = null
     private _intervalId: ReturnType<typeof setInterval> | null = null
 
@@ -20,11 +21,12 @@ export class WebcamProcessor implements IDebugView {
     private _imgStored: HTMLImageElement | null = null
     private _imgDiff: HTMLImageElement | null = null
 
-    constructor({ webcam, rateMs = 1000, threshold = 0.1, pixelThreshold = 30, client, baseUrl }: {
+    constructor({ webcam, rateMs = 1000, threshold = 0.1, pixelThreshold = 30, pixelSamplingStep = 2, client, baseUrl }: {
         webcam: IWebcam
         rateMs?: number
         threshold?: number
         pixelThreshold?: number
+        pixelSamplingStep?: number
         client: AvatarClient
         baseUrl: string
     }) {
@@ -32,6 +34,7 @@ export class WebcamProcessor implements IDebugView {
         this._rateMs = rateMs
         this._threshold = threshold
         this._pixelThreshold = pixelThreshold
+        this._pixelSamplingStep = pixelSamplingStep
         this._client = client
         this._baseUrl = baseUrl.replace(/\/+$/, '')
     }
@@ -56,45 +59,56 @@ export class WebcamProcessor implements IDebugView {
 
         const w = current.width
         const h = current.height
+        const byteStep = this._pixelSamplingStep * 4
 
         const storedCtx = this._storedCanvas.getContext('2d')!
         const currentCtx = current.getContext('2d')!
         const img1 = storedCtx.getImageData(0, 0, w, h).data
         const img2 = currentCtx.getImageData(0, 0, w, h).data
 
-        const diffCanvas = document.createElement('canvas')
-        diffCanvas.width = w
-        diffCanvas.height = h
-        const diffCtx = diffCanvas.getContext('2d')!
-        const diffData = diffCtx.createImageData(w, h)
+        const debugging = this._debugDiv !== null
+        let diffCanvas: HTMLCanvasElement | null = null
+        let diffData: ImageData | null = null
+        if (debugging) {
+            diffCanvas = document.createElement('canvas')
+            diffCanvas.width = w
+            diffCanvas.height = h
+            diffData = diffCanvas.getContext('2d')!.createImageData(w, h)
+        }
 
         let changedPixels = 0
-        for (let i = 0; i < img1.length; i += 4) {
+        let checkedPixels = 0
+        for (let i = 0; i < img1.length; i += byteStep) {
+            checkedPixels++
             const rDiff = Math.abs(img1[i] - img2[i])
             const gDiff = Math.abs(img1[i + 1] - img2[i + 1])
             const bDiff = Math.abs(img1[i + 2] - img2[i + 2])
 
             if ((rDiff + gDiff + bDiff) / 3 > this._pixelThreshold) {
                 changedPixels++
-                diffData.data[i] = 255
-                diffData.data[i + 1] = 0
-                diffData.data[i + 2] = 0
-                diffData.data[i + 3] = 255
-            } else {
+                if (diffData) {
+                    diffData.data[i] = 255
+                    diffData.data[i + 1] = 0
+                    diffData.data[i + 2] = 0
+                    diffData.data[i + 3] = 255
+                }
+            } else if (diffData) {
                 diffData.data[i] = 0
                 diffData.data[i + 1] = 0
                 diffData.data[i + 2] = 0
                 diffData.data[i + 3] = 255
             }
         }
-        diffCtx.putImageData(diffData, 0, 0)
+        if (diffCanvas && diffData) {
+            diffCanvas.getContext('2d')!.putImageData(diffData, 0, 0)
+        }
 
-        const moved = changedPixels > this._threshold * w * h
+        const moved = changedPixels > this._threshold * checkedPixels
         return { moved, diffCanvas }
     }
 
     private imageChanged(current: HTMLCanvasElement): void {
-        const fileName = `webcam_${crypto.randomUUID()}.png`
+        const fileName = `webcam_${crypto.randomUUID()}.jpg`
         const url = `${this._baseUrl}/cache/upload/${encodeURIComponent(fileName)}`
 
         current.toBlob(async (blob) => {
@@ -113,7 +127,7 @@ export class WebcamProcessor implements IDebugView {
             } catch (err) {
                 console.error('webcam upload failed:', err)
             }
-        }, 'image/png')
+        }, 'image/jpeg', 0.8)
 
         const w = current.width
         const h = current.height
@@ -161,5 +175,12 @@ export class WebcamProcessor implements IDebugView {
         this._imgCurrent = makeImg('Current')
         this._imgStored = makeImg('Stored')
         this._imgDiff = makeImg('Diff')
+    }
+
+    release(): void {
+        this._debugDiv = undefined
+        this._imgCurrent = undefined
+        this._imgStored = undefined
+        this._imgDiff = undefined
     }
 }

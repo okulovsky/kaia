@@ -61,34 +61,16 @@ export class KaldiWakeWordDetector implements ILoadingScreenComponent, IWakeWord
         this.initialized = true
     }
 
-    private _resample(input: Float32Array, fromRate: number): Float32Array {
-        if (fromRate === this.sampleRateOfTheModel) return input.slice()
-        const ratio = fromRate / this.sampleRateOfTheModel
-        const outputLength = Math.round(input.length / ratio)
-        const output = new Float32Array(outputLength)
-        for (let i = 0; i < outputLength; i++) {
-            const srcIdx = i * ratio
-            const idx = Math.floor(srcIdx)
-            const frac = srcIdx - idx
-            const a = input[idx] ?? 0
-            const b = input[idx + 1] ?? a
-            output[i] = a + frac * (b - a)
-        }
-        return output
-    }
-
     detect(micData: MicData): boolean {
         if (!this.initialized) return false
 
-        const float32 = this._resample(micData.buffer, micData.sampleRate)
-
         if (this.debugRecorder) {
-            this.debugRecorder.write({ sampleRate: this.sampleRateOfTheModel, buffer: float32.slice() }).catch(console.error)
+            this.debugRecorder.write({ sampleRate: micData.sampleRate, buffer: micData.buffer.slice() }).catch(console.error)
         }
 
         // Vosk expects PCM amplitude range (~±32768), not normalized [-1, 1]
-        const scaled = new Float32Array(float32.length)
-        for (let i = 0; i < float32.length; i++) scaled[i] = float32[i] * 32768
+        const scaled = new Float32Array(micData.buffer.length)
+        for (let i = 0; i < micData.buffer.length; i++) scaled[i] = micData.buffer[i] * 32768
 
         this.recognizerPort!.postMessage(
             { action: 'audioChunk', data: scaled, recognizerId: this.recognizerId, sampleRate: this.sampleRateOfTheModel },

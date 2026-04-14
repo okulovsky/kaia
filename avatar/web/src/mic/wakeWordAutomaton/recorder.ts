@@ -72,7 +72,7 @@ export class Recorder {
     }
 
     private _writeBuffer(buffer: SoundBuffer): void {
-        if (buffer.buffer.length === 0 || !this.filename) return
+        if (buffer.isEmpty || !this.filename) return
         const pcm = buffer.toPcm()
         const bytes = new Uint8Array(pcm.buffer, pcm.byteOffset, pcm.byteLength)
         const index = this.chunkIndex++
@@ -97,7 +97,7 @@ export class Recorder {
         await this._sendChunk(filename, this.chunkIndex++, buildWavHeader(sampleRate))
 
         // Flush pre-roll — awaited for the same reason
-        if (this.startBuffer.buffer.length > 0) {
+        if (!this.startBuffer.isEmpty) {
             const pcm = this.startBuffer.toPcm()
             await this._sendChunk(filename, this.chunkIndex++,
                 new Uint8Array(pcm.buffer, pcm.byteOffset, pcm.byteLength))
@@ -124,7 +124,7 @@ export class Recorder {
 
     async commit(): Promise<void> {
         if (!this.filename) return
-        if (this.normalBuffer.buffer.length > 0) {
+        if (!this.normalBuffer.isEmpty) {
             this._writeBuffer(this.normalBuffer)
         }
         await Promise.all(this.pendingWrites)

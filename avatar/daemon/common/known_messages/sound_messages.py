@@ -15,6 +15,8 @@ class SoundLevelReport(IMessage):
     begin_timestamp: datetime
     end_timestamp: datetime
     levels: list[float]
+    sample_rate: int | None = None
+    frame_size: int | None = None
 
 
 

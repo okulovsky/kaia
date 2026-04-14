@@ -9,9 +9,10 @@ from avatar.utils import WebTestEnvironmentFactory, Sine
 FOLDER = Path(__file__).parent / 'files'
 ENABLE_DEBUG = 'false'
 
+
 class WakeWordTestCase(TestCase):
-    def test_wake_word_detected(self):
-        with WebTestEnvironmentFactory(HTML) as env:
+    def _run(self, model: str):
+        with WebTestEnvironmentFactory(create_html(model), headless=True) as env:
             env.api.cache.upload('noise', Sine().segment(0.5).bytes())
             env.api.cache.upload('computer', (FOLDER / 'computer.wav').read_bytes())
 
@@ -44,19 +45,39 @@ class WakeWordTestCase(TestCase):
             self.assertIsNotNone(found)
             self.assertEqual('computer', found.word)
 
+    def test_kaldi(self):
+        self._run('kaldi')
+
+    def test_bumblebee(self):
+        self._run('bumblebee')
 
 
 
-HTML = '''<!DOCTYPE html>
+def create_html(model: str) -> str:
+    if model == 'kaldi':
+        detector_import = "import { KaldiWakeWordDetector } from '/frontend/scripts/kaldi-wake-word-detector.js';"
+        detector_init = (
+            "const wake = new KaldiWakeWordDetector({ sampleRateOfTheModel: 16000, words: ['computer'], "
+            "modelUrl: '/frontend/models/vosk-model-small-en-us-0.15.zip', dispatcher, "
+            f"uploadDebugSound: {ENABLE_DEBUG} }});"
+        )
+    elif model == 'bumblebee':
+        detector_import = "import { BumblebeeWakeWordDetector } from '/frontend/scripts/bumblebee-wake-word-detector.js';"
+        detector_init = "const wake = new BumblebeeWakeWordDetector({ words: ['computer'], dispatcher });"
+    else:
+        raise ValueError(f'Unknown model: {model}')
+
+    return '''<!DOCTYPE html>
 <html><head><meta charset="UTF-8"></head><body>
 <script type="module">
   import { AvatarClient, Dispatcher, FakeMicrophone, MicController, Message, Envelop, LoadingScreen } from '/frontend/scripts/kaia-frontend.js';
-  import { KaldiWakeWordDetector } from '/frontend/scripts/kaldi-wake-word-detector.js';
-  
+
+''' + detector_import + '''
+
   const client = new AvatarClient({ baseUrl: window.location.origin });
   const dispatcher = new Dispatcher(client);
   const input = new FakeMicrophone({ sampleRate: 22050, frameSize: 512, dispatcher, baseUrl: window.location.origin });
-  const wake = new KaldiWakeWordDetector({ sampleRateOfTheModel: 16000, words: ['computer'], modelUrl: '/frontend/models/vosk-model-small-en-us-0.15.zip', dispatcher, uploadDebugSound: ''' + ENABLE_DEBUG + ''' });
+''' + detector_init + '''
   const controller = new MicController(input, m => wake.detect(m));
 
   dispatcher.start();

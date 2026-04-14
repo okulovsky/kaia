@@ -40,7 +40,7 @@ export class AvatarClient {
     }
   }
 
-  async pull (timeout_in_seconds?: number | null, max_messages?: number | null): Promise<Message[]> {
+  async pull (timeout_in_seconds?: number | null, max_messages?: number | null, signal?: AbortSignal): Promise<Message[]> {
     const url = new URL(`${this.baseUrl}/messaging/get/${encodeURIComponent(this.session)}`)
     if (this.lastId !== undefined) {
       url.searchParams.set('last_id', this.lastId)
@@ -56,6 +56,7 @@ export class AvatarClient {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ allowed_types: this.allowedTypes }),
+      signal,
     })
     if (!resp.ok) {
       throw new Error(`pull failed: ${resp.status} ${resp.statusText}`)

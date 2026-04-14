@@ -29,16 +29,14 @@ def compile(src_folder: Path, dst_folder: Path):
 
     web_root = src_folder.parent
 
-    node_modules = web_root / 'node_modules'
-    if not node_modules.exists():
-        npm_install = subprocess.run(
-            ['npm', 'install'],
-            cwd=str(web_root),
-            capture_output=True,
-            text=True,
-        )
-        if npm_install.returncode != 0:
-            raise RuntimeError(f"npm install failed:\n{npm_install.stdout}\n{npm_install.stderr}")
+    npm_install = subprocess.run(
+        ['npm', 'install'],
+        cwd=str(web_root),
+        capture_output=True,
+        text=True,
+    )
+    if npm_install.returncode != 0:
+        raise RuntimeError(f"npm install failed:\n{npm_install.stdout}\n{npm_install.stderr}")
 
     vite_js = web_root / 'node_modules' / 'vite' / 'bin' / 'vite.js'
     if not vite_js.exists():

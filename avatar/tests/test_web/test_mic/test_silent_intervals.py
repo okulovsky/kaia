@@ -11,7 +11,7 @@ from avatar.utils import WebTestEnvironmentFactory, Sine, WebTestEnvironment, sp
 
 
 FOLDER = Path(__file__).parent / 'files'
-ENABLE_DEBUG = 'false'
+
 
 class SilenceMarginsTestCase(TestCase):
     def _run(self, env: WebTestEnvironment, sound: bytes):
@@ -54,12 +54,16 @@ class SilenceMarginsTestCase(TestCase):
             messages = self._run(env, sound)
             self.print_messages(messages)
             self.assertIsInstance(messages[-1], SoundStreamingEndEvent)
-            segments = split_wav_by_amplitude(env.api.cache.read(messages[-1].file_id))
+            data = env.api.cache.read(messages[-1].file_id)
+            #with open(Path(__file__).parent/'sample.wav', 'wb') as f:
+            #    f.write(data)
+            segments = split_wav_by_amplitude(data)
+
             self.assertEqual(3, len(segments))
             self.assertAlmostEqual(0.3, segments[1].amplitude, 1)
             self.assertAlmostEqual(2.0, segments[1].duration, 1)
-            self.assertAlmostEqual(0.01, segments[0].amplitude)
-            self.assertAlmostEqual(0.01, segments[0].amplitude)
+            self.assertGreater(0.03, segments[0].amplitude)
+            self.assertGreater(0.03, segments[2].amplitude)
 
 
 

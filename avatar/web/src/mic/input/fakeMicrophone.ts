@@ -99,7 +99,7 @@ export class FakeMicrophone implements IMicrophone {
         this.samplesProduced += this.frameSize
 
         if (this.isBufferEmpty()) {
-            return { sampleRate: this.sampleRate, buffer: new Float32Array(this.frameSize), micTimestamp }
+            return new MicData(this.sampleRate, new Float32Array(this.frameSize), micTimestamp)
         }
 
         if (this.pendingStartedEvent !== null && this.dispatcher) {
@@ -121,9 +121,9 @@ export class FakeMicrophone implements IMicrophone {
         if (chunk.length < this.frameSize) {
             const padded = new Float32Array(this.frameSize)
             padded.set(chunk)
-            return { sampleRate: this.sampleRate, buffer: padded, micTimestamp }
+            return new MicData(this.sampleRate, padded, micTimestamp)
         }
-        return { sampleRate: this.sampleRate, buffer: chunk, micTimestamp }
+        return new MicData(this.sampleRate, chunk, micTimestamp)
     }
 
     isRunning(): boolean {

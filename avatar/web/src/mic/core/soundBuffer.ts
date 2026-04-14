@@ -2,44 +2,66 @@ import { MicData } from '../input/micData.js'
 
 export class SoundBuffer {
     maxTimeSeconds: number
-    sampleRate: number | null = null
-    buffer: number[] = []
     isFull = false
     private allowOverfill: boolean
+    private queue: MicData[] = []
+    private totalSamples = 0
+    private totalLevelSum = 0
+    private sampleRate: number | null = null
 
     constructor({ maxTimeSeconds, allowOverfill = false }: { maxTimeSeconds: number, allowOverfill?: boolean }) {
         this.maxTimeSeconds = maxTimeSeconds
         this.allowOverfill = allowOverfill
     }
 
+    get isEmpty(): boolean {
+        return this.totalSamples === 0
+    }
+
     add(data: MicData): void {
-        if (this.sampleRate !== data.sampleRate) {
-            this.sampleRate = data.sampleRate
+        if (this.sampleRate !== null && this.sampleRate !== data.sampleRate) {
             this.clear()
         }
-        for (let i = 0; i < data.buffer.length; i++) {
-            this.buffer.push(data.buffer[i])
-        }
-        const maxSamples = Math.floor(this.maxTimeSeconds * this.sampleRate!)
-        if (this.buffer.length >= maxSamples) {
+        this.sampleRate = data.sampleRate
+        this.queue.push(data)
+        this.totalSamples += data.buffer.length
+        this.totalLevelSum += data.levelSum
+
+        const maxSamples = Math.floor(this.maxTimeSeconds * this.sampleRate)
+        if (this.totalSamples >= maxSamples) {
             if (!this.allowOverfill) {
-                this.buffer = this.buffer.slice(this.buffer.length - maxSamples)
+                // Remove entries from the front as long as the buffer remains full without them
+                while (this.queue.length > 1 && this.totalSamples - this.queue[0].buffer.length >= maxSamples) {
+                    const ejected = this.queue.shift()!
+                    this.totalSamples -= ejected.buffer.length
+                    this.totalLevelSum -= ejected.levelSum
+                }
             }
             this.isFull = true
         }
     }
 
+    getLevel(): number {
+        return this.totalSamples > 0 ? this.totalLevelSum / this.totalSamples : 0
+    }
+
     toPcm(): Int16Array {
-        const result = new Int16Array(this.buffer.length)
-        for (let i = 0; i < this.buffer.length; i++) {
-            const s = Math.max(-1, Math.min(1, this.buffer[i]))
-            result[i] = s < 0 ? Math.round(s * 32768) : Math.round(s * 32767)
+        const result = new Int16Array(this.totalSamples)
+        let offset = 0
+        for (const entry of this.queue) {
+            for (let i = 0; i < entry.buffer.length; i++) {
+                const s = Math.max(-1, Math.min(1, entry.buffer[i]))
+                result[offset++] = s < 0 ? Math.round(s * 32768) : Math.round(s * 32767)
+            }
         }
         return result
     }
 
     clear(): void {
-        this.buffer = []
+        this.queue = []
+        this.totalSamples = 0
+        this.totalLevelSum = 0
         this.isFull = false
+        this.sampleRate = null
     }
 }

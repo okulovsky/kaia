@@ -28,6 +28,7 @@
     "vite": "^8.0.3"
   },
   "dependencies": {
-    "vosk-browser": "^0.0.8"
+    "vosk-browser": "^0.0.8",
+    "bumblebee-hotword": "^0.2.1"
   }
 }

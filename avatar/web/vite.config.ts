@@ -9,6 +9,7 @@ export default defineConfig({
             input: {
                 'kaia-frontend': 'src/index.ts',
                 'kaldi-wake-word-detector': 'src/mic/kaldiWakeWordDetector.ts',
+                'bumblebee-wake-word-detector': 'src/mic/bumblebeeWakeWordDetector.ts',
             },
             output: {
                 entryFileNames: '[name].js',

@@ -18,6 +18,8 @@ export class SilenceDetector {
     private levels: number[]
     private silenceLevel: number
     private dispatcher: Dispatcher
+    private lastSampleRate: number | null = null
+    private lastFrameSize: number | null = null
 
     constructor({
         timeBetweenReportsInSeconds = 1,
@@ -45,15 +47,17 @@ export class SilenceDetector {
 
     detect(micData: MicData): VoicePresence {
         if (this.beginMicTimestamp === null) this.beginMicTimestamp = micData.micTimestamp
+        this.lastSampleRate = micData.sampleRate
+        this.lastFrameSize = micData.buffer.length
 
         this.decisionBuffer.add(micData)
         if (this.decisionBuffer.isFull) {
-            this.decisionLevel = this._computeLevelOf(this.decisionBuffer)
+            this.decisionLevel = this.decisionBuffer.getLevel()
         }
 
         this.reportingBuffer.add(micData)
         if (this.reportingBuffer.isFull) {
-            this.levels.push(this._computeLevelOf(this.reportingBuffer))
+            this.levels.push(this.reportingBuffer.getLevel())
             this.reportingBuffer.clear()
         }
 
@@ -64,6 +68,8 @@ export class SilenceDetector {
                 levels: [...this.levels],
                 silence_level: this.silenceLevel,
                 decision_level: this.decisionLevel,
+                sample_rate: this.lastSampleRate,
+                frame_size: this.lastFrameSize,
             }))
             this.beginMicTimestamp = micData.micTimestamp
             this.levels = []
@@ -73,11 +79,4 @@ export class SilenceDetector {
         return this.decisionLevel < this.silenceLevel ? VoicePresence.Silence : VoicePresence.Sound
     }
 
-    private _computeLevelOf(buffer: SoundBuffer): number {
-        let sum = 0
-        for (const s of buffer.buffer) {
-            sum += Math.abs(s)
-        }
-        return sum / buffer.buffer.length
-    }
 }

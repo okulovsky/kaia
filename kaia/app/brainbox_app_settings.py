@@ -27,4 +27,4 @@ class BrainboxAppSettings(IAppInitializer):
         )
         app.brainbox_server = BrainBoxServer(settings)
         app.brainbox_api = BrainBoxApi(f'http://127.0.0.1:{settings.port}')
-        app.custom_brainbox_cache_folder = locations.cache_folder
+        app.brainbox_cache_folder = locations.cache_folder

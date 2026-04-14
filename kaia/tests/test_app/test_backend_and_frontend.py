@@ -64,8 +64,8 @@ HTML = '''
     Recorder, StatefulRecorder, SilenceDetector, Automaton, AudioController,
     Message, Envelop, LoadingScreen 
   } from '/frontend/scripts/kaia-frontend.js';
-  import { KaldiWakeWordDetector } from '/frontend/scripts/kaldi-wake-word-detector.js';
-  
+  //import { KaldiWakeWordDetector } from '/frontend/scripts/kaldi-wake-word-detector.js';
+  import { BumblebeeWakeWordDetector } from '/frontend/scripts/bumblebee-wake-word-detector.js';
 
 
 
@@ -75,7 +75,8 @@ HTML = '''
   const recorder = new Recorder({ startBufferLength: 1.0, normalBufferLength: 0.3, dispatcher, baseUrl: window.location.origin });
   const stateful = new StatefulRecorder({ recorder, dispatcher });
   const silence = new SilenceDetector({ timeBetweenReportsInSeconds: 1, reportingWindowSeconds: 0.05, silenceLevel: 0.01, dispatcher });
-  const wake = new KaldiWakeWordDetector({ sampleRateOfTheModel: 16000, words: ['computer'], modelUrl: '/frontend/models/vosk-model-small-en-us-0.15.zip', dispatcher });
+  //const wake = new KaldiWakeWordDetector({ sampleRateOfTheModel: 16000, words: ['computer'], modelUrl: '/frontend/models/vosk-model-small-en-us-0.15.zip', dispatcher });
+  const wake = new BumblebeeWakeWordDetector({ words: ['computer'], dispatcher });
   new AudioController({ dispatcher, baseUrl: window.location.origin, silent: true, acceleration: 10 });
   const automaton = new Automaton({ silenceDetector: silence, wakeWordDetector: wake, statefulRecorder: stateful, dispatcher });
   const controller = new MicController(input, m => automaton.process(m));

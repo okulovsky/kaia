@@ -6,4 +6,6 @@ export class ReloadDebugView implements IDebugView {
     acceptDiv(_div: HTMLDivElement): void {
         window.location.reload()
     }
+
+    release(): void {}
 }

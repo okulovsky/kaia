@@ -5,22 +5,17 @@ export class Webcam implements IWebcam, ILoadingScreenComponent {
     readonly name = 'Webcam'
     private _width: number
     private _height: number
-    private _captureIntervalMs: number
     private _video: HTMLVideoElement
     private _canvas: HTMLCanvasElement
     private _stream: MediaStream | null = null
-    private _intervalId: ReturnType<typeof setInterval> | null = null
     private _running = false
-    private _hasFrame = false
 
-    constructor({ width = 320, height = 240, captureIntervalMs = 100 }: {
+    constructor({ width = 320, height = 240 }: {
         width?: number
         height?: number
-        captureIntervalMs?: number
     } = {}) {
         this._width = width
         this._height = height
-        this._captureIntervalMs = captureIntervalMs
 
         this._video = document.createElement('video')
         this._video.autoplay = true
@@ -53,20 +48,10 @@ export class Webcam implements IWebcam, ILoadingScreenComponent {
     }
 
     async start(): Promise<void> {
-        if (this._running) return
         this._running = true
-        this._intervalId = setInterval(() => {
-            const ctx = this._canvas.getContext('2d')!
-            ctx.drawImage(this._video, 0, 0, this._width, this._height)
-            this._hasFrame = true
-        }, this._captureIntervalMs)
     }
 
     stop(): void {
-        if (this._intervalId !== null) {
-            clearInterval(this._intervalId)
-            this._intervalId = null
-        }
         this._stream?.getTracks().forEach(t => t.stop())
         this._running = false
     }
@@ -76,6 +61,9 @@ export class Webcam implements IWebcam, ILoadingScreenComponent {
     }
 
     read(): HTMLCanvasElement | null {
-        return this._hasFrame ? this._canvas : null
+        if (!this._running) return null
+        const ctx = this._canvas.getContext('2d')!
+        ctx.drawImage(this._video, 0, 0, this._width, this._height)
+        return this._canvas
     }
 }

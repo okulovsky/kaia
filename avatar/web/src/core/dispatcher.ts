@@ -7,23 +7,43 @@ export class Dispatcher {
   private client: AvatarClient
   private handlers = new Map<string, Handler[]>()
   private running = false
+  private abortController: AbortController | null = null
 
   constructor (client: AvatarClient) {
     this.client = client
   }
 
+  private syncAllowedTypes (): void {
+    this.client.allowedTypes = [...this.handlers.keys()]
+    if (this.running) {
+      this.abortController?.abort()
+    }
+  }
+
   /** Subscribe a handler to any message whose type endsWith this suffix */
-  subscribe (suffix: string, handler: Handler): void {
+  subscribe (suffix: string, handler: Handler): Handler {
     const list = this.handlers.get(suffix) ?? []
     list.push(handler)
     this.handlers.set(suffix, list)
+    this.syncAllowedTypes()
+    return handler
+  }
+
+  /** Unsubscribe a previously subscribed handler */
+  unsubscribe (suffix: string, handler: Handler): void {
+    const list = this.handlers.get(suffix)
+    if (!list) return
+    const idx = list.indexOf(handler)
+    if (idx !== -1) list.splice(idx, 1)
+    if (list.length === 0) this.handlers.delete(suffix)
+    this.syncAllowedTypes()
   }
 
   /** Start the long-poll loop */
   start (): void {
     if (this.running) return
     this.running = true
-    this.client.allowedTypes = [...this.handlers.keys()]
+    this.syncAllowedTypes()
     void this.loop()
   }
 
@@ -38,10 +58,12 @@ export class Dispatcher {
 
   private async loop (): Promise<void> {
     while (this.running) {
+      this.abortController = new AbortController()
       let msgs: Message[]
       try {
-        msgs = await this.client.pull()
+        msgs = await this.client.pull(undefined, undefined, this.abortController.signal)
       } catch (e) {
+        if (e instanceof DOMException && e.name === 'AbortError') continue
         console.error('Dispatcher: fetch failed', e)
         continue
       }
