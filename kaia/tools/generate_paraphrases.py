@@ -13,26 +13,18 @@ from foundation_kaia.misc import Loc
 
 MODEL = 'llama3.1:8b'
 
+CharaApis.brainbox_api = BrainBox.Api('127.0.0.1:8090')
+
 all_templates = [
     *TimerIntents.get_templates(),
     *TimeIntents.get_templates(),
     *DateIntents.get_templates(),
 ]
 
-CharaApis.brainbox_api = BrainBox.Api('127.0.0.1:8090')
-
 cases = IntentCaseBuilder(templates=all_templates, languages=('ru',)).create_cases()
-
 builder = PromptTaskBuilder(prompter=IntentPrompter(), model=MODEL)
 cache = IntentPipelineCache(Loc.data_folder / 'intent_paraphrases_cache')
-IntentPipeline(builder, grammar_prompter=RuGrammarPrompter())(cache, cases)
-
-results = cache.read_result()
-output = Loc.data_folder / 'intent_paraphrases.txt'
-lines = []
-for record in results:
-    lines.append(f"# {record.original_template_name} | {record.language}")
-    lines.append(record.filename)
-    lines.append("")
-output.write_text('\n'.join(lines), encoding='utf-8')
-print(f"Done. {len(results)} paraphrases → {output}")
+IntentPipeline(builder, grammar_prompter=RuGrammarPrompter())(
+    cache, cases,
+    output_path=Loc.data_folder / 'intent_paraphrases.txt',
+)

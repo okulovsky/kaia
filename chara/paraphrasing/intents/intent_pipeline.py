@@ -19,7 +19,8 @@ class IntentPipeline:
         self.builder = builder
         self.grammar_prompter = grammar_prompter
 
-    def __call__(self, cache: IntentPipelineCache, cases: list[IntentCase]):
+    def __call__(self, cache: IntentPipelineCache, cases: list[IntentCase],
+                 output_path: Path | None = None):
         @logger.phase(cache.llm, "Running LLM")
         def _():
             unit = BrainBoxUnit(self.builder, None, BulletPointDivider())
@@ -52,3 +53,12 @@ class IntentPipeline:
                 logger.log(f"Option `{option}` failed")
 
         cache.write_result(result)
+
+        if output_path is not None:
+            lines = []
+            for record in result:
+                lines.append(f"# {record.original_template_name} | {record.language}")
+                lines.append(record.filename)
+                lines.append("")
+            output_path.write_text('\n'.join(lines), encoding='utf-8')
+            logger.log(f"{len(result)} paraphrases → {output_path}")

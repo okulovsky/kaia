@@ -14,7 +14,8 @@ class NegativePipeline:
     def __init__(self, builder: PromptTaskBuilder):
         self.builder = builder
 
-    def __call__(self, cache: NegativePipelineCache, cases: list[NegativeCase]):
+    def __call__(self, cache: NegativePipelineCache, cases: list[NegativeCase],
+                 output_path: Path | None = None):
         @logger.phase(cache.llm, "Running LLM")
         def _():
             unit = BrainBoxUnit(self.builder, None, BulletPointDivider())
@@ -30,3 +31,7 @@ class NegativePipeline:
             result.append(text)
 
         cache.write_result(result)
+
+        if output_path is not None:
+            output_path.write_text('\n'.join(result), encoding='utf-8')
+            logger.log(f"{len(result)} negative phrases → {output_path}")
