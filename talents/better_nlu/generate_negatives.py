@@ -11,7 +11,7 @@ MODEL = 'llama3.1:8b'
 TARGET = 200
 PHRASES_PER_BATCH = 20
 
-CharaApis.brainbox_api = BrainBox.Api('127.0.0.1:8090')
+CharaApis.brainbox_api = BrainBox.Api('http://127.0.0.1:8090')
 
 n_batches = max(1, (TARGET + PHRASES_PER_BATCH - 1) // PHRASES_PER_BATCH)
 cases = [NegativeCase(language='ru', batch_index=i) for i in range(n_batches)]

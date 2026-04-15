@@ -10,10 +10,9 @@ from kaia.skills.timer_skill import TimerIntents
 from kaia.skills.time import TimeIntents
 from kaia.skills.date import DateIntents
 from foundation_kaia.misc import Loc
+from talents.better_nlu.model import get_model
 
-MODEL = 'llama3.1:8b'
-
-CharaApis.brainbox_api = BrainBox.Api('127.0.0.1:8090')
+CharaApis.brainbox_api = BrainBox.Api('http://127.0.0.1:8090')
 
 all_templates = [
     *TimerIntents.get_templates(),
@@ -22,7 +21,7 @@ all_templates = [
 ]
 
 cases = IntentCaseBuilder(templates=all_templates, languages=('ru',)).create_cases()
-builder = PromptTaskBuilder(prompter=IntentPrompter(), model=MODEL)
+builder = PromptTaskBuilder(prompter=IntentPrompter(), model=get_model())
 cache = IntentPipelineCache(Loc.data_folder / 'intent_paraphrases_cache')
 IntentPipeline(builder, grammar_prompter=RuGrammarPrompter())(
     cache, cases,

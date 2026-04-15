@@ -1,8 +1,7 @@
 from brainbox import BrainBox
 from brainbox.deciders.text.ollama import Ollama
-
-MODEL = 'mistral-small'
+from talents.better_nlu.model import get_model
 
 api = BrainBox.Api('127.0.0.1:8090')
-api.controller_api.download_models(Ollama, [{'name': MODEL}])
-print(f"Downloaded {MODEL}")
+Ollama.Controller().download_models(Ollama.Model(get_model()))
+print(f"Downloaded {get_model()}")

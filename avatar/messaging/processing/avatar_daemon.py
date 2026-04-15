@@ -37,7 +37,8 @@ class AvatarDaemon:
                  time_tick_interval_in_seconds: float|None = None,
                  add_error_events: bool = False,
                  reporting_client: AvatarClient|None = None,
-                 resources_folder: Path|None = None
+                 resources_folder: Path|None = None,
+                 timeout_in_pull_in_seconds: float|None = None
                  ):
         self.client = client
         self.rules = RulesCollection()
@@ -47,6 +48,7 @@ class AvatarDaemon:
         self.add_error_events = add_error_events
         self.reporting_client = reporting_client
         self.resources_folder = resources_folder
+        self.timeout_in_pull_in_seconds = timeout_in_pull_in_seconds
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -97,7 +99,7 @@ class AvatarDaemon:
                         self.last_time_tick = TickEvent(current)
                         self.client.push(self.last_time_tick)
 
-                messages = self.client.pull(timeout_in_seconds=0)
+                messages = self.client.pull(timeout_in_seconds=self.timeout_in_pull_in_seconds)
                 for message in messages:
                     self._event_queue.put(ProcessingEvent(ProcessingEvent.Type.Received, message))
                     for processor in self.processors:
@@ -118,7 +120,9 @@ class AvatarDaemon:
                             exit = True
                 if exit:
                     break
-                time.sleep(0.01)
+
+                if self.timeout_in_pull_in_seconds is not None:
+                    time.sleep(0.01)
         finally:
             for processor in self.processors:
                 processor._stop_event.set()
