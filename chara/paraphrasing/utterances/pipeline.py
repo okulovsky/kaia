@@ -27,12 +27,14 @@ class UtteranceParaphrasePipeline:
                  builder: CaseBuilder,
                  paraphrase: Callable[[ParaphraseCache, list[ParaphraseCase]], None],
                  batches_count: int,
-                 templates_in_batch: int = 20
+                 templates_in_batch: int = 20,
+                 only_completely_missing: bool = False
         ):
         self.builder = builder
         self.paraphrase = paraphrase
         self.templates_in_batch = templates_in_batch
         self.batches_count = batches_count
+        self.only_completely_missing = only_completely_missing
 
 
     def __call__(self, cache: UtteranceParaphrasesCache):
@@ -57,11 +59,22 @@ class UtteranceParaphrasePipeline:
                 def _():
                     stats = cache.stats_before.read()
                     add_prior_result(stats, results)
-                    stats = sort_statistics(stats)
-                    cases = [s.case for s in stats[:self.templates_in_batch]]
+                    stats = sort_statistics(stats, self.only_completely_missing)
+                    stats = stats[:self.templates_in_batch]
+                    logger.info(f"At iteration {i}, {len(stats)} are selected:")
+                    for j, s in enumerate(stats):
+                        logger.info(f"#{j}, existing {s.existing}, seen {s.seen}: {s.case.template.sequences[0].representation}")
+
+                    if len(stats) == 0:
+                        subcache.write_result([])
+
+                    cases = [s.case for s in stats]
                     self.paraphrase(subcache, cases)
 
-                results.extend(subcache.read_result())
+                addition = subcache.read_result()
+                if len(addition) == 0:
+                    break
+                results.extend(addition)
 
             cache.batches.write_result(results)
 

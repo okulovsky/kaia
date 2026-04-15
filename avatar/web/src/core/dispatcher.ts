@@ -61,7 +61,12 @@ export class Dispatcher {
       this.abortController = new AbortController()
       let msgs: Message[]
       try {
-        msgs = await this.client.pull(undefined, undefined, this.abortController.signal)
+        const result = await this.client.pull(undefined, undefined, this.abortController.signal)
+        if (result.missingId) {
+          window.location.reload()
+          return
+        }
+        msgs = result.messages
       } catch (e) {
         if (e instanceof DOMException && e.name === 'AbortError') continue
         console.error('Dispatcher: fetch failed', e)

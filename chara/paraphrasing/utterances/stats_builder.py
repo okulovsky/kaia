@@ -104,7 +104,9 @@ def add_prior_result(stats: list[ParaphraseStats],
         fp_to_stat[fp].existing += 1
 
 
-def sort_statistics(stats: list[ParaphraseStats]) -> list[ParaphraseStats]:
+def sort_statistics(stats: list[ParaphraseStats], only_completely_missing: bool) -> list[ParaphraseStats]:
+    if only_completely_missing:
+        stats = [s for s in stats if s.existing == 0]
     return list(sorted(stats, key=lambda z: z.availability))
 
 

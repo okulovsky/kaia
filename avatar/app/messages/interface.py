@@ -1,6 +1,7 @@
 from foundation_kaia.marshalling import service, endpoint
 from .avatar_message import AvatarMessage
 from ...messaging import AvatarMessageSet
+from datetime import datetime
 
 @service
 class IAvatarMessagingService:
@@ -22,7 +23,7 @@ class IAvatarMessagingService:
     def tail(self,
                   session: str,
                   count: int|None = None,
-                  from_timestamp=None,
+                  from_timestamp:datetime|None =None,
                   ) -> AvatarMessageSet[AvatarMessage]:
         pass
 

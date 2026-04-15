@@ -61,11 +61,11 @@
     debugViewController.register(webcamProcessor);
 
 
-    new LoadingScreen(loadingDiv, [wake , webcam], () => {
+    new LoadingScreen(loadingDiv, [wake , webcam], async () => {
       const initMsg = new Message('InitializationEvent', new Envelop(), {});
+      await client.push(initMsg);
       client.setLastId(initMsg.envelop.id);
       dispatcher.start();
-      dispatcher.push(initMsg);
       controller.start().catch(console.error);
       webcamProcessor.start().catch(console.error);
     });
