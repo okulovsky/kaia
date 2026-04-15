@@ -1,16 +1,16 @@
 from typing import Iterable
-from brainbox import BrainBox, IPostprocessor
-from .recognition_setup import IRecognitionSetup, RecognitionContext, STTConfirmation
+from brainbox import BrainBox
+from .recognition_setup import IRecognitionSetup, RecognitionContext, STTConfirmation, IPostprocessor
 from dataclasses import dataclass
 from ..rhasspy_training import RhasspyHandler, IntentsPack
-from brainbox.deciders import RhasspyKaldi, Empty
+from brainbox.deciders import RhasspyKaldi, Collector
 
 
 class RhasspyPostprocessor(IPostprocessor):
     def __init__(self, handler: RhasspyHandler):
         self.handler = handler
 
-    def postprocess(self, result, api):
+    def postprocess(self, result):
         try:
             return STTConfirmation(self.handler.parse_kaldi_output(result), result)
         except Exception as error:
@@ -20,30 +20,24 @@ class RhasspyPostprocessor(IPostprocessor):
 class RhasspyRecognitionSetup(IRecognitionSetup):
     model: str
 
-    def create_task(self, context: RecognitionContext) -> BrainBox.ITask:
-        task = (BrainBox.Task
-                .call(RhasspyKaldi)
-                .transcribe(file=context.command.file, model=self.model)
-                .to_task(id=context.command.file.split('.')[0] + '.rhasspy')
-                )
+    def create_task_and_postprocessor(self, context: RecognitionContext) -> tuple[BrainBox.Task, IPostprocessor]:
+        task = (
+            RhasspyKaldi
+            .new_task(id=context.command.file.split('.')[0] + '.rhasspy')
+            .transcribe(file=context.command.file, model=self.model)
+        )
         handler = context.rhasspy_handlers[self.model]
         postprocessor = RhasspyPostprocessor(
             handler
         )
-        return BrainBox.ExtendedTask(
-            task,
-            postprocessor=postprocessor
-        )
+        return task, postprocessor
 
     @staticmethod
     def create_training_task(intents_packs: Iterable[IntentsPack]):
-        tasks = []
+        builder = Collector.TaskBuilder()
         for pack in intents_packs:
             handler = RhasspyHandler(pack.templates)
-            tasks.append(
-                BrainBox.Task.call(RhasspyKaldi).train(pack.name, pack.language, handler.ini_file, pack.custom_words)
+            builder.append(
+                RhasspyKaldi.new_task().train(pack.name, pack.language, handler.ini_file, pack.custom_words),
             )
-        return BrainBox.CombinedTask(
-            BrainBox.Task.call(Empty)(),
-            tuple(tasks)
-        )
+        return builder.to_collector_pack('to_array')

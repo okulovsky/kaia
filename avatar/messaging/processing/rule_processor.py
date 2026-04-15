@@ -1,6 +1,6 @@
 import traceback
 from typing import *
-from ..stream import IMessage, StreamClient
+from ..core import IMessage, AvatarClient
 from ..rules import Rule
 from .processing_event import ProcessingEvent
 from queue import Queue
@@ -14,7 +14,7 @@ class ErrorEvent(IMessage):
     traceback: str
 
 class RuleProcessor:
-    def __init__(self, message: IMessage, event_queue: Queue, client: StreamClient, rule: Rule):
+    def __init__(self, message: IMessage, event_queue: Queue, client: AvatarClient, rule: Rule):
         self.message = message
         self.event_queue = event_queue
         self.client = client
@@ -56,7 +56,7 @@ class RuleProcessor:
                 if message.envelop.reply_to is None:
                     message.as_reply_to(self.message)
                 message.as_from_publisher(self.rule.name)
-                self.client.put(message)
+                self.client.push(message)
 
         except:
             tb = traceback.format_exc()

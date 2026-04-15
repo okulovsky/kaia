@@ -3,7 +3,7 @@ from brainbox.utils.compatibility import *
 
 if __name__ == '__main__':
     controller = Whisper.Controller()
-    #resolve_dependencies(controller)
+    #resolve_dependencies(controller, '3.11.11')
     controller.install()
     controller.self_test()
 

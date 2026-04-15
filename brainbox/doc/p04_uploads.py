@@ -4,55 +4,40 @@ from unittest import TestCase
 
 def uploads(test_case: TestCase, api: BrainBox.Api):
     """
-    ### Upload files, required by deciders
-    
-    Some deciders, especially speech-to-text or image analysis, 
-    use files as inputs. You may feed them directly in the call:
+    ### Upload files required by deciders
+
+    Some deciders, especially speech-to-text or audio analysis,
+    use files as inputs. You may feed bytes directly in the call:
     """
-    from brainbox import File
-
-    file = File('hello.txt', "Hello, world!")
-    test_case.assertEqual(file.name, 'hello.txt')
-    test_case.assertEqual(file.content, b'Hello, world!')
-
-    length = api.execute(BrainBox.Task.call(HelloBrainBox).file_length(file))
-    test_case.assertEqual(length, 13)
+    data = b'12112'
+    result = api.execute(HelloBrainBox.new_task().voice_embedding(data))
+    test_case.assertEqual(3, result[1])
+    test_case.assertEqual(2, result[2])
 
     """
-    However, that has the potential to overload the database as well, 
-    and should be avoided.
-    
-    If you run BrainBox server at the machine you're running `api`, 
-    you may pass the path of the file:
+    `HelloBrainBox::voice_embedding` counts the occurrences of bytes from `0` to `9` value
+    and returns a list of 10 counts — one per possible byte value.
 
-    ```python
-    import tempfile
-    from pathlib import Path
+    However, passing large binary data inline has the potential to overload the
+    database, and should be avoided for large files.
 
-    path = file.write(tempfile.gettempdir())
-    test_case.assertIsInstance(path, Path)
-
-    length = api.execute(BrainBox.Task.call(HelloBrainBox).file_length(path))
-    test_case.assertEqual(length, 13)
-    ```
-    
-    This solution is dirty as it won't work with a remote BrainBox, 
-    and would force you to rewrite your codebase in case of such change.
-    
     To avoid this, you may choose to upload the file to the BrainBox
     cache folder instead:
     """
 
-    api.upload(file.name, file)
-    length = api.execute(BrainBox.Task.call(HelloBrainBox).file_length(file.name))
-    test_case.assertEqual(length, 13)
+    from brainbox import File
+
+    file = File('audio.bin', b'12112')
+    api.cache.upload(file.name, file)
+    result = api.execute(HelloBrainBox.new_task().voice_embedding(file.name))
+    test_case.assertEqual(3, result[ord(b'1')])
+    test_case.assertEqual(2, result[ord(b'2')])
 
     """
-    Sometimes, files are required to have specific names, or some
-    recoding. In these cases, deciders usually have static methods
-    that incapsulate these procedures in Prerequisites:
+    By uploading the file to the cache folder first, you decouple the data
+    transfer from the task execution. The decider receives only the filename
+    and reads the file from the shared cache.
+    
+    This solution scales to remote BrainBox instances as well,
+    since the upload is handled separately from the task.
     """
-    upload_prerequisite = HelloBrainBox.file_upload(file)
-    upload_prerequisite.execute(api)
-    length = api.execute(BrainBox.Task.call(HelloBrainBox).file_length(file.name))
-    test_case.assertEqual(length, 13)

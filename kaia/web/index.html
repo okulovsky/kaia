@@ -3,57 +3,72 @@
 <head>
   <meta charset="UTF-8" />
   <title>Kaia - Kitchen AI Assistant</title>
-  <link rel="stylesheet" href="/static/index.css">
+  <link rel="stylesheet" href="/web/static/index.css">
 </head>
 
 <body>
-  <div id="busy-indicator"></div>
+  <div id="loading">Loading…</div>
+  <button id="debug-settings-btn" title="Debug">⚙</button>
+  <div id="debug-div"></div>
   <div id="content">
     <div id="image">
-      <img id="main_image" src="static/style/image.png" alt="main image">
+      <img id="main_image" src=" " alt="main image">
       <div id="overlay"></div>
       <div id="chat_separator">&nbsp;</div>
-      <div id="system-panel"></div>
     </div>
     <div id="chat"></div>
   </div>
 
   <script type="module">
-    import { AvatarClient }             from '/scripts/client.js';
-    import { Dispatcher }               from '/scripts/dispatcher.js';
-    import { ChatCommandHandler }       from '/scripts/chat-command-handler.js';
-    import { ImageCommandHandler }      from '/scripts/image-command-handler.js';
-    import { ButtonGridCommandHandler } from '/scripts/button-grid-command-handler.js';
-    import { ServerStartedEventHandler }  from '/scripts/server-started-event-handler.js'
-    import { ControlPanelController }   from '/scripts/control-panel-controller.js';
-    import { Message }                  from '/scripts/message.js';
-    import { WebCamHandlerSnapshot, WebCamHandlerStream, WebCamHandlerDebugger } from './scripts/web-cam-handler/index.js';
+    import { AvatarClient, Dispatcher, ChatCommandHandler, ImageCommandHandler, ButtonGridCommandHandler,
+             Microphone, MicController, Recorder, StatefulRecorder, SilenceDetector, Automaton, AudioController,
+             Message, Envelop, DebugViewController, MicDebugView, ReloadDebugView, LoadingScreen,
+             Webcam, WebcamProcessor } from '/frontend/scripts/kaia-frontend.js';
+    // import { KaldiWakeWordDetector } from '/frontend/scripts/kaldi-wake-word-detector.js';
+    import { BumblebeeWakeWordDetector } from '/frontend/scripts/bumblebee-wake-word-detector.js';
 
-    const chatDiv     = document.getElementById('chat');
-    const imageDiv    = document.getElementById('main_image');
-    const overlayDiv  = document.getElementById('overlay');
-    const panelDiv    = document.getElementById('system-panel');
+    const loadingDiv    = document.getElementById('loading');
+    const debugSettingsBtn = document.getElementById('debug-settings-btn');
+    const debugDiv      = document.getElementById('debug-div');
+    const chatDiv    = document.getElementById('chat');
+    const imageDiv   = document.getElementById('main_image');
+    const overlayDiv = document.getElementById('overlay');
 
-    const client      = new AvatarClient(window.location.origin, 'default');
-    const initMessage = new Message('InitializationEvent');
-    client.addMessage(initMessage);
-    client.lastMessageId = initMessage.envelop.id;
+    const client     = new AvatarClient({ baseUrl: window.location.origin });
+    const dispatcher = new Dispatcher(client);
+    const debugViewController = new DebugViewController(debugSettingsBtn, debugDiv);
 
-    const busyEl = document.getElementById('busy-indicator');
-    const dispatcher = new Dispatcher(client, 1, busyEl);
+    debugViewController.register(new ReloadDebugView());
+    debugViewController.register(new MicDebugView({baseUrl: window.location.origin, dispatcher}));
 
-    new ChatCommandHandler(dispatcher, chatDiv, window.location.origin);
-    new ImageCommandHandler(dispatcher, imageDiv);
-    new ButtonGridCommandHandler(dispatcher, overlayDiv, client);
-    new ServerStartedEventHandler(dispatcher);
+    new ChatCommandHandler({ dispatcher, container: chatDiv, baseUrl: window.location.origin });
+    new ImageCommandHandler({ dispatcher, imgEl: imageDiv });
+    new ButtonGridCommandHandler({ dispatcher, overlay: overlayDiv, client });
 
-    const controlPanel = new ControlPanelController(imageDiv, panelDiv, overlayDiv, client);
-    const webCamHandler = new WebCamHandlerStream(client, window.location.origin);
-    await webCamHandler.start()
-    const webCamHandlerDebugger = new WebCamHandlerDebugger(webCamHandler);
-    controlPanel.addDebugPanel('📷', webCamHandlerDebugger);
+    new AudioController({ dispatcher, baseUrl: window.location.origin });
 
-    dispatcher.start();
+    const input    = new Microphone();
+    const recorder = new Recorder({ startBufferLength: 1.0, normalBufferLength: 0.3, dispatcher, baseUrl: window.location.origin });
+    const stateful = new StatefulRecorder({ recorder, dispatcher });
+    const silence  = new SilenceDetector({ timeBetweenReportsInSeconds: 0.5, decisionWindowSeconds: 1.0, reportingWindowSeconds: 0.1, silenceLevel: 0.01, dispatcher });
+    // const wake     = new KaldiWakeWordDetector({ sampleRateOfTheModel: 16000, words: ['computer'], modelUrl: '/frontend/models/vosk-model-small-en-us-0.15.zip?v=5', dispatcher });
+    const wake     = new BumblebeeWakeWordDetector({ words: ['computer'], dispatcher });
+    const automaton   = new Automaton({ silenceDetector: silence, wakeWordDetector: wake, statefulRecorder: stateful, dispatcher });
+    const controller  = new MicController(input, m => automaton.process(m));
+
+    const webcam = new Webcam();
+    const webcamProcessor = new WebcamProcessor({ webcam, client, baseUrl: window.location.origin, rateMs: 2000 });
+    debugViewController.register(webcamProcessor);
+
+
+    new LoadingScreen(loadingDiv, [wake , webcam], async () => {
+      const initMsg = new Message('InitializationEvent', new Envelop(), {});
+      await client.push(initMsg);
+      client.setLastId(initMsg.envelop.id);
+      dispatcher.start();
+      controller.start().catch(console.error);
+      webcamProcessor.start().catch(console.error);
+    });
   </script>
 </body>
 </html>

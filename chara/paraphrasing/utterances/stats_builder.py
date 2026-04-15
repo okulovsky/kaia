@@ -30,13 +30,17 @@ def record_to_fingerprint(record) -> ParaphraseFingerprint:
 
 
 def _read_existing() -> list[ParaphraseRecord]:
-    rs = CharaApis.avatar_api.resources(ParaphraseService)
     existing = []
-    files = rs.list(prefix=ParaphraseService.PARAPHRASES_PREFIX, suffix=ParaphraseService.PARAPHRASES_SUFFIX)
+    rs = CharaApis.avatar_api.resources(ParaphraseService)
+    files = rs.list(
+        '/',
+        prefix=ParaphraseService.PARAPHRASES_PREFIX,
+        suffix=ParaphraseService.PARAPHRASES_SUFFIX
+    )
     if files is None:
         files = []
     for file in files:
-        existing.extend(pickle.loads(rs.open(file)))
+        existing.extend(pickle.loads(rs.read(file)))
     return existing
 
 
@@ -44,7 +48,7 @@ def _read_feedback() -> dict[str, dict[str, int]]:
     rs = CharaApis.avatar_api.resources(ParaphraseService)
     if not rs.is_file(ParaphraseService.FEEDBACK_FILENAME):
         return {}
-    return json.loads(rs.open('paraphrases-feedback.json'))
+    return json.loads(rs.read('paraphrases-feedback.json'))
 
 
 def _create_statistics(tasks: list[ParaphraseCase]) -> dict[ParaphraseFingerprint, ParaphraseStats]:
@@ -79,7 +83,7 @@ def _fill_statistics(
             continue
         if 'seen' not in fb:
             continue
-        fp_to_stat[fp].seen = fb['seen']
+        fp_to_stat[fp].seen += fb['seen']
 
     stats = list(fp_to_stat.values())
     return stats
@@ -100,7 +104,9 @@ def add_prior_result(stats: list[ParaphraseStats],
         fp_to_stat[fp].existing += 1
 
 
-def sort_statistics(stats: list[ParaphraseStats]) -> list[ParaphraseStats]:
+def sort_statistics(stats: list[ParaphraseStats], only_completely_missing: bool) -> list[ParaphraseStats]:
+    if only_completely_missing:
+        stats = [s for s in stats if s.existing == 0]
     return list(sorted(stats, key=lambda z: z.availability))
 
 

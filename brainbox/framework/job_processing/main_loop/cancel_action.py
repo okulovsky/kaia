@@ -10,7 +10,7 @@ class CancelAction(ICoreAction):
     cancel_batch_id: str|None
 
     def apply(self, core: Core):
-        condition = ~Job.finished
+        condition = Job.finished_timestamp.is_(None)
         if self.cancel_job_id is not None:
             condition &= Job.id == self.cancel_job_id
         if self.cancel_batch_id is not None:

@@ -1,3 +1,1 @@
-flask
-notebook
 chatterbox-tts

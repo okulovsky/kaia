@@ -1,5 +1,7 @@
 from dataclasses import dataclass
+from brainbox.framework import ConnectionSettings
+
 
 @dataclass
 class LlamaLoraSFTTrainerSettings:
-    pass
+    connection = ConnectionSettings(20404)

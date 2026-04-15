@@ -1,29 +1,28 @@
 from typing import Iterable
-from unittest import TestCase
+from foundation_kaia.brainbox_utils import Installer
 from ....framework import (
-    RunConfiguration, TestReport, BrainboxImageBuilder, IImageBuilder, DockerWebServiceController,
-    BrainBoxApi, BrainBoxTask, FileIO, INotebookableController, IModelDownloadingController, DownloadableModel,
-    File
+    RunConfiguration, SelfTestCase, BrainboxImageBuilder, IImageBuilder, DockerMarshallingController,
+    BrainBoxApi, BrainBoxTask, File
 )
-from ...common import VOICEOVER_TEXT, check_if_its_sound
+from ...common import VOICEOVER_TEXT
 from .settings import CosyVoiceSettings
 from pathlib import Path
+from .app.model import CosyVoiceInstaller
 
 
-class CosyVoiceController(
-    DockerWebServiceController[CosyVoiceSettings],
-    INotebookableController,
-):
+class CosyVoiceController(DockerMarshallingController[CosyVoiceSettings]):
     def get_image_builder(self) -> IImageBuilder|None:
         return BrainboxImageBuilder(
             Path(__file__).parent,
             '3.10.18',
             #allow_arm64=True,
-            custom_dependencies=(
+            dependencies=(
                 BrainboxImageBuilder.PytorchDependencies(
                     '2.7.0', 'cu128', True
                 ),
-                BrainboxImageBuilder.Dependencies(no_deps=True)
+                BrainboxImageBuilder.CustomDependencies(('numpy', 'cython')),
+                BrainboxImageBuilder.RequirementsLockTxt(),
+                BrainboxImageBuilder.KaiaFoundationDependencies()
             ),
             repository=BrainboxImageBuilder.Repository(
                 'https://github.com/FunAudioLLM/CosyVoice',
@@ -31,7 +30,7 @@ class CosyVoiceController(
                 install=False,
                 recursive_clone=True
             ),
-            keep_dockerfile = True,
+            keep_dockerfile=True
         )
 
     def get_service_run_configuration(self, parameter: str|None) -> RunConfiguration:
@@ -39,14 +38,10 @@ class CosyVoiceController(
             raise ValueError(f"`parameter` must be None for {self.get_name()}")
         return RunConfiguration(
             publish_ports={self.connection_settings.port:8080},
-            dont_rm=False
         )
-    
-    def post_install(self):
-        if not self.resource_folder('pretrained_models').is_dir():
-            self.run_with_configuration(self.get_service_run_configuration(None).as_service_worker('--install'))
-        else:
-            print('MODELS are already downloaded')
+
+    def get_installer(self) -> Installer|None:
+        return CosyVoiceInstaller(self.resource_folder())
 
     def get_notebook_configuration(self) -> RunConfiguration|None:
         return self.get_service_run_configuration(None).as_notebook_service()
@@ -55,53 +50,30 @@ class CosyVoiceController(
         return CosyVoiceSettings()
 
     def create_api(self):
+        from .api import CosyVoiceApi
+        return CosyVoiceApi()
+
+    def self_test_cases(self) -> Iterable[SelfTestCase]:
         from .api import CosyVoice
-        return CosyVoice()
 
-    def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable:
-        from .api import CosyVoice
-
-        api.execute(BrainBoxTask.call(CosyVoice).train(
-            'lina',
-            "One little spark, and before you know it, the whole world is burning.",
-            File.read(Path(__file__).parent / 'lina.wav')
-        ))
-
-
-        yield (
-            TestReport
-            .last_call(api)
-            .href('echo')
-            .with_comment("Returns JSON with passed arguments and `success` fields")
+        yield SelfTestCase(
+            CosyVoice.new_task().train(
+                'lina',
+                "One little spark, and before you know it, the whole world is burning.",
+                File.read(Path(__file__).parent / 'lina.wav')
+            ),
+            None
+        )
+        yield SelfTestCase(
+            CosyVoice.new_task().voice_to_text('lina', VOICEOVER_TEXT),
+            SelfTestCase.assertFileIsSound()
         )
 
-        result = api.execute(BrainBoxTask.call(CosyVoice).voice_to_text('lina', VOICEOVER_TEXT))
-        tc.assertIsInstance(result, str)
-        check_if_its_sound(api.open_file(result).content, tc)
-        yield (
-            TestReport
-            .last_call(api)
-            .href('voice_to_text')
-            .result_is_file(File.Kind.Audio)
+        yield SelfTestCase(
+            CosyVoice.new_task().voice_to_text_translingual('lina', "Ein einziger Funke, und unmerklich gerät die Welt in Brand."),
+            SelfTestCase.assertFileIsSound()
         )
-
-        result = api.execute(BrainBoxTask.call(CosyVoice).voice_to_text_transligual('lina', "Ein einziger Funke, und unmerklich gerät die Welt in Brand."))
-        tc.assertIsInstance(result, str)
-        check_if_its_sound(api.open_file(result).content, tc)
-        yield (
-            TestReport
-            .last_call(api)
-            .href('voice_to_test_transligual')
-            .result_is_file(File.Kind.Audio)
-        )
-
-        source = File.read(Path(__file__).parent / 'lina_ru.wav')
-        result = api.execute(BrainBoxTask.call(CosyVoice).voice_to_file('lina', source))
-        tc.assertIsInstance(result, str)
-        check_if_its_sound(api.open_file(result).content, tc)
-        yield (
-            TestReport
-            .last_call(api)
-            .href('voice_file')
-            .result_is_file(File.Kind.Audio)
+        yield SelfTestCase(
+            CosyVoice.new_task().voice_to_file('lina', File.read(Path(__file__).parent / 'lina_ru.wav')),
+            SelfTestCase.assertFileIsSound()
         )

@@ -15,9 +15,9 @@ class CheckReadyAction(ICoreAction):
                 session
                 .query(Job)
                 .filter(
-                    ~Job.finished & ~Job.ready & ~Job.has_dependencies
+                    Job.finished_timestamp.is_(None) & Job.ready_timestamp.is_(None) & ~Job.has_dependencies
                 )
-                .update({Job.ready: True, Job.ready_timestamp:datetime.now()})
+                .update({Job.ready_timestamp: datetime.now()})
             )
             session.commit()
 
@@ -26,32 +26,34 @@ class CheckReadyAction(ICoreAction):
         with core.new_session() as session:
             dependent_tasks = list(session.execute(
                 select(Job.id, Job.dependencies)
-                .where(~Job.finished & ~Job.ready & Job.has_dependencies)
+                .where(Job.finished_timestamp.is_(None) & Job.ready_timestamp.is_(None) & Job.has_dependencies)
             ))
 
             dependency_ids = list(set(id for dependent in dependent_tasks for id in dependent.dependencies.values()))
 
             dependency_status = list(session.execute(
-                select(Job.id, Job.finished)
+                select(Job.id, Job.finished_timestamp, Job.responding_timestamp)
                 .where(Job.id.in_(dependency_ids))
             ))
-            id_to_finished = {status.id: status.finished for status in dependency_status}
+            id_to_acceptable = {
+                status.id: status.finished_timestamp is not None or status.responding_timestamp is not None
+                for status in dependency_status
+            }
 
             for task in dependent_tasks:
                 set_ready = True
                 for id in task.dependencies.values():
-                    if id not in id_to_finished:
+                    if id not in id_to_acceptable:
                         core.close_job(
                             session,
                             core.get_job_by_id(session, task.id),
                             f"id {id} is required by this task but is absent"
                         )
-                    elif not id_to_finished[id]:
+                    elif not id_to_acceptable[id]:
                         set_ready = False
                         break
                 if set_ready:
                     task_obj = core.get_job_by_id(session, task.id)
-                    task_obj.ready = True
                     task_obj.ready_timestamp = datetime.now()
                     core.operator_log.task(task_obj.id).event('Ready')
 

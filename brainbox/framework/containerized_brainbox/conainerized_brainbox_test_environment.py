@@ -1,6 +1,7 @@
 from brainbox.framework.containerized_brainbox import BrainBoxRunner
-from brainbox.framework import BrainBoxApi, Loc
+from brainbox.framework import BrainBoxApi
 from threading import Thread
+from foundation_kaia.misc import Loc
 
 
 class ContainerizedBrainboxTestEnvironment:
@@ -16,7 +17,7 @@ class ContainerizedBrainboxTestEnvironment:
         self.runner.get_deployment().stop().remove().build()
         Thread(target=self._run_container_thread).start()
         api = BrainBoxApi('127.0.0.1:8090')
-        api.wait(60)
+        api.wait_for_connection(60)
         return api
 
     def __exit__(self, exc_type, exc_val, exc_tb):

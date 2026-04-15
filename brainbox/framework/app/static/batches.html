@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BrainBox - Batches</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+  h1 { color: #333; }
+  nav { margin-bottom: 16px; }
+  nav a { margin-right: 12px; color: #0066cc; text-decoration: none; }
+  nav a:hover { text-decoration: underline; }
+  table { border-collapse: collapse; width: 100%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  th { background: #444; color: #fff; padding: 8px 12px; text-align: left; }
+  td { padding: 8px 12px; border-bottom: 1px solid #eee; vertical-align: top; }
+  tr:hover { background: #f9f9f9; }
+  button { padding: 4px 10px; cursor: pointer; }
+  button:disabled { opacity: 0.5; cursor: default; }
+  .progress-bar { background: #ddd; border-radius: 4px; height: 16px; width: 120px; display: inline-block; vertical-align: middle; }
+  .progress-fill { background: #4caf50; height: 100%; border-radius: 4px; }
+  .finished { color: #888; font-size: 0.85em; }
+  .pagination { margin-top: 12px; display: flex; align-items: center; gap: 10px; }
+  #status { margin-bottom: 8px; color: #555; font-size: 0.9em; }
+</style>
+</head>
+<body>
+<h1>BrainBox - Batches</h1>
+<nav>
+  <a href="/static/controllers.html">Controllers</a>
+  <a href="/static/operator_log.html">Operator Log</a>
+</nav>
+<div id="status">Loading...</div>
+<table id="batches-table">
+  <thead>
+    <tr>
+      <th>Batch ID</th>
+      <th>Deciders</th>
+      <th>Received</th>
+      <th>Progress</th>
+      <th>Tasks</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody id="batches-body"></tbody>
+</table>
+<div class="pagination">
+  <button id="btn-prev" onclick="prevPage()">&#8592; Prev</button>
+  <span id="page-info"></span>
+  <button id="btn-next" onclick="nextPage()">Next &#8594;</button>
+</div>
+
+<script>
+const PAGE_SIZE = 20;
+let currentOffset = 0;
+let totalBatches = 0;
+
+function fmtTime(ts) {
+  if (!ts) return '';
+  return new Date(ts).toLocaleString();
+}
+
+function fmtDuration(sec) {
+  if (sec === null || sec === undefined) return '';
+  if (sec < 60) return sec.toFixed(1) + 's';
+  return (sec / 60).toFixed(1) + 'm';
+}
+
+async function loadBatches() {
+  try {
+    const url = '/batches-service/get-batches?offset=' + currentOffset + '&size=' + PAGE_SIZE;
+    const resp = await fetch(url);
+    if (!resp.ok) { document.getElementById('status').textContent = 'Error: ' + resp.status; return; }
+    const data = await resp.json();
+    totalBatches = data.total;
+    const batches = data.items;
+
+    document.getElementById('status').textContent =
+      'Last update: ' + new Date().toLocaleTimeString() + ' — ' + totalBatches + ' batches total';
+
+    const tbody = document.getElementById('batches-body');
+    tbody.innerHTML = '';
+    for (const b of batches) {
+      const tr = document.createElement('tr');
+
+      const tdId = document.createElement('td');
+      const link = document.createElement('a');
+      link.href = '/static/batch.html?id=' + encodeURIComponent(b.batch_id);
+      link.textContent = b.batch_id.length > 18 ? b.batch_id.substring(0, 18) + '…' : b.batch_id;
+      link.title = b.batch_id;
+      tdId.appendChild(link);
+      tr.appendChild(tdId);
+
+      const tdDec = document.createElement('td');
+      tdDec.innerHTML = b.deciders.join('<br>');
+      tr.appendChild(tdDec);
+
+      const tdRec = document.createElement('td');
+      tdRec.textContent = fmtTime(b.received_timestamp);
+      tr.appendChild(tdRec);
+
+      const tdProg = document.createElement('td');
+      if (b.is_finished) {
+        tdProg.innerHTML = '<span class="finished">Done ' + fmtTime(b.finished_timestamp) +
+          (b.total_processing_time ? ' (' + fmtDuration(b.total_processing_time) + ')' : '') + '</span>';
+      } else {
+        const pct = Math.round(b.progress * 100);
+        tdProg.innerHTML =
+          '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div> ' + pct + '%';
+      }
+      tr.appendChild(tdProg);
+
+      const tdTasks = document.createElement('td');
+      let taskText = b.tasks_success + '/' + b.tasks_total;
+      if (b.tasks_failure > 0) taskText += ' (' + b.tasks_failure + ' failed)';
+      if (b.tasks_in_work > 0) taskText += ' (' + b.tasks_in_work + ' running)';
+      tdTasks.textContent = taskText;
+      tr.appendChild(tdTasks);
+
+      const tdAct = document.createElement('td');
+      const cancelBtn = document.createElement('button');
+      cancelBtn.textContent = 'Cancel';
+      cancelBtn.onclick = async () => {
+        cancelBtn.disabled = true;
+        try {
+          await fetch('/batches-service/cancel-batch/' + encodeURIComponent(b.batch_id), { method: 'POST' });
+        } finally {
+          cancelBtn.disabled = false;
+          loadBatches();
+        }
+      };
+      tdAct.appendChild(cancelBtn);
+      tr.appendChild(tdAct);
+
+      tbody.appendChild(tr);
+    }
+
+    updatePagination();
+  } catch (e) {
+    document.getElementById('status').textContent = 'Error: ' + e.message;
+  }
+}
+
+function updatePagination() {
+  const page = Math.floor(currentOffset / PAGE_SIZE) + 1;
+  const totalPages = Math.ceil(totalBatches / PAGE_SIZE) || 1;
+  document.getElementById('page-info').textContent = 'Page ' + page + ' / ' + totalPages;
+  document.getElementById('btn-prev').disabled = currentOffset <= 0;
+  document.getElementById('btn-next').disabled = currentOffset + PAGE_SIZE >= totalBatches;
+}
+
+function prevPage() {
+  if (currentOffset > 0) {
+    currentOffset = Math.max(0, currentOffset - PAGE_SIZE);
+    loadBatches();
+  }
+}
+
+function nextPage() {
+  if (currentOffset + PAGE_SIZE < totalBatches) {
+    currentOffset += PAGE_SIZE;
+    loadBatches();
+  }
+}
+
+loadBatches();
+setInterval(loadBatches, 5000);
+</script>
+</body>
+</html>

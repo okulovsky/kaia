@@ -1,9 +1,11 @@
 from typing import Type
 import time
 from typing import Callable, Any
-from avatar.messaging import StreamClient
-from avatar.daemon import TextCommand, STTService, TickEvent, SoundCommand
+from avatar.messaging import AvatarClient
+from avatar.daemon import TextCommand, STTService, SoundCommand
 from loguru import logger
+
+from chara.common import Logger
 from ..assistant import KaiaContext
 from eaglesong import Automaton
 from .interpreter import KaiaInterpreter
@@ -39,7 +41,7 @@ class DefaultAssistantFactory(IAssistantFactory):
 class KaiaDriver:
     def __init__(self,
                  assistant_factory: IAssistantFactory,
-                 client: StreamClient,
+                 client: AvatarClient,
                  expect_confirmations_for_types: tuple[Type,...] = (TextCommand, SoundCommand),
                  context_setup: Callable[[KaiaContext], None] = None,
                  ):
@@ -63,7 +65,9 @@ class KaiaDriver:
             if not self.rhasspy_training_is_done:
                 logger.info("Sending Rhasspy Train Command")
                 packs = assistant.get_intents()
-                context.get_client().put(STTService.RhasspyTrainingCommand(packs))
+                context.get_client().push(STTService.RhasspyTrainingCommand(packs))
+            else:
+                logger.info("Training is done, skipping")
 
         assistant = self.assistant_factory.wrap_assistant(assistant)
         automaton = Automaton(assistant, context)
@@ -85,9 +89,10 @@ class KaiaDriver:
         try:
             logger.info(f"Item to interpreter: {self._trim(message)}")
             self.interpreter.process(message)
+            logger.info(f"Item processed by interpreted: {self._trim(message)}")
         except:
             err = traceback.format_exc()
-            self.client.put(ChatCommand(err, ChatCommand.MessageType.error))
+            self.client.push(ChatCommand(err, ChatCommand.MessageType.error))
             self.interpreter = None
             logger.error(f'Error occured, interpreter is nullified:\n{err}')
 
@@ -96,13 +101,14 @@ class KaiaDriver:
             self.initialize()
 
     def run(self):
-        self.client.initialize()
+        self.client.wait_for_availability()
+        self.client.scroll_to_end()
         while True:
             messages = self.client.pull()
             for message in messages:
                 self.process(message)
-            if len(messages) == 0:
-                time.sleep(0.1)
+
+
 
     def __call__(self):
         self.run()

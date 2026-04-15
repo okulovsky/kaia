@@ -21,11 +21,11 @@ def handler_2(m: Message) -> OutMessage:
 
 class RuleConnectorTestCase(TestCase):
     def check(self, settings_2: BindingSettings):
-        client = TestStream().create_client()
+        client = AvatarClient.default()
         avatar = AvatarDaemon(client)
         avatar.rules.bind(handler_1, BindingSettings().bind_type(Message).to_all_except('handler_1'))
         avatar.rules.bind(handler_2, settings_2)
-        client.put(Message(1).as_from_publisher('input'))
+        client.push(Message(1).as_from_publisher('input'))
         result = avatar.debug_and_stop_by_count(2)
         return [e.value for e in result.messages[1:]]
 
@@ -35,12 +35,8 @@ class RuleConnectorTestCase(TestCase):
 
     def test_2(self):
         result = self.check(BindingSettings().bind_type(Message).to('handler_1'))
-        self.assertEqual([2,20], result)
+        self.assertEqual([2, 20], result)
 
     def test_3(self):
         result = self.check(BindingSettings().bind_type(Message).to_all_except('input'))
-        self.assertEqual([2,20], result)
-
-
-
-
+        self.assertEqual([2, 20], result)

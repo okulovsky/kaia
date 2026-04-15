@@ -1,8 +1,18 @@
 from brainbox.framework.deployment import IContainerRunner, DockerArgumentsHelper, Deployment, LocalImageSource, LocalExecutor
 from dataclasses import dataclass
-from brainbox.framework import Loc, IExecutor, Command
+from brainbox.framework import IExecutor, Command
 from pathlib import Path
 from .container_builder import create_brainbox_builder
+from enum import Enum
+
+class BrainBoxRunnerPlaner(Enum):
+    single = 'standard'
+    always_on_find_only = 'always_on_find_only'
+    always_on_start_only = 'always_on_start_only'
+    always_on_find_then_start = 'always_on_find_then_start'
+
+
+
 
 @dataclass
 class BrainBoxRunner(IContainerRunner):
@@ -12,7 +22,7 @@ class BrainBoxRunner(IContainerRunner):
     user_id: str|None = None
     docker_group_id: str|None = None
     debug: bool = False
-
+    planer: BrainBoxRunnerPlaner = BrainBoxRunnerPlaner.single
 
     def _get_user(self, executor: IExecutor):
         if self.user_id is not None:
@@ -49,8 +59,11 @@ class BrainBoxRunner(IContainerRunner):
             '--data-folder',
             str(self.folder),
             '--port',
-            str(self.port)
+            str(self.port),
+            '--planer',
+            str(self.planer.value),
         ]
+        #print(command)
         executor.execute(command)
 
     def get_deployment(self):

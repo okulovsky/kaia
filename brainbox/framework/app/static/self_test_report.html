@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BrainBox - Self-test Report</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+  h1 { color: #333; }
+  nav { margin-bottom: 16px; }
+  nav a { margin-right: 12px; color: #0066cc; text-decoration: none; }
+  nav a:hover { text-decoration: underline; }
+  #status { color: #555; font-size: 0.9em; margin-bottom: 8px; }
+  #report { background: #fff; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+</style>
+</head>
+<body>
+<h1 id="title">BrainBox - Self-test Report</h1>
+<nav>
+  <a href="/static/controllers.html">Controllers</a>
+  <a href="/static/batches.html">Batches</a>
+</nav>
+<div id="status">Loading...</div>
+<div id="report"></div>
+
+<script>
+const decider = new URLSearchParams(window.location.search).get('decider');
+
+if (decider) {
+  document.getElementById('title').textContent = 'Self-test Report: ' + decider;
+  fetch('/controllers-service/self-test-report/' + encodeURIComponent(decider))
+    .then(r => {
+      if (!r.ok) return r.text().then(t => { throw new Error(t); });
+      return r.json();
+    })
+    .then(reportHtml => {
+      document.getElementById('status').style.display = 'none';
+      document.getElementById('report').innerHTML = reportHtml;
+    })
+    .catch(e => {
+      document.getElementById('status').textContent = 'Error: ' + e.message;
+    });
+} else {
+  document.getElementById('status').textContent = 'Missing decider parameter.';
+}
+</script>
+</body>
+</html>

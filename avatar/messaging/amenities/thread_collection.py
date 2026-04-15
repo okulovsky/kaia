@@ -1,6 +1,6 @@
 from typing import Tuple, Optional, Iterable
 from dataclasses import dataclass, field
-from ..stream import IMessage
+from ..core import IMessage
 from datetime import datetime
 from collections import defaultdict
 from yo_fluq import Query

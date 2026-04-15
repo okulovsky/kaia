@@ -1,0 +1,7 @@
+from foundation_kaia.marshalling import ApiCall
+from .interface import IDiagnosticsService
+
+
+class DiagnosticsApi(IDiagnosticsService):
+    def __init__(self, base_url: str):
+        ApiCall.define_endpoints(self, base_url, IDiagnosticsService)

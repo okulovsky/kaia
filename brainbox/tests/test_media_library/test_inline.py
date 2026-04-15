@@ -1,9 +1,9 @@
 from unittest import TestCase
-from brainbox.framework import Loc, MediaLibrary
+from brainbox.framework import MediaLibrary
 from uuid import uuid4
 from datetime import datetime
 import json
-
+from foundation_kaia.misc import Loc
 
 
 class InlineMediaLibraryTestCase(TestCase):

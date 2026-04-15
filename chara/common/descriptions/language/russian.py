@@ -1,3 +1,4 @@
+from .upsampling_dataset.russian import ru_upsampling_dataset
 
 def russian():
     from .language import Language
@@ -12,5 +13,6 @@ def russian():
             "Также в стране распустили парламент, бывшую правящую партию, армию, все службы безопасности и приостановили действие конституции.",
         ),
         native_espeak_phonemes={"ʌ", "i", "n", "r", "ɑ", "s", "t", "a", "y", "u", "v", "j", "k", "ɭ", "p", "m", "ɪ", "e", "o", "ɭʲ", "tʲ", "rʲ", "nʲ", "d", "sʲ", "z", "", "ʃ", "tʃʲ", "f", "b", "x", "ɡ", "mʲ", "vʲ", "ja", "dʲ", "ʒ", "ju", "ts", "kʲ", "ɕ", "pʲ", "bʲ", "ɛ", "ʑ", "ɡʲ", "u\"", "fʲ", "ɵ", "ɪ^", "dʒʲ"},
-        sentence_symbols=set(',.')
+        sentence_symbols=set(',.'),
+        upsampling_dataset_reader=ru_upsampling_dataset,
     )

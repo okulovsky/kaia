@@ -6,6 +6,6 @@ if __name__ == '__main__':
     #resolve_dependencies(controller, exclude_pytorch=True)
 
     controller.install()
-    #controller.self_test()
+    controller.self_test()
     #controller.run_notebook()
-    test_on_arm64(controller)
+    #test_on_arm64(controller)

@@ -1,7 +1,7 @@
 from typing import Callable, Any
 from dataclasses import dataclass, field
 
-from avatar.daemon import TextCommand
+from avatar.daemon import TextCommand, MockSoundService
 from brainbox import BrainBox
 from brainbox.framework import ControllersSetup
 from .app import KaiaApp, IAppInitializer
@@ -9,14 +9,12 @@ from avatar.messaging import AvatarDaemon
 from avatar import daemon as s
 from avatar.daemon.common import content_manager as cm, AvatarService
 import inspect
-from brainbox.deciders import Piper, RhasspyKaldi, Whisper, Resemblyzer
-from pathlib import Path
+from brainbox.deciders import Piper, RhasspyKaldi, Whisper, Resemblyzer, InsightFace
 from kaia.assistant import KaiaAssistant
-from yo_fluq import FileIO
 
 class DemoDubTaskFactory(s.TTSService.TaskFactory):
-    def create_task(self, s: str, info: s.TTSService.Command.Settings) -> BrainBox.ITask:
-        return BrainBox.Task.call(Piper).voiceover(s, info.language)
+    def create_task(self, s: str, info: s.TTSService.Command.Settings) -> BrainBox.Task:
+        return Piper.new_task().voiceover(s, info.language)
 
 def _speaker_to_image_url(speaker):
     return f'/static/unknown.png'
@@ -39,18 +37,20 @@ class AvatarDaemonAppSettings(IAppInitializer):
     initialize_volume: bool = False
     report_to_session: str|None = None
     default_volume: float = 0.1
+    mock_sound_service: bool = False
 
 
 
     def create_brainbox_service(self, app: KaiaApp, state: s.State):
-        bbox = s.BrainBoxService(
-            app.brainbox_api,
-            ControllersSetup((
-                 ControllersSetup.Instance(RhasspyKaldi),
-                 ControllersSetup.Instance(Whisper, None, 'base'),
-                 ControllersSetup.Instance(Piper),
-                 ControllersSetup.Instance(Resemblyzer),
-            )))
+        setup = (
+            ControllersSetup()
+            .up(RhasspyKaldi)
+            .up(Whisper, model = 'base')
+            .up(Piper)
+            .up(Resemblyzer)
+            .up(InsightFace)
+        )
+        bbox = s.BrainBoxService(app.brainbox_api, setup)
         bbox.binding_settings.asynchronous(True)
         return bbox
 
@@ -117,13 +117,28 @@ class AvatarDaemonAppSettings(IAppInitializer):
         if app.brainbox_api is None:
             return s.MockVoiceoverService()
 
+    def create_mock_sound_service(self, app: KaiaApp, state: s.State):
+        if self.mock_sound_service:
+            return MockSoundService()
+
     def create_sound_command_unblocker(self, app: KaiaApp, state: s.State):
         return s.SoundPlayUnblockerService()
+
+    def create_wav_file_fider(self, app: KaiaApp, state: s.State):
+        return s.UploadedWavFixer(app.brainbox_cache_folder, 16000)
+
+    def create_silence_level_controller(self, app: KaiaApp, state: s.State):
+        return s.SilenceLevelService(0.1)
 
     def new_state(self):
         return s.State(character=self.characters[0], language='en')
 
     def bind_app(self, app: KaiaApp):
+        if app.brainbox_cache_folder is None:
+            raise ValueError("KaiaApp.brainbox_cache_folder must be set before AvatarDaemonAppSettings.bind_app")
+        if app.avatar_resources_folder is None:
+            raise ValueError("KaiaApp.avatar_resources_folder must be set before AvatarDaemonAppSettings.bind_app")
+
         reporting_stream = None
         if self.report_to_session is not None:
             reporting_stream = app.avatar_api.create_messaging_stream(self.report_to_session).create_client().as_asyncronous()

@@ -1,18 +1,14 @@
-import subprocess
-from server import InsightFaceApp
-from recognition import FaceEmbedder
-import argparse
-import sys
+from foundation_kaia.brainbox_utils import run_brainbox_app, SingleModelStorage, ModelLoadingSupport, ModelInstallingSupport
+from model import InsightFaceModelSpec, InsightFaceInstaller
+from service import InsightFaceService
+
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-n', '--notebook', action='store_true')
-
-    args = parser.parse_args()
-    print(f"Running with arguments\n{args}")
-
-    if args.notebook:
-        subprocess.call([sys.executable, '-m', 'notebook', '--allow-root', '--port', '8899', '--ip', '0.0.0.0', "--NotebookApp.token=''"], cwd='/repo')
-        exit(0)
-
-    InsightFaceApp(FaceEmbedder()).create_app().run('0.0.0.0', 8084)
+    installer = InsightFaceInstaller()
+    storage = SingleModelStorage(installer, default_model='buffalo_l')
+    service = InsightFaceService(storage)
+    run_brainbox_app([
+        service,
+        ModelLoadingSupport(storage),
+        ModelInstallingSupport[InsightFaceModelSpec](installer),
+    ])

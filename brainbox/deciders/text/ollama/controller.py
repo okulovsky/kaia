@@ -1,7 +1,6 @@
 from typing import Iterable
-from unittest import TestCase
 from ....framework import (
-    RunConfiguration, TestReport, SmallImageBuilder, IImageBuilder, DockerWebServiceController,
+    RunConfiguration, SelfTestCase, SmallImageBuilder, IImageBuilder, DockerWebServiceController,
     BrainBoxApi, BrainBoxTask, IModelDownloadingController, DownloadableModel
 )
 from .settings import OllamaSettings, OllamaModel
@@ -36,8 +35,8 @@ class OllamaController(DockerWebServiceController[OllamaSettings], IModelDownloa
         return OllamaSettings()
 
     def create_api(self):
-        from .api import Ollama
-        return Ollama()
+        from .api import OllamaApi
+        return OllamaApi()
 
     def pre_install(self):
         path = Path(__file__).parent/'container/run.sh'
@@ -48,22 +47,15 @@ class OllamaController(DockerWebServiceController[OllamaSettings], IModelDownloa
     def post_install(self):
         self.download_models(self.settings.models_to_install)
 
-    def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable:
+    def self_test_cases(self) -> Iterable[SelfTestCase]:
         from .api import Ollama
         model = self.settings.models_to_install[0]
         prompt = "The recipe for the borsch is as follows:"
-        api.execute(BrainBoxTask.call(Ollama, model.name).completions_json(prompt=prompt))
-        yield TestReport.last_call(api).href('completions-json').with_comment("Returns json for completions with detailed reply")
-
-        api.execute(BrainBoxTask.call(Ollama, model.name).completions(prompt=prompt))
-        yield TestReport.last_call(api).href('completions-txt').with_comment("Returns only the text result")
-
+        yield SelfTestCase(Ollama.new_task(parameter=model.name).completions_json(prompt=prompt), None)
+        yield SelfTestCase(Ollama.new_task(parameter=model.name).completions(prompt=prompt), None)
         prompt = "Give me the recipe of the borsch."
-        api.execute(BrainBoxTask.call(Ollama, model.name).question_json(prompt=prompt))
-        yield TestReport.last_call(api).href('question-json').with_comment("Returns json for question mode with detailed reply")
-
-        api.execute(BrainBoxTask.call(Ollama, model.name).question(prompt=prompt))
-        yield TestReport.last_call(api).href('question-txt').with_comment("Returns only the text result")
+        yield SelfTestCase(Ollama.new_task(parameter=model.name).question_json(prompt=prompt), None)
+        yield SelfTestCase(Ollama.new_task(parameter=model.name).question(prompt=prompt), None)
 
 
 

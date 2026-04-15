@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BrainBox - Process Log</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+  h1 { color: #333; }
+  nav { margin-bottom: 16px; }
+  nav a { margin-right: 12px; color: #0066cc; text-decoration: none; }
+  nav a:hover { text-decoration: underline; }
+  #status { color: #555; font-size: 0.9em; margin-bottom: 8px; }
+  #report { background: #fff; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-family: monospace; font-size: 0.85em; min-height: 100px; white-space: pre-wrap; word-break: break-all; }
+  #terminate-btn { margin-bottom: 8px; padding: 6px 14px; background: #cc3300; color: #fff; border: none; cursor: pointer; font-size: 0.9em; border-radius: 3px; }
+  #terminate-btn:hover { background: #aa2200; }
+  #terminate-btn:disabled { background: #aaa; cursor: default; }
+</style>
+</head>
+<body>
+<h1 id="title">BrainBox - Process Log</h1>
+<nav>
+  <a href="/static/controllers.html">Controllers</a>
+  <a href="/static/batches.html">Batches</a>
+</nav>
+<button id="terminate-btn" onclick="terminate()">Terminate</button>
+<div id="status">Running...</div>
+<div id="report"></div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const key = params.get('key');
+const type = params.get('type'); // 'install' or 'self-test'
+const basePath = '/controllers-service/' + type;
+
+document.getElementById('title').textContent = 'BrainBox - ' + (type === 'install' ? 'Installation' : 'Self-test') + ' Log';
+
+async function update() {
+  try {
+    const isRunning = await fetch(basePath + '/is-running/' + encodeURIComponent(key)).then(r => r.json());
+    const reportHtml = await fetch(basePath + '/html-report/' + encodeURIComponent(key)).then(r => r.json());
+    document.getElementById('report').innerHTML = reportHtml;
+    if (isRunning) {
+      document.getElementById('status').textContent = 'Running... (last update: ' + new Date().toLocaleTimeString() + ')';
+      setTimeout(update, 2000);
+    } else {
+      document.getElementById('status').textContent = 'Completed at ' + new Date().toLocaleTimeString();
+      document.getElementById('terminate-btn').disabled = true;
+    }
+  } catch (e) {
+    document.getElementById('status').textContent = 'Error: ' + e.message;
+  }
+}
+
+async function terminate() {
+  const btn = document.getElementById('terminate-btn');
+  btn.disabled = true;
+  try {
+    await fetch(basePath + '/terminate', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({key})
+    });
+  } catch (e) {
+    document.getElementById('status').textContent = 'Terminate error: ' + e.message;
+  }
+}
+
+if (key && type) {
+  update();
+} else {
+  document.getElementById('status').textContent = 'Missing key or type parameter.';
+  document.getElementById('terminate-btn').disabled = true;
+}
+</script>
+</body>
+</html>

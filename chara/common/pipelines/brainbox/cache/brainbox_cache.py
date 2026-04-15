@@ -13,7 +13,7 @@ TOption = TypeVar("TOption")
 class BrainBoxCache(Generic[TCase, TOption], ICache[None]):
     def __init__(self, working_folder: Path|None = None):
         super().__init__(working_folder)
-        self.tasks = FileCache[list[BrainBox.ITask]]()
+        self.tasks = FileCache[list[BrainBox.Task]]()
         self.task_id = FileCache[str](FileCache.Type.Text)
         self.result = BrainBoxMultifileCache[TCase, TOption]()
         self.files = FolderCache()
@@ -59,6 +59,16 @@ class BrainBoxCache(Generic[TCase, TOption], ICache[None]):
 
     def open_file(self, option: str):
         return self.files.read_file(option)
+
+
+    def _read_errors(self):
+        for case in self.result.read():
+            if case.options is None:
+                yield case
+
+    def read_errors(self) -> Queryable[BrainBoxUnitResultItem[TCase, TOption]]:
+        return Queryable(self._read_errors())
+
 
 
 

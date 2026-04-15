@@ -1,54 +1,53 @@
 from typing import Iterable
-from unittest import TestCase
+from foundation_kaia.brainbox_utils import Installer
 from ....framework import (
-    RunConfiguration, TestReport, BrainboxImageBuilder, IImageBuilder, DockerWebServiceController,
-    BrainBoxApi, BrainBoxTask, File, IModelDownloadingController, DownloadableModel
+    File, RunConfiguration, SelfTestCase, BrainboxImageBuilder, IImageBuilder,
+    DockerMarshallingController, BrainBoxApi, BrainBoxTask,
 )
-from .settings import YoloSettings
-from .model import YoloModel
+from .settings import YoloSettings, YoloModels
 from pathlib import Path
+from .app.model import YoloInstaller
 
 
-class YoloController(DockerWebServiceController[YoloSettings], IModelDownloadingController):
-    def get_image_builder(self) -> IImageBuilder|None:
+class YoloController(DockerMarshallingController[YoloSettings]):
+    def get_image_builder(self) -> IImageBuilder | None:
         return BrainboxImageBuilder(
             Path(__file__).parent,
             '3.11.11',
-            allow_arm64=True
+            ('libgl1',),
+            allow_arm64=True,
+            dependencies=(
+                BrainboxImageBuilder.PytorchDependencies(
+                    '2.7.0', 'cu128', None, '0.22.0'
+                ),
+                BrainboxImageBuilder.RequirementsLockTxt(),
+                BrainboxImageBuilder.KaiaFoundationDependencies(),
+            )
         )
 
-    def get_downloadable_model_type(self) -> type[DownloadableModel]:
-        return YoloModel
-
-    def get_service_run_configuration(self, parameter: str|None) -> RunConfiguration:
+    def get_service_run_configuration(self, parameter: str | None) -> RunConfiguration:
         if parameter is not None:
             raise ValueError(f"`parameter` must be None for {self.get_name()}")
         return RunConfiguration(
-            parameter,
-            publish_ports={self.connection_settings.port:8084},
+            publish_ports={self.connection_settings.port: 8080},
         )
+
+    def get_installer(self) -> Installer | None:
+        return YoloInstaller(self.resource_folder())
 
     def get_default_settings(self):
         return YoloSettings()
 
     def create_api(self):
+        from .api import YoloApi
+        return YoloApi()
+
+    def self_test_cases(self) -> Iterable[SelfTestCase]:
         from .api import Yolo
-        return Yolo()
-
-    def post_install(self):
-        self.download_models(self.settings.models_to_downloads)
-
-
-    def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable:
-        from .api import Yolo
-
-        api.execute(BrainBoxTask.call(Yolo).analyze(
-            File.read(Path(__file__).parent / "test_anime_img.png"),
-            "Fuyucchi/yolov8_animeface:yolov8x6_animeface.pt"
-        ))
-
-        yield TestReport.last_call(api).href('run')
-
-
-
-
+        yield SelfTestCase(
+            Yolo.new_task().analyze(
+                File.read(Path(__file__).parent / 'test_anime_img.png'),
+                YoloModels.yolov8_animeface,
+            ),
+            lambda result, api, tc: tc.assertIn('objects', result)
+        )

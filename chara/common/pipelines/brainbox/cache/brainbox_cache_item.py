@@ -16,7 +16,7 @@ class BrainBoxUnitResultOption(Generic[TOption]):
 @dataclass
 class BrainBoxUnitResultItem(Generic[TCase, TOption]):
     case: TCase
-    task: BrainBox.ITask|None = None
+    task: BrainBox.Task|None = None
     brainbox_answer_is_missing: bool = False
     brainbox_error: str|None = None
     brainbox_result: Any = None

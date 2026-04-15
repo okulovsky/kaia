@@ -1,7 +1,3 @@
-import os
-
-import yo_fluq
-
 from avatar.messaging import *
 from avatar.daemon import ImageService, State
 from avatar.daemon.common.content_manager import MediaLibraryManager, MediaLibrary, NewContentStrategy
@@ -38,7 +34,7 @@ class ImageServiceTestCase(TestCase):
         ml.save(self.folder/'media_library.zip')
 
         self.state = State(character='c0', activity='a0')
-        proc = AvatarDaemon(TestStream().create_client())
+        proc = AvatarDaemon(AvatarClient.default())
         self.service = ImageService(self.state, None, NewContentStrategy(False), record_to_description)
         self.service.set_resources_folder(self.folder)
         self.service.on_initialize(InitializationEvent())

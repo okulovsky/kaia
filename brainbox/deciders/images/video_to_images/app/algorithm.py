@@ -3,7 +3,7 @@ import json
 import os
 import shutil
 from PIL import Image
-from settings import AnalysisSettings
+from interface import AnalysisSettings
 from frame import Frame
 from layer_capture import layer_capture
 from layer_bufferer import layer_bufferer

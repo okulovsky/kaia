@@ -1,7 +1,14 @@
-import uvicorn
-from server import RecognizerApp
+from foundation_kaia.brainbox_utils import run_brainbox_app, SingleModelStorage, ModelLoadingSupport, ModelInstallingSupport
+from model import YoloInstaller
+from service import YoloService
 
-app = RecognizerApp().create_app()
 
 if __name__ == '__main__':
-    uvicorn.run(f"main:app", host="0.0.0.0", port=8084, reload=True)
+    installer = YoloInstaller()
+    storage = SingleModelStorage(installer)
+    service = YoloService(storage)
+    run_brainbox_app([
+        service,
+        ModelLoadingSupport(storage),
+        ModelInstallingSupport[str](installer),
+    ])

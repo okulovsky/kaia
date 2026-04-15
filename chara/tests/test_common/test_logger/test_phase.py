@@ -1,26 +1,28 @@
+import os
 from unittest import TestCase
 from foundation_kaia.misc import Loc
-from chara.common import FileCache, Logger, LineItem, HeaderItem, ExceptionItem
+from chara.common import FileCache, Logger
+from foundation_kaia.logging.simple import LineItem, HeaderItem, ExceptionItem
 
 
 class PhaseTestCase(TestCase):
     def test_success(self):
-        logger = Logger(print)
-        with Loc.create_test_folder() as folder:
-            item = FileCache()
-            item.initialize(folder/'test')
+        logger = Logger()
+        data = []
+        with logger.with_callback(data.append):
+            with Loc.create_test_folder() as folder:
+                item = FileCache()
+                item.initialize(folder/'test')
 
-            @logger.phase(item)
-            def _():
-                logger.log("Starting doing something")
-                item.write("RESPONSE")
-                logger.log("Finished doing something")
+                @logger.phase(item)
+                def _():
+                    logger.log("Starting doing something")
+                    item.write("RESPONSE")
+                    logger.log("Finished doing something")
 
-            @logger.phase(item)
-            def _():
-                raise ValueError("Should not be here")
-
-            data = logger.items
+                @logger.phase(item)
+                def _():
+                    raise ValueError("Should not be here")
 
             self.assertEqual(len(data), 8)
 
@@ -59,18 +61,20 @@ class PhaseTestCase(TestCase):
             self.assertEqual(data[7].text, "Finished doing something")
 
     def test_failure(self):
-        logger = Logger(print)
-        with Loc.create_test_folder() as folder:
-            item = FileCache()
-            item.initialize(folder/'test')
+        logger = Logger()
+        data = []
 
-            with self.assertRaises(ValueError):
-                @logger.phase(item)
-                def _():
-                    raise ValueError("Exception")
+        with logger.with_callback(data.append):
+            with Loc.create_test_folder() as folder:
+                item = FileCache()
+                item.initialize(folder/'test')
+
+                with self.assertRaises(ValueError):
+                    @logger.phase(item)
+                    def _():
+                        raise ValueError("Exception")
                     item.write("RESPONSE")
 
-            data = logger.items
             self.assertEqual(len(data), 4)
 
             # 1

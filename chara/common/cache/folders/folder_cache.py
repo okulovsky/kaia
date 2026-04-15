@@ -40,6 +40,11 @@ class FolderCache(Generic[TMetadata], IFinalizableCacheEntity[None]):
         if metadata is not None:
             FileIO.write_pickle(metadata, self.get_metadata_path(name))
 
+    def write_metadata(self, name: str, metadata: TMetadata|None = None) -> None:
+        if metadata is not None:
+            path = self.get_metadata_path(name)
+            FileIO.write_pickle(metadata, self.get_metadata_path(name))
+
 
     def read_file(self, name: str) -> File:
         bts = FileIO.read_bytes(self.working_folder / name)
@@ -47,6 +52,12 @@ class FolderCache(Generic[TMetadata], IFinalizableCacheEntity[None]):
         if self.get_metadata_path(name).exists():
             file.metadata = FileIO.read_pickle(self.get_metadata_path(name))
         return file
+
+    def read_metadata(self, name: str) -> TMetadata:
+        if self.get_metadata_path(name).exists():
+            return FileIO.read_pickle(self.get_metadata_path(name))
+        else:
+            return None
 
     def read_paths(self) -> list[Path]:
         result = []
@@ -59,6 +70,8 @@ class FolderCache(Generic[TMetadata], IFinalizableCacheEntity[None]):
                 continue
             result.append(self.working_folder/c)
         return result
+
+
 
     def read_files(self) -> Queryable[File]:
         paths = self.read_paths()

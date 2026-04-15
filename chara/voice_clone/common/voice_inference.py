@@ -28,7 +28,7 @@ class VoiceInference(ABC):
     Cache = VoiceInferenceCache
 
     @abstractmethod
-    def create_task(self, model: VoiceModel, text: str) -> BrainBox.ITask:
+    def create_task(self, model: VoiceModel, text: str) -> BrainBox.Task:
         pass
 
     def get_metadata(self) -> dict:
@@ -36,7 +36,7 @@ class VoiceInference(ABC):
 
 
     @staticmethod
-    def _create_task(case: InferenceCase) -> BrainBox.ITask:
+    def _create_task(case: InferenceCase) -> BrainBox.Task:
         return case.inference.create_task(case.model, case.text)
 
 

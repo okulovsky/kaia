@@ -1,3 +1,5 @@
+from markdown_it.rules_inline.strikethrough import postProcess
+
 from .stt import IRecognitionSetup, RecognitionContext, STTCommand, STTConfirmation, RhasspyRecognitionSetup
 from .rhasspy_training import IntentsPack, RhasspyHandler
 from ..common import IMessage, message_handler, AvatarService
@@ -43,14 +45,13 @@ class STTService(AvatarService):
                 self.requested_setup = None
 
         context = RecognitionContext(sound, self.handlers)
-        recognition_task = setup.create_task(context)
+        recognition_task, postprocessor = setup.create_task_and_postprocessor(context)
         bb_command = BrainBoxService.Command(recognition_task).as_reply_to(sound)
         bb_result = self.client.run_synchronously(bb_command, BrainBoxService.Confirmation)
-        result: STTConfirmation = bb_result.result
-        if result is None:
+        if bb_result.result is None:
             raise ValueError(f"Expected result, error\n{bb_result.error}")
+        result: STTConfirmation = postprocessor.postprocess(bb_result.result)
         return result.as_confirmation_for(sound).as_reply_to(bb_result)
-
 
 
     @message_handler

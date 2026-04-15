@@ -28,16 +28,17 @@ def pure_http(test_case: TestCase, api: BrainBox.Api):
 
     ## Run the tasks
 
-    To run the deciders via BrainBox, we have two endpoints, `/jobs/add` and `/jobs/join`.
+    To run the deciders via BrainBox, we have two endpoints,
+    `/tasks-service/base-add` and `/tasks-service/base-join`.
 
-    `jobs/add` accepts a list of dictionaries, each describing one job.
-    What we did above with `BrainBox.Task.call(HelloBrainBox)` was actually a definition of the job with API.
+    `tasks-service/base-add` accepts a list of job descriptions.
+    What we did above with `HelloBrainBox.new_task()` was actually a definition of the job with API.
     Job has the following fields:
 
     * `id`: a unique string id of the job
-    * `decider`: the name of the decider, like `"Boilerlate"` string
+    * `decider`: the name of the decider, like `"HelloBrainBox"` string
     * `method`: the method of decider class we're running. Can be None if the class defines `__call__` method and is therefore callable itself.
-    * `decider_parameter`: decider's parameter, usually None
+    * `parameter`: decider's parameter, usually None
     * `arguments`: arguments of the method as dictionary.
     * `info`: arbitrary data that is associated with the job, but doesn't have any effect on it.
     * `batch`: jobs in e.g. `Collector`'s packs are organized in batches, so in the web-interface it may be seen what percentage
@@ -47,11 +48,11 @@ def pure_http(test_case: TestCase, api: BrainBox.Api):
     * `ordering_token`: None or an arbitrary string that helps BrainBox arrange the jobs to minimize the model switching.
        Something like `<larger_model_name>/<smaller_model_name>/<even_smaller_model_name>` is usually sufficient.
 
-    Simply the list of such dictionaries to the BrainBox server and it will add the tasks to the queue,
+    POST the list of such dictionaries to the BrainBox server and it will add the tasks to the queue,
     returning the control immediately.
-    To block your process until the tasks are finished, use `/jobs/join` endpoint,
+    To block your process until the tasks are finished, use `/tasks-service/base-join` endpoint,
     and provide it with the list of `id` of the jobs you want to wait for.
-    As a result, `/jobs/join` will return a list of arbitrary objects that correspond to the list of `id`.
+    As a result, `/tasks-service/base-join` will return a JSON array of results corresponding to the provided ids.
 
     """
     import requests
@@ -60,43 +61,37 @@ def pure_http(test_case: TestCase, api: BrainBox.Api):
     address = api.address
     id = str(uuid.uuid4())
 
-    reply = requests.post(f'http://{address}/jobs/add', json=
+    reply = requests.post(f'http://{address}/tasks-service/base-add', json=
     {
-        "arguments": {
-            "jobs": [
-                {
-                    "id": id,
-                    "decider": "HelloBrainBox",
-                    "method": "json",
-                    "decider_parameter": None,
-                    "arguments": {
-                        "argument": "Hello, HTTP"
-                    }
-                }
-            ]
-        }
+        "jobs": [
+            {
+                "id": id,
+                "decider": "HelloBrainBox",
+                "method": "sum",
+                "parameter": None,
+                "arguments": {
+                    "a": 2,
+                    "b": 4
+                },
+                "info": None,
+                "batch": None,
+                "ordering_token": None,
+                "dependencies": {}
+            }
+        ]
     })
     if reply.status_code != 200:
-        raise ValueError(f"Endpoint returned {reply.status_code}\n{reply.json()['error']}")
+        raise ValueError(f"Endpoint returned {reply.status_code}\n{reply.text}")
 
-    reply = requests.get(f"http://{address}/jobs/join", json=
+    reply = requests.post(f"http://{address}/tasks-service/base-join", json=
     {
-        "arguments": {
-            "ids": [
-                id
-            ]
-        }
+        "ids": [
+            id
+        ]
     })
 
     if reply.status_code != 200:
-        raise ValueError(f"Endpoint returned {reply.status_code}\n{reply.json()['error']}")
+        raise ValueError(f"Endpoint returned {reply.status_code}\n{reply.text}")
 
-    result = reply.json()['result'][0]
-    test_case.assertDictEqual(
-        {
-            'argument': 'Hello, HTTP',
-            'model': 'no_parameter',
-            'setting': 'default_setting'
-        },
-        result
-    )
+    result = reply.json()[0]
+    test_case.assertEqual(6, result)

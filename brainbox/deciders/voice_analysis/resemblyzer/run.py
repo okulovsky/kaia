@@ -3,7 +3,7 @@ from brainbox.utils.compatibility import *
 
 if __name__ == '__main__':
     controller = Resemblyzer.Controller()
-    #resolve_dependencies(controller, exclude_pytorch=True)
+    #resolve_dependencies(controller, python_version='3.10.14')
     controller.install()
     controller.self_test()
     #controller.run_notebook()

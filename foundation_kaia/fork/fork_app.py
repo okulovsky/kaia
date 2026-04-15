@@ -10,6 +10,7 @@ class ForkApp:
 
     def run(self):
         for service in self.supporting:
+            print(f"Starting supporting service {service}")
             self._forks.append(Fork(service).start())
         if self.main is not None:
             self.main()

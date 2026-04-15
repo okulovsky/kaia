@@ -1,71 +1,58 @@
-import json
 from typing import Iterable
-from unittest import TestCase
-
+from foundation_kaia.brainbox_utils import Installer
 from ....framework import (
-    File, RunConfiguration, TestReport, IImageBuilder, BrainboxImageBuilder,
-    DockerWebServiceController, BrainBoxApi, BrainBoxTask, IModelDownloadingController, DownloadableModel
+    File, RunConfiguration, SelfTestCase, IImageBuilder, BrainboxImageBuilder,
+    DockerMarshallingController, BrainBoxApi, BrainBoxTask,
 )
-from .settings import WhisperSettings, WhisperModel
+from .settings import WhisperSettings
 from pathlib import Path
+from .app.model import WhisperInstaller
 
 
-class WhisperController(DockerWebServiceController[WhisperSettings], IModelDownloadingController):
-    def get_image_builder(self) -> IImageBuilder|None:
+class WhisperController(DockerMarshallingController[WhisperSettings]):
+    def get_image_builder(self) -> IImageBuilder | None:
         return BrainboxImageBuilder(
             Path(__file__).parent,
-            '3.9.21',
+            '3.11.11',
             ('ffmpeg',),
-            allow_arm64=True
+            allow_arm64=True,
+            dependencies=(
+                BrainboxImageBuilder.PytorchDependencies(
+                    '2.7.0', 'cu128', True
+                ),
+                BrainboxImageBuilder.RequirementsLockTxt(),
+                BrainboxImageBuilder.KaiaFoundationDependencies()
+            )
         )
 
-    def get_downloadable_model_type(self) -> type[DownloadableModel]:
-        return WhisperModel
+    def get_installer(self) -> Installer | None:
+        return WhisperInstaller(self.resource_folder())
 
-    def get_service_run_configuration(self, parameter: str|None) -> RunConfiguration:
+    def get_service_run_configuration(self, parameter: str | None) -> RunConfiguration:
         if parameter is not None:
             raise ValueError(f"`parameter` must be None for {self.get_name()}")
         return RunConfiguration(
             None,
-            publish_ports={self.connection_settings.port:8084},
+            publish_ports={self.connection_settings.port: 8080},
         )
-
-    def get_notebook_configuration(self) -> RunConfiguration|None:
-        return self.get_service_run_configuration(None).as_notebook_service()
 
     def get_default_settings(self):
         return WhisperSettings()
 
     def create_api(self):
+        from .api import WhisperApi
+        return WhisperApi()
+
+    def self_test_cases(self) -> Iterable[SelfTestCase]:
         from .api import Whisper
-        return Whisper()
-
-    def run_notebook(self):
-        self.run_with_configuration(self.get_service_run_configuration(None).as_notebook_service())
-
-    def post_install(self):
-        self.download_models(self.settings.models_to_download)
-
-
-    def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable:
-        from .api import Whisper
-
         file = File.read(Path(__file__).parent / 'files/test_voice.wav')
-
-        first_time = True
-        for model in self.settings.models_to_download:
-            result = api.execute(BrainBoxTask.call(Whisper).transcribe_json(file, model.name))
-            yield TestReport.last_call(api).with_comment("Speech recognition with Whisper, full output")
-            tc.assertEqual(
-                'One little spark and before you know it, the whole world is burning.',
-                result['text'].strip()
+        expected = 'One little spark and before you know it, the whole world is burning.'
+        for model in self.settings.models_to_install:
+            yield SelfTestCase(
+                Whisper.new_task().transcribe(file, model),
+                lambda result, api, tc: tc.assertEqual(expected, result['text'].strip())
             )
-
-            result = api.execute(BrainBoxTask.call(Whisper).transcribe(file, model.name))
-            if first_time:
-                yield TestReport.last_call(api).href('recognition').with_comment("Speech recognition with Whisper, text-only output")
-            tc.assertEqual(
-                'One little spark and before you know it, the whole world is burning.',
-                result
+            yield SelfTestCase(
+                Whisper.new_task().transcribe_text(file, model),
+                SelfTestCase.assertEqual(expected)
             )
-

@@ -35,10 +35,10 @@ if __name__ == '__main__':
                 print(message)
                 if isinstance(message, InitializationEvent):
                     img = api.file_cache.upload(FileIO.read_bytes(Path(__file__).parent / 'image.png'))
-                    client.put(ImageCommand(img))
+                    client.push(ImageCommand(img))
                     for element in ChatCommand.MessageType:
-                        client.put(ChatCommand(element.name, element, element.name, '/static/unknown.png'))
-                    client.put(ButtonGridCommand(elements=(
+                        client.push(ChatCommand(element.name, element, element.name, '/static/unknown.png'))
+                    client.push(ButtonGridCommand(elements=(
                         ButtonGridCommand.Button("Caption", 0, 0, column_span=4),
                         ButtonGridCommand.Button("Button 1", 1, 1, button_feedback='test 1'),
                         ButtonGridCommand.Button("Button 2", 2, 2, button_feedback='test 2'),

@@ -2,9 +2,11 @@ from ..core import OperatorMessage, OperatorState
 import traceback
 from datetime import datetime
 from .decider_log import DeciderLogger
-from ...common import IDecider, DeciderContext, File, Locator
 from .file_postprocessor import file_postprocess
+from ..main_loop.task_finished_action import TaskFinishedAction
 import time
+
+from ..main_loop.task_update_reminder import TaskUpdateReminder
 
 
 class DeciderOperator:
@@ -40,6 +42,7 @@ class DeciderOperator:
         self.state.logger.decider(self.state.key).event(f'Processing task {self.current_id}')
         self.state.results_queue.put(OperatorMessage(self.current_id, OperatorMessage.Type.accepted))
         self.state.logger.task(self.current_id).event('Accepted')
+        self.state.command_queue.put_action(TaskUpdateReminder())
 
         method = job.method
         arguments = job.arguments
@@ -48,7 +51,7 @@ class DeciderOperator:
         try:
             decider = self.state.api
             decider.context._current_job_id = self.current_id
-            decider.context._logger = DeciderLogger(self.current_id, self.state.results_queue)
+            decider.context._api_callback = DeciderLogger(self.current_id, self.state.results_queue, self.state.command_queue, self.state.logger)
 
             if method is not None:
                 method_instance = getattr(decider, method)
@@ -62,11 +65,13 @@ class DeciderOperator:
             result = file_postprocess(result, decider.cache_folder)
 
             self.state.results_queue.put(OperatorMessage(self.current_id, OperatorMessage.Type.result, result))
+            self.state.command_queue.put_action(TaskFinishedAction())
             self.state.logger.task(self.current_id).event('Finished with a success')
             return True
-        except:
+        except Exception:
             msg = f"Error when executing job {self.current_id} for decider {self.state.key}\n" + traceback.format_exc()
             self.state.results_queue.put(OperatorMessage(self.current_id, OperatorMessage.Type.error, msg))
+            self.state.command_queue.put_action(TaskFinishedAction())
             self.state.logger.task(self.current_id).event('Finished with a failure')
             return False
         finally:

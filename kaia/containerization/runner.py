@@ -1,0 +1,60 @@
+from brainbox.framework.deployment import IContainerRunner, DockerArgumentsHelper, Deployment, LocalImageSource, LocalExecutor
+from dataclasses import dataclass
+from brainbox.framework import IExecutor, Command
+from pathlib import Path
+
+
+@dataclass
+class KaiaRunner(IContainerRunner):
+    folder: Path
+    port: int = 18090
+    auto_restart: bool = False
+    user_id: str|None = None
+    docker_group_id: str|None = None
+    debug: bool = False
+    propagate_env_variables: list[str]|None = None
+
+
+    def _get_user(self, executor: IExecutor):
+        if self.user_id is not None:
+            user_id = self.user_id
+        else:
+            user_id = int(executor.execute(['id','-u'], Command.Options(return_output=True)).strip())
+        if self.docker_group_id is not None:
+            docker_group_id = self.docker_group_id
+        else:
+            docker = executor.execute(['getent', 'group', 'docker'], Command.Options(return_output=True)).strip()
+            docker_group_id = int(docker.split(':')[2])
+        return ['--user', f'{user_id}:{docker_group_id}']
+
+
+    def run(self, image_name: str, container_name: str, executor: IExecutor):
+        restart = ['--restart', 'unless-stopped'] if self.auto_restart and not self.debug else []
+
+        env_variables = DockerArgumentsHelper.arg_propagate_env_variables(self.propagate_env_variables) if self.propagate_env_variables else []
+
+        command = [
+            'docker',
+            'run',
+            '--name',
+            container_name,
+            '--mount',
+            DockerArgumentsHelper.arg_mount(self.folder, self.folder),
+            '--network',
+            'host',
+            *(['--detach'] if not self.debug else ['--rm']),
+            *self._get_user(executor),
+            *restart,
+            *env_variables,
+            image_name,
+            '--data-folder',
+            str(self.folder),
+            '--port',
+            str(self.port)
+        ]
+        executor.execute(command)
+
+
+
+
+

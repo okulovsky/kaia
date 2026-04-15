@@ -18,7 +18,7 @@ class STTIntegrationService(AvatarService):
             file = event.file_id,
             language = self.state.language
         ).as_reply_to(event)
-        self.client.put(command)
+        self.client.push(command)
 
         if self.enable_speaker_identification:
             id_command = SpeakerIdentificationService.Command(event.file_id)
@@ -29,7 +29,7 @@ class STTIntegrationService(AvatarService):
         result = self.client.wait_for_confirmation(command, STTService.Confirmation)
 
         if not isinstance(result.recognition, (str, Utterance)):
-            raise ValueError(f"STT returned recognition of type {type(result.recognition)}, which is not expected")
+            raise ValueError(f"STT returned recognition of type {type(result.recognition)}, which is not expected:\n{result.recognition}")
         else:
             return TextEvent(result.recognition, speaker, event.file_id).as_reply_to(result)
 

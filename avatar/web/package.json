@@ -24,6 +24,11 @@
     "globals": "^16.0.0",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.30.1",
-    "undici-types": "^7.19.2"
+    "undici-types": "^7.19.2",
+    "vite": "^8.0.3"
+  },
+  "dependencies": {
+    "vosk-browser": "^0.0.8",
+    "bumblebee-hotword": "^0.2.1"
   }
 }

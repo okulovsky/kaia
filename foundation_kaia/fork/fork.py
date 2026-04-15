@@ -1,7 +1,8 @@
 import threading
 import subprocess
 import sys
-import pickle
+import os
+import cloudpickle
 import atexit
 import time
 from uuid import uuid4
@@ -21,9 +22,11 @@ class Fork:
         try:
             path = Loc.temp_folder / ('fork_' + str(uuid4()))
             with open(path, 'wb') as stream:
-                pickle.dump(self.method, stream)
+                cloudpickle.dump(self.method, stream)
         except Exception as ex:
             raise ValueError(f"Cannot pickle {self.method} to run in fork") from ex
+        env = os.environ.copy()
+        env['PYTHONPATH'] = os.pathsep.join(sys.path)
         self.process = subprocess.Popen(
             [
                 sys.executable,
@@ -32,6 +35,7 @@ class Fork:
                 str(self.method),
                 str(path)
             ],
+            env=env,
         )
         atexit.register(self.terminate)
 
@@ -53,7 +57,11 @@ class Fork:
         if self.process and self.process.poll() is None:
             self.exception_raised = True
             self.process.terminate()
-            self.process.wait()
+            try:
+                self.process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self.process.kill()
+                self.process.wait()
 
     def __enter__(self):
         self.start()

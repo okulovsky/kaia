@@ -16,15 +16,12 @@ authors = [
 
 dependencies = [
     "yo_fluq",
-    "flask",
     "requests",
     "sqlalchemy",
     "soundfile",
     "kaia-foundation",
     "toml",
     "pandas",
-    "huggingface_hub",
-    "dill"
 ]
 
 classifiers = [

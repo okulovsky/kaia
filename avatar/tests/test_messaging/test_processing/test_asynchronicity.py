@@ -1,8 +1,7 @@
 import unittest
-import asyncio
 import time
 from dataclasses import dataclass
-from avatar.messaging import AvatarDaemon, Rule, IMessage, TestStream, BindingSettings
+from avatar.messaging import AvatarDaemon, Rule, IMessage, BindingSettings, AvatarClient
 
 
 @dataclass
@@ -33,34 +32,29 @@ class Handlers2:
         return Out(value=2)
 
 
-
 class TestStreamProcessor(unittest.TestCase):
-    def check(self, functions, messages_count = 1, asynchronous = False):
-        stream = TestStream()
-        client = stream.create_client()
+    def check(self, functions, messages_count=1, asynchronous=False):
+        client = AvatarClient.default()
         messages = [In(content="hello") for _ in range(messages_count)]
         for m in messages:
-            client.put(m)
+            client.push(m)
 
-        processor = AvatarDaemon(
-            client,
-        )
+        processor = AvatarDaemon(client)
         for f in functions:
             processor.rules.bind(f, BindingSettings().asynchronous(asynchronous))
 
-        result = processor.debug_and_stop_by_count(len(functions)*messages_count)
+        result = processor.debug_and_stop_by_count(len(functions) * messages_count)
         return result.duration
-
 
     def test_one_handler(self):
         delta = self.check([Handlers1().handler_1_1])
-        self.assertTrue(0.2<=delta<=0.3)
+        self.assertTrue(0.2 <= delta <= 0.3)
 
     def test_sequencial_handler(self):
         h = Handlers1()
         delta = self.check([h.handler_1_1, h.handler_1_2])
         print(delta)
-        self.assertTrue(0.4<=delta<=0.5)
+        self.assertTrue(0.4 <= delta <= 0.5)
 
     def test_parallel_handlers(self):
         delta = self.check([Handlers1().handler_1_1, Handlers2().handler_2_1])
