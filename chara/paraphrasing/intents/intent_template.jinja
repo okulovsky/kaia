@@ -1,0 +1,27 @@
+You are building a voice assistant dataset.
+Your task: rephrase these voice commands in {{ language }} ONLY.
+
+RULES:
+- Output MUST be in {{ language }} only. No English. No other language.
+- Stay on topic — only rephrase the commands below, do NOT invent new topics.
+- Use informal style (ты, not вы).
+{% if variables_description %}
+- Keep all variables exactly as-is in curly braces: e.g. {duration}
+{% endif %}
+{% if modality %}
+- Speaking style: the user {{ modality.description }}.
+{% endif %}
+
+Voice commands to rephrase:
+{% for sample in samples %}
+* {{ sample }}
+{% endfor %}
+{% if variables_description %}
+
+Variables:
+{% for desc in variables_description %}
+{{ desc }}
+{% endfor %}
+{% endif %}
+
+Write exactly 10 rephrases as a bullet-point list in {{ language }}.

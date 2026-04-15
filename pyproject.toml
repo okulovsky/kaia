@@ -38,8 +38,9 @@ dependencies = [
     "yo_fluq_ds",
     "selenium",
     "kaleido",
-    "graphviz"
-    ]
+    "graphviz",
+    "openai>=2.29.0",
+]
 
 [[project.authors]]
 name = "Yuri Okulovsky"

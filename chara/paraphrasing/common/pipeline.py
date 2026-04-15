@@ -37,7 +37,7 @@ class ParaphrasePipeline:
         cache.write_result(result)
 
     @staticmethod
-    def clean_option(self, s):
+    def clean_option(s):
         while s[0] in EXCLUDE_SYMBOLS:
             s = s[1:]
         while s[-1] in EXCLUDE_SYMBOLS:
@@ -45,17 +45,17 @@ class ParaphrasePipeline:
         return s
 
     @staticmethod
-    def case_and_option_to_record(case: ParaphraseCase, option: str):
+    def case_and_option_to_record(case, option: str, grammar_rules: dict | None = None):
         option = ParaphrasePipeline.clean_option(option)
-        template = case.template.restore_template(option)
+        template = case.template.restore_template(option, grammar_rules)
         return ParaphraseRecord(
             option,
             template,
             case.template.template.get_name(),
             case.template.variables_tag,
             case.language,
-            None if case.character is None else case.character.name,
-            None if case.user is None else case.user.name
+            None if not hasattr(case, 'character') or case.character is None else case.character.name,
+            None if not hasattr(case, 'user') or case.user is None else case.user.name
         )
 
 

@@ -1,4 +1,5 @@
 from typing import Any
+from copy import copy
 from ...dubs import GrammarRule, IDub
 from .categories import *
 from .declinator import Declinator
@@ -8,6 +9,21 @@ class RuGrammarRule(GrammarRule):
         self.declension = declension
         self.gender = gender
         self.number = number
+
+    def get_language_name(self):
+        return 'ru'
+
+    def merge_with_lower_priority(self, rule: GrammarRule):
+        if not isinstance(rule, RuGrammarRule):
+            return self
+        result = copy(self)
+        if result.declension is None:
+            result.declension = rule.declension
+        if result.gender is None:
+            result.gender = rule.gender
+        if result.number is None:
+            result.number = rule.number
+        return result
 
     def apply(self, text: str):
         return Declinator.declinate(text, self.declension, self.gender, self.number)
