@@ -40,7 +40,7 @@ export class AvatarClient {
     }
   }
 
-  async pull (timeout_in_seconds?: number | null, max_messages?: number | null, signal?: AbortSignal): Promise<{ messages: Message[], missingId: boolean }> {
+  async pullWithDetails (timeout_in_seconds?: number | null, max_messages?: number | null, signal?: AbortSignal): Promise<{ messages: Message[], missingId: boolean }> {
     const url = new URL(`${this.baseUrl}/messaging/get/${encodeURIComponent(this.session)}`)
     if (this.lastId !== undefined) {
       url.searchParams.set('last_id', this.lastId)
@@ -77,6 +77,10 @@ export class AvatarClient {
     }
 
     return { messages, missingId: !!data.missing_id }
+  }
+
+  async pull (timeout_in_seconds?: number | null, max_messages?: number | null, signal?: AbortSignal): Promise<Message[]> {
+    return (await this.pullWithDetails(timeout_in_seconds, max_messages, signal)).messages
   }
 
   async tail (count: number): Promise<Message[]> {

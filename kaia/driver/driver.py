@@ -44,6 +44,7 @@ class KaiaDriver:
                  client: AvatarClient,
                  expect_confirmations_for_types: tuple[Type,...] = (TextCommand, SoundCommand),
                  context_setup: Callable[[KaiaContext], None] = None,
+                 skip_logging_for_types: tuple[type,...] = ()
                  ):
         self.assistant_factory = assistant_factory
         self.client = client
@@ -51,6 +52,7 @@ class KaiaDriver:
         self.interpreter: KaiaInterpreter|None = None
         self.rhasspy_training_is_done: bool = False
         self.context_setup = context_setup
+        self.skip_logging_for_types = skip_logging_for_types
 
 
     def initialize(self):
@@ -87,7 +89,8 @@ class KaiaDriver:
             self.initialize()
 
         try:
-            logger.info(f"Item to interpreter: {self._trim(message)}")
+            if not isinstance(message, self.skip_logging_for_types):
+                logger.info(f"Item to interpreter: {self._trim(message)}")
             self.interpreter.process(message)
             logger.info(f"Item processed by interpreted: {self._trim(message)}")
         except:

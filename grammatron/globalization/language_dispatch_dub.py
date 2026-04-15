@@ -11,12 +11,10 @@ class LanguageDispatchDub(IDub, Generic[TDub]):
         self.dispatch: dict[str, TDub] = dispatch
 
     def get_dispatch(self, parameters: DubParameters) -> TDub:
-        if parameters.language in self.dispatch:
+        if parameters.language not in self.dispatch:
+            return self.dispatch[DubParameters.default_language()]
+        else:
             return self.dispatch[parameters.language]
-        default = DubParameters.default_language()
-        if default in self.dispatch:
-            return self.dispatch[default]
-        return next(iter(self.dispatch.values()))
 
     def _to_str_internal(self, value, parameters: DubParameters):
         return self.get_dispatch(parameters).to_str(value, parameters)

@@ -25,11 +25,13 @@ class WebcamProcessorTestCase(TestCase):
                 content = env.api.cache.read(event.file_id)
                 img = Image.open(io.BytesIO(content)).convert('RGB')
                 pixels = list(img.getdata())
-                white = sum(1 for r, g, b in pixels if r == 255 and g == 255 and b == 255)
+                white = sum(1 for r, g, b in pixels if r > 128 and g > 128 and b > 128)
                 pct = round(white / len(pixels) * 100)
                 percentages.append(pct)
 
-            self.assertEqual([0, 10, 20, 30, 40], percentages)
+            for expected, actual in zip([0, 10, 20, 30, 40], percentages): # Because of JPEG, the values are not precise
+                self.assertGreater(actual, expected-2)
+                self.assertLess(actual, expected + 2)
 
 def HTML(rate: int):
     return '''<!DOCTYPE html>

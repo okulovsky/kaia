@@ -13,24 +13,11 @@ class TestParse(unittest.TestCase):
 
         self.assertEqual(
             [type(b) for b in blocks],
-            [CodeBlock, ExpectedValueBlock, CodeBlock, TextBlock, CodeBlock, TextBlock, CodeBlock],
+            [TextBlock, CodeBlock, TextBlock, CodeBlock, TextBlock, CodeBlock, ExpectedValueBlock],
         )
 
-        # code before the validate call; define line is silently dropped
+        # text block; opening ''' is not stored; ``` fence opens a code block
         self.assertEqual(blocks[0].lines, [
-            'from foundation_kaia.mddoc import ControlValue',
-            '',
-            'x = 1 + 2',
-        ])
-
-        # validate call becomes an ExpectedValueBlock carrying the stored value
-        self.assertEqual(blocks[1].variable_value, 3)
-
-        # blank line between the validate call and the opening '''
-        self.assertEqual(blocks[2].lines, [''])
-
-        # text block; opening ''' and closing ``` are not stored in any block
-        self.assertEqual(blocks[3].lines, [
             '# Sample Documentation',
             '',
             'This module demonstrates all mddoc features.',
@@ -40,10 +27,19 @@ class TestParse(unittest.TestCase):
         ])
 
         # code inside the markdown fence
-        self.assertEqual(blocks[4].lines, ['code inside text'])
+        self.assertEqual(blocks[1].lines, ['code inside text'])
 
-        # text after the closing ```
-        self.assertEqual(blocks[5].lines, ['', 'And some closing text.'])
+        # text after the closing ``` up to the closing '''
+        self.assertEqual(blocks[2].lines, ['', 'And some closing text.', '', "Now, let's compute:"])
 
-        # code after the closing '''
-        self.assertEqual(blocks[6].lines, ['', 'y = 10'])
+        # code between the two doc-strings; define line is silently dropped
+        self.assertEqual(blocks[3].lines, ['', 'x = 1 + 2', ''])
+
+        # second text block (between """ delimiters)
+        self.assertEqual(blocks[4].lines, ['The result should be:'])
+
+        # blank line between the second """ and the validate call
+        self.assertEqual(blocks[5].lines, [''])
+
+        # validate call becomes an ExpectedValueBlock carrying the stored value
+        self.assertEqual(blocks[6].variable_value, 3)

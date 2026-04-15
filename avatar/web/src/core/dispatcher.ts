@@ -61,7 +61,7 @@ export class Dispatcher {
       this.abortController = new AbortController()
       let msgs: Message[]
       try {
-        const result = await this.client.pull(undefined, undefined, this.abortController.signal)
+        const result = await this.client.pullWithDetails(undefined, undefined, this.abortController.signal)
         if (result.missingId) {
           window.location.reload()
           return

@@ -3,7 +3,7 @@ from typing import Any
 from kaia import KaiaDriver, KaiaContext, KaiaAssistant, IKaiaSkill, skills, StateTranslator, IAssistantFactory
 from pathlib import Path
 from yo_fluq import FileIO
-from avatar.daemon import ChatCommand, SoundCommand, TextEvent, ButtonPressedEvent, TickEvent, InitializationEvent
+from avatar.daemon import ChatCommand, SoundCommand, TextEvent, ButtonPressedEvent, TickEvent, InitializationEvent, UserWalkInService
 from .app import KaiaApp, IAppInitializer
 from dataclasses import dataclass
 from grammatron import Template, TemplatesCollection
@@ -105,4 +105,5 @@ class KaiaDriverSettings(IAppInitializer):
         app.kaia_driver = KaiaDriver(
             AssistantFactory(app.avatar_api),
             self.create_client(app),
+            skip_logging_for_types=(TickEvent,)
         )
