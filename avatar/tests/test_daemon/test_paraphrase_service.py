@@ -41,7 +41,7 @@ class ParaphraseTestCase(TestCase):
             FileIO.write_pickle(records, folder/'paraphrases.pkl')
 
             state = State(character='character_0', language='en')
-            proc = AvatarDaemon(AvatarClient.default())
+            proc = AvatarDaemon(AvatarClient.default(), timeout_in_pull_in_seconds=0)
             proc.rules.bind(
                 StateToUtterancesApplicationService(state),
             )

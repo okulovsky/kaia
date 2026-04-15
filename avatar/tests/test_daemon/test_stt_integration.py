@@ -9,7 +9,7 @@ TEMPLATE = Template("Yes!")
 
 class STTIntegrationTestCase(TestCase):
     def run_with_identification(self, response: str):
-        proc = AvatarDaemon(AvatarClient.default())
+        proc = AvatarDaemon(AvatarClient.default(), timeout_in_pull_in_seconds=0)
         proc.rules.bind(STTIntegrationService(State(), True))
         result = proc.debug_and_stop_by_empty_queue(SoundEvent("file")).messages
         self.assertEqual(3, len(result))
@@ -22,7 +22,7 @@ class STTIntegrationTestCase(TestCase):
         return result[-1]
 
     def run_without_identification(self, response):
-        proc = AvatarDaemon(AvatarClient.default())
+        proc = AvatarDaemon(AvatarClient.default(), timeout_in_pull_in_seconds=0)
         proc.rules.bind(STTIntegrationService(State(), False))
         result = proc.debug_and_stop_by_empty_queue(SoundEvent("file")).messages
         self.assertEqual(2, len(result))

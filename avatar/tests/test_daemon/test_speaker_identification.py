@@ -36,7 +36,7 @@ class SpeakerIdentificationTestCase(TestCase):
                 service.set_resources_folder(folder)
                 service.sample_to_vector = make_sample_to_vector
                 client = api.create_client()
-                proc = AvatarDaemon(client.clone_client())
+                proc = AvatarDaemon(client.clone_client(), timeout_in_pull_in_seconds=0)
                 proc.rules.bind(service)
                 proc.debug_and_stop_by_count(1, InitializationEvent())
                 self.assertIsNotNone(service.vector_identificator.df)
@@ -59,7 +59,7 @@ class SpeakerIdentificationTestCase(TestCase):
                     service.sample_to_vector = make_sample_to_vector
                     service.set_resources_folder(folder)
                     client = api.create_client()
-                    proc = AvatarDaemon(client.clone_client())
+                    proc = AvatarDaemon(client.clone_client(), timeout_in_pull_in_seconds=0)
                     proc.rules.bind(service)
                     proc.debug_and_stop_by_count(1, InitializationEvent())
 

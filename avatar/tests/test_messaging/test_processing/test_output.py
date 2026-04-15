@@ -17,7 +17,7 @@ class TestWrongOutputType(unittest.TestCase):
         client = AvatarClient.default()
         client.push(In())
 
-        processor = AvatarDaemon(client)
+        processor = AvatarDaemon(client, timeout_in_pull_in_seconds=0)
         processor.rules.bind(function)
 
         result = processor.debug_and_stop_by_count(1)

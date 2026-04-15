@@ -64,7 +64,7 @@ class STTTestCase(TestCase):
 
     def test_stt_kaldi_no_training(self):
         with BrainBox.Api.test([RhasspyKaldiMock()]) as api:
-            proc = AvatarDaemon(AvatarClient.default())
+            proc = AvatarDaemon(AvatarClient.default(), timeout_in_pull_in_seconds=0)
             proc.rules.bind(STTService(RhasspyRecognitionSetup('test_1')))
             proc.rules.bind(BrainBoxService(api))
 
@@ -83,7 +83,7 @@ class STTTestCase(TestCase):
         ]
 
         with BrainBox.Api.test([RhasspyKaldiMock()]) as api:
-            proc = AvatarDaemon(AvatarClient.default())
+            proc = AvatarDaemon(AvatarClient.default(), timeout_in_pull_in_seconds=0)
             stt = STTService(RhasspyRecognitionSetup('test_2'))
             proc.rules.bind(stt)
             proc.rules.bind(BrainBoxService(api))

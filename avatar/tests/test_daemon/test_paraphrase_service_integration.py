@@ -42,7 +42,7 @@ class ParaphraseTestCase(TestCase):
 
                 state = State(character='character_0', language='en')
                 client = api.create_client()
-                proc = AvatarDaemon(client.clone_client(), resources_folder=folder/'resources')
+                proc = AvatarDaemon(client.clone_client(), resources_folder=folder/'resources', timeout_in_pull_in_seconds=0)
                 proc.rules.bind(
                     StateToUtterancesApplicationService(state),
                 )

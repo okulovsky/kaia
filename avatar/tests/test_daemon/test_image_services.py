@@ -34,7 +34,7 @@ class ImageServiceTestCase(TestCase):
         ml.save(self.folder/'media_library.zip')
 
         self.state = State(character='c0', activity='a0')
-        proc = AvatarDaemon(AvatarClient.default())
+        proc = AvatarDaemon(AvatarClient.default(), timeout_in_pull_in_seconds=0)
         self.service = ImageService(self.state, None, NewContentStrategy(False), record_to_description)
         self.service.set_resources_folder(self.folder)
         self.service.on_initialize(InitializationEvent())

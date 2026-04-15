@@ -17,7 +17,7 @@ class TestWrongOutputType(unittest.TestCase):
         client = AvatarClient.default()
         client.push(InMessage(content="bad"))
 
-        processor = AvatarDaemon(client)
+        processor = AvatarDaemon(client, timeout_in_pull_in_seconds=0)
 
         with self.assertRaises(Exception) as cm:
             processor.rules.bind(function)
