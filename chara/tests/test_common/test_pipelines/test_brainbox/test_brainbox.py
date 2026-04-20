@@ -1,15 +1,18 @@
-from brainbox import BrainBox
-from brainbox.deciders import Mock, Ollama, Collector
-from chara.common import BrainBoxUnit, BrainBoxCache, BrainBoxMerger, CharaApis
+from brainbox import BrainBox, ISelfManagingDecider
+from brainbox.deciders import Ollama, Collector
+from chara.common import BrainBoxPipeline, BrainBoxCache, BrainBoxMerger, CharaApis
 from unittest import TestCase
 from foundation_kaia.misc import Loc
 
 
 
 
-class MyMock(Mock):
+class MyMock(ISelfManagingDecider):
     def __init__(self):
-        super().__init__('Ollama')
+        super().__init__()
+
+    def get_name(self):
+        return 'Ollama'
 
     def question(self, prompt: str):
         if prompt == 'error':
@@ -18,16 +21,16 @@ class MyMock(Mock):
 
 
 def create_task(s: str):
-    return BrainBox.Task.call(Ollama,'test-model').question(s)
+    return Ollama.new_task(parameter='test-model').question(s)
 
-class BrainBoxUnitTestCase(TestCase):
+class BrainBoxPipelineTestCase(TestCase):
     def test_simple(self):
         with Loc.create_test_folder() as folder:
             cache = BrainBoxCache(folder)
-            unit = BrainBoxUnit(
+            unit = BrainBoxPipeline(
                 create_task
             )
-            with BrainBox.Api.Test([MyMock(), Collector()]) as api:
+            with BrainBox.Api.test([MyMock(), Collector()]) as api:
                 CharaApis.brainbox_api = api
                 unit.run(cache, ['a', 'error'])
 
@@ -57,7 +60,6 @@ class BrainBoxUnitTestCase(TestCase):
 
 
     def test_with_divider(self):
-
         def _merge(case, option):
             if option=='b2':
                 raise ValueError()
@@ -70,12 +72,12 @@ class BrainBoxUnitTestCase(TestCase):
 
         with Loc.create_test_folder() as folder:
             cache = BrainBoxCache(folder)
-            unit = BrainBoxUnit(
+            unit = BrainBoxPipeline(
                 create_task,
                 _merge,
                 _divide
             )
-            with BrainBox.Api.Test([MyMock(), Collector()]) as api:
+            with BrainBox.Api.test([MyMock(), Collector()]) as api:
                 CharaApis.brainbox_api = api
                 unit.run(cache, ['a', 'b', 'c', 'error'])
 

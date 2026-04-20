@@ -23,6 +23,8 @@ dependencies = [
     "pvporcupine==1.9.5",
     "pyaudio",
     "pymorphy3",
+    "simplemma",
+    "german_nouns",
     "python-dotenv",
     "python-telegram-bot",
     "regex",

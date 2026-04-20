@@ -93,7 +93,9 @@ class Serializer:
     def is_nullable(self) -> bool:
         return self._nullable
 
-    def to_json(self, value: Any, ctx: SerializationContext) -> Any:
+    def to_json(self, value: Any, ctx: SerializationContext|None = None) -> Any:
+        if ctx is None:
+            ctx = SerializationContext()
         if not self._handlers:
             return value
         last_error = None
@@ -106,7 +108,9 @@ class Serializer:
             raise last_error
         raise TypeError(f"No handler for {type(value)}")
 
-    def from_json(self, json_value: Any, ctx: SerializationContext) -> Any:
+    def from_json(self, json_value: Any, ctx: SerializationContext|None = None) -> Any:
+        if ctx is None:
+            ctx = SerializationContext()
         if not self._handlers:
             return json_value
         last_error = None
@@ -119,7 +123,9 @@ class Serializer:
             raise last_error
         raise TypeError(f"No handler could deserialize {json_value}")
 
-    def to_string(self, value: Any, ctx: SerializationContext) -> str:
+    def to_string(self, value: Any, ctx: SerializationContext|None = None) -> str:
+        if ctx is None:
+            ctx = SerializationContext()
         for h in self._handlers:
             if isinstance(h, IPrimitiveTypeHandler):
                 try:
@@ -128,7 +134,9 @@ class Serializer:
                     pass
         raise TypeError(f"Not a primitive type: {type(value)}")
 
-    def from_string(self, string: str, ctx: SerializationContext) -> Any:
+    def from_string(self, string: str, ctx: SerializationContext|None = None) -> Any:
+        if ctx is None:
+            ctx = SerializationContext()
         for h in self._handlers:
             if isinstance(h, IPrimitiveTypeHandler):
                 return h.from_string(string, ctx)

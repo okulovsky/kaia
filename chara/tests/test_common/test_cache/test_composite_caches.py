@@ -18,8 +18,8 @@ class CompositeCacheTest(TestCase):
         with Loc.create_test_folder() as folder:
 
             cache.initialize(folder)
-            self.assertEqual(folder/'00_file_1/cache', cache.file_1.cache_file_path)
-            self.assertEqual(folder / '01_file_2/cache', cache.file_2.cache_file_path)
+            self.assertEqual(folder/'00_file_1/cache.pickle', cache.file_1.cache_file_path)
+            self.assertEqual(folder / '01_file_2/cache.pickle', cache.file_2.cache_file_path)
 
 
             cache.file_1.write('')
@@ -54,8 +54,8 @@ class CompositeCacheTest(TestCase):
             shutil.rmtree(folder, ignore_errors=True)
 
             cache = M(folder)
-            self.assertEqual(folder/'00_file/cache', cache.file.cache_file_path)
-            self.assertEqual(folder/'01_composite/00_file_1/cache', cache.composite.file_1.cache_file_path)
+            self.assertEqual(folder/'00_file/cache.pickle', cache.file.cache_file_path)
+            self.assertEqual(folder/'01_composite/00_file_1/cache.pickle', cache.composite.file_1.cache_file_path)
 
 
 

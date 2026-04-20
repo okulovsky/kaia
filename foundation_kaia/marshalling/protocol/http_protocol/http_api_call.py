@@ -30,12 +30,12 @@ def http_api_call(data: CallModel) -> Any:
 
     url = data.base_url.rstrip('/')+data.content.url
 
-    producer = ContentProducer(data.content)
+    producer = ContentProducer(data.content, data.endpoint_model)
     streaming = data.endpoint_model.result.type == ResultType.BinaryFile
 
     if data.endpoint_model.protocol.http_method.value == 'GET':
         if producer.has_content:
-            raise ValueError(f"Cannot make a GET request: json or files are not empty.\nJson: {','.join(data.content.json)}\nFiles: {','.join(data.content.files)}")
+            raise ValueError(f"Cannot make a GET request: json or files are not empty.\nJson: {','.join(data.content.json_values)}\nFiles: {','.join(data.content.raw_values)}")
         response = requests.get(url, stream=streaming)
     else:
         if producer.has_content:

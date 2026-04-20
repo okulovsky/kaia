@@ -3,7 +3,7 @@ from chara.common import (
     ICache,
     BrainBoxCache,
     logger,
-    BrainBoxUnit,
+    BrainBoxPipeline,
     DictCache,
 )
 from pathlib import Path
@@ -110,7 +110,7 @@ class LlamaLoraPipeline:
     ):
         @logger.phase(cache.train_checkpoints, "Training a LoRA adapter")
         def _():
-            unit = BrainBoxUnit(self._create_training_task)
+            unit = BrainBoxPipeline(self._create_training_task)
             unit.run(
                 cache.train_checkpoints,
                 [LoraTrainCase(adapter_name=adapter_name, train_dataset=train_dataset)],
@@ -138,7 +138,7 @@ class LlamaLoraPipeline:
 
                 @logger.phase(subcache, f"Generating for checkpoint {checkpoint_number}")
                 def _():
-                    unit = BrainBoxUnit(self._create_generation_task)
+                    unit = BrainBoxPipeline(self._create_generation_task)
                     unit.run(
                         subcache,
                         self._get_generation_cases(

@@ -1,4 +1,4 @@
-from ..brainbox import BrainBoxUnit, TCase, TOption, BrainBoxCache
+from ..brainbox import BrainBoxPipeline, TCase, TOption, BrainBoxCache
 from brainbox import BrainBox
 from brainbox.deciders import Ollama
 from typing import Generic, Callable, Optional, Iterable
@@ -34,7 +34,7 @@ class LLMUnit(Generic[TCase, TOption]):
 
 
     def __call__(self, cache: BrainBoxCache[TCase, TOption], cases: Iterable[TCase]) -> None:
-        unit = BrainBoxUnit(
+        unit = BrainBoxPipeline(
             self._task_builder,
             self._merger,
             self._list_divider if self.parser_to_list is not None else None,

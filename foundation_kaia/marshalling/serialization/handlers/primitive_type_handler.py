@@ -167,28 +167,22 @@ class EnumHandler(IPrimitiveTypeHandler):
     def to_json(self, value: Any, context: SerializationContext) -> Any:
         if not isinstance(value, self.enum_type):
             raise TypeError(f"Expected {self.enum_type} at {context.current_path}, got {type(value)}")
-        return value.value
+        return value.name
 
     def from_json(self, json_value: Any, context: SerializationContext) -> Any:
         try:
-            return self.enum_type(json_value)
+            return self.enum_type[json_value]
         except (ValueError, KeyError) as e:
             raise ValueError(f"Invalid value for {self.enum_type} at {context.current_path}: {json_value}") from e
 
     def to_string(self, value: Any, context: SerializationContext) -> str:
-        return str(value.value)
+        return value.name
 
     def from_string(self, string: str, context: SerializationContext) -> Any:
-        # Try string value directly, then as int (for int-valued enums)
         try:
-            return self.enum_type(string)
-        except (ValueError, KeyError):
-            pass
-        try:
-            return self.enum_type(int(string))
-        except (ValueError, KeyError):
-            pass
-        raise ValueError(f"Invalid value for {self.enum_type} at {context.current_path}: '{string}'")
+            return self.enum_type[string]
+        except (ValueError, KeyError) as e:
+            raise ValueError(f"Invalid value for {self.enum_type} at {context.current_path}: '{string}'") from e
 
     def to_json_schema(self, root: JsonSchema) -> dict:
         return {'enum': [v.value for v in self.enum_type]}

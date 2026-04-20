@@ -1,6 +1,6 @@
 from click.core import augment_usage_errors
 
-from chara.common import ICache, logger, BrainBoxCache, Language, BrainBoxUnit
+from chara.common import ICache, logger, BrainBoxCache, Language, BrainBoxPipeline
 from ..common import VoiceInference, VoiceModel
 from .dto import UpsamplingResult
 from pathlib import Path
@@ -51,7 +51,7 @@ class StepPipeline:
 
         @logger.phase(cache.recognition, "Recognition of texts")
         def _():
-            unit = BrainBoxUnit(
+            unit = BrainBoxPipeline(
                 self._create_vosk_task,
             )
             unit.run(cache.recognition, name_to_path)

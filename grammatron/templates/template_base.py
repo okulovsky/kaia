@@ -1,4 +1,6 @@
 from typing import *
+
+from .. import DubParameters
 from ..dubs import RegexParser, VariableAssignment, IDub
 
 from copy import copy, deepcopy
@@ -73,8 +75,11 @@ class TemplateBase(Generic[TDub]):
         obj._paraphrasing_allowed = False
         return obj
 
-    def to_str(self, value) -> str:
-        return self.utter(value).to_str()
+    def get_default_parameters(self) -> DubParameters:
+        return DubParameters()
+
+    def to_str(self, value, parameters: DubParameters|None = None) -> str:
+        return self.utter(value).to_str(parameters)
 
     def _get_single_attached_subdub_name(self) -> str|None:
         return None

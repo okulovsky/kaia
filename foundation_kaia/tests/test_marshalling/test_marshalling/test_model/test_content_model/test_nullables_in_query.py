@@ -5,9 +5,8 @@ from foundation_kaia.tests.test_marshalling.test_marshalling.test_model.test_con
 
 class TestNullablesInQuery(unittest.TestCase):
     def check_no_content(self, c: ContentModel):
-        self.assertEqual({}, c.json)
-        self.assertEqual({}, c.files)
-        self.assertIsNone(c.binary_stream)
+        self.assertEqual({}, c.json_values)
+        self.assertEqual({}, c.raw_values)
 
     def test_nullable_with_value_in_query_string(self):
         @endpoint
@@ -61,8 +60,6 @@ class TestNullablesInQuery(unittest.TestCase):
         @endpoint
         def func(name: str | None) -> None: ...
         c, data = make_url_test(func, 'alice')
-        self.assertEqual({}, c.json)
-        self.assertEqual({}, c.files)
         self.check_no_content(c)
         self.assertEqual({'name': 'alice'}, data)
 

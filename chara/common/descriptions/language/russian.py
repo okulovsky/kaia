@@ -3,7 +3,8 @@ from .upsampling_dataset.russian import ru_upsampling_dataset
 def russian():
     from .language import Language
     return Language(
-        name="ru",
+        code="ru",
+        name="Russian",
         words_symbols=set('абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'),
         sample_text=(
             "Кроме того, сотрудник может потерять бронь, если работодатель лишится статуса, позволяющего освобождать работников от призыва.",

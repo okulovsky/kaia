@@ -34,7 +34,7 @@ class RhasspyKaldiMock(ISelfManagingDecider):
 
 class STTTestCase(TestCase):
     def test_stt(self):
-        with BrainBox.Api.test([WhisperMock()]) as api:
+        with BrainBox.Api.serverless_test([WhisperMock()]) as api:
             proc = AvatarDaemon(AvatarClient.default())
             proc.rules.bind(STTService(WhisperRecognitionSetup()))
             proc.rules.bind(BrainBoxService(api))
@@ -47,7 +47,7 @@ class STTTestCase(TestCase):
             self.assertEqual('test', message.recognition)
 
     def test_stt_request(self):
-        with BrainBox.Api.test([WhisperMock(), VoskMock()]) as api:
+        with BrainBox.Api.serverless_test([WhisperMock(), VoskMock()]) as api:
             proc = AvatarDaemon(AvatarClient.default())
             proc.rules.bind(STTService(WhisperRecognitionSetup()))
             proc.rules.bind(BrainBoxService(api))
@@ -63,7 +63,7 @@ class STTTestCase(TestCase):
             self.assertEqual('whisper', message_2.recognition)
 
     def test_stt_kaldi_no_training(self):
-        with BrainBox.Api.test([RhasspyKaldiMock()]) as api:
+        with BrainBox.Api.serverless_test([RhasspyKaldiMock()]) as api:
             proc = AvatarDaemon(AvatarClient.default(), timeout_in_pull_in_seconds=0)
             proc.rules.bind(STTService(RhasspyRecognitionSetup('test_1')))
             proc.rules.bind(BrainBoxService(api))
@@ -82,7 +82,7 @@ class STTTestCase(TestCase):
             IntentsPack('test_2', tuple(Collection2.get_templates()), {}, 'en')
         ]
 
-        with BrainBox.Api.test([RhasspyKaldiMock()]) as api:
+        with BrainBox.Api.serverless_test([RhasspyKaldiMock()]) as api:
             proc = AvatarDaemon(AvatarClient.default(), timeout_in_pull_in_seconds=0)
             stt = STTService(RhasspyRecognitionSetup('test_2'))
             proc.rules.bind(stt)

@@ -11,7 +11,7 @@ class TestIsPathlike(unittest.TestCase):
         def func(path: str) -> None: ...
         c, data = make_url_test(func, 'folder/sub')
         self.assertEqual('/func/folder/sub', c.url)
-        self.assertEqual({}, c.json)
+        self.assertEqual({}, c.json_values)
 
     def test_pathlike_str_value_preserved_in_url(self):
         @endpoint(is_pathlike='path')
@@ -56,7 +56,7 @@ class TestIsPathlike(unittest.TestCase):
             pass
         c, _ = make_url_test(func, 'some/path')
         self.assertEqual('/func/some/path', c.url)
-        self.assertNotIn('path', c.json)
+        self.assertNotIn('path', c.json_values)
 
     def test_pathlike_other_params_still_use_force_json(self):
         @endpoint(is_pathlike='path', force_json_params=True, verify_abstract=False)
@@ -64,8 +64,8 @@ class TestIsPathlike(unittest.TestCase):
             pass
         c, _ = make_url_test(func, 'some/path', 42)
         self.assertEqual('/func/some/path', c.url)
-        self.assertIn('value', c.json)
-        self.assertEqual(42, c.json['value'])
+        self.assertIn('value', c.json_values)
+        self.assertEqual(42, c.json_values['value'])
 
     def test_pathlike_query_params_still_work(self):
         @endpoint(is_pathlike='path')

@@ -12,6 +12,8 @@ class LanguageDispatchDub(IDub, Generic[TDub]):
 
     def get_dispatch(self, parameters: DubParameters) -> TDub:
         if parameters.language not in self.dispatch:
+            if DubParameters.default_language() not in self.dispatch:
+                raise ValueError(f"Language {parameters.language} was requested, but it's not supported for this template, and default language {DubParameters.default_language()} is also missing")
             return self.dispatch[DubParameters.default_language()]
         else:
             return self.dispatch[parameters.language]

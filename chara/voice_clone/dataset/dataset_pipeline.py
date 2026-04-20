@@ -1,7 +1,7 @@
 import pandas as pd
 from typing import Iterable
 from itertools import tee
-from ...common import Language, logger, BrainBoxUnit
+from ...common import Language, logger, BrainBoxPipeline
 from ...common import ICache, JsonlCache, BrainBoxCache, logger, FileCache, ListCache
 from .phonemization import create_phonemization_samples, merge, Phonemization
 from .corpus import Corpus
@@ -78,7 +78,7 @@ class DatasetPipeline:
 
         @logger.phase(cache.phonemization)
         def _():
-            unit = BrainBoxUnit(
+            unit = BrainBoxPipeline(
                 self._create_phonemization_task,
                 merge,
             )

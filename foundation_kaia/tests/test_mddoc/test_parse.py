@@ -1,8 +1,8 @@
 import unittest
 from pathlib import Path
-from foundation_kaia.mddoc import parse
-from foundation_kaia.mddoc.doc_block import TextBlock, ExpectedValueBlock
-from foundation_kaia.mddoc.code_block import CodeBlock
+from foundation_kaia.releasing.mddoc import parse
+from foundation_kaia.releasing.mddoc.doc_block import TextBlock, ExpectedValueBlock
+from foundation_kaia.releasing.mddoc.code_block import CodeBlock
 
 SAMPLE = Path(__file__).parent / 'sample_doc.py'
 

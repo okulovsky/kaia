@@ -17,6 +17,8 @@ class Utterance(IAsserter):
         return self._value
 
     def to_str(self, parameters: DubParameters|None = None):
+        if parameters is None:
+            parameters = self.template.get_default_parameters()
         return self.template.dub.to_str(self.value, parameters)
 
     def __str__(self):

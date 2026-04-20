@@ -2,7 +2,7 @@ from .....common import *
 from brainbox import BrainBox
 from typing import TypeVar, Generic
 from yo_fluq import Queryable, FileIO
-from .brainbox_cache_item import BrainBoxUnitResultItem
+from .brainbox_cache_item import BrainBoxPipelineResultItem
 from .brainbox_multifile_cache import BrainBoxMultifileCache
 from pathlib import Path
 
@@ -35,7 +35,7 @@ class BrainBoxCache(Generic[TCase, TOption], ICache[None]):
         counts = FileIO.read_json(self.result.counts_file)
         return Queryable(self._read_cases_and_options(), counts['options'])
 
-    def _item_to_case_and_single_option(self, item: BrainBoxUnitResultItem[TCase, TOption]) -> tuple[TCase, TOption]|None:
+    def _item_to_case_and_single_option(self, item: BrainBoxPipelineResultItem[TCase, TOption]) -> tuple[TCase, TOption]|None:
         if item.options is None:
             return None
         if len(item.options) > 1:
@@ -51,7 +51,7 @@ class BrainBoxCache(Generic[TCase, TOption], ICache[None]):
             .where(lambda z: z is not None)
         )
 
-    def read_result(self) -> Queryable[BrainBoxUnitResultItem[TCase, TOption]]:
+    def read_result(self) -> Queryable[BrainBoxPipelineResultItem[TCase, TOption]]:
         return self.result.read()
 
     def get_file_path(self, option: str):
@@ -66,7 +66,7 @@ class BrainBoxCache(Generic[TCase, TOption], ICache[None]):
             if case.options is None:
                 yield case
 
-    def read_errors(self) -> Queryable[BrainBoxUnitResultItem[TCase, TOption]]:
+    def read_errors(self) -> Queryable[BrainBoxPipelineResultItem[TCase, TOption]]:
         return Queryable(self._read_errors())
 
 

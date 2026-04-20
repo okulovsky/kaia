@@ -1,6 +1,7 @@
 from typing import *
 from dataclasses import dataclass
 from foundation_kaia.misc import Loc
+from foundation_kaia.releasing.mddoc import create_documentation
 import shutil
 from pathlib import Path
 import subprocess
@@ -21,7 +22,7 @@ class Releaser:
     module_name: str
     folders_to_export: tuple[str,...]
     files_to_export: tuple[str,...]
-    readme_md_generator: Optional[Callable[[], str]] = None
+    doc_folder: Optional[Path] = None
     tox_python: Optional[str] = None
     tox_versions: Optional[Tuple[str,...]] = None
     inner_dependencies: Tuple[str,...] = ()
@@ -96,8 +97,8 @@ class Releaser:
         for file in self.files_to_export:
             shutil.copy(src_folder / file, module_release_folder / file)
 
-        if self.readme_md_generator is not None:
-            doc = self.readme_md_generator()
+        if self.doc_folder is not None:
+            doc = create_documentation(self.doc_folder)
             file_io_write_text(doc, src_folder/'README.md')
             file_io_write_text(doc, release_folder / 'README.md')
         else:

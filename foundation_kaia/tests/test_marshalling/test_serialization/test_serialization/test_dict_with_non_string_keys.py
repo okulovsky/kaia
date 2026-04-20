@@ -41,8 +41,8 @@ class TestDictWithNonStringKeys(unittest.TestCase):
         desc = DataclassHandler(EnumKeyed)
         obj = EnumKeyed(mapping={Color.RED: 1, Color.BLUE: 3})
         json_data = desc.to_json(obj, _ctx())
-        self.assertIn('red', json_data['mapping'])
-        self.assertIn('blue', json_data['mapping'])
+        self.assertIn('RED', json_data['mapping'])
+        self.assertIn('BLUE', json_data['mapping'])
         restored = desc.from_json(json_data, _ctx())
         self.assertEqual(obj, restored)
 

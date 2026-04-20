@@ -1,5 +1,5 @@
 from .voice_train import VoiceModel
-from chara.common import BrainBoxUnit, BrainBoxCache, ICache, FileCache, logger
+from chara.common import BrainBoxPipeline, BrainBoxCache, ICache, FileCache, logger
 from chara.common.tools import Wav
 from abc import ABC, abstractmethod
 from typing import Iterable, Any
@@ -88,7 +88,7 @@ class VoiceInference(ABC):
 
         @logger.phase(cache.voiceover)
         def _():
-            unit = BrainBoxUnit(
+            unit = BrainBoxPipeline(
                 VoiceInference._create_task,
                 options_as_files=True
             )

@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from chara.common import ICache, FolderCache, ListCache, BrainBoxCache, logger, BrainBoxUnit
+from chara.common import ICache, FolderCache, ListCache, BrainBoxCache, logger, BrainBoxPipeline
 from chara.common.tools import Wav
 from typing import Iterable, Callable
 
@@ -196,7 +196,7 @@ class VoiceTrain(ABC):
 
         @logger.phase(cache.training)
         def _():
-            unit = BrainBoxUnit()
+            unit = BrainBoxPipeline()
             unit.run(cache.training, tasks)
 
         cache.write_result(models)

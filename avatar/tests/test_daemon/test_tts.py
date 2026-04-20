@@ -18,7 +18,7 @@ class PiperTaskFactory(TTSService.TaskFactory):
 
 class VoiceoverServiceTestCase(TestCase):
     def test_voiceover(self):
-        with BrainBox.Api.test([PiperMock()]) as api:
+        with BrainBox.Api.serverless_test([PiperMock()]) as api:
             voiceover_service = TTSService(PiperTaskFactory())
             brainbox_service = BrainBoxService(api)
             sound_processor = MockSoundService()

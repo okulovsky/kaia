@@ -35,7 +35,7 @@ class ChatterboxTrainTest(TestCase):
             CharaApis.brainbox_api = api
 
             with Loc.create_test_folder() as folder:
-                folder = Path(__file__).parent/'cache'; shutil.rmtree(folder, ignore_errors=True)
+                #folder = Path(__file__).parent/'cache'; shutil.rmtree(folder, ignore_errors=True)
 
 
                 os.makedirs(folder/'source/one')

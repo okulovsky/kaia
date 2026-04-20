@@ -13,7 +13,7 @@ class AlgorithmData:
     @staticmethod
     def from_phonemizations(data: Iterable[Phonemization], language: Language, strict: bool = False) -> 'AlgorithmData':
         if language.native_espeak_phonemes is None:
-            raise ValueError(f"You must first create a list of native espeak phonemes for language `{language.name}`, to equalify on them. Read the log and set the field `native_espeak_phonemes` to the language")
+            raise ValueError(f"You must first create a list of native espeak phonemes for language `{language.code}/{language.name}`, to equalify on them. Read the log and set the field `native_espeak_phonemes` to the language")
         id_to_sentence = {}
         rows = []
         rejected_phonemes = {}

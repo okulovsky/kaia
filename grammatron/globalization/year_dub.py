@@ -32,6 +32,11 @@ class YearDub(LanguageDispatchDub):
             value_to_variables=from_value,
             variables_to_value=to_value
         )
+        sequences['de'] = FunctionalTemplateDub(
+            [f"{VariableDub('year', OrdinalDub(2100))}"],
+            value_to_variables=from_value,
+            variables_to_value=to_value
+        )
         super().__init__(**sequences)
 
 

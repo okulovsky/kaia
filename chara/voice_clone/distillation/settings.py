@@ -19,7 +19,7 @@ class LanguageSettings:
 
     @staticmethod
     def from_language(language: Language) -> 'LanguageSettings':
-        if language.name == 'en':
+        if language.code == 'en':
             return LanguageSettings(
                 language=language,
                 verifier_prefix_max_skip=4,
@@ -32,7 +32,7 @@ class LanguageSettings:
                 voiceover_example="Pete bought a big bag of cheap red apples and fresh fish for Sue. Those thieves thought that this weather was rather unusual. A joyful wizard quickly mixed beige liquids in huge jars."
             )
 
-        if language.name == 'ru':
+        if language.code == 'ru':
             return LanguageSettings(
                 language=language,
                 verifier_prefix_max_skip=4,
@@ -45,7 +45,7 @@ class LanguageSettings:
                 voiceover_example="Шустрый ёж съел мягкий хлеб, выпил чаю и лёг спать. Вьюга бьёт по съёмным крышам, гулко звенят цепи. Фальшивый джаз гремел, хриплый вокал дрожал."
             )
 
-        if language.name == 'de':
+        if language.code == 'de':
             return LanguageSettings(
                 language=language,
                 verifier_prefix_max_skip=4,

@@ -60,7 +60,7 @@ class TrainingPipeline:
 
         @logger.phase(cache.export)
         def _():
-            BrainBoxUnit(self._create_export_task, options_as_files=True).run(cache.export, ckpts)
+            BrainBoxPipeline(self._create_export_task, options_as_files=True).run(cache.export, ckpts)
 
         file_to_checkpoint = {}
         for checkpoint, file in cache.export.read_cases_and_options():
@@ -68,22 +68,22 @@ class TrainingPipeline:
 
         @logger.phase(cache.delete_training)
         def _():
-            BrainBoxUnit(self._create_training_delete_task).run(cache.delete_training, [self.name])
+            BrainBoxPipeline(self._create_training_delete_task).run(cache.delete_training, [self.name])
 
         files = list(cache.export.read_options())
 
         @logger.phase(cache.upload)
         def _():
-            BrainBoxUnit(self._create_upload_task).run(cache.upload, files)
+            BrainBoxPipeline(self._create_upload_task).run(cache.upload, files)
 
         @logger.phase(cache.voiceover)
         def _():
-            BrainBoxUnit(self._create_voiceover_task, options_as_files=True).run(cache.voiceover, files)
+            BrainBoxPipeline(self._create_voiceover_task, options_as_files=True).run(cache.voiceover, files)
 
 
         @logger.phase(cache.delete_voices)
         def _():
-            BrainBoxUnit(self._create_delete_task).run(cache.delete_voices, files)
+            BrainBoxPipeline(self._create_delete_task).run(cache.delete_voices, files)
 
         lst = []
         for filename, file in cache.voiceover.read_cases_and_options():

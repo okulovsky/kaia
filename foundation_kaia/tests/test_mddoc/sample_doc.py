@@ -1,4 +1,4 @@
-from foundation_kaia.mddoc import ControlValue
+from foundation_kaia.releasing.mddoc import ControlValue
 
 cv = ControlValue.mddoc_define_control_value(3)
 

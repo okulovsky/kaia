@@ -3,13 +3,14 @@ from foundation_kaia.fork import Fork
 from foundation_kaia.marshalling import ApiUtils
 import requests
 import time
-from flask import Flask
+import uvicorn
+from fastapi import FastAPI
 
 class Server:
     def __call__(self):
-        app = Flask("TestApp")
-        app.add_url_rule('/', view_func=self.index, methods=['GET'])
-        app.run('127.0.0.1', 8099)
+        app = FastAPI()
+        app.add_api_route('/', self.index, methods=['GET'])
+        uvicorn.run(app, host='127.0.0.1', port=8099)
 
     def index(self):
         return 'OK'
