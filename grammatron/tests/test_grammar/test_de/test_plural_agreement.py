@@ -1,48 +1,54 @@
 import unittest
-from grammatron import DubParameters, CardinalDub, OptionsDub
-from grammatron.grammars.de import DePluralAgreement, DeGrammarRule, DeCasus, DeArticleType
-
-PARAMETERS = DubParameters(language='de')
+from grammatron.grammars.de import DeDeclinator, DeCasus, DeGenus, DeNumerus, DeArticleType, DePluralAgreement
+from grammatron import Template, CardinalDub, OptionsDub, DubParameters, DeGrammarRule
 
 
-class TestDePluralAgreement(unittest.TestCase):
+class NounDeclinationTestCase(unittest.TestCase):
+    def check(self, expected, vocabular, numerus, casus):
+        prop = {
+            DeCasus.NOMINATIV: "",
+            DeCasus.GENITIV: "wegen ",
+            DeCasus.DATIV: "mit ",
+            DeCasus.AKKUSATIV: "für "
+        }[casus]
 
-    def test_singular(self):
-        ag = DePluralAgreement(CardinalDub().as_variable('amount'), 'Hund')
-        result = ag.to_str(dict(amount=1), PARAMETERS)
+        amount_value = 1 if numerus == DeNumerus.SINGULAR else 5
 
-        self.assertEqual("eins Hund", result)
-        # Is it really literate? I think in this case it should be ein Hund, eine Gurke, etc.
-        # Test for other Genus as well
+        amount = CardinalDub().as_variable('amount')
+        template = Template(de=f"{prop}{DePluralAgreement(amount, vocabular)}")
+        result = template.to_str(dict(amount = amount_value), DubParameters(language='de', grammar_rule=DeGrammarRule(casus=casus)))
 
-    def test_plural(self):
-        ag = DePluralAgreement(CardinalDub().as_variable('amount'), 'Hund')
-        result = ag.to_str(dict(amount=3), PARAMETERS)
-        self.assertIn('drei', result)
-        self.assertIn('Hunde', result)
+        self.assertEqual(expected, result)
 
-    def test_plural_five(self):
-        ag = DePluralAgreement(CardinalDub().as_variable('amount'), 'Haus')
-        result = ag.to_str(dict(amount=5), PARAMETERS)
-        self.assertIn('fünf', result)
-        self.assertIn('Häuser', result)
+    def test_masc(self):
+        v = "klein Hund"
+        self.check("ein kleiner Hund",        v, DeNumerus.SINGULAR, DeCasus.NOMINATIV)
+        self.check("wegen eines kleinen Hunds",  v, DeNumerus.SINGULAR, DeCasus.GENITIV)
+        self.check("mit einem kleinen Hund",     v, DeNumerus.SINGULAR, DeCasus.DATIV)
+        self.check("für einen kleinen Hund",     v, DeNumerus.SINGULAR, DeCasus.AKKUSATIV)
+        self.check("fünf kleine Hunde",          v, DeNumerus.PLURAL,   DeCasus.NOMINATIV)
+        self.check("wegen fünf kleiner Hunde",   v, DeNumerus.PLURAL,   DeCasus.GENITIV)
+        self.check("mit fünf kleinen Hunden",    v, DeNumerus.PLURAL,   DeCasus.DATIV)
+        self.check("für fünf kleine Hunde",      v, DeNumerus.PLURAL,   DeCasus.AKKUSATIV)
 
-    def test_with_article_plural(self):
-        # With definite article: article goes before the entire phrase → "die drei Gurken"
-        ag = DePluralAgreement(
-            CardinalDub().as_variable('amount'), 'Gurke'
-        ).grammar.de(article_type=DeArticleType.WEAK)
-        result = ag.to_str(dict(amount=3), PARAMETERS)
-        self.assertEqual("die drei Gurken", result) # isn't it extremely specific case, like "(exactly these) three cucumbers"?
+    def test_fem(self):
+        v = "klein Gurke"
+        self.check("eine kleine Gurke",          v, DeNumerus.SINGULAR, DeCasus.NOMINATIV)
+        self.check("wegen einer kleinen Gurke",  v, DeNumerus.SINGULAR, DeCasus.GENITIV)
+        self.check("mit einer kleinen Gurke",    v, DeNumerus.SINGULAR, DeCasus.DATIV)
+        self.check("für eine kleine Gurke",      v, DeNumerus.SINGULAR, DeCasus.AKKUSATIV)
+        self.check("fünf kleine Gurken",         v, DeNumerus.PLURAL,   DeCasus.NOMINATIV)
+        self.check("wegen fünf kleiner Gurken",  v, DeNumerus.PLURAL,   DeCasus.GENITIV)
+        self.check("mit fünf kleinen Gurken",    v, DeNumerus.PLURAL,   DeCasus.DATIV)
+        self.check("für fünf kleine Gurken",     v, DeNumerus.PLURAL,   DeCasus.AKKUSATIV)
 
-
-    def test_with_casus(self):
-        ag = DePluralAgreement(
-            CardinalDub().as_variable('amount'), 'Hund'
-        ).grammar.de(casus=DeCasus.DATIV)
-        result = ag.to_str(dict(amount=3), PARAMETERS)
-        self.assertEqual('drei Hunden', result)
-
-
-if __name__ == '__main__':
-    unittest.main()
+    def test_neu(self):
+        v = "klein Haus"
+        self.check("ein kleines Haus",             v, DeNumerus.SINGULAR, DeCasus.NOMINATIV)
+        self.check("wegen eines kleinen Hauses",   v, DeNumerus.SINGULAR, DeCasus.GENITIV)
+        self.check("mit einem kleinen Haus",       v, DeNumerus.SINGULAR, DeCasus.DATIV)
+        self.check("für ein kleines Haus",         v, DeNumerus.SINGULAR, DeCasus.AKKUSATIV)
+        self.check("fünf kleine Häuser",           v, DeNumerus.PLURAL,   DeCasus.NOMINATIV)
+        self.check("wegen fünf kleiner Häuser",    v, DeNumerus.PLURAL,   DeCasus.GENITIV)
+        self.check("mit fünf kleinen Häusern",     v, DeNumerus.PLURAL,   DeCasus.DATIV)
+        self.check("für fünf kleine Häuser",       v, DeNumerus.PLURAL,   DeCasus.AKKUSATIV)

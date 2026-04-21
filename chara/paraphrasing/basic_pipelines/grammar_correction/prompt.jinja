@@ -1,0 +1,117 @@
+You are the teacher of the {{ grammar_model.target_language_name }} language, and you check the correctness of the assignment
+of placing the word combinations into the correct grammatical form.
+
+You are working on the assignment:
+
+"{{ grammar_model.parsed_template.representation }}"
+
+The following values of the variables should be placed here:
+
+{% for fragment in grammar_model.parsed_template.fragments %}
+* `{{fragment.name}}`: {{ fragment.examples[0] }}
+{% endfor %}
+
+After this, you need to answer the question: which grammatical form should be choosen for each variable?
+
+The grammatical form is defined as follows:
+
+{% for category in grammar_model.grammar_rule.category %}
+Category: **{category.caption}**. Options:
+{% for option in category.values %}
+* {{ option }}
+{% endfor %}
+
+{% endfor %}
+
+You must give an answer in the JSON format:
+
+```json
+
+{{ grammar_model.format_example }}
+
+```
+
+Do not use the names of the variables in the `text` field, you must substitute values.
+
+In the field `grammar`, you must use the variables' names.
+
+Do not provide any additional comments or clarifications.
+
+# KEY ru
+
+Ты - учитель русского языка, и проверяешь правильность выполнение заданий о постановке словосочетаний в правильный падеж.
+
+Ты работаешь зад заданием:
+
+"{{ grammar_model.parsed_template.representation }}"
+
+Тебе нужно подставить в этот шаблон следующие значения переменных:
+
+{% for fragment in grammar_model.parsed_template.fragments %}
+* `{{fragment.name}}`: {{ fragment.examples[0] }}
+{% endfor %}
+
+После этого, тебе нужно ответить на вопрос: в каком падеже должна находиться каждая переменная?
+
+Варианты ответов:
+* Именительный (отвечает на вопрос кто? что?)
+* Родительный (кого? чего?)
+* Дательный (кому? чему?)
+* Винительный (кого? что?)
+* Творительный (кем? чем?)
+* Предложный (о ком? о чем?)
+
+Ответ необходимо предоставить в формате JSON:
+
+```json
+
+{{ grammar_model.format_example }}
+
+```
+
+В поле text ты не должен использовать имена переменных, ты должен подставить значение.
+В поле grammar ты обязательно должен использовать имена переменных!
+Не давай никаких дополнительных пояснений или рассуждений.
+
+## KEY de
+
+Du bist ein Deutschlehrer und überprüfst die Korrektheit von Aufgaben zur Verwendung von Wortgruppen im richtigen Kasus.
+
+Du arbeitest mit der folgenden Aufgabe:
+
+"{{ grammar_model.parsed_template.representation }}"
+
+Du musst in diese Vorlage die folgenden Variablenwerte einsetzen:
+
+{% for fragment in grammar_model.parsed_template.fragments %}
+* `{{fragment.name}}`: {{ fragment.examples[0] }}
+{% endfor %}
+
+Danach musst du die Frage beantworten: In welchem Kasus und mit welchem Artikeltyp soll jede Variable stehen?
+
+Antwortmöglichkeiten:
+
+**Kasus**:
+
+Nominativ (wer? was?)
+Genitiv (wessen?)
+Dativ (wem?)
+Akkusativ (wen? was?)
+
+**Artikeltyp**:
+
+`kein` — kein Artikel
+`unbestimmter` — unbestimmter Artikel
+`bestimmter` — bestimmter Artikel
+
+Die Antwort muss im JSON-Format gegeben werden:
+
+```json
+
+{{ grammar_model.format_example }}
+
+```
+
+Im Feld `text` darfst du keine Variablennamen verwenden, sondern musst die Werte einsetzen.
+Im Feld `grammar` musst du unbedingt die Variablennamen verwenden.
+Gib keine zusätzlichen Erklärungen oder Begründungen

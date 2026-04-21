@@ -17,7 +17,7 @@ class WordTranslationCase:
 
 
 
-class WordTransformer:
+class WordTranslationCaseManager:
     def __init__(self,
                  templates: list[Template],
                  also_translate_options_header: bool = False
@@ -25,8 +25,25 @@ class WordTransformer:
         self.templates = templates
         self.also_translate_options_header = also_translate_options_header
         self.word_to_language_to_locations = {}
-        for template in templates:
-            self._parse_template(template)
+
+    def prepare(self) -> list[WordTranslationCase]:
+        for template in self.templates:
+            parsed_template = ParsedTemplate.parse_single(template)
+            language = parsed_template.original_language
+            locations = self._get_locations(parsed_template)
+            for location in locations:
+                word = location.get()
+                if word not in self.word_to_language_to_locations:
+                    self.word_to_language_to_locations[word] = {}
+                if language not in self.word_to_language_to_locations[word]:
+                    self.word_to_language_to_locations[word][language] = []
+                self.word_to_language_to_locations[word][language].append(location)
+
+        cases = []
+        for word in self.word_to_language_to_locations:
+            for language in self.word_to_language_to_locations[word]:
+                cases.append(WordTranslationCase(word, language, Language.from_code(language).name))
+        return cases
 
     def _get_locations(self, parsed_template: ParsedTemplate) -> list[IWordLocation]:
         result = []
@@ -42,25 +59,6 @@ class WordTransformer:
                         result.append(OptionHeaderLocation(variable.dub, value))
         return result
 
-    def _parse_template(self, template: Template):
-        parsed_template = ParsedTemplate.parse_single(template)
-        language = parsed_template.original_language
-        locations = self._get_locations(parsed_template)
-        for location in locations:
-            word = location.get()
-            if word not in self.word_to_language_to_locations:
-                self.word_to_language_to_locations[word] = {}
-            if language not in self.word_to_language_to_locations[word]:
-                self.word_to_language_to_locations[word][language] = []
-            self.word_to_language_to_locations[word][language].append(location)
-
-
-    def get_cases(self) -> list[WordTranslationCase]:
-        cases = []
-        for word in self.word_to_language_to_locations:
-            for language in self.word_to_language_to_locations[word]:
-                cases.append(WordTranslationCase(word, language, Language.from_code(language).name))
-        return cases
 
     def _apply_cases(self, cases: list[WordTranslationCase], condition: Callable[[IWordLocation], bool]):
         for translation in cases:
@@ -68,9 +66,10 @@ class WordTransformer:
                 if condition(location):
                     location.set(translation.translation)
 
-    def apply_cases(self, cases: list[WordTranslationCase]):
+    def apply(self, cases: list[WordTranslationCase]) -> list[Template]:
         self._apply_cases(cases, lambda loc: not isinstance(loc, OptionHeaderLocation))
         self._apply_cases(cases, lambda loc: isinstance(loc, OptionHeaderLocation))
+        return self.templates
 
 
 

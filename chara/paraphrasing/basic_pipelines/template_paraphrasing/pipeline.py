@@ -12,11 +12,13 @@ from dataclasses import dataclass
 @dataclass
 class TemplateParaphraseCase:
     info: Any
-    target_language: str
-    parsed_template: ParsedTemplate
+    parsed_template: ParsedTemplate|None
+
+    target_language_code: str|None = None
+    target_language_name: str|None = None
 
     template: Template|None = None
-    target_language_name: str|None = None
+
 
 
 class TemplateParaphraseCache(ICache[list[TemplateParaphraseCase]]):
@@ -33,7 +35,7 @@ class TemplateParaphrasePipeline:
     def _merge(self, case: TemplateParaphraseCase, option: str):
         try:
             parsed_template = case.parsed_template
-            template = parsed_template.restore_template(option, case.target_language)
+            template = parsed_template.restore_template(option, case.target_language_code)
             new_case = copy.deepcopy(case)
             new_case.template = template
             return new_case
@@ -44,7 +46,9 @@ class TemplateParaphrasePipeline:
 
     def __call__(self, cache: TemplateParaphraseCache, cases: list[TemplateParaphraseCase]):
         for case in cases:
-            case.target_language_name = Language.from_code(case.target_language).name
+            if case.target_language_code is None:
+                case.target_language_code = case.parsed_template.original_language
+            case.target_language_name = Language.from_code(case.target_language_code).name
 
         @logger.phase(cache.llm, "Running LLM")
         def _():

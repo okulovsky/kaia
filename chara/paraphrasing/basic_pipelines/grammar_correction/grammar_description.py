@@ -40,12 +40,22 @@ class GrammarRuleDescription:
                 categories=(
                     GrammarCategoryDescription(
                         'casus',
-                        {c.name: c for c in DeCasus},
+                        'Kasus',
+                        {
+                            "Nominative": DeCasus.NOMINATIV,
+                            "Genitiv": DeCasus.GENITIV,
+                            "Dativ": DeCasus.DATIV,
+                            "Akkusativ": DeCasus.AKKUSATIV,
+                        },
                     ),
                     GrammarCategoryDescription(
                         "article_type",
-                        {c.name: c for c in DeArticleType},
-                        explanation="Which article is suggested for the group in case it's singular: STRONG (no article), WEAR (der/die/das), MIXED (ein/eine)"
+                        'Artikeltyp',
+                        {
+                            "kein" : DeArticleType.STRONG,
+                            "bestimmter": DeArticleType.WEAK,
+                            "unbestimmter": DeArticleType.MIXED
+                        },
                     )
                 ))
 

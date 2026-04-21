@@ -1,1 +1,1 @@
-from .pipeline import OptionExpandingPipeline, OptionExpandingCache
+from .pipeline import OptionExpandingPipeline, OptionExpandingCaseManager, OptionExpandingCache

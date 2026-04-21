@@ -10,7 +10,7 @@ from typing import Any
 @dataclass
 class GrammarModel:
     original_template: Template
-    sequence: ParsedTemplate
+    parsed_template: ParsedTemplate
     target_language_code: str
     target_language_name: str
     grammar_rule: GrammarRuleDescription
@@ -18,7 +18,7 @@ class GrammarModel:
 
     def __post_init__(self):
         example = {}
-        for field in self.sequence.fragments:
+        for field in self.parsed_template.fragments:
             example[field.name] = {}
             for category in self.grammar_rule.categories:
                 example[field.name][category.caption] = random.choice(list(category.values.keys()))
@@ -26,10 +26,12 @@ class GrammarModel:
         self.format_example = json.dumps(example, indent = 2, ensure_ascii=False).replace('\n','\n\n')
 
     @staticmethod
-    def build(template: Template) -> 'GrammarModel':
+    def build(template: Template) -> 'GrammarModel|None':
         parsed_template = ParsedTemplate.parse_single(template)
         language = parsed_template.original_language
         rule = GrammarRuleDescription.for_language(language)
+        if rule is None:
+            return None
         return GrammarModel(
             template,
             parsed_template,
@@ -41,7 +43,7 @@ class GrammarModel:
     def apply(self, grammar_advice: Any):
         grammar_advice = grammar_advice['grammar']
         for variable_name, variable_grammar in grammar_advice.items():
-            fragment = next((f for f in self.sequence.fragments if f.name == variable_name))
+            fragment = next((f for f in self.parsed_template.fragments if f.name == variable_name))
             grammar_rule = fragment.dub.grammar.get_grammar(self.target_language_code)
             for category in self.grammar_rule.categories:
                 provided_value = grammar_advice[variable_name][category.caption]

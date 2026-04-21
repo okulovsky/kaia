@@ -24,7 +24,9 @@ dependencies = [
     "regex",
     "inflect",
     "lemminflect",
-    "pymorphy3"
+    "pymorphy3",
+    "simplemma",
+    "german_nouns"
 ]
 
 classifiers = [

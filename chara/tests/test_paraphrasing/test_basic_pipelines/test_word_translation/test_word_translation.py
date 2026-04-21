@@ -1,6 +1,6 @@
 from chara.common import logger, CharaApis
 from chara.common.tools.llm import PromptTaskBuilder
-from chara.paraphrasing.basic_pipelines.template_words_translation import WordTranslationPipeline, WordTranslationCache
+from chara.paraphrasing.basic_pipelines.words_translation import WordTranslationPipeline, WordTranslationCache, WordTranslationCaseManager
 from unittest import TestCase
 from chara.tests.test_voice_clone.test_common.test_chatterbox import ChatterboxTrainTest
 from grammatron import Template, OptionsDub, CardinalDub, PluralAgreement
@@ -38,17 +38,20 @@ class TestWordTranslationPipeline(TestCase):
             Template(ru=f"Нужно купить {OptionsDub(['banana', 'orange']).as_variable('fruit')}"),
             Template(de=f"Ich gehe in {OptionsDub(['bathroom', 'living room']).as_variable('room')}")
         ]
+        manager = WordTranslationCaseManager(templates)
+
         with Loc.create_test_folder() as folder:
             with BrainBox.Api.serverless_test([OllamaMock(), Collector()]) as api:
                 CharaApis.brainbox_api = api
                 cache = WordTranslationCache(folder)
                 pipe = WordTranslationPipeline(PromptTaskBuilder("test", f))
-                pipe(cache, templates)
+                pipe(cache, manager.prepare())
                 result = cache.read_result()
 
-        self.assertEqual("Таймер заведен на десять минут", result[0].utter(10).to_str())
-        self.assertEqual("Нужно купить банан", result[1].utter('banana').to_str())
-        self.assertEqual("Ich gehe in Wohnzimmer", result[2].utter("living room").to_str())
+        result_templates = manager.apply(result)
+        self.assertEqual("Таймер заведен на десять минут", result_templates[0].utter(10).to_str())
+        self.assertEqual("Нужно купить банан", result_templates[1].utter('banana').to_str())
+        self.assertEqual("Ich gehe in Wohnzimmer", result_templates[2].utter("living room").to_str())
 
 
     def test_with_translating_headers(self):
@@ -57,16 +60,18 @@ class TestWordTranslationPipeline(TestCase):
             Template(ru=f"Нужно купить {OptionsDub(['banana', 'orange']).as_variable('fruit')}"),
             Template(de=f"Ich gehe in {OptionsDub(['bathroom', 'living room']).as_variable('room')}")
         ]
+        manager = WordTranslationCaseManager(templates)
         with Loc.create_test_folder() as folder:
             with BrainBox.Api.serverless_test([OllamaMock(), Collector()]) as api:
                 CharaApis.brainbox_api = api
                 cache = WordTranslationCache(folder)
                 pipe = WordTranslationPipeline(PromptTaskBuilder("test", f), also_translate_option_headers=True)
-                pipe(cache, templates)
+                pipe(cache, manager.prepare())
                 result = cache.read_result()
 
+        result = manager.apply(result)
         self.assertEqual("Таймер заведен на десять минут", result[0].utter(10).to_str())
-        #self.assertEqual("Нужно купить банан", result[1].utter('банан').to_str())
-        #self.assertEqual("Ich gehe in Wohnzimmer", result[2].utter("Wohnzimmer").to_str())
+        self.assertEqual("Нужно купить банан", result[1].utter('банан').to_str())
+        self.assertEqual("Ich gehe in Wohnzimmer", result[2].utter("Wohnzimmer").to_str())
 
 

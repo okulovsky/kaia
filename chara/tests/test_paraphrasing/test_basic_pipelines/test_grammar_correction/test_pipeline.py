@@ -31,20 +31,20 @@ class GrammarCorrectiomPipelineTestCase(TestCase):
     def test_grammar_correction_pipeline(self):
         options = OptionsDub(['банан', 'яблоко', 'груша']).as_variable('fruit')
         template = Template(ru=f"Я съел {PluralAgreement(CardinalDub().as_variable('amount'), options)}")
-        case = GrammarCorrectionCase(None, template)
+        manager = GrammarCorrectionCaseManager([template])
 
         with Loc.create_test_folder() as folder:
             with BrainBox.Api.serverless_test([OllamaMock(), Collector()]) as api:
                 CharaApis.brainbox_api = api
                 cache = GrammarCorrectionCache(folder)
-                pipe = GrammarCorrectionPipeline(
-                    dict(ru=PromptTaskBuilder('mistral')),
-                )
-                pipe(cache, [case])
+                pipe = GrammarCorrectionPipeline(PromptTaskBuilder('mistral'))
+                cases = manager.prepare()
+                pipe(cache, cases)
+                result = cache.read_result()
 
-            result = cache.read_result()
-            print(result[0].grammar_reply)
-            self.assertEqual(
-                "Я съел одну грушу",
-                result[0].template.to_str(dict(fruit='груша', amount=1))
-            )
+        print(result[0].grammar_reply)
+        templates = manager.apply(result)
+        self.assertEqual(
+            "Я съел одну грушу",
+            templates[0].to_str(dict(fruit='груша', amount=1))
+        )

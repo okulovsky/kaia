@@ -1,6 +1,6 @@
 from chara.common import CharaApis
 from chara.common.tools.llm import PromptTaskBuilder
-from chara.paraphrasing.basic_pipelines.options_expanding import OptionExpandingPipeline, OptionExpandingCache
+from chara.paraphrasing.basic_pipelines.options_expanding import OptionExpandingPipeline, OptionExpandingCaseManager, OptionExpandingCache
 from unittest import TestCase
 from grammatron import Template, OptionsDub
 from foundation_kaia.misc import Loc
@@ -36,13 +36,18 @@ class TestOptionExpandingPipeline(TestCase):
             Template(f"We need to buy {fruit_dub}"),
             Template(f"You ordered {fruit_dub_1}"),
         ]
+        manager = OptionExpandingCaseManager(templates)
+
         with Loc.create_test_folder() as folder:
             with BrainBox.Api.serverless_test([OllamaMock(), Collector()]) as api:
                 CharaApis.brainbox_api = api
                 cache = OptionExpandingCache(folder)
                 pipe = OptionExpandingPipeline(PromptTaskBuilder("test", f))
-                pipe(cache, templates)
+                pipe(cache, manager.prepare())
+                result = cache.read_result()
 
+        print(result)
+        templates = manager.apply(result)
         self.assertEqual("We need to buy kiwi", templates[0].to_str("kiwi"))
         with self.assertRaises(Exception):
             templates[0].to_str("lemon")

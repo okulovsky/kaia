@@ -42,8 +42,9 @@ class DeWordTools:
     @staticmethod
     def is_noun(word: str) -> bool:
         """Check exact spelling only — no lemma fallback.
-        This prevents "kleine" → simplemma → "Kleine" from matching the feminine noun "Kleine"."""
-        return bool(DeWordTools._noun_entries(word))
+        This prevents "kleine" → simplemma → "Kleine" from matching the feminine noun "Kleine".
+        Also requires capitalization: German nouns are always written with a capital letter."""
+        return bool(word) and word[0].isupper() and bool(DeWordTools._noun_entries(word))
 
     @staticmethod
     def is_adjective_in_base_form(word: str) -> bool:

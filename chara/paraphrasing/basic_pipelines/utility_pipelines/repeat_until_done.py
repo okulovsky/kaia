@@ -57,7 +57,7 @@ class RepeatUntilDonePipeline(Generic[T, TCache]):
                 def __():
                     self.inner_pipeline(subcache, active_cases)
 
-                attempt_result: list[T] = list(subcache.read_options())
+                attempt_result: list[T] = list(subcache.read_result())
                 if len(attempt_result) != len(active_cases):
                     raise ValueError(f"Pipeline must process all the cases provided, and return all of them. Cases submitted {len(active_cases)}, cases received {len(attempt_result)}")
                 active_cases = []
