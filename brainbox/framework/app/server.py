@@ -14,6 +14,7 @@ from brainbox.framework.job_processing.core.job import BrainBoxBase
 from brainbox.framework.common import BrainBoxLocations
 from brainbox.framework.controllers.architecture import ControllerRegistry
 from foundation_kaia.marshalling import ServiceComponent, StaticFilesComponent, IServer, WebAppEntryPoint
+from foundation_kaia.marshalling.amenities import DocumentationService
 
 from .batches.service import BatchesService
 from .diagnostics.service import DiagnosticsService
@@ -21,7 +22,6 @@ from .jobs.service import JobsService
 from .tasks.service import TasksService
 from .controllers.service import ControllersService
 from .controllers.side_process import SideProcessService, InstallationSideProcess, SelfTestSideProcess, SideProcessPool
-from .deciders.service import DeciderService
 from foundation_kaia.marshalling.amenities import Storage
 from brainbox.framework.common.streaming import StreamingStorage
 from foundation_kaia.misc import Loc
@@ -49,7 +49,6 @@ class BrainBoxServices:
     resources: Storage
     batches: BatchesService
     jobs: JobsService
-    decider: DeciderService
     install_side_process: SideProcessService
     self_test_side_process: SideProcessService
 
@@ -83,7 +82,6 @@ class BrainBoxServer(IServer):
             resources=Storage(settings.registry.resources_folder),
             batches=BatchesService(engine, core.command_queue),
             jobs=JobsService(engine, core.command_queue),
-            decider=DeciderService(settings.registry),
             install_side_process=SideProcessService(
                 pool,
                 lambda decider: InstallationSideProcess(settings.registry.get_controller(decider))
@@ -108,18 +106,22 @@ class BrainBoxServer(IServer):
         def heartbeat():
             return PlainTextResponse('OK')
 
-        ServiceComponent(services.jobs).mount(app)
-        ServiceComponent(services.batches).mount(app)
-        ServiceComponent(services.tasks).mount(app)
-        ServiceComponent(services.diagnostics).mount(app)
-        ServiceComponent(services.controllers).mount(app)
-        ServiceComponent(services.install_side_process, 'controllers-service/install').mount(app)
-        ServiceComponent(services.self_test_side_process, 'controllers-service/self-test').mount(app)
-        ServiceComponent(services.decider).mount(app)
-        ServiceComponent(services.cache, 'cache').mount(app)
-        ServiceComponent(services.streaming_cache, 'streaming-cache').mount(app)
-        ServiceComponent(services.resources, 'resources').mount(app)
+        service_components = [
+            ServiceComponent(services.jobs),
+            ServiceComponent(services.batches),
+            ServiceComponent(services.tasks),
+            ServiceComponent(services.diagnostics),
+            ServiceComponent(services.controllers),
+            ServiceComponent(services.install_side_process, 'controllers-service/install'),
+            ServiceComponent(services.self_test_side_process, 'controllers-service/self-test'),
+            ServiceComponent(services.cache, 'cache'),
+            ServiceComponent(services.streaming_cache, 'streaming-cache'),
+            ServiceComponent(services.resources, 'resources'),
+        ]
+        for sc in service_components:
+            sc.mount(app)
 
+        ServiceComponent(DocumentationService(service_components), 'doc').mount(app)
 
         StaticFilesComponent(Path(__file__).parent / 'static').mount(app)
 

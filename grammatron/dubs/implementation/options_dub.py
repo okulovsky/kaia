@@ -5,7 +5,7 @@ from enum import Enum
 
 class OptionsDub(CategoricalVariableDub):
     def __init__(self,
-                 options: Union[Dict[str, Any], Iterable[str], Type[Enum]]
+                 options: Union[Dict[str, Any], Iterable[str], Type[Enum]],
                  ):
         self.value_to_strs: dict[Any,list[str]] = {}
         if isinstance(options, dict):

@@ -80,4 +80,5 @@ class LlamaLoraSFTTrainerInterface:
         settings: TrainingSettings,
         dataset: FileLike,
     ) -> Iterable[BrainboxReportItem[TrainingRun]]:
+        """Fine-tunes a Llama model with a named LoRA adapter using SFT, streaming training progress."""
         ...

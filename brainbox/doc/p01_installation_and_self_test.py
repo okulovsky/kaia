@@ -1,14 +1,12 @@
 from brainbox import BrainBox
-from brainbox.deciders import HelloBrainBox
-from unittest import TestCase
+api = BrainBox.Api("http://127.0.0.1:8090")
 
-
-def install(test_case: TestCase, api: BrainBox.Api):
+if __name__ == '__main__':
     """
     # Python's API
 
     This is the simplest way to access the BrainBox functionality.
-    To use it, install BrainBox to your project with `pip install brainbox`
+    To use it, install BrainBox to your project with `pip install kaia-brainbox`
 
     To execute the following code, you need to run BrainBox and keep it running.
 
@@ -26,7 +24,7 @@ def install(test_case: TestCase, api: BrainBox.Api):
     ```python
     from brainbox import BrainBox
 
-    api = BrainBox.Api("127.0.0.1:8090")
+    api = BrainBox.Api("http://127.0.0.1:8090")
     api.wait_for_connection(1)
     ```
 
@@ -42,8 +40,7 @@ def install(test_case: TestCase, api: BrainBox.Api):
 
     from brainbox.deciders import HelloBrainBox
 
-    report = api.controllers.install(HelloBrainBox)
-    test_case.assertIsNotNone(report)
+    api.controllers.install.execute(HelloBrainBox)
 
     """
     Note that the container is not pulled, but built on your machine,
@@ -62,10 +59,7 @@ def install(test_case: TestCase, api: BrainBox.Api):
 
     Returned `report` can largely be ignored, it's only needed for
     GUI purposes.
-    """
 
-def self_test(test_case: TestCase, api: BrainBox.Api):
-    """
     ### Run a self-test
 
     The self-tests for the deciders run the most important endpoints,
@@ -80,13 +74,13 @@ def self_test(test_case: TestCase, api: BrainBox.Api):
     import requests, webbrowser, tempfile
     from pathlib import Path
 
-    api.controllers.self_test(HelloBrainBox)
-    self_test_report = requests.get(f'http://{api.address}/html/controllers/self_test_report/HelloBrainBox').text #TODO add the endpoint in the ControllersService
-    test_case.assertIsInstance(self_test_report, str)
+    key = api.controllers.self_test.start(HelloBrainBox)
+    api.controllers.self_test.join(key)
+    report = api.controllers.self_test.html_report(key)
 
     test_case_test_path = Path(tempfile.gettempdir()) / 'test_report.html'
     with open(test_case_test_path, 'w', encoding='utf-8') as file:
-        file.write(self_test_report)
+        file.write(report)
 
     """
 
@@ -96,9 +90,9 @@ def self_test(test_case: TestCase, api: BrainBox.Api):
     webbrowser.open('file://'+str(test_case_test_path))
     ```
 
-    While self-test reports provide some understanding of the endpoints,
-    I also recommend exploring the endpoints via HTTP page, and also 
-    reading the self-tests code: all the endpoints are called
+    Self-test reports provide some understanding of the endpoints.
+    I also recommend reading the controller's page in the BrainBox UI. 
+    Reading the self-tests code also helps a lot: all the endpoints are called
     in the same way you will call them from your Python code.
     
     Self-tests, building containers and other container-related things

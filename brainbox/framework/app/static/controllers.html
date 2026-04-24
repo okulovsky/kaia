@@ -100,10 +100,17 @@ async function loadControllers() {
 
       // Name
       const tdName = document.createElement('td');
-      const nameLink = document.createElement('a');
-      nameLink.href = '/static/decider.html?name=' + encodeURIComponent(c.name);
-      nameLink.textContent = c.name;
-      tdName.appendChild(nameLink);
+      tdName.textContent = c.name;
+      const docLink = document.createElement('a');
+      docLink.href = '/static/controller_doc.html?name=' + encodeURIComponent(c.name);
+      docLink.textContent = '[doc]';
+      docLink.style.cssText = 'margin-left:8px;font-size:0.8em;color:#0066cc;text-decoration:none';
+      const exLink = document.createElement('a');
+      exLink.href = '/static/controller_examples.html?name=' + encodeURIComponent(c.name);
+      exLink.textContent = '[examples]';
+      exLink.style.cssText = 'margin-left:6px;font-size:0.8em;color:#0066cc;text-decoration:none';
+      tdName.appendChild(docLink);
+      tdName.appendChild(exLink);
       tr.appendChild(tdName);
 
       // Installed

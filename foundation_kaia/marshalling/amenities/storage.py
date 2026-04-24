@@ -18,30 +18,37 @@ class FileDetails:
 class IStorage(ABC):
     @endpoint(is_pathlike='path')
     def list(self, path: str|Path, prefix: str|None = None, suffix: str|None = None, glob: bool|None = None) -> list[str]:
+        """Lists file names under path, optionally filtered by prefix, suffix, or glob."""
         ...
 
     @endpoint(is_pathlike='path')
     def list_details(self, path: str|Path, prefix: str|None = None, suffix: str|None = None, glob: bool|None = None) -> list[FileDetails]:
+        """Lists files with metadata under path, optionally filtered by prefix, suffix, or glob."""
         ...
 
     @endpoint(is_pathlike='filename', method='GET')
     def open(self, filename: str|Path) -> Iterable[bytes]:
+        """Streams the contents of a file as byte chunks."""
         ...
 
     @endpoint(is_pathlike='filename')
     def upload(self, filename: str|Path, data: FileLike|Iterable[bytes]) -> None:
+        """Uploads data to the given path, creating parent directories as needed."""
         ...
 
     @endpoint(is_pathlike='filename')
     def delete(self, filename: str|Path) -> None:
+        """Deletes a file or directory tree at the given path."""
         ...
 
     @endpoint(is_pathlike='filename')
     def is_file(self, filename: str|Path) -> bool:
+        """Returns True if the path refers to an existing file."""
         ...
 
     @endpoint(is_pathlike='filename')
     def is_dir(self, filename: str|Path) -> bool:
+        """Returns True if the path refers to an existing directory."""
         ...
 
     def read(self, filename: str|Path) -> bytes:

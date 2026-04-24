@@ -32,13 +32,16 @@ class PiperTrainingParameters:
 class PiperTrainingInterface:
     @brainbox_websocket
     def train(self, training_id: str, model: str, parameters: PiperTrainingParameters, dataset: Iterable[bytes]|FileLike) -> Iterable[BrainboxReportItem[list[CkptData]]]:
+        """Trains a Piper TTS voice model from a dataset archive, streaming checkpoint progress."""
         ...
 
 
     @brainbox_endpoint
     def export(self, ckpt: CkptData) -> FileLike:
+        """Exports a training checkpoint to a voice model file."""
         ...
 
     @brainbox_endpoint
     def delete(self, training_id: str) -> None:
+        """Deletes all data associated with a training session."""
         ...

@@ -1,4 +1,4 @@
-from brainbox.framework.containerized_brainbox import BrainBoxRunner
+from .container_runner import BrainBoxRunner
 from brainbox.framework import BrainBoxApi
 from threading import Thread
 from foundation_kaia.misc import Loc
@@ -7,7 +7,7 @@ from foundation_kaia.misc import Loc
 class ContainerizedBrainboxTestEnvironment:
     def __init__(self, runner: BrainBoxRunner|None = None):
         if runner is None:
-            runner = BrainBoxRunner(Loc.root_folder, 8090, True, debug=True)
+            runner = BrainBoxRunner(Loc.data_folder/'brainbox_in_container', 8090, True, debug=True)
         self.runner = runner
 
     def _run_container_thread(self):
@@ -16,7 +16,7 @@ class ContainerizedBrainboxTestEnvironment:
     def __enter__(self):
         self.runner.get_deployment().stop().remove().build()
         Thread(target=self._run_container_thread).start()
-        api = BrainBoxApi('127.0.0.1:8090')
+        api = BrainBoxApi('http://127.0.0.1:8090')
         api.wait_for_connection(60)
         return api
 

@@ -1,8 +1,10 @@
+import os
+
 from brainbox.framework.deployment import IContainerRunner, DockerArgumentsHelper, Deployment, LocalImageSource, LocalExecutor
 from dataclasses import dataclass
 from brainbox.framework import IExecutor, Command
 from pathlib import Path
-from .container_builder import create_brainbox_builder
+from .container_builder import BrainBoxImageBuilder
 from enum import Enum
 
 class BrainBoxRunnerPlaner(Enum):
@@ -38,6 +40,7 @@ class BrainBoxRunner(IContainerRunner):
 
 
     def run(self, image_name: str, container_name: str, executor: IExecutor):
+        os.makedirs(self.folder, exist_ok=True)
         restart = ['--restart', 'unless-stopped'] if self.auto_restart and not self.debug else []
 
 
@@ -71,7 +74,7 @@ class BrainBoxRunner(IContainerRunner):
             LocalImageSource('brainbox'),
             self,
             LocalExecutor(),
-            create_brainbox_builder()
+            BrainBoxImageBuilder()
         )
 
 

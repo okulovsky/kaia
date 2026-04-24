@@ -6,15 +6,21 @@ from datetime import datetime
 from threading import Thread
 
 from brainbox.framework.common import FileIO
-from brainbox.framework.controllers.architecture import ControllerRegistry
+from brainbox.framework.common.decider_model import DeciderModel
+from brainbox.framework.controllers.architecture import ControllerRegistry, ControllerOverDecider
 from brainbox.framework.controllers.docker_web_service_controller import DockerWebServiceApi
 from foundation_kaia.brainbox_utils import IModelLoadingSupport
 from foundation_kaia.logging import Logger
 from foundation_kaia.logging.simple import ExceptionItem
+from foundation_kaia.marshalling import SERVICE_ATTR
+from foundation_kaia.marshalling.reflector import DeclaredType
+from foundation_kaia.marshalling.documenter import ServiceDocumentation
+from foundation_kaia.marshalling.amenities.documentation_service.html_helper import build_snippet
 
 from .dto import (
     LogItem, InstallationReport, ControllerInstance, ControllerStatus,
     ControllersStatus, SelfTestResult, ControllersSetup,
+    SelfTestCaseDocumentation, MethodExamples, ControllerExamples,
 )
 from .interface import IControllersService
 from .logging import LoggingLocalExecutor, LoggingApiCallback
@@ -50,14 +56,14 @@ class ControllersService(IControllersService):
             controller = self._get_controller(name)
             instances = []
             for instance_id, parameter in controller.get_running_instances_id_to_parameter().items():
-                address = None
+                base_url = None
                 api = controller.find_api(instance_id)
                 if isinstance(api, DockerWebServiceApi):
-                    address = api.address
+                    base_url = api.base_url
                 instances.append(ControllerInstance(
                     instance_id=instance_id,
                     parameter=parameter,
-                    address=address,
+                    base_url = base_url,
                 ))
 
             report_path = self.self_test_folder / name
@@ -126,6 +132,63 @@ class ControllersService(IControllersService):
         path = self.self_test_folder / controller.get_name()
         if path.is_file():
             os.unlink(path)
+
+    def documentation(self, name: str) -> list[ServiceDocumentation]:
+        controller = self._get_controller(name)
+        if isinstance(controller, ControllerOverDecider):
+            return []
+        api_class = self.registry.get_api_class(name)
+        if api_class is None:
+            return []
+        dt = DeclaredType.parse(api_class)
+        result = []
+        for mro_elem in dt.mro:
+            if SERVICE_ATTR not in mro_elem.type.__dict__:
+                continue
+            tp = mro_elem.generic_type or mro_elem.type
+            result.append(ServiceDocumentation.parse(tp))
+        return result
+
+    def documentation_html(self, name: str) -> bytes:
+        docs = self.documentation(name)
+        return build_snippet(docs).encode('utf-8')
+
+    def examples(self, name: str) -> ControllerExamples:
+        api_class = self.registry.get_api_class(name)
+        controller = self.registry.get_controller(name)
+        if api_class is None:
+            return ControllerExamples(name=name, docstring=None, methods=[])
+
+        self_test_cases = list(controller.self_test_cases())
+        decider_model = DeciderModel.parse(api_class)
+
+        methods = []
+        for dm in decider_model.methods.values():
+            method_cases = []
+            for case in self_test_cases:
+                job_request = case.task.to_job_request()
+                if len(job_request.jobs) != 1:
+                    continue
+                job = job_request.jobs[0]
+                if job.method != dm.method_name:
+                    continue
+                method_cases.append(SelfTestCaseDocumentation(
+                    title=case.title,
+                    method=dm.method_name,
+                    arguments=job.arguments,
+                ))
+            methods.append(MethodExamples(
+                method_name=dm.method_name,
+                self_test_cases=method_cases,
+                is_file=list(dm.file_argument_names),
+                result_is_file=dm.result_is_file,
+            ))
+
+        return ControllerExamples(
+            name=name,
+            docstring=api_class.__doc__,
+            methods=methods,
+        )
 
     def setup(self, setup: ControllersSetup) -> None:
         for decider in setup.simple_deciders:

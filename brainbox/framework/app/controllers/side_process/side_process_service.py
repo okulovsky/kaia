@@ -8,22 +8,27 @@ from .side_process_pool import ISideProcess, SideProcessPool
 class ISideProcessService:
     @endpoint
     def start(self, decider: str) -> str:
+        """Launches a side process for the given decider and returns its key."""
         ...
 
     @endpoint
     def join(self, key: str) -> None:
+        """Blocks until the side process identified by key finishes."""
         ...
 
     @endpoint(method=HttpMethod.GET)
     def html_report(self, key: str) -> str:
+        """Returns the HTML execution report for a side process."""
         ...
 
     @endpoint(method=HttpMethod.GET)
     def is_running(self, key: str) -> bool:
+        """Returns True if the side process is still executing."""
         ...
 
     @endpoint
     def terminate(self, key: str) -> None:
+        """Forcibly stops a running side process."""
         ...
 
 

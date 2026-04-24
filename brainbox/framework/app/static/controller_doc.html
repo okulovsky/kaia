@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BrainBox - Documentation</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+  h1 { color: #333; }
+  nav { margin-bottom: 16px; }
+  nav a { margin-right: 12px; color: #0066cc; text-decoration: none; }
+  nav a:hover { text-decoration: underline; }
+  #status { color: #555; font-size: 0.9em; margin-bottom: 8px; }
+  #content { background: #fff; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 4px; }
+  .empty { color: #aaa; font-style: italic; }
+</style>
+</head>
+<body>
+<h1 id="page-title">BrainBox - Documentation</h1>
+<nav>
+  <a href="/static/controllers.html">&#8592; Controllers</a>
+</nav>
+<div id="status">Loading...</div>
+<div id="content"></div>
+
+<script>
+const name = new URLSearchParams(window.location.search).get('name') || '';
+document.getElementById('page-title').textContent = name + ' - Documentation';
+document.title = 'BrainBox - ' + name;
+
+async function load() {
+  try {
+    const resp = await fetch('/controllers-service/documentation-html/' + encodeURIComponent(name));
+    if (!resp.ok) {
+      document.getElementById('status').textContent = 'Error ' + resp.status + ': ' + await resp.text();
+      return;
+    }
+    const html = await resp.text();
+    document.getElementById('status').textContent = '';
+    const content = document.getElementById('content');
+    if (!html.trim()) {
+      content.innerHTML = '<p class="empty">No API documentation available for this controller.</p>';
+    } else {
+      content.innerHTML = html;
+    }
+  } catch (e) {
+    document.getElementById('status').textContent = 'Error: ' + e.message;
+  }
+}
+
+load();
+</script>
+</body>
+</html>

@@ -15,7 +15,7 @@ class IServer(ABC):
 
     def __call__(self):
         wp = self.create_web_app_entry_point()
-        print(f"Starting server on port {self.get_port()}")
+        print(f"Starting server on http://127.0.0.1:{self.get_port()}")
         wp.run()
 
 

@@ -10,10 +10,17 @@ class ControlValue:
         self.value = value
 
     def mddoc_validate_control_value(self, actual):
-        _tc.assertEqual(self.value, actual)
-        pprint(actual)
+        if callable(actual):
+            _tc.assertTrue(actual())
+            print("custom check passed")
+            pprint(self.value)
+        else:
+            _tc.assertEqual(self.value, actual)
+            pprint(actual)
+
 
 
     @staticmethod
     def mddoc_define_control_value(value):
         return ControlValue(value)
+

@@ -6,8 +6,8 @@ from ...common import ApiUtils, IDecider
 TController = TypeVar('TController')
 
 class DockerWebServiceApi(IDecider, Generic[TSettings, TController]):
-    def __init__(self, address: str|None, container_parameter: str|None = None):
-        self._custom_address = address
+    def __init__(self, base_url: str|None, container_parameter: str|None = None):
+        self._custom_base_url = base_url
         self._controller: DockerWebServiceController|None = None
         self._container_parameter = container_parameter
 
@@ -20,15 +20,15 @@ class DockerWebServiceApi(IDecider, Generic[TSettings, TController]):
         self._controller = controller
 
     @property
-    def address(self) -> str:
-        if self._custom_address is not None:
-            return self._custom_address
-        return self.controller.address
+    def base_url(self) -> str:
+        if self._custom_base_url is not None:
+            return self._custom_base_url
+        return self.controller.base_url
 
     def endpoint(self, endpoint=''):
         if len(endpoint)>0 and not endpoint.startswith('/'):
             endpoint='/'+endpoint
-        return 'http://'+self.address+endpoint
+        return self.base_url+endpoint
 
     @property
     def settings(self) -> TSettings:

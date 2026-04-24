@@ -1,10 +1,12 @@
 from brainbox import BrainBox
-from brainbox.deciders import HelloBrainBox
 from unittest import TestCase
-from brainbox.doc import run_all
+from foundation_kaia.releasing.mddoc import run_doc_files
+from pathlib import Path
+
 
 class ReadmeTestCase(TestCase):
     def test_readme(self):
-        with BrainBox.Api.Test() as api:
-            run_all(api, self)
+        with BrainBox.Api.test(port=8090) as api:
+            run_doc_files(self, Path(__file__).parent.parent/'doc')
+
 

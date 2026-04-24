@@ -24,6 +24,8 @@ class EndpointDocumentation:
         parts = [ep.endpoint_address]
         for p in ep.params.path_params:
             parts.append(f'<{p.name}>')
+        if ep.params.pathlike_param is not None:
+            parts.append(f'<{ep.params.pathlike_param.name}>')
         url = '/' + '/'.join(parts)
         query_parts = [f'{p.name}=<{p.name}>' for p in ep.params.query_params]
         if query_parts:

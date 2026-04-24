@@ -1,105 +1,49 @@
 # Description
 
-Kaia (Kitchen AI-Assistant) is an open-source home assistant with AI-generated voice, face and personality. 
-It employes state-of-the-art free models to generate content and personalize home assistant. 
+Kaia (Kitchen AI-Assistant) is an open-source, local-first 
+home assistant with AI-generated voice, face and personality.
 
-**The project is currently underconstruction**. 
-There is a stable part of the project, `BrainBox`, that is located in `/brainbox` 
-and has its own documentation and even Pypi-release.
-The voice assistant itself currently runs either on a normal computer or on a custom RaspberryPi device. 
-We are taking the steps to enable Kaia's frontent running on Android- and IOS-devices. 
-Once that happens, you will be able to enjoy the project at your home!  
+Kaia **is not** a gateway from a tablet to the paid AI in the cloud. 
+We believe the kitchen conversations should stay in the kitchen, and therefore only employ open-source, 
+self-hosted models in this project, so the assistant is completely private.
+We also believe that using a GPU machine 24/7 to power the kitchen assistant is extravagancy, 
+so all the AI in Kaia can be run on a decent laptop without GPU
+(however, the procedures to train or distill these AIs cannot).
+That for sure presents certain challenges, but is also a good example of a rational use of computational resources,
+as well as a demonstration of how much could actually be done in this setup.
 
+Kaia is designed to be more a toolbox than a product. 
+It does not contain all the skills imaginable you may use out of the box, 
+or a library of characters you can employ as your assistant. 
+Instead, Kaia contains the tools to create such skills or characters.
+This way, Kaia can be your companion in the world of AI,
+where you can experiment with AI on your own, and immediately see the results right in your kitchen.
 
-# Quick start
+This monorepo contains multiple projects.
 
-To run demo, the following external software is needed:
+* `kaia` is the runnable kitchen assistant. 
+It contains instructions on how to run the assistant on your machine or deploy it on the remote machine.
+* `brainbox` is a module that hosts over 15 AIs in the docker container, enabling the access to them via API or HTTP. 
+BrainBox is heavily used in Kaia, but can also employed in any pet project you want to create, isolating functionality
+such as voiceover or speech recognition. 
+It is very well documented and contains instructions on how to use brainbox both with Python API or with the raw HTTP requests
+* `chara` is a collection of scripts that are used to train and personalize the kitchen assistant. 
+Currently, there are scripts that allow you to clone the voice you choose and distill it as a small model that runs even on Raspberry Pi,
+as well as the scripts to paraphrase the utterances of the kitchen assistant with custom personality of the character.
+More are planned, e.g. training Kaia to recognize the family members by voice and face, create the characters' images
+and their own universes with the daily schedules, or train an NLU to recognize your speech on different languages.
+* `avatar` is a bridge that connects the world of AI with the frontend. It contains a webserver with a bus for messages
+that encode all the inputs and outputs: voice commands and replies, text messages, images change and so on. 
+It also contains middleware that employs `brainbox` to e.g. translate a text command emitted by Kaia into speech command.
+A TypeScript library with the widgets that perform these commands, as well as emit events from microphone or camera, 
+are also stored in `avatar`.
+* `grammatron` is a small NLG utility that allows you to define templates to transform variables in the coherent and 
+grammatically correct text. It supports English, Russian and German languages, but can be extended to other european 
+languages as well, and maybe even beyond. 
+* `eaglesong` is a small library that enables a natural way to write the conversations: instead of manually implementing
+the state machine that advances on the user's input, you can write it naturally in the format "say this, listen, then say that",
+and turn it in to state machine using Python generators mechanics. It is well documented.
+* `foundation_kaia` contains the utilities that are used by other modules. 
+The most important utility is `marshalling` that allows you to create a stereotypic FastAPI server and API
+from properly decorated and annotated class. It is well documented.
 
-* [Docker](http://docker.com) to manage containers. 
-  * On Windows, Docker Desktop app must run while demo is working. 
-  * On Linux, it must run with current user's priviliges.
-* [FFMPEG](http://ffmpeg.org) to manage sound files.
-  * On Windows, it must be accessible from command line with `ffmpeg`.
-* [PyAudio](https://pypi.org/project/PyAudio/).
-  * On Windows, no steps are required.
-  * On Linux, `sudo apt install python3-pyaudio`
-
-Then, you need to install [Anaconda](https://www.anaconda.com/) to manage the dependencies.
-
-## Creating the environment
-
-* Open Console in Linux or Anaconda Terminal in Windows
-
-* execute `conda create --name kaia python=3.11 -y`. 
-  * This will create an environment with Python 3.11. 
-
-* execute `conda activate kaia`
-  * This will activate the created environment 
-
-* change working dir to the root of the repository
-
-* execute `pip install -e .`
-
-If something went wrong during the installation or afterwards, reinstall the environment:
-
-* execute `conda deactivate`, if the environment is activated.
-
-* execute `conda remove --name kaia --all -y`
-
-* repeat steps to create the environment
-
-## Installing deciders
-
-Run `python kaia/demo/install.py`.
-
-This will build three AI systems that are required for the demo: 
-text-to-speech (OpenTTS) and two speech-to-text (Kaldi and Whisper),
-and also will download all the base models required.
-
-It takes a lot of time and traffic, so be patient.
-
-The script will also self-test these containers. 
-The HTML-reports about the self-testing will be located `data/brainbox_self_test/`
-
-## Running Kaia
-
-Run `python demos/kaia/run_demo.py`. No GPU is required for this.
-
-If everything is fine, you will see several warnings
-"WARNING: This is a development server. Do not use it in a production deployment.".
-Then, messages of shape "[Processing item] TimerTick(current_time=datetime.datetime(...))"
-will start appearing continuously.
-
-After that, you may open at this point, you may open `localhost:8890` in your web-browser.
-There should be a nice AI-generated image, and the text "Hello, nice to see you" in the chat control on the right.
-This sentence should also be said.
-
-To talk with Kaia, say wake word `computer`, wait for confirmation sound, 
-and utter the command, e.g. "What can you do?". After this, another confirmation sound
-should be emitted. 
-
-You may use the command "Computer! What can you do?" to get the list of available commands.
-
-### Troubleshooting
-
-If you hear "Hello, nice to see you", but the system doesn't hear you, you would need to adjust your input settings.
-They are located in `kaia/demo/run_demo.py`.
-
-If you say "computer" and then __do not__ hear a confirmation sound:
-check `mic_device_index`, by default it is set -1, which is default mic.
-Try to change the value, or physically find your system default mic and speak into it.
-Restart the app.
- 
-If you hear confirmation after "computer", but not after the command you say:
-you probably need to adjust your silence levels. 
-Go to 127.0.0.1:12111/graph - it draws a graph of everything you say in the mic within last couple of seconds.
-Find a value that clearly separates silence from signal, and put it in `silence_level` argument.
-Restart the app.
-
-If you hear both confirmation signals, but the command is consistantly misrecognized:
-Go to 121.0.0.1:8090 , this is BrainBox console. Find a job belonging to Rhasspy with ID like 
-`<ID>.rhasspy`.
-Then get the file `121.0.0.1:8090/file/<ID>.input.wav` and listen to this. 
-If you hear too high/too low pitch, wrong `sample_rate` is the reason. 
-Find out which sample rate your OS runs the mic, update the settings and restart the app.
- 

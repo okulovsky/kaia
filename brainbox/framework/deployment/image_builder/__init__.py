@@ -1,2 +1,3 @@
 from .image_builder import IImageBuilder
 from .small_image_builder import SmallImageBuilder
+from .repo_image_builder import RepoImageBuilder

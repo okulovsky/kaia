@@ -5,12 +5,12 @@ from enum import Enum
 
 class HelloBrainBoxModels(str, Enum):
     google = 'google'
-    facebook = 'duckduckgo'
+    facebook = 'facebook'
 
 @dataclass
 class HelloBrainBoxSettings:
     connection = ConnectionSettings(20000, 5)
     models_to_install = {
         'google': HelloBrainBoxModelSpec('https://google.com'),
-        'duckduckgo': HelloBrainBoxModelSpec('https://duckduckgo.com'),
+        'facebook': HelloBrainBoxModelSpec('https://facebook.com'),
     }

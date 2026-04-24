@@ -20,7 +20,7 @@ class InstallationReport:
 class ControllerInstance:
     instance_id: str
     parameter: str | None
-    address: str | None
+    base_url: str | None
 
 
 @dataclass
@@ -51,6 +51,28 @@ class SelfTestResult:
     name: str
     sections: list[str]
     error: str|None = None
+
+@dataclass
+class SelfTestCaseDocumentation:
+    title: str | None
+    method: str
+    arguments: dict
+
+
+@dataclass
+class MethodExamples:
+    method_name: str
+    self_test_cases: list[SelfTestCaseDocumentation]
+    is_file: list[str]
+    result_is_file: bool
+
+
+@dataclass
+class ControllerExamples:
+    name: str
+    docstring: str | None
+    methods: list[MethodExamples]
+
 
 @dataclass
 class ControllersSetup:

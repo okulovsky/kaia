@@ -1,8 +1,11 @@
 from brainbox import BrainBox
 from brainbox.deciders import HelloBrainBox
-from unittest import TestCase
+from foundation_kaia.releasing.mddoc import ControlValue
+api = BrainBox.Api("http://127.0.0.1:8090")
 
-def uploads(test_case: TestCase, api: BrainBox.Api):
+voice_embedding_1 = ControlValue.mddoc_define_control_value([0.0, 3.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+
+if __name__ == '__main__':
     """
     ### Upload files required by deciders
 
@@ -11,13 +14,15 @@ def uploads(test_case: TestCase, api: BrainBox.Api):
     """
     data = b'12112'
     result = api.execute(HelloBrainBox.new_task().voice_embedding(data))
-    test_case.assertEqual(3, result[1])
-    test_case.assertEqual(2, result[2])
 
     """
-    `HelloBrainBox::voice_embedding` counts the occurrences of bytes from `0` to `9` value
-    and returns a list of 10 counts — one per possible byte value.
+    This decider counts the occurrences of bytes from `0` to `9` value
+    and returns a list of 10 counts — one per possible byte value, so the result is:
+    """
 
+    voice_embedding_1.mddoc_validate_control_value(result)
+
+    """
     However, passing large binary data inline has the potential to overload the
     database, and should be avoided for large files.
 
@@ -27,11 +32,14 @@ def uploads(test_case: TestCase, api: BrainBox.Api):
 
     from brainbox import File
 
-    file = File('audio.bin', b'12112')
-    api.cache.upload(file.name, file)
-    result = api.execute(HelloBrainBox.new_task().voice_embedding(file.name))
-    test_case.assertEqual(3, result[ord(b'1')])
-    test_case.assertEqual(2, result[ord(b'2')])
+    api.cache.upload('test', b'12112')
+    result = api.execute(HelloBrainBox.new_task().voice_embedding('test'))
+
+    """
+    The result will remain the same:
+    """
+
+    voice_embedding_1.mddoc_validate_control_value(result)
 
     """
     By uploading the file to the cache folder first, you decouple the data

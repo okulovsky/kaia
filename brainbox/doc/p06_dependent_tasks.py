@@ -1,8 +1,13 @@
 from brainbox import BrainBox
 from brainbox.deciders import HelloBrainBox
-from unittest import TestCase
+from foundation_kaia.releasing.mddoc import ControlValue
+api = BrainBox.Api("http://127.0.0.1:8090")
 
-def dependent_tasks(test_case: TestCase, api: BrainBox.Api):
+result_1_control_value = ControlValue.mddoc_define_control_value([6, 16])
+result_2_control_value = ControlValue.mddoc_define_control_value(16)
+result_3_control_value = ControlValue.mddoc_define_control_value([[0.0, {'index': 0}], [1.0, {'index': 1}], [2.0, {'index': 2}], [3.0, {'index': 3}], [4.0, {'index': 4}]])
+
+if __name__ == '__main__':
     """
     ### Build a workflow from tasks
 
@@ -11,15 +16,35 @@ def dependent_tasks(test_case: TestCase, api: BrainBox.Api):
     task1 = HelloBrainBox.new_task().sum(2, 4)
     task2 = HelloBrainBox.new_task().sum(task1, 10)
     result = api.execute([task1, task2])
-    test_case.assertEqual(6, result[0])
-    test_case.assertEqual(16, result[1])
+
+    """
+    The result will be:
+    """
+
+    result_1_control_value.mddoc_validate_control_value(result)
+
 
     """
     In this case, `task1` will be executed before `task2`, and the output of
     `task1` will be used as an argument to `task2`.
+    
+    The same pipeline can be arranged in a more elegant way:
+    
     """
 
-def collector(test_case: TestCase, api: BrainBox.Api):
+    task = HelloBrainBox.new_task().sum(
+        10,
+        HelloBrainBox.new_task().sum(2,4)
+    )
+
+    result = api.execute(task)
+
+    """
+    The result will be:
+    """
+
+    result_2_control_value.mddoc_validate_control_value(result)
+
     """
     ### Collect the outputs of many tasks
 
@@ -32,41 +57,11 @@ def collector(test_case: TestCase, api: BrainBox.Api):
     from brainbox.deciders import Collector
 
     builder = Collector.TaskBuilder()
-    for i in range(10):
+    for i in range(5):
         builder.append(task=HelloBrainBox.new_task().sum(0, i), tags=dict(index=i))
     pack = builder.to_collector_pack('to_array')
-    array = api.execute(pack)
-    for item in array:
-        test_case.assertIsNone(item['error'])
-        test_case.assertEqual(item['tags']['index'], item['result'])
+    result = [[r['result'], r['tags']] for r in api.execute(pack)]
+    result_3_control_value.mddoc_validate_control_value(result)
 
 
-def media_library(test_case: TestCase, api: BrainBox.Api):
-    """
-    ### Collect the files from many tasks
 
-    One problem remains: if deciders return files, these files won't be collected.
-    To solve it, MediaLibrary structure is used. Essentially it's a zip-file
-    that contains all the outputs as well as tags.
-
-    """
-    from brainbox import MediaLibrary
-    from brainbox.deciders import Collector
-    import json
-
-    builder = Collector.TaskBuilder()
-    for i in range(3):
-        builder.append(
-            task=HelloBrainBox.new_task().voiceover(str(i), HelloBrainBox.Models.google),
-            tags=dict(index=i)
-        )
-    from pathlib import Path
-    import tempfile
-
-    pack = builder.to_collector_pack('to_media_library')
-    path = api.cache.download(api.execute(pack), Path(tempfile.gettempdir()))
-    ml = MediaLibrary.read(path)
-    for record in ml.records:
-        content = record.get_content()
-        tags = record.tags
-        test_case.assertEqual(str(tags['index']), json.loads(content)['text'])

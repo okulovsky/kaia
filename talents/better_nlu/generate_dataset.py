@@ -2,10 +2,11 @@ from chara.nlu.dataset import DatasetGenerationCache, DatasetGenerationPipeline,
 from foundation_kaia.misc import Loc
 from kaia.app import AssistantFactory
 from pprint import pprint
+import pickle
 
 if __name__ == "__main__":
     cache = DatasetGenerationCache(Loc.data_folder/'nlu-dataset')
-    cache.delete()
+    #cache.delete()
     pipe = DatasetGenerationPipeline(
         'mistral-small',
         [
@@ -30,6 +31,8 @@ if __name__ == "__main__":
     pipe(cache, templates)
 
     result = export_dataset(cache.read_result())
+    with open(Loc.data_folder/'nlu-dataset.pkl', 'wb') as file:
+        pickle.dump(result, file)
     for item in result:
         pprint(item)
 

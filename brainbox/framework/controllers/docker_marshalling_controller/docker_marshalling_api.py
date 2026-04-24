@@ -1,5 +1,5 @@
 from ..docker_web_service_controller import DockerWebServiceApi, TController
-from foundation_kaia.marshalling import ApiCall
+from foundation_kaia.marshalling import ApiCall, ApiUtils
 from .docker_marshalling_endpoint import DockerMarshallingApiCall
 from brainbox.framework.common.decider_model import DeciderModel
 from typing import Generic
@@ -13,4 +13,8 @@ class DockerMarshallingApi(DockerWebServiceApi[TSettings, TController], Generic[
         for name, decider_method in decider_model.methods.items():
             call = ApiCall('', decider_method.endpoint)
             setattr(self, name, DockerMarshallingApiCall(self, call, decider_method))
+
+    def wait_for_connection(self, timeout_in_seconds: int = 10):
+        ApiUtils.wait_for_reply(self.base_url, timeout_in_seconds)
+
 

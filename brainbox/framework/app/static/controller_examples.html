@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BrainBox - Examples</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+  h1, h2, h3 { color: #333; }
+  nav { margin-bottom: 16px; }
+  nav a { color: #0066cc; text-decoration: none; }
+  nav a:hover { text-decoration: underline; }
+  .method { background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; padding: 16px; border-radius: 4px; }
+  .method h2 { margin: 0 0 6px 0; font-size: 1.1em; font-family: monospace; }
+  table { border-collapse: collapse; margin-top: 4px; width: 100%; }
+  th { background: #ddd; padding: 4px 8px; text-align: left; font-size: 0.85em; }
+  td { padding: 4px 8px; border-bottom: 1px solid #eee; font-size: 0.85em; }
+  #status { color: #555; margin-bottom: 12px; }
+  .arg-list { margin: 0; padding: 0; list-style: none; }
+  .arg-list li { margin: 2px 0; font-size: 0.85em; }
+  .arg-name { font-family: monospace; font-weight: bold; color: #555; }
+  .btn-execute { padding: 3px 10px; cursor: pointer; border: 1px solid #0066cc; border-radius: 3px; background: #fff; color: #0066cc; font-size: 0.8em; margin-top: 6px; }
+  .btn-execute:hover:not(:disabled) { background: #e8f0fb; }
+  .btn-execute:disabled { opacity: 0.5; cursor: default; }
+  .result-cell { min-width: 160px; }
+  .result-running { color: #888; font-style: italic; font-size: 0.85em; }
+  .result-error { color: #c62828; font-size: 0.8em; white-space: pre-wrap; max-height: 120px; overflow: auto; }
+  .result-json { font-size: 0.8em; white-space: pre-wrap; max-height: 200px; overflow: auto; background: #f8f8f8; padding: 4px; }
+</style>
+</head>
+<body>
+<h1 id="page-title">BrainBox - Examples</h1>
+<nav>
+  <a href="/static/controllers.html">&#8592; Controllers</a>
+</nav>
+<div id="status">Loading...</div>
+<div id="content"></div>
+
+<script>
+const name = new URLSearchParams(window.location.search).get('name') || '';
+document.getElementById('page-title').textContent = name + ' - Examples';
+document.title = 'BrainBox - ' + name;
+
+
+const AUDIO_MIME = {wav: 'audio/wav', mp3: 'audio/mpeg', ogg: 'audio/ogg'};
+const IMAGE_MIME = {png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', bmp: 'image/bmp'};
+
+function renderFileWidget(value) {
+  if (!value || typeof value !== 'object') return null;
+  const content = value.content;
+  if (!content || content['@type'] !== 'bytes') return null;
+  const b64 = content.value;
+  const kind = value.kind;
+  const filename = value.name || '';
+  const ext = filename.split('.').pop().toLowerCase();
+
+  if (kind === 'Audio' || AUDIO_MIME[ext]) {
+    const mime = AUDIO_MIME[ext] || 'audio/wav';
+    const audio = document.createElement('audio');
+    audio.controls = true;
+    audio.style.height = '32px';
+    const source = document.createElement('source');
+    source.src = 'data:' + mime + ';base64,' + b64;
+    audio.appendChild(source);
+    const label = document.createElement('div');
+    label.style.cssText = 'font-size:0.8em;color:#888';
+    label.textContent = filename;
+    const wrap = document.createElement('div');
+    wrap.appendChild(audio);
+    wrap.appendChild(label);
+    return wrap;
+  }
+  if (kind === 'Image' || IMAGE_MIME[ext]) {
+    const mime = IMAGE_MIME[ext] || 'image/png';
+    const wrap = document.createElement('div');
+    const img = document.createElement('img');
+    img.src = 'data:' + mime + ';base64,' + b64;
+    img.style.cssText = 'max-width:200px;max-height:120px;display:block;margin-top:2px';
+    const label = document.createElement('div');
+    label.style.cssText = 'font-size:0.8em;color:#888';
+    label.textContent = filename;
+    wrap.appendChild(img);
+    wrap.appendChild(label);
+    return wrap;
+  }
+  if (kind === 'Text' || kind === 'Json') {
+    const text = atob(b64);
+    const pre = document.createElement('pre');
+    pre.style.cssText = 'margin:0;font-size:0.75em;max-height:80px;overflow:auto;background:#f8f8f8;padding:4px';
+    pre.textContent = text;
+    return pre;
+  }
+  const span = document.createElement('span');
+  span.style.cssText = 'color:#888;font-style:italic;font-size:0.85em';
+  span.textContent = (filename || 'file') + ' (~' + Math.round(b64.length * 3 / 4) + ' bytes)';
+  return span;
+}
+
+const STREAM_CACHE_AUDIO = new Set(['wav','mp3','ogg']);
+const STREAM_CACHE_IMAGE = new Set(['png','jpg','jpeg','bmp']);
+
+async function renderCachedFileWidget(filename) {
+  const ext = filename.split('.').pop().toLowerCase();
+  const url = '/cache/open/' + encodeURIComponent(filename);
+  if (STREAM_CACHE_AUDIO.has(ext)) {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('cache fetch ' + resp.status);
+    const objectUrl = URL.createObjectURL(await resp.blob());
+    const audio = document.createElement('audio');
+    audio.controls = true;
+    audio.style.height = '32px';
+    audio.src = objectUrl;
+    const label = document.createElement('div');
+    label.style.cssText = 'font-size:0.75em;color:#888';
+    label.textContent = filename;
+    const wrap = document.createElement('div');
+    wrap.appendChild(audio);
+    wrap.appendChild(label);
+    return wrap;
+  }
+  if (STREAM_CACHE_IMAGE.has(ext)) {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('cache fetch ' + resp.status);
+    const objectUrl = URL.createObjectURL(await resp.blob());
+    const wrap = document.createElement('div');
+    const img = document.createElement('img');
+    img.src = objectUrl;
+    img.style.cssText = 'max-width:200px;max-height:120px;display:block;margin-top:2px';
+    const label = document.createElement('div');
+    label.style.cssText = 'font-size:0.75em;color:#888';
+    label.textContent = filename;
+    wrap.appendChild(label);
+    wrap.appendChild(img);
+    return wrap;
+  }
+  const a = document.createElement('a');
+  a.href = url;
+  a.textContent = filename;
+  a.style.fontSize = '0.85em';
+  return a;
+}
+
+function uuid4() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = crypto.getRandomValues(new Uint8Array(1))[0];
+    return (c === 'x' ? r & 0xf : (r & 0x3 | 0x8)).toString(16);
+  });
+}
+
+async function executeJob(deciderName, methodName, args, resultIsFile, resultCell, btn) {
+  btn.disabled = true;
+  resultCell.innerHTML = '';
+  const running = document.createElement('span');
+  running.className = 'result-running';
+  running.textContent = 'Running…';
+  resultCell.appendChild(running);
+
+  try {
+    const jobId = uuid4();
+    const addResp = await fetch('/tasks-service/base-add', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({jobs: [{
+        id: jobId,
+        decider: deciderName,
+        parameter: null,
+        method: methodName,
+        arguments: args,
+        info: null,
+        batch: null,
+        ordering_token: null,
+        dependencies: {}
+      }]})
+    });
+    if (!addResp.ok) throw new Error('base-add ' + addResp.status + ': ' + await addResp.text());
+
+    const joinResp = await fetch('/tasks-service/base-join', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ids: [jobId]})
+    });
+    if (!joinResp.ok) throw new Error('base-join ' + joinResp.status + ': ' + await joinResp.text());
+
+    const results = await joinResp.json();
+    const result = results[0];
+    resultCell.innerHTML = '';
+
+    if (resultIsFile && typeof result === 'string') {
+      resultCell.appendChild(await renderCachedFileWidget(result));
+    } else if (result && typeof result === 'object' && result.content && result.content['@type'] === 'bytes') {
+      const widget = renderFileWidget(result);
+      if (widget) resultCell.appendChild(widget);
+      else resultCell.textContent = JSON.stringify(result);
+    } else {
+      const pre = document.createElement('pre');
+      pre.className = 'result-json';
+      pre.textContent = JSON.stringify(result, null, 2);
+      resultCell.appendChild(pre);
+    }
+  } catch (e) {
+    resultCell.innerHTML = '';
+    const err = document.createElement('pre');
+    err.className = 'result-error';
+    err.textContent = e.message;
+    resultCell.appendChild(err);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function renderArgValue(value, isFile) {
+  if (isFile) {
+    const widget = renderFileWidget(value);
+    if (widget) return widget;
+  }
+  const pre = document.createElement('pre');
+  pre.style.cssText = 'margin:0;font-size:0.8em';
+  pre.textContent = JSON.stringify(value, null, 2);
+  return pre;
+}
+
+async function load() {
+  try {
+    const resp = await fetch('/controllers-service/examples/' + encodeURIComponent(name));
+    if (!resp.ok) {
+      document.getElementById('status').textContent = 'Error ' + resp.status + ': ' + await resp.text();
+      return;
+    }
+    const doc = await resp.json();
+    document.getElementById('status').textContent = '';
+    const content = document.getElementById('content');
+    content.innerHTML = '';
+
+    for (const method of doc.methods || []) {
+      if (!method.self_test_cases || method.self_test_cases.length === 0) continue;
+      const div = document.createElement('div');
+      div.className = 'method';
+
+      const h2 = document.createElement('h2');
+      h2.textContent = method.method_name;
+      div.appendChild(h2);
+
+      {
+        const tbl = document.createElement('table');
+        const thead = document.createElement('thead');
+        thead.innerHTML = '<tr><th>Title</th><th>Arguments</th><th>Result</th></tr>';
+        tbl.appendChild(thead);
+        const tbody = document.createElement('tbody');
+        const fileArgs = new Set(method.is_file || []);
+        for (const sc of method.self_test_cases) {
+          const tr = document.createElement('tr');
+
+          const tdTitle = document.createElement('td');
+          tdTitle.textContent = sc.title || '—';
+          tr.appendChild(tdTitle);
+
+          const tdArgs = document.createElement('td');
+          const ul = document.createElement('ul');
+          ul.className = 'arg-list';
+          for (const [argName, argValue] of Object.entries(sc.arguments || {})) {
+            const li = document.createElement('li');
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'arg-name';
+            nameDiv.textContent = argName + ':';
+            li.appendChild(nameDiv);
+            const valueDiv = document.createElement('div');
+            valueDiv.style.paddingLeft = '8px';
+            valueDiv.appendChild(renderArgValue(argValue, fileArgs.has(argName)));
+            li.appendChild(valueDiv);
+            ul.appendChild(li);
+          }
+          tdArgs.appendChild(ul);
+          const btn = document.createElement('button');
+          btn.className = 'btn-execute';
+          btn.textContent = 'Execute';
+          tdArgs.appendChild(btn);
+          tr.appendChild(tdArgs);
+
+          const tdResult = document.createElement('td');
+          tdResult.className = 'result-cell';
+          tdResult.textContent = '—';
+          btn.onclick = () => executeJob(name, method.method_name, sc.arguments, method.result_is_file, tdResult, btn);
+          tr.appendChild(tdResult);
+
+          tbody.appendChild(tr);
+        }
+        tbl.appendChild(tbody);
+        div.appendChild(tbl);
+      }
+
+      content.appendChild(div);
+    }
+
+    if (content.children.length === 0) {
+      content.innerHTML = '<p style="color:#888">No self-test cases defined for this controller.</p>';
+    }
+  } catch (e) {
+    document.getElementById('status').textContent = 'Error: ' + e.message;
+  }
+}
+
+load();
+</script>
+</body>
+</html>

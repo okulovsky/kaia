@@ -104,7 +104,7 @@ class DockerMarshallingApiCall:
 
     def __call__(self, *args, **kwargs):
         model = self.preprocess(*args, **kwargs)
-        model.base_url = 'http://' + self.api.address
+        model.base_url = self.api.base_url
         result = self.call.make_call(model)
         return self.postprocess(result)
 
