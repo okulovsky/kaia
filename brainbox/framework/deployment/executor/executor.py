@@ -28,5 +28,8 @@ class IExecutor(ABC):
         command = Command(tuple(command), options)
         return self.execute_command(command)
 
+    def execute_shell(self, script: str):
+        self.execute(['bash', '-c', script])
+
 
 

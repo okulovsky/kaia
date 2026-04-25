@@ -1,9 +1,9 @@
 from typing import Callable, Any
 from dataclasses import dataclass, field
+from loguru import logger
 
 from avatar.daemon import TextCommand, MockSoundService
 from brainbox import BrainBox
-from brainbox.framework import ControllersSetup
 from .app import KaiaApp, IAppInitializer
 from avatar.messaging import AvatarDaemon
 from avatar import daemon as s
@@ -42,15 +42,7 @@ class AvatarDaemonAppSettings(IAppInitializer):
 
 
     def create_brainbox_service(self, app: KaiaApp, state: s.State):
-        setup = (
-            ControllersSetup()
-            .up(RhasspyKaldi)
-            .up(Whisper, model = 'base')
-            .up(Piper)
-            .up(Resemblyzer)
-            .up(InsightFace)
-        )
-        bbox = s.BrainBoxService(app.brainbox_api, setup)
+        bbox = s.BrainBoxService(app.brainbox_api)
         bbox.binding_settings.asynchronous(True)
         return bbox
 
@@ -164,7 +156,7 @@ class AvatarDaemonAppSettings(IAppInitializer):
 
             if app.brainbox_api is None and isinstance(service, AvatarService) and service.requires_brainbox():
                 continue
-            print(f'Binding {service}')
+            logger.info(f'Binding {service}')
             proc.rules.bind(service)
 
         app.avatar_processor = proc

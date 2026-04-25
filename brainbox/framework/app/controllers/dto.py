@@ -1,6 +1,5 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
-from ...controllers import ControllerRegistry, ControllerLike
 
 
 @dataclass
@@ -74,18 +73,3 @@ class ControllerExamples:
     methods: list[MethodExamples]
 
 
-@dataclass
-class ControllersSetup:
-    simple_deciders: list[str] = field(default_factory=list)
-    deciders_with_model: dict[str, str] = field(default_factory=dict)
-    deciders_with_parameters: dict[str, str] = field(default_factory=dict)
-
-    def up(self, decider: ControllerLike, *, model: str|None = None, parameter: str|None = None) -> 'ControllersSetup':
-        name = ControllerRegistry.to_controller_name(decider)
-        if model is not None:
-            self.deciders_with_model[name] = model
-        elif parameter is not None:
-            self.deciders_with_parameters[name] = parameter
-        else:
-            self.simple_deciders.append(name)
-        return self

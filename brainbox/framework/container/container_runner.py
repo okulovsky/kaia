@@ -40,7 +40,7 @@ class BrainBoxRunner(IContainerRunner):
 
 
     def run(self, image_name: str, container_name: str, executor: IExecutor):
-        os.makedirs(self.folder, exist_ok=True)
+        #os.makedirs(self.folder, exist_ok=True)
         restart = ['--restart', 'unless-stopped'] if self.auto_restart and not self.debug else []
 
 
@@ -69,13 +69,7 @@ class BrainBoxRunner(IContainerRunner):
         #print(command)
         executor.execute(command)
 
-    def get_deployment(self):
-        return Deployment(
-            LocalImageSource('brainbox'),
-            self,
-            LocalExecutor(),
-            BrainBoxImageBuilder()
-        )
+
 
 
 

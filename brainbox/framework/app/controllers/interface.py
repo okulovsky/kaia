@@ -1,6 +1,6 @@
 from foundation_kaia.marshalling import service, endpoint
 from foundation_kaia.marshalling.documenter import ServiceDocumentation
-from .dto import (ControllersStatus, InstallationReport, SelfTestResult, ControllersSetup, ControllerExamples)
+from .dto import (ControllersStatus, InstallationReport, SelfTestResult, ControllerExamples)
 
 
 @service
@@ -44,11 +44,6 @@ class IControllersService:
     @endpoint(method='POST')
     def delete_self_test(self, decider: str) -> None:
         """Clears the stored self-test result for a decider."""
-        ...
-
-    @endpoint(method='POST')
-    def setup(self, setup: ControllersSetup) -> None:
-        """Applies a bulk controller configuration."""
         ...
 
     @endpoint(method='GET')

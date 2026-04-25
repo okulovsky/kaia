@@ -1,6 +1,7 @@
 import os
 import shutil
 import webbrowser
+from loguru import logger
 from avatar.server import AvatarServerSettings, AvatarApi, AvatarStream, MessagingComponent
 from avatar.server.components import MainComponent, StaticPathsComponent, TypeScriptComponent, FileCacheComponent
 from avatar.daemon import ChatCommand, ImageCommand, ButtonGridCommand, InitializationEvent
@@ -32,7 +33,7 @@ if __name__ == '__main__':
             api.wait()
             webbrowser.open('http://'+api.address+'/main')
             for message in client.query():
-                print(message)
+                logger.info(message)
                 if isinstance(message, InitializationEvent):
                     img = api.file_cache.upload(FileIO.read_bytes(Path(__file__).parent / 'image.png'))
                     client.push(ImageCommand(img))

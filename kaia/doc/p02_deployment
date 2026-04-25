@@ -1,0 +1,124 @@
+## Deployment
+
+If you wish to use Kaia as a kitchen assistant, the best scenario is to deploy the backend
+to the home server ("remote machine"), and then run the frontend on a tablet device ("console").
+The deployment is easiest to do with a docker container, and we will
+separate this into two parts: BrainBox and everything else. The reason for this split
+is that BrainBox is very stable and rarely needs updates, and it's better to leave BrainBox and its child containers
+in peace. Avatar and Kaia, however, are areas of the active development, and most of the experiments and improvements
+will need these systems redeployed. Therefore, they are bundled into the second container.
+
+To build, deliver and run the containers, I use `brainbox.framework.deployment` subsystem,
+the same I use for managing the containers in BrainBox. I admit this choice is quetionable
+and perhaps more mature dev-ops infrastructure would be an improvement.
+With the current solution, however, I'm able to manage the deployment by running exactly one script and zero additional tools,
+which makes the onboarding easier for Python developers and especially Data Scientists, who are not always fluent with devops.
+Especially that there is still a ton of the infrastructural work to do.
+
+To deploy Kaia, you need to configure the remote and the local machines:
+* The remote machine is acessible via SSH without entering the password (e.g. with `ssh-copy-id`)
+* Docker is installed on both machines
+* `rsync` is installed on both machines
+
+Rename `environment.env.example` to `environment.env`,
+collect following information from the remote machine and place it in the file:
+* username
+* user id (`id -u`)
+* ip-address
+* the folder that will host all data related to Kaia
+
+Run `deploy_brainbox`. It will:
+* build container on the local machine
+* export the container as a tar file, unpackages it, and sync the files with the remote machine
+(only changed layers will be synced which accelerates the following delployments)
+* assembles the tar back at the remote machine, loads and runs it
+
+After that, BrainBox should be running at the remote machine on the port `8090`.
+
+I'm not completely sure why, but in this setup it might be the case that BrainBox won't be working
+because of the permissions to the `/var/run/docker.sock`. This dirty fix allows to solve this problem:
+
+```
+sudo tee /etc/systemd/system/docker-sock-chmod.service <<EOF
+[Unit]
+Description=Fix docker.sock permissions
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/chmod 666 /var/run/docker.sock
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+
+And then:
+```
+sudo systemctl daemon-reload
+sudo systemctl enable docker-sock-chmod.service
+```
+
+Then, run `deploy_kaia.py`. After that, the server will be running at `13000` port.
+
+Now the fun starts. Our frontend uses media devices, which means the HTML code must be obtained from trusted source,
+thus, localhost or via HTTPS. That means we need to install the HTTPS proxy on the remote machine.
+
+First, install Caddy:
+
+```
+sudo apt update
+
+sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https curl gnupg
+
+curl -fsSL https://dl.cloudsmith.io/public/caddy/stable/gpg.key \
+  | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+
+echo "deb [signed-by=/usr/share/keyrings/caddy-stable-archive-keyring.gpg] \
+https://dl.cloudsmith.io/public/caddy/stable/deb/ubuntu any-version main" \
+| sudo tee /etc/apt/sources.list.d/caddy-stable.list >/dev/null
+
+sudo apt update
+
+sudo apt install -y caddy
+```
+
+Create config file:
+
+```
+sudo tee /etc/caddy/Caddyfile >/dev/null <<EOF
+<ID_ADDRESS_OR_HOST>:13001 {
+    tls internal
+    reverse_proxy 127.0.0.1:13000
+}
+EOF
+```
+
+Restart Caddy:
+
+```
+sudo systemctl restart caddy
+```
+
+and export the certificate file:
+
+```
+sudo cp /var/lib/caddy/.local/share/caddy/pki/authorities/local/root.crt ~/caddy-root.crt
+
+sudo chown $USER:$USER ~/caddy-root.crt
+```
+
+then, download this file from server and copy to the console.
+There, you will need to add this certificate to the browser. We recommend Firefox to run Kaia,
+so there it can be done in the menu:
+
+* Settings → Privacy & Security
+* Certificates → View Certificates
+* Authorities → Import
+* Find caddy-root.crt on the console
+* Check "Trust this CA to identify websites"
+
+Now, you can open https://[your server ip]:13001 and complete microphone setup.
+
+

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from loguru import logger
 from kaia.assistant import KaiaSkillBase, CommonIntents
 from grammatron import *
 from kaia import  TickEvent, World
@@ -66,7 +67,7 @@ class WorkoutSkill(KaiaSkillBase):
         return isinstance(input, TickEvent) or input in CommonIntents.stop
 
     def _wait(self, seconds: int):
-        print(f'Now waiting for {seconds}')
+        logger.info(f'Now waiting for {seconds}')
         first_tick: TickEvent|None = None
         while True:
             tick = yield Listen()

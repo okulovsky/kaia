@@ -2,8 +2,10 @@ import uuid
 from collections.abc import Iterable
 from io import BytesIO
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeVar, Type
 from .file import File
+
+T = TypeVar('T')
 
 FileLike = Path | str | bytes | BytesIO | File
 
@@ -72,6 +74,28 @@ class FileLikeHandler:
                         yield json.dumps(item).encode('utf-8')
             return
         raise ValueError(f"{type(filelike)} is not a supported FileLike type")
+
+    @staticmethod
+    def to_jsonlines_iterable(filelike) -> Iterable[Any]:
+        import json
+        buffer = b''
+        for chunk in FileLikeHandler.to_bytes_iterable(filelike):
+            buffer += chunk
+            while b'\n' in buffer:
+                line, buffer = buffer.split(b'\n', 1)
+                line = line.strip()
+                if line:
+                    yield json.loads(line)
+        buffer = buffer.strip()
+        if buffer:
+            yield json.loads(buffer)
+
+    @staticmethod
+    def to_typed_jsonlines_iterable(filelike, element_type: Type[T]) -> Iterable[T]:
+        from ...serialization import Serializer
+        serializer = Serializer.parse(element_type)
+        for obj in FileLikeHandler.to_jsonlines_iterable(filelike):
+            yield serializer.from_json(obj)
 
     @staticmethod
     def to_bytes(filelike) -> bytes:

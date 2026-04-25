@@ -1,4 +1,5 @@
 from typing import Optional, Callable
+from loguru import logger
 from kaia import KaiaSkillBase, ButtonPressedEvent, ButtonGridCommand, World, Listen, Return
 from grammatron import *
 from ..notification_skill import NotificationRegister, NotificationInfo
@@ -70,7 +71,7 @@ class CookBookSkill(KaiaSkillBase):
 
     def run(self):
         while True:
-            print(f"TIME {self.datetime_factory()}")
+            logger.debug(f"TIME {self.datetime_factory()}")
             input = yield
             if isinstance(input, Utterance):
                 if input in CookBookIntents.recipe:

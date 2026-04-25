@@ -1,8 +1,8 @@
 from brainbox.framework.controllers.architecture.controller_registry import ControllerRegistry, ControllerLike
 from foundation_kaia.marshalling import ApiCall
-from .dto import ControllersSetup
 from .interface import IControllersService
 from .side_process import SideProcessApi
+from typing import Iterable
 
 
 class InternalControllersApi(IControllersService):
@@ -37,8 +37,9 @@ class ControllersApi:
     def self_test_report(self, decider: str|ControllerLike) -> str:
         return self._internal.self_test_report(self._name(decider))
 
-    def setup(self, setup: ControllersSetup):
-        return self._internal.setup(setup)
+
+
+
 
 
 

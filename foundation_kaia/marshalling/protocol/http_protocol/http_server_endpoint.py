@@ -1,4 +1,5 @@
 import asyncio
+import json
 import traceback
 from typing import Any, Callable
 from fastapi import Request
@@ -35,10 +36,10 @@ class HttpEndpointHandler:
         parse_content(kwargs, self._sync_stream(q, loop), self.model, content_type)
         return self.service(**kwargs)
 
-    def _build_binary_response(self, result) -> Response:
-        """Wrap a binary file result as a StreamingResponse."""
+    def _build_streaming_response(self, bytes_iter) -> Response:
+        """Wrap an Iterable[bytes] as a StreamingResponse with the endpoint's content type."""
         result_ct = self.model.result.content_type
-        result_iter = iter(FileLikeHandler.to_bytes_iterable(result))
+        result_iter = iter(bytes_iter)
         try:
             first_chunk = next(result_iter)
         except StopIteration:
@@ -51,6 +52,20 @@ class HttpEndpointHandler:
             yield from result_iter
 
         return StreamingResponse(stream(), media_type=result_ct)
+
+    def _build_binary_response(self, result) -> Response:
+        return self._build_streaming_response(FileLikeHandler.to_bytes_iterable(result))
+
+    def _build_string_streaming_response(self, result) -> Response:
+        return self._build_streaming_response(s.encode('utf-8') + b'\n' for s in result)
+
+    def _build_custom_streaming_response(self, result) -> Response:
+        ctx = SerializationContext()
+        serializer = self.model.result.serializer
+        return self._build_streaming_response(
+            json.dumps(serializer.to_json(item, ctx)).encode('utf-8') + b'\n'
+            for item in result
+        )
 
     def _build_json_response(self, result) -> Response:
         """Serialize the result to JSON and return a JSONResponse."""
@@ -88,8 +103,17 @@ class HttpEndpointHandler:
             except Exception:
                 return Response(content=traceback.format_exc(), status_code=500)
 
-        if self.model.result.type == ResultType.BinaryFile:
-            return self._build_binary_response(result)
+        streaming_builders = {
+            ResultType.BinaryFile: self._build_binary_response,
+            ResultType.StringIterable: self._build_string_streaming_response,
+            ResultType.CustomIterable: self._build_custom_streaming_response,
+        }
+        if self.model.result.type in streaming_builders:
+            builder = streaming_builders[self.model.result.type]
+            try:
+                return await loop.run_in_executor(None, lambda: builder(result))
+            except Exception:
+                return Response(content=traceback.format_exc(), status_code=500)
         return self._build_json_response(result)
 
 

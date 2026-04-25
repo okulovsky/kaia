@@ -1,4 +1,3 @@
-"""
 # Introduction
 
 BrainBox provides easy HTTP access to a set of curated Docker containers
@@ -130,4 +129,3 @@ If the port is busy:
   In this case, check your processes and kill those from `python`.
   Or simply restart the machine.
 
-"""

@@ -1,8 +1,11 @@
+import json
 from typing import Any
 import requests
 from ..model import ResultType, CallModel
 from .content_producer import ContentProducer
 from ...serialization import SerializationContext
+
+_STREAMING_TYPES = (ResultType.BinaryFile, ResultType.StringIterable, ResultType.CustomIterable)
 
 
 class ApiError(requests.HTTPError):
@@ -22,16 +25,11 @@ class ApiError(requests.HTTPError):
 
 
 def http_api_call(data: CallModel) -> Any:
-    if data.endpoint_model.result.type == ResultType.CustomIterable:
-        raise ValueError(
-            f"Endpoint '{data.endpoint_model.name}' returns a CustomIterable which is not supported over HTTP. "
-            f"Use WebSockets instead."
-        )
-
     url = data.base_url.rstrip('/')+data.content.url
 
     producer = ContentProducer(data.content, data.endpoint_model)
-    streaming = data.endpoint_model.result.type == ResultType.BinaryFile
+    result_type = data.endpoint_model.result.type
+    streaming = result_type in _STREAMING_TYPES
 
     if data.endpoint_model.protocol.http_method.value == 'GET':
         if producer.has_content:
@@ -46,8 +44,16 @@ def http_api_call(data: CallModel) -> Any:
     if response.status_code != 200:
         raise ApiError(response)
 
-    if data.endpoint_model.result.type == ResultType.BinaryFile:
+    if result_type == ResultType.BinaryFile:
         return response.iter_content(chunk_size=None), None
+
+    if result_type == ResultType.StringIterable:
+        return (line.decode('utf-8') for line in response.iter_lines()), None
+
+    if result_type == ResultType.CustomIterable:
+        ctx = SerializationContext()
+        serializer = data.endpoint_model.result.serializer
+        return (serializer.from_json(json.loads(line), ctx) for line in response.iter_lines()), None
 
     ctx = SerializationContext()
     raw = response.json()

@@ -19,7 +19,7 @@ from foundation_kaia.marshalling.amenities.documentation_service.html_helper imp
 
 from .dto import (
     LogItem, InstallationReport, ControllerInstance, ControllerStatus,
-    ControllersStatus, SelfTestResult, ControllersSetup,
+    ControllersStatus, SelfTestResult,
     SelfTestCaseDocumentation, MethodExamples, ControllerExamples,
 )
 from .interface import IControllersService
@@ -189,28 +189,4 @@ class ControllersService(IControllersService):
             docstring=api_class.__doc__,
             methods=methods,
         )
-
-    def setup(self, setup: ControllersSetup) -> None:
-        for decider in setup.simple_deciders:
-            controller = self._get_controller(decider)
-            if not controller.get_running_instances_id_to_parameter():
-                self.run(decider)
-
-        for decider, parameter in setup.deciders_with_parameters.items():
-            controller = self._get_controller(decider)
-            running = controller.get_running_instances_id_to_parameter()
-            if parameter not in running.values():
-                self.run(decider, parameter)
-
-        for decider, model in setup.deciders_with_model.items():
-            controller = self._get_controller(decider)
-            running = controller.get_running_instances_id_to_parameter()
-            if not running:
-                self.run(decider)
-                running = controller.get_running_instances_id_to_parameter()
-            instance_id = next(iter(running))
-            api = controller.find_api(instance_id)
-            if isinstance(api, IModelLoadingSupport):
-                api.load_model(model)
-
 

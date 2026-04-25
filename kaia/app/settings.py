@@ -1,10 +1,21 @@
 from .avatar_daemon_app_settings import AvatarDaemonAppSettings
 from .avatar_server_app_settings import AvatarServerAppSettings
 from .brainbox_app_settings import BrainboxAppSettings
+from brainbox.framework import BrainBoxSetup
 from .kaia_driver_settings import KaiaDriverSettings
 from .app import KaiaApp
 from dataclasses import dataclass, field
 from pathlib import Path
+from brainbox.deciders import Resemblyzer, Piper, RhasspyKaldi, Whisper
+
+def _create_brainbox_setup():
+    setup = (BrainBoxSetup()
+             .up(Resemblyzer)
+             .up(Piper)
+             .up(RhasspyKaldi)
+             .up(Whisper, model='base')
+             )
+    return setup
 
 
 @dataclass
@@ -14,6 +25,8 @@ class KaiaAppSettings:
     avatar_server: AvatarServerAppSettings|None = field(default_factory=AvatarServerAppSettings)
     kaia: KaiaDriverSettings|None = field(default_factory=KaiaDriverSettings)
     custom_avatar_resources_folder: Path|None = None
+    brainbox_setup: BrainBoxSetup = field(default_factory=_create_brainbox_setup)
+
 
 
     def create_app(self, working_folder: Path):
