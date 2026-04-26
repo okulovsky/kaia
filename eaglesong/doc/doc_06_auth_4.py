@@ -14,8 +14,8 @@ for all the users of the chatbot, and all of them will share its fields values!
 
 Sometimes it's a desirable behaviour. But often enough we want to avoid it, use the `lambda` syntax as below.
 """
-from eaglesong.demo.common import *
-from eaglesong.demo.example_01_echobot import main as echobot
+from eaglesong.doc.common import *
+from eaglesong.doc.doc_01_echobot import main as echobot
 
 class Authorize:
     def __init__(self, env_variable, inner_routine):

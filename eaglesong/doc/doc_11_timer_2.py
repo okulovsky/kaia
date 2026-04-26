@@ -13,8 +13,8 @@ consumes one input and produces one output.
 
 """
 
-from eaglesong.demo.common import *
-from eaglesong.demo.example_08_menu_2 import create_menu
+from eaglesong.doc.common import *
+from eaglesong.doc.doc_08_menu_2 import create_menu
 
 def main():
     context = yield ContextRequest()

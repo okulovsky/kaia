@@ -6,8 +6,8 @@ Now let's see how we can organize the authorization code better, to be able to r
 First, we can decompose the code to `authorize` and `echobot` methods, and combine the calls in `main`.
 
 """
-from eaglesong.demo.common import *
-from eaglesong.demo.example_01_echobot import main as echobot
+from eaglesong.doc.common import *
+from eaglesong.doc.doc_01_echobot import main as echobot
 
 
 def authorize(env_variable):

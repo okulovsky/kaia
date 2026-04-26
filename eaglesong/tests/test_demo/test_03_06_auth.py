@@ -1,8 +1,8 @@
 from eaglesong.tests.test_demo.common import *
-from eaglesong.demo.example_03_auth_1 import bot as bot_1
-from eaglesong.demo.example_04_auth_2 import bot as bot_2
-from eaglesong.demo.example_05_auth_3 import bot as bot_3
-from eaglesong.demo.example_06_auth_4 import bot as bot_4
+from eaglesong.doc.doc_03_auth_1 import bot as bot_1
+from eaglesong.doc.doc_04_auth_2 import bot as bot_2
+from eaglesong.doc.doc_05_auth_3 import bot as bot_3
+from eaglesong.doc.doc_06_auth_4 import bot as bot_4
 import os
 
 class AuthTestCase(TestCase):

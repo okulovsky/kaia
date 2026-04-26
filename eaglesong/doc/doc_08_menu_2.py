@@ -8,7 +8,7 @@ The first way is to create a class inherited from `MenuItem`, and implement it's
 Alternatively, you can just write the Routine in the function and create `FunctionalMenuItem` in it.
 """
 
-from eaglesong.demo.common import *
+from eaglesong.doc.common import *
 from eaglesong.drivers.telegram import menu
 import requests
 
@@ -32,9 +32,7 @@ def say_nice_thing():
     yield "You are handsome!"
 
 def say_naugty_thing():
-    yield "I'm horny!"
-
-
+    yield "You are ugly!"
 
 def create_menu():
     main = (

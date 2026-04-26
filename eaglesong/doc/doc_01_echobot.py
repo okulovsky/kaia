@@ -16,7 +16,7 @@ this bot.
 
 """
 
-from eaglesong.demo.common import *
+from eaglesong.doc.common import *
 
 
 def main():

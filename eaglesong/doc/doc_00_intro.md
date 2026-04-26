@@ -25,6 +25,8 @@ Some people suggested yield approach can be replaced with async/await, keeping t
 * Both approaches should be able to coexist side-by-side with Automaton class abstraction.
 * `aiogram` seems to implement this approach for Telegram; however, it seems like using this approach in Kaia would bring `async/await` everywhere inside it, which is not my wish.
 
+# eaglesong demo
+
 There are a few demos demonstrating the different designs of the chatflow with eaglesong, located in `demo` subfolder. 
 They are all runnable and you should be able to run a Telegram bot with each of them.
 Before running the bots from demos/eaglesong, you will need:
@@ -38,6 +40,3 @@ If you don't wish to do it, the Appendix to this readme will contain the source 
 
 `eaglesong` also offer elegant method to test the conversation flows, written in this fashion. To see how, consult `tests/test_demo/` folder.
 
-# eaglesong demo
-
-<<<FROM_DEMO>>>

@@ -1,7 +1,7 @@
 from chara.common import CharaApis
 from chara.common.tools.llm import PromptTaskBuilder
 from grammatron import OptionsDub, Template, PluralAgreement, CardinalDub
-from grammatron.grammars.ru import RuDeclension
+from grammatron.grammars.ru import RuCase
 from unittest import TestCase
 from dataclasses import dataclass
 from chara.paraphrasing.grammar_correction import GrammarModel, GrammarCorrectionPipeline, GrammarCorrectionCache
@@ -14,21 +14,21 @@ option = OptionsDub(['банан', 'яблоко', 'груша']).as_variable('f
 time = PluralAgreement(CardinalDub().as_variable('amount'), "час")
 
 dataset = {
-    f'Я хочу {option}' : RuDeclension.ACCUSATIVE,
-    f'У меня нет {option}' : RuDeclension.GENITIVE,
-    f"Мне нужна сахарная пудра к {option}": RuDeclension.DATIVE,
-    f'На столе лежит {option}': RuDeclension.NOMINATIVE,
-    f'Я позавтракал {option}': RuDeclension.INSTRUMENTAL,
-    f'Я думаю о {option}': RuDeclension.PREPOSITIONAL,
-    f"Я приду около {time}": RuDeclension.GENITIVE,
-    f"Мне нужно {time}, чтобы сделать это": RuDeclension.ACCUSATIVE,
-    f"Я приду к {time}": RuDeclension.DATIVE
+    f'Я хочу {option}' : RuCase.ACCUSATIVE,
+    f'У меня нет {option}' : RuCase.GENITIVE,
+    f"Мне нужна сахарная пудра к {option}": RuCase.DATIVE,
+    f'На столе лежит {option}': RuCase.NOMINATIVE,
+    f'Я позавтракал {option}': RuCase.INSTRUMENTAL,
+    f'Я думаю о {option}': RuCase.PREPOSITIONAL,
+    f"Я приду около {time}": RuCase.GENITIVE,
+    f"Мне нужно {time}, чтобы сделать это": RuCase.ACCUSATIVE,
+    f"Я приду к {time}": RuCase.DATIVE
 }
 
 @dataclass
 class ParaphraseCase:
     template: Template
-    expected_case: RuDeclension
+    expected_case: RuCase
     language: str
     grammar_model: GrammarModel|None = None
     grammar_reply: Any|None = None

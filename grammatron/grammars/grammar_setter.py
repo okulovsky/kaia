@@ -23,10 +23,10 @@ class GrammarSetter:
             grammars[language] = GrammarSetter.get_default_grammar_for_language(language)
         return grammars[language]
 
-    def ru(self, declension: RuDeclension|None = None, gender: RuGender|None = None, number: RuNumber|None = None) -> IDub:
+    def ru(self, case: RuCase|None = None, gender: RuGender|None = None, number: RuNumber|None = None) -> IDub:
         return self.set_grammar(
             'ru',
-            RuGrammarRule(declension, gender, number)
+            RuGrammarRule(case, gender, number)
         )
 
     def en(self, plural: bool|None = None):

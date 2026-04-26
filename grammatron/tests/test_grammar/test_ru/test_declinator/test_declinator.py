@@ -8,7 +8,7 @@ class TestDeclinator(unittest.TestCase):
         text = "десять"
         result = Declinator.declinate(
             text,
-            declension=RuDeclension.DATIVE,
+            case=RuCase.DATIVE,
         )
         self.assertEqual("десяти", result)
 
@@ -16,7 +16,7 @@ class TestDeclinator(unittest.TestCase):
         text = "синяя кружка и ложка"
         result = Declinator.declinate(
             text,
-            declension=RuDeclension.INSTRUMENTAL,
+            case=RuCase.INSTRUMENTAL,
             gender=RuGender.FEMININE,
             number=RuNumber.SINGULAR,
             word_selector=lambda words: [0, 1]  # синяя, кружка
@@ -27,7 +27,7 @@ class TestDeclinator(unittest.TestCase):
         text = "вкусный кофе, свежий круассан"
         result = Declinator.declinate(
             text,
-            declension=RuDeclension.GENITIVE,
+            case=RuCase.GENITIVE,
             gender=RuGender.MASCULINE,
             number=RuNumber.SINGULAR,
             word_selector=lambda words: [0, 2, 3]  # вкусный, свежий, круассан
@@ -47,28 +47,28 @@ class TestDeclinator(unittest.TestCase):
         text = "первый и второй этаж"
         result = Declinator.declinate(
             text,
-            declension=RuDeclension.PREPOSITIONAL,
+            case=RuCase.PREPOSITIONAL,
             gender=RuGender.MASCULINE,
             number=RuNumber.SINGULAR
         )
         self.assertEqual("первом и втором этаже", result)
 
-    def test_partial_declension_feminine(self):
+    def test_partial_case_feminine(self):
         text = "первая миска супа"
         result = Declinator.declinate(
             text,
-            declension=RuDeclension.INSTRUMENTAL,
+            case=RuCase.INSTRUMENTAL,
             gender=RuGender.FEMININE,
             number=RuNumber.SINGULAR,
             word_selector=lambda words: [0, 1]  # первая, миска
         )
         self.assertEqual("первой миской супа", result)
 
-    def test_cardinal_declension(self):
+    def test_cardinal_case(self):
         text = 'десять'
         result = Declinator.declinate(
             text,
-            declension=RuDeclension.INSTRUMENTAL
+            case=RuCase.INSTRUMENTAL
         )
         self.assertEqual("десятью", result)
 

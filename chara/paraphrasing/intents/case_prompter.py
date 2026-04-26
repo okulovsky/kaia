@@ -1,7 +1,7 @@
 import json
 import re
 from grammatron import GrammarRule
-from grammatron.grammars.ru import RuDeclension, RuGrammarRule
+from grammatron.grammars.ru import RuCase, RuGrammarRule
 from abc import ABC, abstractmethod
 
 
@@ -35,7 +35,7 @@ class RuGrammarPrompter(GrammarPrompter):
         result = {}
         for k, v in json.loads(s).items():
             try:
-                result[k] = RuGrammarRule(RuDeclension[v.strip().upper()])
+                result[k] = RuGrammarRule(RuCase[v.strip().upper()])
             except (KeyError, ValueError):
                 pass
         return result

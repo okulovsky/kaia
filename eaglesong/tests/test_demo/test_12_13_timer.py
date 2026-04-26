@@ -1,6 +1,6 @@
 from eaglesong.tests.test_demo.common import *
-from eaglesong.demo.example_10_timer_1 import bot as bot_1
-from eaglesong.demo.example_11_timer_2 import bot as bot_2
+from eaglesong.doc.doc_10_timer_1 import bot as bot_1
+from eaglesong.doc.doc_11_timer_2 import bot as bot_2
 
 
 class DispatcherTestCase(TestCase):

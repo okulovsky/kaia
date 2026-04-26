@@ -5,7 +5,7 @@ This will demonstrate a reusable `menu` component, handy for different Telegram 
 
 The following menu allows you to pick a value from the lists. The value is then displayed to you.
 """
-from eaglesong.demo.common import *
+from eaglesong.doc.common import *
 from eaglesong.drivers.telegram.menu import *
 
 def create_menu():

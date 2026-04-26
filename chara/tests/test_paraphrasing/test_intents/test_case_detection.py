@@ -1,7 +1,7 @@
 from datetime import timedelta
 from unittest import TestCase
 from grammatron import DubParameters
-from grammatron.grammars.ru import RuDeclension
+from grammatron.grammars.ru import RuCase
 from chara.paraphrasing.common import ParsedTemplate
 from chara.paraphrasing.intents import GrammarPrompter, RuGrammarPrompter
 from kaia.skills.timer_skill import TimerIntents
@@ -16,7 +16,7 @@ class CaseDetectionTestCase(TestCase):
 
     def test_parse_case_response(self):
         cases = RuGrammarPrompter().parse_case_response('{"duration": "accusative"}')
-        self.assertEqual(RuDeclension.ACCUSATIVE, cases['duration'].declension)
+        self.assertEqual(RuCase.ACCUSATIVE, cases['duration'].declension)
 
     def test_restore_and_substitute(self):
         paraphrase = "Поставь таймер на {duration}"

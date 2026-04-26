@@ -100,7 +100,7 @@ You need [Docker](https://docs.docker.com/engine/install/) installed in your sys
 and the access granted to the current user to run `docker` from command line without elevated privileges.
 The command
 
-```python
+```commandline
 docker run hello-world
 ```
 
@@ -111,13 +111,13 @@ should work successfully and produce the text starting with "Hello from Docker!"
 [Anaconda](https://www.anaconda.com/download/success) is recommended to manage Python's
 environments. Create an environment for e.g. Python 3.12 (BrainBox is tested with 3.10-3.13 Python versions):
 
-```python
+```commandline
 conda create --name brainbox python==3.11
 ```
 
 Then, activate the environment
 
-```python
+```commandline
 conda activate brainbox
 ```
 
@@ -125,28 +125,25 @@ conda activate brainbox
 
 Install the brainbox
 
-```python
+```commandline
 pip install kaia-brainbox
 ```
 
 Run the brainbox
 
-```python
+```commandline
 python -m brainbox.run --data-folder <where_all_files_will_be_stored>
 ```
 
 You should see something like:
-
-```python
+```
 Starting server on http://127.0.0.1:8090
 ```
 
 If you see:
-
-```python
+```
 ERROR:    [Errno 98] error while attempting to bind on address ('0.0.0.0', 8090): [errno 98] address already in use
 ```
-
 consult the Troubleshooting section.
 
 Run the build-in test. It will make sure that all the functions, mentioned in this README, work correctly
@@ -166,6 +163,10 @@ If the port is busy:
 * Maybe you were running BrainBox before and shut it down incorrectly.
   In this case, check your processes and kill those from `python`.
   Or simply restart the machine.
+
+
+
+
 
 # Python's API
 
@@ -851,3 +852,7 @@ Since this mounting is actually going to happen on the host machine, the name of
 as at the host machine. So it will look like this:
 `docker run --mount type=bind,source={BBPATH},target={BBPATH} brainbox --data-folder BBPATH
 * BrainBox will communicate with the containers it creates over network, so `--network host` is required.
+* GPU needs to be shared with this container
+
+If you develop BrainBox in the repository and want to containerize the repo's current state, 
+you may use `brainbox.framework.container` module. 

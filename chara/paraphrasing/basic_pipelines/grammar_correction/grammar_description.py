@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Any, Callable
-from grammatron.grammars.ru import RuDeclension, RuGrammarRule
+from grammatron.grammars.ru import RuCase, RuGrammarRule
 from grammatron.grammars.de import DeCasus, DeGrammarRule, DeArticleType
 
 
@@ -22,15 +22,15 @@ class GrammarRuleDescription:
             return GrammarRuleDescription(
                 categories= (
                     GrammarCategoryDescription(
-                        'declension',
+                        'case',
                         'падеж',
                         {
-                            "Именительный": RuDeclension.NOMINATIVE,
-                            "Родительный": RuDeclension.GENITIVE,
-                            "Дательный": RuDeclension.DATIVE,
-                            "Винительный": RuDeclension.ACCUSATIVE,
-                            "Творительный": RuDeclension.INSTRUMENTAL,
-                            "Предложный": RuDeclension.PREPOSITIONAL
+                            "Именительный": RuCase.NOMINATIVE,
+                            "Родительный": RuCase.GENITIVE,
+                            "Дательный": RuCase.DATIVE,
+                            "Винительный": RuCase.ACCUSATIVE,
+                            "Творительный": RuCase.INSTRUMENTAL,
+                            "Предложный": RuCase.PREPOSITIONAL
                         }
                     ),
                 ))

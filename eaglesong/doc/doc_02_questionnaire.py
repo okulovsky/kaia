@@ -16,7 +16,7 @@ is assigned to the result of the whole `yield from questionnaire()` call
 
 """
 
-from eaglesong.demo.common import *
+from eaglesong.doc.common import *
 from datetime import datetime
 
 

@@ -1,6 +1,6 @@
 from ..dubs import VariableDub, OrdinalDub, CardinalDub, FunctionalTemplateDub
 from .language_dispatch_dub import LanguageDispatchDub
-from ..grammars.ru import RuDeclension, RuGender
+from ..grammars.ru import RuCase, RuGender
 
 
 def to_value(v: dict):
@@ -28,7 +28,7 @@ class YearDub(LanguageDispatchDub):
             variables_to_value=to_value
         )
         sequences['ru'] = FunctionalTemplateDub(
-            [f"{VariableDub('year', OrdinalDub(2100).grammar.ru(declension=RuDeclension.GENITIVE, gender=RuGender.MASCULINE))}"],
+            [f"{VariableDub('year', OrdinalDub(2100).grammar.ru(case=RuCase.GENITIVE, gender=RuGender.MASCULINE))}"],
             value_to_variables=from_value,
             variables_to_value=to_value
         )

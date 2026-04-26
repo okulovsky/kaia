@@ -22,10 +22,10 @@ class Releaser:
     module_name: str
     folders_to_export: tuple[str,...]
     files_to_export: tuple[str,...]
-    doc_folder: Optional[Path] = None
     tox_python: Optional[str] = None
     tox_versions: Optional[Tuple[str,...]] = None
     inner_dependencies: Tuple[str,...] = ()
+    compile_documentation: bool = True
 
     def fix_toml_for_tox(self, path):
         lines = []
@@ -97,8 +97,9 @@ class Releaser:
         for file in self.files_to_export:
             shutil.copy(src_folder / file, module_release_folder / file)
 
-        if self.doc_folder is not None:
-            doc = create_documentation(self.doc_folder)
+        if self.compile_documentation is not None:
+            doc_folder = self.root_folder/self.module_name/'doc'
+            doc = create_documentation(doc_folder)
             file_io_write_text(doc, src_folder/'README.md')
             file_io_write_text(doc, release_folder / 'README.md')
         else:

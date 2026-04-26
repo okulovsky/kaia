@@ -20,16 +20,10 @@ class IDockBlock(ABC):
     def to_md(self) -> str:
         pass
 
-    @abstractmethod
-    def get_lines(self) -> list[str]:
-        pass
 
 class TextBlock(IDockBlock):
     def __init__(self, lines: list[str]):
         self.lines = lines
-
-    def get_lines(self) -> list[str]:
-        return self.lines
 
     def to_md(self) -> str:
         return "\n".join(strip_common_indent(self.lines))
@@ -39,10 +33,14 @@ class ExpectedValueBlock(IDockBlock):
         self.line = line
         self.variable_value = variable_value
 
-    def get_lines(self) -> list[str]:
-        return [self.line]
-
     def to_md(self) -> str:
         import pprint
         return '```\n' + pprint.pformat(self.variable_value) + '\n```'
 
+
+class InsertMdFile(IDockBlock):
+    def __init__(self, md: str):
+        self.md = md
+
+    def to_md(self) -> str:
+        return self.md+"\n\n"

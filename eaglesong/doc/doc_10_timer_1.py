@@ -6,7 +6,7 @@ means, and in this case the timer is used to poll the bot and produce the output
 
 This timer input is fed into the chatflow in the same fashion as the normal input.
 """
-from eaglesong.demo.common import *
+from eaglesong.doc.common import *
 
 
 def main():

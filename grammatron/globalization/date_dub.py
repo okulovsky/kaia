@@ -1,6 +1,6 @@
 from datetime import date
 from ..dubs import VariableDub, OrdinalDub, FunctionalTemplateDub
-from ..grammars.ru import RuDeclension
+from ..grammars.ru import RuCase
 from ..grammars.de import DeCasus
 from .language_dispatch_dub import LanguageDispatchDub
 from .month_dub import MonthDub
@@ -39,8 +39,8 @@ class DateDub(LanguageDispatchDub):
             f"the {DAY} of {MONTH}, {YEAR}"
         ]
         sequences['ru'] = [
-            f"{DAY} {MONTH.grammar.ru(RuDeclension.GENITIVE)}",
-            f"{DAY} {MONTH.grammar.ru(RuDeclension.GENITIVE)} {YEAR}"
+            f"{DAY} {MONTH.grammar.ru(RuCase.GENITIVE)}",
+            f"{DAY} {MONTH.grammar.ru(RuCase.GENITIVE)} {YEAR}"
         ]
         sequences['de'] = [
             f"{DAY}. {MONTH}",

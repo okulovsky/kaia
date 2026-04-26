@@ -15,7 +15,7 @@ write and to test.
 
 """
 
-from eaglesong.demo.common import *
+from eaglesong.doc.common import *
 from eaglesong.drivers.telegram import TgCommand, TelegramSimplifier
 
 def main():

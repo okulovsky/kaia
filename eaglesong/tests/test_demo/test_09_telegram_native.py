@@ -1,5 +1,5 @@
 from eaglesong.tests.test_demo.common import *
-from eaglesong.demo.example_09_telegram_native import bot
+from eaglesong.doc.doc_09_telegram_native import bot
 from eaglesong.drivers.telegram import TgContext, TgCommand, TgUpdatePackage, TelegramScenario as S
 from yo_fluq import Obj
 

@@ -10,8 +10,8 @@ Essentially, we write something like `yield from Authorize('KAIA_TEST_BOT_CHAT_I
 Those double brackets may seem weird, but this is totally fine thanks to `Authorize` class
 implementing `__call__` method.
 """
-from eaglesong.demo.common import *
-from eaglesong.demo.example_01_echobot import main as echobot
+from eaglesong.doc.common import *
+from eaglesong.doc.doc_01_echobot import main as echobot
 
 class Authorize:
     def __init__(self, env_variable):

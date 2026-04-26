@@ -10,7 +10,7 @@ to authorize only yourself as a user of the chatbot: you just write your chat id
 and check that the user is legit.
 """
 
-from eaglesong.demo.common import *
+from eaglesong.doc.common import *
 
 
 def main():

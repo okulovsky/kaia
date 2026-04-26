@@ -1,6 +1,10 @@
 from enum import Enum
 
-class RuDeclension(Enum):
+class RuAnimacy(Enum):
+    ANIMATE = 'anim'
+    INANIMATE = 'inan'
+
+class RuCase(Enum):
     NOMINATIVE = 'nomn'  # именительный
     GENITIVE = 'gent'  # родительный
     DATIVE = 'datv'  # дательный
@@ -21,5 +25,6 @@ class RuGender(Enum):
 
 
 class RuNumber(Enum):
-    SINGULAR = 'sing'  # единственное число
-    PLURAL = 'plur'  # множественное число
+    SINGULAR = 'sing'    # единственное число
+    PLURAL = 'plur'      # множественное число
+    MIXED = 'mixed'      # adjective→plural, noun→singular (used after 2–4)

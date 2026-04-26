@@ -77,7 +77,7 @@ if __name__ == '__main__':
     """
     The deserialized value is:
     """
-    event_result.mddoc_validate_control_value()
+    event_result.mddoc_validate_control_value(lambda: event.color==Color.GREEN and isinstance(event.log_path, Path))
 
 """
 

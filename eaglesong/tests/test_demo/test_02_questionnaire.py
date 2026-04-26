@@ -1,5 +1,5 @@
 from eaglesong.tests.test_demo.common import *
-from eaglesong.demo.example_02_questionnaire import bot
+from eaglesong.doc.doc_02_questionnaire import bot
 
 
 class Demo0TestCase(TestCase):
