@@ -20,7 +20,7 @@ def _default_builder(x):
 
 class BrainBoxUnit(Generic[TCase, TOption]):
     def __init__(self,
-                 task_builder: Callable[[TCase], BrainBox.ITask]|None = None,
+                 task_builder: Callable[[TCase], BrainBox.Task]|None = None,
                  merger: Callable[[TCase, Any], TOption] | None = None,
                  divider: Callable[[Any], list] | None = None,
                  options_as_files: bool = False,
@@ -33,8 +33,9 @@ class BrainBoxUnit(Generic[TCase, TOption]):
     def _match_tasks(self,
                      cases,
                      brainbox_collective_result: dict,
-                     task_objects: list[BrainBox.ITask],
-                     stats: BrainBoxStats) -> Iterable[BrainBoxUnitResultItem]:
+                     task_objects: list[BrainBox.Task],
+                     stats: BrainBoxStats,
+                     ) -> Iterable[BrainBoxUnitResultItem]:
         index_to_result = {}
         for item in brainbox_collective_result:
             index_to_result[item['tags']['index']] = item
@@ -46,6 +47,8 @@ class BrainBoxUnit(Generic[TCase, TOption]):
                 merge.brainbox_answer_is_missing = True
                 stats.cases_missing_from_brainbox += 1
             elif index_to_result[index]['error'] is not None:
+                if CharaApis.strict_brainbox_errors:
+                    raise ValueError("Error in brainbox\n"+index_to_result[index]['error'])
                 merge.brainbox_error = index_to_result[index]['error']
                 stats.cases_with_brainbox_errors += 1
             else:
@@ -53,12 +56,19 @@ class BrainBoxUnit(Generic[TCase, TOption]):
                 self._perform_merge(merge, stats)
             yield merge
 
-    def _perform_merge(self, merge: BrainBoxUnitResultItem, stats: BrainBoxStats):
+    def _perform_merge(
+            self,
+            merge: BrainBoxUnitResultItem,
+            stats: BrainBoxStats,
+    ):
         try:
             brainbox_options = self.divider(merge.brainbox_result)
         except Exception as e:
+            if CharaApis.strict_brainbox_errors:
+                raise
             merge.divider_error = e
             stats.cases_with_divider_errors += 1
+            logger.error(e)
             return
 
         stats.cases_success += 1
@@ -71,16 +81,19 @@ class BrainBoxUnit(Generic[TCase, TOption]):
                 option.option = self.merger(merge.case, brainbox_option)
                 stats.options_success += 1
             except Exception as exception:
+                if CharaApis.strict_brainbox_errors:
+                    raise
                 option.merge_error = exception
                 stats.options_with_errors += 1
+                logger.error(exception)
             merge.options.append(option)
 
 
     def _get_status(self, brainbox_api: BrainBox.Api, task_id: str):
-        summary = brainbox_api.summary([task_id])
-        if summary[0]['finished']:
+        summary = brainbox_api.tasks.get_job_summary(task_id)
+        if summary.finished:
             return 1
-        return brainbox_api.batch_progress(task_id)['progress']
+        return brainbox_api.batches.get_batch_progress(task_id).progress
 
     def _wait_for_brainbox(self, name: str, task_id: str):
         progress = self._get_status(CharaApis.brainbox_api, task_id)
@@ -125,14 +138,15 @@ class BrainBoxUnit(Generic[TCase, TOption]):
             with cache.result.session():
                 for merge in self._match_tasks(cases_2, result, tasks, stats):
                     cache.result.write(merge)
+
             logger.log(stats)
 
-        if self.options_as_files:
-            @logger.phase(cache.files, "Downloading files")
-            def _():
+        @logger.phase(cache.files, "Downloading files")
+        def _():
+            if self.options_as_files:
                 for option in cache.read_options():
-                    cache.files.write(CharaApis.brainbox_api.open_file(option))
-                cache.files.finalize()
-        cache.files.finalize()
+                    cache.files.write(CharaApis.brainbox_api.cache.read(option))
+            cache.files.finalize()
+
         cache.finalize()
 

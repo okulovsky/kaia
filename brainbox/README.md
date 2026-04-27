@@ -351,7 +351,7 @@ test_case.assertIsInstance(filename, str)
 
 ```
 
-You may open this file with `api.open_file` method, which returns `File` 
+You may open this file with `api.cache.read_file` method, which returns `File` 
 instance, reading the content of the file on the fly. 
 
 ```python
@@ -359,7 +359,7 @@ instance, reading the content of the file on the fly.
 from brainbox import File
 import json
 
-file = api.open_file(filename)
+file = api.cache.read_file(filename)
 test_case.assertIsInstance(file, File)
 test_case.assertDictEqual(
     {

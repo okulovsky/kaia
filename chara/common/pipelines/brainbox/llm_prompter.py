@@ -14,7 +14,7 @@ class LLMPrompter(Generic[TCase]):
         self.model = model
         self.system_prompt = system_prompt
 
-    def __call__(self, case: TCase) -> BrainBox.ITask:
+    def __call__(self, case: TCase) -> BrainBox.Task:
         prompt = self.template(case)
-        return BrainBox.Task.call(Ollama, self.model).question(prompt, system_prompt=self.system_prompt)
+        return Ollama.new_task(parameter=self.model).question(prompt, system_prompt=self.system_prompt)
 

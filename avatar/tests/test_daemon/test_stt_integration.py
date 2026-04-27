@@ -9,26 +9,26 @@ TEMPLATE = Template("Yes!")
 
 class STTIntegrationTestCase(TestCase):
     def run_with_identification(self, response: str):
-        proc = AvatarDaemon(TestStream().create_client())
+        proc = AvatarDaemon(AvatarClient.default(), timeout_in_pull_in_seconds=0)
         proc.rules.bind(STTIntegrationService(State(), True))
         result = proc.debug_and_stop_by_empty_queue(SoundEvent("file")).messages
         self.assertEqual(3, len(result))
         self.assertIsInstance(result[1], STTService.Command)
         self.assertIsInstance(result[2], SpeakerIdentificationService.Command)
 
-        proc.client.put(STTService.Confirmation(response).as_confirmation_for(result[1]))
-        proc.client.put(Confirmation("speaker").as_confirmation_for(result[2]))
+        proc.client.push(STTService.Confirmation(response).as_confirmation_for(result[1]))
+        proc.client.push(Confirmation("speaker").as_confirmation_for(result[2]))
         result = proc.debug_and_stop_by_empty_queue().messages
         return result[-1]
 
     def run_without_identification(self, response):
-        proc = AvatarDaemon(TestStream().create_client())
+        proc = AvatarDaemon(AvatarClient.default(), timeout_in_pull_in_seconds=0)
         proc.rules.bind(STTIntegrationService(State(), False))
         result = proc.debug_and_stop_by_empty_queue(SoundEvent("file")).messages
         self.assertEqual(2, len(result))
         self.assertIsInstance(result[1], STTService.Command)
 
-        proc.client.put(STTService.Confirmation(response).as_confirmation_for(result[1]))
+        proc.client.push(STTService.Confirmation(response).as_confirmation_for(result[1]))
         result = proc.debug_and_stop_by_empty_queue().messages
         return result[-1]
 

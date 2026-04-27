@@ -4,7 +4,7 @@ from kaia.driver import *
 from eaglesong import Listen, Automaton, Return, Terminate
 from grammatron import Template, Utterance, TemplatesCollection, UtterancesSequence
 from avatar.daemon import TextEvent, ChatCommand, TextCommand
-from avatar.messaging import TestStream, IMessage
+from avatar.messaging import AvatarClient, IMessage
 from unittest import TestCase
 from typing import cast
 
@@ -46,37 +46,37 @@ class DriverTestCase(TestCase):
 
 
     def test_driver(self):
-        client = TestStream().create_client(None).with_name('main')
+        client = AvatarClient.default()
         driver = KaiaDriver(
             DefaultAssistantFactory(lambda _: mock_routine),
-            client.clone('driver'),
+            client.clone_client(),
             expect_confirmations_for_types=()
         )
         driver.run_in_thread()
-        client.put(TextEvent('text'))
+        client.push(TextEvent('text'))
         result = client.query(1).take(2).to_list()
         self.assertIsInstance(result[-1], TextCommand)
         self.check_ut(result, str)
 
-        client.put(TextEvent('utterance'))
+        client.push(TextEvent('utterance'))
         result = client.query(1).take(2).to_list()
         self.check_ut(result, Utterance)
 
-        client.put(TextEvent('sequence'))
+        client.push(TextEvent('sequence'))
         result = client.query(1).take(2).to_list()
         self.check_ut(result, UtterancesSequence)
 
-        client.put(TextEvent('message'))
+        client.push(TextEvent('message'))
         result = client.query(1).take(2).to_list()
         self.assertIsInstance(result[-1], ChatCommand)
         self.assertEqual('command',  result[-1].text)
 
-        client.put(TextEvent('error'))
+        client.push(TextEvent('error'))
         result = client.query(1).take(2).to_list()
         self.assertIsInstance(result[-1], ChatCommand)
         self.assertTrue(result[-1].text.startswith('Error when handling'))
 
-        client.put(TextEvent('exit'))
+        client.push(TextEvent('exit'))
         with self.assertRaises(ValueError):
             client.query(1).take(2).to_list()
 

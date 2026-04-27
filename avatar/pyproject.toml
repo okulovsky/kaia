@@ -20,8 +20,9 @@ dependencies = [
     "kaia-brainbox",
     "kaia-eaglesong",
     "kaia-grammatron",
-    "flask",
     "loguru",
+    "plotly",
+    "dash"
 ]
 
 classifiers = [

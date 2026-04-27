@@ -1,6 +1,6 @@
 import cv2
 from frame import Frame
-from settings import AnalysisSettings
+from interface import AnalysisSettings
 from cv2 import cvtColor, COLOR_BGR2GRAY, Laplacian, CV_64F
 from PIL import Image
 

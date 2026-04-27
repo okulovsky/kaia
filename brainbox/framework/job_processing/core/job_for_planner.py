@@ -6,10 +6,10 @@ from datetime import datetime
 class JobForPlanner:
     id: str
     decider: str
-    decider_parameters: str|None
+    parameters: str|None
     received_timestamp: datetime
     assigned: bool
     ordering_token: str|None
 
     def get_decider_instance_key(self):
-        return DeciderInstanceKey(self.decider, self.decider_parameters)
+        return DeciderInstanceKey(self.decider, self.parameters)

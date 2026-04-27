@@ -1,65 +1,77 @@
 from unittest import TestCase
 from avatar.daemon import BrainBoxService, STTService, WhisperRecognitionSetup, VoskRecognitionSetup, IntentsPack, RhasspyRecognitionSetup
-from avatar.messaging import *
-import jsonpickle
+from avatar.messaging import AvatarDaemon, AvatarClient
 from grammatron import Template, TemplatesCollection
-from brainbox import BrainBox
+from brainbox import BrainBox, ISelfManagingDecider
 
 
-def brain_box_mock(task: BrainBox.ITask):
-    jobs = task.create_jobs()
-    if jobs[-1].decider == 'EmptyDecider':  # It means training
+class WhisperMock(ISelfManagingDecider):
+    def get_name(self):
+        return 'Whisper'
+
+    def transcribe_text(self, file, model=None, initial_prompt=None, options=None):
+        return file
+
+
+class VoskMock(ISelfManagingDecider):
+    def get_name(self):
+        return 'Vosk'
+
+    def transcribe_to_string(self, file, model=None):
+        return file
+
+
+class RhasspyKaldiMock(ISelfManagingDecider):
+    def get_name(self):
+        return 'RhasspyKaldi'
+
+    def train(self, name, language, sentences, custom_words=None):
         return 'OK'
-    if len(jobs) != 1:
-        raise ValueError(
-            "Must be either multi-job task for training, or a single-job task for recognition")
-    job = jobs[0]
-    return jsonpickle.loads(job.arguments['file'])[job.decider]
+
+    def transcribe(self, file, model=None):
+        return {'fsticuffs': []}
+
 
 class STTTestCase(TestCase):
     def test_stt(self):
-        proc = AvatarDaemon(TestStream().create_client())
-        proc.rules.bind(STTService(WhisperRecognitionSetup()))
-        proc.rules.bind(BrainBoxService(brain_box_mock))
+        with BrainBox.Api.test([WhisperMock()]) as api:
+            proc = AvatarDaemon(AvatarClient.default())
+            proc.rules.bind(STTService(WhisperRecognitionSetup()))
+            proc.rules.bind(BrainBoxService(api))
 
-        obj=dict(Whisper=STTService.Confirmation('test'))
-        proc.client.put(STTService.Command(jsonpickle.dumps(obj)))
-        result = proc.debug_and_stop_by_message_type(STTService.Confirmation)
+            proc.client.push(STTService.Command('test'))
+            result = proc.debug_and_stop_by_message_type(STTService.Confirmation)
 
-        message = result.messages[-1]
-        self.assertIsInstance(message, STTService.Confirmation)
-        self.assertEqual('test', message.recognition)
-
+            message = result.messages[-1]
+            self.assertIsInstance(message, STTService.Confirmation)
+            self.assertEqual('test', message.recognition)
 
     def test_stt_request(self):
-        proc = AvatarDaemon(TestStream().create_client())
-        proc.rules.bind(STTService(WhisperRecognitionSetup()))
-        proc.rules.bind(BrainBoxService(brain_box_mock))
+        with BrainBox.Api.test([WhisperMock(), VoskMock()]) as api:
+            proc = AvatarDaemon(AvatarClient.default())
+            proc.rules.bind(STTService(WhisperRecognitionSetup()))
+            proc.rules.bind(BrainBoxService(api))
 
-        obj1 = dict(Vosk = STTService.Confirmation("vosk"))
-        proc.client.put(VoskRecognitionSetup('x'))
-        proc.client.put(STTService.Command(jsonpickle.dumps(obj1)))
+            proc.client.push(VoskRecognitionSetup('x'))
+            proc.client.push(STTService.Command('vosk'))
 
-        message_1 = proc.debug_and_stop_by_message_type(STTService.Confirmation).messages[-1]
+            message_1 = proc.debug_and_stop_by_message_type(STTService.Confirmation).messages[-1]
+            self.assertEqual('vosk', message_1.recognition)
 
-        self.assertEqual('vosk', message_1.recognition)
-
-        obj2 = dict(Whisper=STTService.Confirmation("whisper"))
-        proc.client.put(STTService.Command(jsonpickle.dumps(obj2)))
-
-        message_2 = proc.debug_and_stop_by_message_type(STTService.Confirmation).messages[-1]
-        self.assertEqual('whisper', message_2.recognition)
+            proc.client.push(STTService.Command('whisper'))
+            message_2 = proc.debug_and_stop_by_message_type(STTService.Confirmation).messages[-1]
+            self.assertEqual('whisper', message_2.recognition)
 
     def test_stt_kaldi_no_training(self):
-        proc = AvatarDaemon(TestStream().create_client())
-        proc.rules.bind(STTService(RhasspyRecognitionSetup('test_1')))
-        proc.rules.bind(BrainBoxService(brain_box_mock))
+        with BrainBox.Api.test([RhasspyKaldiMock()]) as api:
+            proc = AvatarDaemon(AvatarClient.default(), timeout_in_pull_in_seconds=0)
+            proc.rules.bind(STTService(RhasspyRecognitionSetup('test_1')))
+            proc.rules.bind(BrainBoxService(api))
 
-        obj = dict(RhasspyKaldi=STTService.Confirmation("rhasspy"))
-        proc.client.put(STTService.Command(jsonpickle.dumps(obj)))
-        self.assertRaises(ValueError, lambda: proc.debug_and_stop_by_message_type(STTService.Confirmation))
+            proc.client.push(STTService.Command('file'))
+            self.assertRaises(ValueError, lambda: proc.debug_and_stop_by_message_type(STTService.Confirmation))
 
-    def test_stt_kaldi_trainig(self):
+    def test_stt_kaldi_training(self):
         class Collection1(TemplatesCollection):
             test_1 = Template("Test one")
         class Collection2(TemplatesCollection):
@@ -70,29 +82,17 @@ class STTTestCase(TestCase):
             IntentsPack('test_2', tuple(Collection2.get_templates()), {}, 'en')
         ]
 
-        proc = AvatarDaemon(TestStream().create_client())
-        stt = STTService(RhasspyRecognitionSetup('test_2'))
-        proc.rules.bind(stt)
-        proc.rules.bind(BrainBoxService(brain_box_mock))
+        with BrainBox.Api.test([RhasspyKaldiMock()]) as api:
+            proc = AvatarDaemon(AvatarClient.default(), timeout_in_pull_in_seconds=0)
+            stt = STTService(RhasspyRecognitionSetup('test_2'))
+            proc.rules.bind(stt)
+            proc.rules.bind(BrainBoxService(api))
 
-        obj = dict(RhasspyKaldi=STTService.Confirmation("rhasspy"))
-        proc.client.put(STTService.RhasspyTrainingCommand(packs))
-        proc.client.put(RhasspyRecognitionSetup('test_2'))
-        proc.client.put(STTService.Command(jsonpickle.dumps(obj)))
-        messages = proc.debug_and_stop_by_message_type(STTService.Confirmation).messages
+            proc.client.push(STTService.RhasspyTrainingCommand(packs))
+            proc.client.push(RhasspyRecognitionSetup('test_2'))
+            proc.client.push(STTService.Command('file'))
+            messages = proc.debug_and_stop_by_message_type(STTService.Confirmation).messages
 
-        self.assertEqual('rhasspy', messages[-1].recognition)
-        bb_command = [m for m in messages if isinstance(m, BrainBoxService.Command)][-1]
-        handler = bb_command.task.postprocessor.handler.intent_to_template
-        self.assertTrue(list(handler)[0].endswith('Collection2.test_2'))
-
-
-
-
-
-
-
-
-
-
-
+            self.assertIsInstance(messages[-1], STTService.Confirmation)
+            self.assertIn('test_1', stt.handlers)
+            self.assertIn('test_2', stt.handlers)

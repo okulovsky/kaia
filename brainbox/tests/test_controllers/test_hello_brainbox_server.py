@@ -1,77 +1,61 @@
-from brainbox.framework.controllers import ControllerApi, ControllerServiceStatus
+from brainbox.framework.app.controllers import ControllersStatus, ControllerStatus
+from brainbox.framework import BrainBoxApi
 from brainbox.deciders.utils.hello_brainbox import HelloBrainBox
 from unittest import TestCase
-from yo_fluq import Query
 
 
-def _bps(status: ControllerServiceStatus):
-    return Query.en(status.containers).where(lambda z: z.name == 'HelloBrainBox').single()
+def _cs(status: ControllersStatus) -> ControllerStatus:
+    return next(c for c in status.controllers if c.name == 'HelloBrainBox')
 
 
-def _first_install_to_check_if_installable(self: TestCase, api:ControllerApi):
-    api.uninstall(HelloBrainBox, True)
-    status = api.status()
-    self.assertIsNone(status.currently_installing_container)
-    self.assertFalse(_bps(status).installation_status.installed)
+def _first_install_to_check_if_installable(self: TestCase, api: BrainBoxApi):
+    api.controllers.uninstall(HelloBrainBox, True)
+    status = api.controllers.status()
+    self.assertFalse(_cs(status).installed)
 
-    api.install(HelloBrainBox, True)
+    api.controllers.install.execute(HelloBrainBox)
 
-    status = api.status()
-    self.assertTrue(_bps(status).installation_status.installed)
-    self.assertEqual(0, len(_bps(status).instances))
-    self.assertIsNone(status.currently_installing_container)
+    status = api.controllers.status()
+    self.assertTrue(_cs(status).installed)
+    self.assertEqual(0, len(_cs(status).instances))
 
-def test_api(self: TestCase, api: ControllerApi):
+
+
+def make_api_test(self: TestCase, api: BrainBoxApi):
     _first_install_to_check_if_installable(self, api)
 
-    api.uninstall(HelloBrainBox, True)
-    status = api.status()
-    self.assertIsNone(status.currently_installing_container)
-    self.assertFalse(_bps(status).installation_status.installed)
+    api.controllers.uninstall(HelloBrainBox, True)
+    status = api.controllers.status()
+    self.assertFalse(_cs(status).installed)
 
-    self.assertRaises(Exception, lambda: api.run(HelloBrainBox, 'must_fail'))
+    self.assertRaises(Exception, lambda: api.controllers.run(HelloBrainBox, 'must_fail'))
 
-    api.install(HelloBrainBox, False)
-    status = api.status()
-    self.assertFalse(_bps(status).installation_status.installed)
-    self.assertEqual('HelloBrainBox', status.currently_installing_container)
-    api.join_installation()
+    key = api.controllers.install.start(HelloBrainBox)
+    status = api.controllers.status()
+    self.assertFalse(_cs(status).installed)
+    api.controllers.install.join(key)
 
-    status = api.status()
-    self.assertTrue(_bps(status).installation_status.installed)
-    self.assertEqual(0, len(_bps(status).instances))
-    self.assertIsNone(status.currently_installing_container)
+    status = api.controllers.status()
+    self.assertTrue(_cs(status).installed)
+    self.assertEqual(0, len(_cs(status).instances))
 
-    instance_id = api.run(HelloBrainBox, 'test')
+    instance_id = api.controllers.run(HelloBrainBox, None)
 
-    boilerplate_api = HelloBrainBox('127.0.0.1:20000')
-    result = boilerplate_api.json('test')
+    brainbox_api = HelloBrainBox.Api('127.0.0.1:20000')
+    result = brainbox_api.sum(2, 4)
+    self.assertEqual(6, result)
 
-    self.assertDictEqual(
-        {'argument': 'test', 'model': 'test', 'setting': 'default_setting'},
-        result
-    )
+    status = api.controllers.status()
+    self.assertEqual(instance_id, _cs(status).instances[0].instance_id)
 
-    status = api.status()
-    self.assertEqual(instance_id, _bps(status).instances[0].instance_id)
+    api.controllers.stop(HelloBrainBox, instance_id)
+    status = api.controllers.status()
+    self.assertEqual(0, len(_cs(status).instances))
 
-    api.stop(HelloBrainBox, instance_id)
-    status = api.status()
-    self.assertEqual(0, len(_bps(status).instances))
-
-    api.self_test(HelloBrainBox)
+    api.controllers.self_test.execute(HelloBrainBox)
 
 
 class HelloBrainBoxWebServerTestCase(TestCase):
     def test_web_server(self):
-        with ControllerApi.Test([HelloBrainBox.Controller()]) as api:
-            test_api(self, api)
-
-
-
-
-
-
-
-
-
+        with BrainBoxApi.test([HelloBrainBox.Controller()], default_resources_folder=False) as api:
+            make_api_test(self, api)

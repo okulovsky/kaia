@@ -1,18 +1,14 @@
-
-from algorithm import VideoProcessorApp
-import argparse
-from layer_semantic_comparator import get_comparator
+from foundation_kaia.brainbox_utils import run_brainbox_app, InstallingSupport
+from service import VideoToImagesService
+from installer import VideoToImagesInstaller
+from pathlib import Path
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--install', '-i', action='store_true')
-    args = parser.parse_args()
-
-    if args.install:
-        get_comparator()
-        exit(0)
-
-
-    app = VideoProcessorApp()
-    app.run()
-
+    installer = VideoToImagesInstaller(Path('/resources'))
+    run_brainbox_app(
+        [
+            VideoToImagesService(installer),
+            InstallingSupport(installer),
+        ],
+        True
+    )

@@ -4,8 +4,8 @@ from .common import SoundEvent, IMessage, message_handler, State, AvatarService,
 from .common.vector_identificator import VectorIdentificator, IStrategy
 from .brainbox_service import BrainBoxService
 from dataclasses import dataclass
-from brainbox.framework import FileLike
-from ..server import AvatarApi
+from foundation_kaia.marshalling import FileLike
+from ..app import AvatarApi
 from ..messaging import Confirmation
 
 
@@ -40,18 +40,14 @@ class SpeakerIdentificationService(AvatarService):
             self.resources_folder,
             self.identification_strategy,
             self.sample_to_vector,
-            self.api.file_cache.open
+            self.api.cache.read
         )
         self.vector_identificator.initialize()
 
 
-    def sample_to_vector(self, file: FileLike.Type):
-        command = BrainBoxService.Command(
-            BrainBox.Task
-            .call(Resemblyzer).vector(file)
-            .to_task()
-        )
-        return self.client.run_synchronously(command, BrainBoxService.Confirmation).result['vector']
+    def sample_to_vector(self, file: FileLike):
+        command = BrainBoxService.Command(Resemblyzer.new_task().vector(file))
+        return self.client.run_synchronously(command, BrainBoxService.Confirmation).result
 
     @message_handler.with_call(BrainBoxService.Command, BrainBoxService.Confirmation)
     def on_sound_event(self, message: SpeakerIdentificationCommand) -> Confirmation:

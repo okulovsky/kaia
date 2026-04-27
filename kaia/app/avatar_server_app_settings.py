@@ -1,75 +1,47 @@
 from .app import KaiaApp, IAppInitializer
-from avatar.messaging import IMessage
-from avatar.server import AvatarServer, AvatarServerSettings, MessagingComponent, AvatarStream, AvatarApi
-from avatar.server.messaging_component.store import CompositeStore
-from avatar.server.components import *
-from avatar.daemon import TickEvent
-from phonix.daemon import SoundLevelReport, SilenceLevelReport
-from phonix.components import PhonixMonitoringComponent, PhonixRecordingComponent, PhonixApi
+from avatar.daemon.common import ServerStartedEvent
+from avatar.app import AvatarServer, AvatarServerSettings, AvatarApi
 from dataclasses import dataclass, field
-
-import importlib
-import inspect
-import pkgutil
 from pathlib import Path
-from copy import copy
-from yo_fluq import FileIO
+from foundation_kaia.misc import Loc
 
-
-@dataclass
-class ServerStartedEvent(IMessage):
-    pass
 
 @dataclass
 class AvatarServerAppSettings(IAppInitializer):
     additional_static_folders: dict[str, Path] = field(default_factory=dict)
-    compile_scripts: bool = False
-    add_chunks_component: bool = False
-    add_phonix_component: bool = True
     hide_logs: bool = True
+    custom_frontend_folder: Path|None = None
+    custom_html: str|None = None
+    port: int = 13002
 
 
     def bind_app(self, app: 'KaiaApp'):
-        PORT = 13002
+        if app.brainbox_cache_folder is None:
+            raise ValueError("KaiaApp.brainbox_cache_folder must be set before AvatarServerAppSettings.bind_app")
+        if app.avatar_resources_folder is None:
+            raise ValueError("KaiaApp.avatar_resources_folder must be set before AvatarServerAppSettings.bind_app")
 
         start_message = ServerStartedEvent()
         start_message_id = start_message.envelop.id
 
-        components = [
-            MessagingComponent(
-                app.working_folder/'avatar/messages.db',
-                MessagingComponent.create_aliases("avatar.messaging", "avatar.daemon", "kaia"),
-                dict(default=(start_message,)),
-                {
-                    60*60*2.0: (SoundLevelReport, SilenceLevelReport, TickEvent)
-                },
-                CompositeStore.Factory(1000)
-            ),
-            FileCacheComponent(app.brainbox_cache_folder)
-        ]
-        static_folders = copy(self.additional_static_folders)
-        web_folder = Path(__file__).parent.parent/'web'
-        static_folders['static'] = web_folder/'static'
-        components.append(StaticPathsComponent(static_folders))
-        components.append(TypeScriptComponent(web_folder/'scripts', self.compile_scripts))
-        components.append(MainComponent(FileIO.read_text(web_folder / 'index.html')))
-        components.append(ResourcesComponent(app.avatar_resources_folder))
-
-        if self.add_phonix_component:
-            components.append(PhonixRecordingComponent(app.brainbox_cache_folder))
-            components.append(PhonixMonitoringComponent(app.brainbox_cache_folder))
-        if self.add_chunks_component:
-            components.append(AudioChunksComponent(app.brainbox_cache_folder))
-            
         settings = AvatarServerSettings(
-            tuple(components),
-            PORT,
-            self.hide_logs
+            port = self.port,
+            hide_logs=self.hide_logs,
+            aliases_discovery_namespaces = ("avatar.messaging", "avatar.daemon", "kaia"),
+            messages_ttl_in_seconds=60*60*2,
+            cache_folder=app.brainbox_cache_folder,
+            web_folder=Loc.root_folder/'kaia/web',
+            frontend_folder=app.working_folder/'avatar/frontend' if self.custom_frontend_folder is None else self.custom_frontend_folder,
+            resources_folder=app.avatar_resources_folder,
+            custom_html=self.custom_html,
+            starting_messages=dict(default=(start_message,))
         )
-        app.avatar_api = AvatarApi(f'127.0.0.1:{PORT}')
-        app._avatar_client = AvatarStream(app.avatar_api).create_client(start_message_id)
+
+        app.avatar_api = AvatarApi(f'http://127.0.0.1:{self.port}')
+        app._avatar_client = app.avatar_api.create_client()
         app.avatar_server = AvatarServer(settings)
-        app.phonix_api = PhonixApi(f'127.0.0.1:{PORT}')
+
+
 
 
 

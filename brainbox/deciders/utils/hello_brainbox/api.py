@@ -1,47 +1,36 @@
-from ....framework import DockerWebServiceApi, File, FileLike, CacheUploadPrerequisite
-import requests
-from .settings import HelloBrainBoxSettings
+from foundation_kaia.brainbox_utils import IModelInstallingSupport, IModelLoadingSupport
+from ....framework import DockerMarshallingApi, EntryPoint, TaskBuilder
+from .settings import HelloBrainBoxSettings, HelloBrainBoxModels
 from .controller import HelloBrainBoxController
-from .model import HelloBrainBoxModel
-import json
+from .app.interface import IHelloBrainBox
+from .app.model import HelloBrainBoxModelSpec
 
 
-class HelloBrainBox(DockerWebServiceApi[HelloBrainBoxSettings, HelloBrainBoxController]):
+
+class HelloBrainBoxApi(
+    DockerMarshallingApi[HelloBrainBoxSettings, HelloBrainBoxController],
+    IHelloBrainBox,
+    IModelLoadingSupport,
+    IModelInstallingSupport[HelloBrainBoxModelSpec],
+):
     def __init__(self, address: str|None = None):
         super().__init__(address)
 
-
-    def json(self, argument: str):
-        result = requests.post(
-            self.endpoint('/decide'),
-            json = dict(
-                argument=argument,
-            )
-        )
-        if result.status_code!=200:
-            raise ValueError(f"Endpoint /decide returned unexpected status code {result.status_code}\n{result.text}")
-        return result.json()
-
-    def file(self, argument: str):
-        json_data = self.json(argument)
-        return File(self.current_job_id+'.output.json', json.dumps(json_data), File.Kind.Json)
-
-    def file_length(self, file_like: FileLike.Type):
-        with FileLike(file_like, self.cache_folder) as stream:
-            return len(stream.read())
-
-    def resources(self):
-        result = requests.get(self.endpoint('/resources'))
-        if result.status_code!=200:
-            raise ValueError(f"Endpoint /resources returned unexpected status code {result.status_code}\n{result.text}")
-        return result.json()
+class HelloBrainBoxTaskBuilder(
+    TaskBuilder,
+    IHelloBrainBox,
+    IModelLoadingSupport,
+    IModelInstallingSupport[HelloBrainBoxModelSpec]
+):
+    pass
 
 
-    @staticmethod
-    def file_upload(file: File):
-        return CacheUploadPrerequisite(file.content, file.name)
+class HelloBrainBoxEntryPoint(EntryPoint[HelloBrainBoxTaskBuilder]):
+    def __init__(self):
+        super().__init__()
+        self.Api = HelloBrainBoxApi
+        self.Models = HelloBrainBoxModels
+        self.Settings = HelloBrainBoxSettings
+        self.Controller = HelloBrainBoxController
 
-
-    Settings = HelloBrainBoxSettings
-    Controller = HelloBrainBoxController
-    Model = HelloBrainBoxModel
+HelloBrainBox = HelloBrainBoxEntryPoint()

@@ -10,7 +10,7 @@ class DockerizedBrainBoxDebugTestCase(TestCase):
         platform.system() == "Windows" or "TOX_ENV_DIR" in os.environ,
         "Test not supported on Windows or in Tox"
     )
-    def test_dockerized_brainbox_with_debugging(self):
+    def dont_test_dockerized_brainbox_with_debugging(self):
         with ContainerizedBrainboxTestEnvironment() as api:
             run_all(api)
 

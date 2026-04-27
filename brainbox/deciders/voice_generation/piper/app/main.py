@@ -1,10 +1,12 @@
-import subprocess, sys
-from pathlib import Path
+from foundation_kaia.brainbox_utils import run_brainbox_app, ModelInstallingSupport
+from model import PiperModelSpec, PiperInstaller
+from service import PiperService
 
-subprocess.run([
-    sys.executable, 
-    "-m", "uvicorn", 
-    "server:app",
-    "--host", "0.0.0.0", 
-    "--port", "8080"
-], cwd =  Path(__file__).parent)
+
+if __name__ == '__main__':
+    installer = PiperInstaller()
+    service = PiperService()
+    run_brainbox_app([
+        service,
+        ModelInstallingSupport[PiperModelSpec](installer),
+    ])

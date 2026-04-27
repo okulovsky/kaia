@@ -1,9 +1,9 @@
 from typing import Optional, Callable, Union
 from .common import IMessage, State, ChatCommand, message_handler, ImageCommand, Confirmation, AvatarService, InitializationEvent
 from .common.content_manager import MediaLibrary, IContentStrategy, MediaLibraryManager
-from ..server import AvatarApi
+from ..app import AvatarApi
 from dataclasses import dataclass
-import base64
+
 
 @dataclass
 class NewImageCommand(IMessage):
@@ -63,7 +63,7 @@ class ImageService(AvatarService):
 
     def _get_image_command(self, message: IMessage):
         if self.api is not None:
-            self.api.file_cache.upload(self.last_image_record.get_content(), self.last_image_record.filename)
+            self.api.cache.upload(self.last_image_record.filename, self.last_image_record.get_content())
         return ImageCommand(
             self.last_image_record.filename,
             self.last_image_record.tags,
@@ -71,7 +71,7 @@ class ImageService(AvatarService):
 
     def _get_empty_image(self, message: IMessage):
         if self.api is not None and not self.empty_image_uploaded:
-            self.api.file_cache.upload(_empty_image, 'empty_image.png')
+            self.api.cache.upload('empty_image.png', _empty_image)
         return ImageCommand('empty_image.png').as_propagation_confirmation_to(message)
 
     @message_handler

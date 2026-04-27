@@ -1,4 +1,4 @@
-from ..stream import IMessage
+from ..core import IMessage
 from ..rules import Rule
 from dataclasses import dataclass, field
 from datetime import datetime

@@ -9,7 +9,7 @@ from foundation_kaia.misc import Loc
 from yo_fluq import FileIO
 
 def make(proc: AvatarDaemon, utterance: Utterance) -> str:
-    proc.client.put(TextCommand(utterance))
+    proc.client.push(TextCommand(utterance))
     messages = proc.debug_and_stop_by_empty_queue().messages
     print(messages)
     m = messages[-1]
@@ -41,14 +41,14 @@ class ParaphraseTestCase(TestCase):
             FileIO.write_pickle(records, folder/'paraphrases.pkl')
 
             state = State(character='character_0', language='en')
-            proc = AvatarDaemon(TestStream().create_client())
+            proc = AvatarDaemon(AvatarClient.default(), timeout_in_pull_in_seconds=0)
             proc.rules.bind(
                 StateToUtterancesApplicationService(state),
             )
             service = ParaphraseService(state, NewContentStrategy(False))
             service.set_resources_folder(folder)
             proc.rules.bind(service, BindingSettings().bind_type(InternalTextCommand).to(StateToUtterancesApplicationService))
-            proc.client.put(InitializationEvent())
+            proc.client.push(InitializationEvent())
 
             m = make(proc, templates[0].utter())
             self.assertEqual('Test_1/character_0/0.', m)

@@ -1,0 +1,1 @@
+JSON = dict|list|str|float|int|None

@@ -10,7 +10,7 @@ activities = ('a0', 'a1', 'a2')
 
 class NarrationTestCase(TestCase):
     def setUp(self):
-        self.proc = AvatarDaemon(TestStream().create_client())
+        self.proc = AvatarDaemon(AvatarClient.default(), timeout_in_pull_in_seconds=0)
         self.state = State(character='c1', activity='a1')
         self.proc.rules.bind(NarrationService(
             self.state,

@@ -1,2 +1,0 @@
-from .status_page import create_status_page
-from .installation_report_page import create_installation_report_page

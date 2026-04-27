@@ -1,54 +1,48 @@
 from typing import Iterable
-from unittest import TestCase
+from foundation_kaia.brainbox_utils import Installer
 from ....framework import (
-    RunConfiguration, TestReport, BrainboxImageBuilder, IImageBuilder, DockerWebServiceController,
-    BrainBoxApi, BrainBoxTask, INotebookableController, File, SmallImageBuilder
+    File, RunConfiguration, SelfTestCase, BrainboxImageBuilder, IImageBuilder,
+    DockerMarshallingController, BrainBoxApi, BrainBoxTask,
 )
 from .settings import InsightFaceSettings
 from pathlib import Path
-import os
+from .app.model import InsightFaceInstaller
 
-class InsightFaceController(
-    DockerWebServiceController[InsightFaceSettings],
-    INotebookableController
-):
-    def get_image_builder(self) -> IImageBuilder|None:
+
+class InsightFaceController(DockerMarshallingController[InsightFaceSettings]):
+    def get_image_builder(self) -> IImageBuilder | None:
         return BrainboxImageBuilder(
             Path(__file__).parent,
             '3.11.11',
-            allow_arm64=True
+            allow_arm64=True,
+            dependencies=(
+                BrainboxImageBuilder.CustomDependencies(('numpy==2.4.2','cython==3.2.4')),
+                BrainboxImageBuilder.RequirementsLockTxt(),
+                BrainboxImageBuilder.KaiaFoundationDependencies(),
+            )
         )
 
-
-    def get_service_run_configuration(self, parameter: str|None) -> RunConfiguration:
+    def get_service_run_configuration(self, parameter: str | None) -> RunConfiguration:
         if parameter is not None:
             raise ValueError(f"`parameter` must be None for {self.get_name()}")
-        config = RunConfiguration(
-            publish_ports={self.settings.connection.port: 8084},
+        return RunConfiguration(
+            publish_ports={self.connection_settings.port: 8080},
         )
-        return config
 
-    def get_notebook_configuration(self) -> RunConfiguration|None:
-        return self.get_service_run_configuration(None).as_notebook_service()
+    def get_installer(self) -> Installer | None:
+        return InsightFaceInstaller(self.resource_folder())
 
     def get_default_settings(self):
         return InsightFaceSettings()
 
     def create_api(self):
-        from .api import InsightFace
-        return InsightFace()
+        from .api import InsightFaceApi
+        return InsightFaceApi()
 
-    def post_install(self):
-        pass
-
-
-    def _self_test_internal(self, api: BrainBoxApi, tc: TestCase) -> Iterable:
+    def self_test_cases(self) -> Iterable[SelfTestCase]:
         from .api import InsightFace
         file = File.read(Path(__file__).parent / 'files/image.png')
-
-
-        result = api.execute(BrainBoxTask.call(InsightFace).analyze(image=file))
-        yield TestReport.last_call(api)
-
-        tc.assertEqual(5, len(result))
-
+        yield SelfTestCase(
+            InsightFace.new_task().analyze(image=file),
+            lambda result, api, tc: tc.assertEqual(5, len(result))
+        )

@@ -35,11 +35,13 @@ class NotificationSkill(IKaiaSkill):
     def __init__(self,
                  registers: Iterable[NotificationRegister],
                  pause_between_alarms_in_seconds: Optional[float] = None,
-                 volume_delta: Optional[float] = None
+                 volume_delta: Optional[float] = None,
+                 max_notification_output: int = 7
                  ):
         self.registers: tuple[NotificationRegister,...] = tuple(registers)
         self.pause_between_alarms_in_seconds = pause_between_alarms_in_seconds
         self.volume_delta = volume_delta
+        self.max_notification_output = max_notification_output
 
     def _find_notification(self, current_time) -> Optional[FoundNotification]:
         for register in self.registers:
@@ -70,15 +72,19 @@ class NotificationSkill(IKaiaSkill):
 
     def run(self):
         last_time_audio_sent: Optional[datetime] = None
-        first_notification = True
+        notifications_count = 0
 
         input = yield
-        active_notification = self._find_notification(input.time)
+        current_time = input.time
+        active_notification = self._find_notification(current_time)
         if active_notification is None:
             raise Return()
 
+
         while True:
             input = yield
+            emit_notification = False
+            emit_end = False
             if isinstance(input, TickEvent):
                 current_time = input.time
                 if (
@@ -86,23 +92,39 @@ class NotificationSkill(IKaiaSkill):
                     or last_time_audio_sent is None
                     or (current_time-last_time_audio_sent).total_seconds() >= self.pause_between_alarms_in_seconds
                 ):
-                    for item in active_notification.register.notification_signals:
-                        yield item.with_new_envelop()
-                    last_time_audio_sent = current_time
-                    if self.volume_delta is not None:
-                        stash_to = 'before_notification' if first_notification else None
-                        yield VolumeControlService.Command(relative_value=self.volume_delta, stash_to = stash_to)
-                    first_notification = False
-                yield Listen()
+                    if notifications_count >= self.max_notification_output:
+                        emit_end = True
+                    else:
+                        emit_notification = True
             else:
+                emit_end = True
+
+            if not emit_notification and not emit_end:
+                yield Listen()
+                continue
+
+            if emit_notification:
+                for item in active_notification.register.notification_signals:
+                    yield item.with_new_envelop()
+                last_time_audio_sent = current_time
+                if self.volume_delta is not None:
+                    stash_to = 'before_notification' if notifications_count == 0 else None
+                    yield VolumeControlService.Command(relative_value=self.volume_delta, stash_to = stash_to)
+                notifications_count += 1
+                yield Listen()
+                continue
+
+            if emit_end:
                 if active_notification.register.exit_signals is not None:
                     for item in active_notification.register.exit_signals:
                         yield item.with_new_envelop()
                 del active_notification.register.instances[active_notification.index]
-                if self.volume_delta is not None and not first_notification:
+                if self.volume_delta is not None and notifications_count > 0:
                     yield VolumeControlService.Command(restore_from='before_notification')
                 if active_notification.info.pushback_after is not None:
                     raise Return(Pushback(active_notification.info.pushback_after))
                 else:
                     raise Return()
+
+
 

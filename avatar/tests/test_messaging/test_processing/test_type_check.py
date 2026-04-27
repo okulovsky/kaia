@@ -1,7 +1,7 @@
-import traceback
 import unittest
 from dataclasses import dataclass
 from avatar.messaging import *
+
 
 @dataclass
 class InMessage(IMessage):
@@ -13,13 +13,11 @@ class WrongOutput(IMessage):
 
 
 class TestWrongOutputType(unittest.TestCase):
-    def check(self, function, expected_exception = None):
-        stream = TestStream()
-        client = stream.create_client()
-        client.put(InMessage(content="bad"))
+    def check(self, function, expected_exception=None):
+        client = AvatarClient.default()
+        client.push(InMessage(content="bad"))
 
-        processor = AvatarDaemon(client)
-
+        processor = AvatarDaemon(client, timeout_in_pull_in_seconds=0)
 
         with self.assertRaises(Exception) as cm:
             processor.rules.bind(function)
@@ -27,8 +25,6 @@ class TestWrongOutputType(unittest.TestCase):
 
         if expected_exception is not None:
             self.assertIn(expected_exception, str(cm.exception))
-
-
 
     def test_handler_returns_unexpected_type(self):
         def handler_returns_wrong_type(msg: InMessage) -> InMessage:
@@ -48,12 +44,4 @@ class TestWrongOutputType(unittest.TestCase):
     def test_handler_wrong_signature(self):
         def handler_wrong_signature() -> InMessage:
             return InMessage("test")
-        self.check(handler_wrong_signature, 'Callable must have exactly one argument (excluding self/cls)')
-
-
-
-
-
-
-
-
+        self.check(handler_wrong_signature, 'message handler must have exactly one argument')

@@ -1,41 +1,30 @@
-import json
-import uuid
-
-from ....framework import DockerWebServiceApi
-import requests
+from ....framework import DockerMarshallingApi, EntryPoint, TaskBuilder
 from .settings import EspeakPhonemizerSettings
 from .controller import EspeakPhonemizerController
+from .app.interface import IEspeakPhonemizer
 
 
 
-class EspeakPhonemizer(DockerWebServiceApi[EspeakPhonemizerSettings, EspeakPhonemizerController]):
-    def __init__(self, address: str|None = None):
+class EspeakPhonemizerApi(
+    DockerMarshallingApi[EspeakPhonemizerSettings, EspeakPhonemizerController],
+    IEspeakPhonemizer,
+):
+    def __init__(self, address: str | None = None):
         super().__init__(address)
 
 
-    def phonemize(self, text: str|list[str], language: str = 'en-us', stress = False):
-        if isinstance(text, str):
-            text = [text]
+class EspeakPhonemizerTaskBuilder(
+    TaskBuilder,
+    IEspeakPhonemizer,
+):
+    pass
 
-        result = requests.post(
-            self.endpoint('/echo'),
-            json = dict(
-                text = text,
-                language = language,
-                stress = stress,
-            )
-        )
-        if result.status_code!=200:
-            raise ValueError(f"Endpoint /phonemize returned unexpected status code {result.status_code}\n{result.text}")
 
-        return result.json()
+class EspeakPhonemizerEntryPoint(EntryPoint[EspeakPhonemizerTaskBuilder]):
+    def __init__(self):
+        super().__init__()
+        self.Api = EspeakPhonemizerApi
+        self.Settings = EspeakPhonemizerSettings
+        self.Controller = EspeakPhonemizerController
 
-    def phonemize_to_file(self, text: str|list[str], language: str = 'en-us', stress = False):
-        result = self.phonemize(text, language, stress)
-        filename = str(uuid.uuid4())+'.json'
-        with open(self.cache_folder/filename, 'w') as f:
-            json.dump(result, f)
-        return filename
-
-    Settings = EspeakPhonemizerSettings
-    Controller = EspeakPhonemizerController
+EspeakPhonemizer = EspeakPhonemizerEntryPoint()

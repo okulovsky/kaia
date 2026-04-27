@@ -1,25 +1,15 @@
-import torch
-import os
-import torchaudio as ta
-from chatterbox.mtl_tts import ChatterboxMultilingualTTS, Conditionals  # Добавь импорт Conditionals
+from foundation_kaia.brainbox_utils import Installer
 
-class Model:
-    def __init__(self, device='cuda'):
-        self.model = ChatterboxMultilingualTTS.from_pretrained(device=device)
-        self.device = device  # Сохраним для удобства
 
-    def compute_embedding(self, src_path):
-        self.model.prepare_conditionals(src_path, exaggeration=0.5)
-        return self.model.conds
+class ChatterboxInstaller(Installer[str]):
+    def _execute_installation(self):
+        import torch
+        from chatterbox.mtl_tts import ChatterboxMultilingualTTS
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        ChatterboxMultilingualTTS.from_pretrained(device=device)
 
-    def voiceover(self, text, conds, language, output_file, exaggeration=0.5, cfg_weight=0.5):
-        self.model.conds = conds  
-        # Если exaggeration отличается, generate сам обновит его в conds.t3.emotion_adv
-        wav_out = self.model.generate(
-            text=text,
-            language_id=language,
-            exaggeration=exaggeration,
-            cfg_weight=cfg_weight
-        )
-        ta.save(output_file, wav_out, self.model.sr)
-
+    def _execute_unique_model_loading(self):
+        import torch
+        from processing import Model
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        return Model(device=device)

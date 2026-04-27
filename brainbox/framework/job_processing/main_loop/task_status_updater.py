@@ -1,5 +1,5 @@
 from ..core import Core, ICoreAction, OperatorMessage, Job
-from sqlalchemy.orm import Session
+from pprint import pprint
 
 class TasksStatusUpdater(ICoreAction):
     def apply(self, core: Core):
@@ -23,26 +23,29 @@ class TasksStatusUpdater(ICoreAction):
 
     def _apply_update(self, core, update: OperatorMessage, job: Job):
         if update.type == OperatorMessage.Type.accepted:
-            job.accepted = True
             job.accepted_timestamp = update.timestamp
 
         elif update.type == OperatorMessage.Type.error:
             job.error = update.payload
-            job.finished = True
             job.success = False
             job.finished_timestamp = update.timestamp
 
         elif update.type == OperatorMessage.Type.result:
             job.result = update.payload
             job.success = True
-            job.finished = True
             job.finished_timestamp = update.timestamp
 
         elif update.type == OperatorMessage.Type.report_progress:
             job.progress = update.payload
 
         elif update.type == OperatorMessage.Type.log:
-            job.log.append(update.payload)
+            existing = list(job.log) if job.log is not None else []
+            existing.append(update.payload)
+            job.log = existing
+
+        elif update.type == OperatorMessage.Type.responding:
+            job.responding_timestamp = update.timestamp
+            job.result = update.payload
 
         else:
             raise ValueError(f"Unknown update type {update.type}")

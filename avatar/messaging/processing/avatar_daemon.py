@@ -3,7 +3,7 @@ import threading
 import time
 from collections import defaultdict
 from .rule_group_processor import RuleGroupProcessor
-from ..stream import StreamClient, IStreamClient
+from ..core import AvatarClient, IMessage
 from ..rules import RulesCollection
 import queue
 from .filters import *
@@ -33,11 +33,12 @@ class ExceptionEvent(IMessage):
 
 class AvatarDaemon:
     def __init__(self,
-                 client: StreamClient,
+                 client: AvatarClient,
                  time_tick_interval_in_seconds: float|None = None,
                  add_error_events: bool = False,
-                 reporting_client: IStreamClient|None = None,
-                 working_folder: Path|None = None
+                 reporting_client: AvatarClient|None = None,
+                 resources_folder: Path|None = None,
+                 timeout_in_pull_in_seconds: float|None = None
                  ):
         self.client = client
         self.rules = RulesCollection()
@@ -46,7 +47,8 @@ class AvatarDaemon:
         self.last_time_tick: TickEvent|None = None
         self.add_error_events = add_error_events
         self.reporting_client = reporting_client
-        self.working_folder = working_folder
+        self.resources_folder = resources_folder
+        self.timeout_in_pull_in_seconds = timeout_in_pull_in_seconds
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -61,12 +63,12 @@ class AvatarDaemon:
         self._stop_flag.set()
 
     def run(self, filters: list[IProcessingFilter]|None = None):
+        self.client.wait_for_availability()
         if filters is None:
             filters = []
 
-        self.client.initialize()
         if self.reporting_client is not None:
-            self.reporting_client.initialize()
+            pass
 
         # Group rules by host_object
         grouped = defaultdict(list)
@@ -78,7 +80,7 @@ class AvatarDaemon:
 
         # Make RuleProcessors
         self.processors = [
-            RuleGroupProcessor(self.client, rules_for_host, self._event_queue, self.working_folder)
+            RuleGroupProcessor(self.client, rules_for_host, self._event_queue, self.resources_folder)
             for rules_for_host in grouped.values()
         ]
 
@@ -95,9 +97,9 @@ class AvatarDaemon:
                     current = datetime.now()
                     if self.last_time_tick is None or (current - self.last_time_tick.time).total_seconds() > self.time_tick_interval_in_seconds:
                         self.last_time_tick = TickEvent(current)
-                        self.client.put(self.last_time_tick)
+                        self.client.push(self.last_time_tick)
 
-                messages = self.client.pull()
+                messages = self.client.pull(timeout_in_seconds=self.timeout_in_pull_in_seconds)
                 for message in messages:
                     self._event_queue.put(ProcessingEvent(ProcessingEvent.Type.Received, message))
                     for processor in self.processors:
@@ -110,15 +112,17 @@ class AvatarDaemon:
                 while not self._event_queue.empty():
                     event: ProcessingEvent = self._event_queue.get()
                     if self.reporting_client is not None:
-                        self.reporting_client.put(event)
+                        self.reporting_client.push(event)
                     if self.add_error_events and event.type == ProcessingEvent.Type.Error:
-                        self.client.put(ExceptionEvent(event.rule_name, event.exception))
+                        self.client.push(ExceptionEvent(event.rule_name, event.exception))
                     for filter in filters:
                         if filter.should_stop_on_event(event):
                             exit = True
                 if exit:
                     break
-                time.sleep(0.01)
+
+                if self.timeout_in_pull_in_seconds is not None:
+                    time.sleep(0.01)
         finally:
             for processor in self.processors:
                 processor._stop_event.set()
@@ -130,14 +134,16 @@ class AvatarDaemon:
         Thread(target=self.run, daemon=True).start()
 
     def debug(self, messages, filters: list[IProcessingFilter]) -> AvatarDebugReport:
+        last_id_before = self.client.last_id
         for message in messages:
-            self.client.put(message)
+            self.client.push(message)
         start = time.perf_counter()
-        client = self.client.clone()
+        client = self.client.clone_client()
+        client.set_last_id(last_id_before)
         self.run(filters)
         end = time.perf_counter()
         return AvatarDebugReport(
-            tuple(client.pull()),
+            tuple(client.pull(timeout_in_seconds=0)),
             end-start
         )
 

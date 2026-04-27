@@ -1,0 +1,2 @@
+class IEntryPoint:
+    pass

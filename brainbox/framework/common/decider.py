@@ -1,20 +1,20 @@
 from uuid import uuid4
-from .logger import Logger
-from .loc import Loc
+from .api_callback import ApiCallback
+from .locations import BrainBoxLocations
 from pathlib import Path
 from dataclasses import dataclass, field
 
 class DeciderContext:
     def __init__(self):
-        self._logger : Logger|None = None
+        self._api_callback : ApiCallback|None = None
         self._current_job_id: str|None = None
         self._cache_folder: Path|None = None
 
     @property
-    def logger(self) -> Logger:
-        if self._logger is None:
-            return Logger()
-        return self._logger
+    def api_callback(self) -> ApiCallback:
+        if self._api_callback is None:
+            return ApiCallback()
+        return self._api_callback
 
     @property
     def current_job_id(self) -> str:
@@ -25,7 +25,7 @@ class DeciderContext:
     @property
     def cache_folder(self) -> Path:
         if self._cache_folder is None:
-            return Loc.cache_folder
+            return BrainBoxLocations.default_cache_folder()
         return self._cache_folder
 
 
@@ -59,4 +59,7 @@ class ISelfManagingDecider(IDecider):
 
     def cooldown(self):
         pass
+
+    def get_name(self):
+        return type(self).__name__
 

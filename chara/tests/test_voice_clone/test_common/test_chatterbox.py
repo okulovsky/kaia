@@ -5,16 +5,19 @@ import shutil
 from chara.voice_clone.common import ChatterboxModel, ChatterboxInference, ChatterboxTrain
 from chara.common import Samples, CharaApis
 from unittest import TestCase
-from brainbox import BrainBox, File
-from brainbox.deciders import Mock, Collector
+from brainbox import BrainBox, File, ISelfManagingDecider
+from brainbox.deciders import Collector
 from uuid import uuid4
 from foundation_kaia.misc import Loc
 from yo_fluq import FileIO
+from pathlib import Path
 
-class MyMock(Mock):
+class MyMock(ISelfManagingDecider):
     def __init__(self):
-        super(MyMock, self).__init__("Chatterbox")
         self.models = set()
+
+    def get_name(self):
+        return "Chatterbox"
 
     def train(self, speaker: str, sample_file):
         pass
@@ -28,11 +31,11 @@ class MyMock(Mock):
 
 class ChatterboxTrainTest(TestCase):
     def test_train(self):
-        with BrainBox.Api.Test([MyMock(), Collector()]) as api:
+        with BrainBox.Api.test([MyMock(), Collector()]) as api:
             CharaApis.brainbox_api = api
 
             with Loc.create_test_folder() as folder:
-                #folder = Path(__file__).parent/'cache'; shutil.rmtree(folder, ignore_errors=True)
+                folder = Path(__file__).parent/'cache'; shutil.rmtree(folder, ignore_errors=True)
 
 
                 os.makedirs(folder/'source/one')

@@ -10,17 +10,17 @@ from grammatron import UtterancesSequence
 
 
 
-def _factory(dtf, beautification):
+def _factory(dtf, beautification, cap):
     register = NotificationRegister(
         (ChatCommand('Alarm'),),
         (ChatCommand('Alarm cancelled'),) if beautification else None
     )
-    notification = NotificationSkill([register], 10 if beautification else None)
+    notification = NotificationSkill([register], 10 if beautification else None, max_notification_output=cap)
     timer = TimerSkill(register, dtf)
     return Automaton(KaiaAssistant([timer, notification]), None)
 
-def S(dtf: TestTimeFactory, with_after_audio = False):
-    return Scenario(automaton_factory=lambda: _factory(dtf, with_after_audio))
+def S(dtf: TestTimeFactory, with_after_audio = False, cap = 7):
+    return Scenario(automaton_factory=lambda: _factory(dtf, with_after_audio, cap))
 
 
 class TestDate(TestCase):
@@ -64,6 +64,23 @@ class TestDate(TestCase):
             .check()
             .act_and_send(lambda: dtf.event())
             .check()
+            .validate()
+        )
+
+    def test_timer_produces_limited_amount_of_notifications(self):
+        dtf = TestTimeFactory()
+        (
+            S(dtf, True, 2)
+            .send(TimerIntents.set_the_timer.utter(duration=timedelta(minutes=5)))
+            .check(
+                TimerReplies.timer_is_set.utter(duration=timedelta(minutes=5)),
+            )
+            .act_and_send(lambda: dtf.shift(5 * 60).event())
+            .check(lambda z: z.text=="Alarm")
+            .act_and_send(lambda: dtf.shift(10).event())
+            .check(lambda z: z.text == "Alarm")
+            .act_and_send(lambda: dtf.shift(10).event())
+            .check(lambda z: z.text == "Alarm cancelled")
             .validate()
         )
 

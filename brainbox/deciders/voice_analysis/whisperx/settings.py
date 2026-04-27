@@ -1,5 +1,7 @@
 from dataclasses import dataclass
+from ....framework import ConnectionSettings
+
 
 @dataclass
 class WhisperXSettings:
-    pass
+    connection = ConnectionSettings(20106, 300)

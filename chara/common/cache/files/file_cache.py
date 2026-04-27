@@ -16,12 +16,28 @@ T = TypeVar('T')
 class FileCache(Generic[T], ICacheEntity):
     Type = FileCacheType
 
-    def __init__(self, file_type: FileCacheType = FileCacheType.Pickle):
+    def __init__(self, file_type: FileCacheType = FileCacheType.Pickle, custom_file_name: str|None = None):
         self.file_type = file_type
+        self.custom_file_name = custom_file_name
 
     @property
     def cache_file_path(self) -> Path:
-        return self.working_folder/'cache'
+        if self.custom_file_name is not None:
+            filename = self.custom_file_name
+        else:
+            filename = 'cache'
+            if self.file_type == FileCacheType.Pickle:
+                filename += '.pickle'
+            elif self.file_type == FileCacheType.Json:
+                filename += '.json'
+            elif self.file_type == FileCacheType.Text:
+                filename += '.txt'
+            elif self.file_type == FileCacheType.Bytes:
+                filename += '.bin'
+            else:
+                raise ValueError(f"Unsupported file type {self.file_type}")
+
+        return self.working_folder/filename
 
     @property
     def ready(self) -> bool:

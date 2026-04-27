@@ -3,4 +3,4 @@ from ....framework import ConnectionSettings
 
 @dataclass
 class ZonosSettings:
-    connection = ConnectionSettings(20001, 20)
+    connection = ConnectionSettings(20206, 20)

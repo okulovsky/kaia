@@ -1,6 +1,6 @@
 from typing import Type, Any,Tuple, Callable, Optional, Union
 from dataclasses import dataclass
-from ..stream import IMessage
+from ..core import IMessage
 
 @dataclass
 class RuleConnector:

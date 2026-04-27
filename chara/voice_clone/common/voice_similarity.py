@@ -94,7 +94,7 @@ class VoiceSimilarityCache(ICache[dict[Path,CandidateMatch]]):
 
 
     def _create_task(self, path: Path):
-        return BrainBox.Task.call(Resemblyzer).vector(path.name)
+        return Resemblyzer.new_task().vector(path.name)
 
 
     def pipeline(self,
@@ -107,7 +107,7 @@ class VoiceSimilarityCache(ICache[dict[Path,CandidateMatch]]):
             unit = BrainBoxUnit(self._create_task)
             e_files = [p for lst in etalon.values() for p in lst ]
             for e in e_files:
-                CharaApis.brainbox_api.upload(e.name, e)
+                CharaApis.brainbox_api.cache.upload(e.name, e)
             unit.run(
                 self.encodings,
                 e_files + list(candidates)

@@ -39,16 +39,16 @@ class TaskForPlannerSyncWithLastUpdated(ICoreAction):
 
 
     def _get_tasks(self, session, from_timestamp: datetime|None = None):
-        condition = ~Job.finished & Job.ready
+        condition = Job.finished_timestamp.is_(None) & Job.ready_timestamp.is_not(None)
         if from_timestamp is not None:
             condition &= Job.last_update_timestamp>=from_timestamp
         new_records = list(session.execute(
             select(
                 Job.id,
                 Job.decider,
-                Job.decider_parameter,
+                Job.parameter,
                 Job.received_timestamp,
-                Job.assigned,
+                Job.assigned_timestamp.is_not(None).label('assigned'),
                 Job.ordering_token,
                 Job.last_update_timestamp
             )

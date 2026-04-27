@@ -1,37 +1,27 @@
-import subprocess
-import argparse
 import sys
-from installation import install
-import sys
+import os
+
 sys.path.append('/home/app/repo/')
 sys.path.append('/home/app/repo/third_party/Matcha-TTS')
-from cosyvoice.cli.cosyvoice import AutoModel
-from server import CosyVoiceApp
-import os
 os.environ["MODELSCOPE_CACHE"] = "/resources/modelscope"
 
+from foundation_kaia.brainbox_utils import (
+    run_brainbox_app, ModelLoadingSupport, ModelInstallingSupport,
+    InstallingSupport, SingleModelStorage
+)
+from model import CosyVoiceInstaller
+from service import CosyVoiceService
+
+
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-n', '--notebook', action='store_true')
-    parser.add_argument('-i', '--install', action='store_true')
-
-    args = parser.parse_args()
-    print(f"Running with arguments\n{args}")
-
-    if args.notebook:
-        subprocess.call([sys.executable, '-m', 'notebook', '--allow-root', '--port', '8899', '--ip', '0.0.0.0', "--NotebookApp.token=''"], cwd='/repo')
-        exit(0)
-
-    if args.install:
-        install()
-        exit(0)
-
-    cosyvoice = AutoModel(model_dir='/resources/pretrained_models/Fun-CosyVoice3-0.5B')
-    CosyVoiceApp(cosyvoice).create_app().run('0.0.0.0',8080)
-
-
-
-
-
-
-
+    installer = CosyVoiceInstaller()
+    storage = SingleModelStorage(installer, default_model='Fun-CosyVoice3-0.5B-2512')
+    service = CosyVoiceService(storage)
+    run_brainbox_app(
+        [
+            service,
+            ModelLoadingSupport(storage),
+            ModelInstallingSupport[str](installer),
+            InstallingSupport(installer)
+        ]
+    )

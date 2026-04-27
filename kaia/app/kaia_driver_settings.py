@@ -3,11 +3,11 @@ from typing import Any
 from kaia import KaiaDriver, KaiaContext, KaiaAssistant, IKaiaSkill, skills, StateTranslator, IAssistantFactory
 from pathlib import Path
 from yo_fluq import FileIO
-from avatar.daemon import ChatCommand, SoundCommand, TextEvent, ButtonPressedEvent, TickEvent, InitializationEvent
+from avatar.daemon import ChatCommand, SoundCommand, TextEvent, ButtonPressedEvent, TickEvent, InitializationEvent, UserWalkInService
 from .app import KaiaApp, IAppInitializer
 from dataclasses import dataclass
 from grammatron import Template, TemplatesCollection
-from avatar.server import AvatarApi
+from avatar.app import AvatarApi
 from .avatar_daemon_app_settings import CHARACTERS
 
 
@@ -22,9 +22,10 @@ class AssistantFactory(IAssistantFactory):
 
     def create_timer_register(self):
         if self.avatar_api is not None:
-            self.avatar_api.file_cache.upload(
+            self.avatar_api.cache.upload(
+                'alarm.wav',
                 FileIO.read_bytes(Path(__file__).parent / 'files/alarm.wav'),
-                'alarm.wav')
+            )
         timer_register = skills.NotificationRegister(
             (SoundCommand('alarm.wav'), ChatCommand("alarm ringing", ChatCommand.MessageType.system)),
             (ChatCommand("alarm stopped", ChatCommand.MessageType.system),)
@@ -92,11 +93,17 @@ class AssistantFactory(IAssistantFactory):
 class KaiaDriverSettings(IAppInitializer):
     def create_client(self, app: KaiaApp):
         client = app.create_avatar_client()
-        client = client.with_types(TextEvent, ButtonPressedEvent, TickEvent, InitializationEvent)
+        client.set_allowed_types(TextEvent, ButtonPressedEvent, TickEvent, InitializationEvent)
         return client
 
     def bind_app(self, app: 'KaiaApp'):
+        if app.avatar_api is None:
+            raise ValueError("KaiaApp.avatar_api must be set before KaiaDriverSettings.bind_app")
+        if app._avatar_client is None:
+            raise ValueError("KaiaApp._avatar_client must be set before KaiaDriverSettings.bind_app")
+
         app.kaia_driver = KaiaDriver(
             AssistantFactory(app.avatar_api),
             self.create_client(app),
+            skip_logging_for_types=(TickEvent,)
         )

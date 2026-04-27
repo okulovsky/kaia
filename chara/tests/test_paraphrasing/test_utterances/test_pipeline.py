@@ -1,6 +1,5 @@
-from avatar.server import AvatarApi, AvatarServerSettings
-from avatar.server.components import ResourcesComponent
-from avatar.daemon import ParaphraseService, State
+from avatar.app import AvatarApi, AvatarServerSettings
+from avatar.daemon import *
 from unittest import TestCase
 from grammatron import Template, TemplatesCollection, TimedeltaDub
 from chara.paraphrasing.utterances import CaseBuilder, UtteranceParaphrasePipeline, UtteranceParaphrasesCache, ParaphraseStats
@@ -50,36 +49,30 @@ class UtteranceParaphrasePipelineTestCase(TestCase):
 
     def test_pipeline(self):
         buider = CaseBuilder(Utterances.get_templates())
-        with Loc.create_test_folder() as resources_folder:
-            settings = AvatarServerSettings((
-                ResourcesComponent(resources_folder),
-            ))
-
-            with AvatarApi.Test(settings) as api:
+        with Loc.create_test_folder() as avatar_folder:
+            with AvatarApi.test(avatar_folder) as api:
                 CharaApis.avatar_api = api
                 with Loc.create_test_folder() as folder_1:
                     cache = UtteranceParaphrasesCache(folder_1)
                     pipe = UtteranceParaphrasePipeline(buider, first_run, 2, 1)
                     pipe(cache)
 
-                    stats = cache.stats.read()
+                    stats = cache.stats_before.read()
                     self.check_stats(stats, 0, 0, 0, 0)
 
-                state = State(None, None, None, 'en')
+                state = State(None, None, 'en')
                 service = ParaphraseService(state)
-                service.set_resources_folder(resources_folder/'ParaphraseService')
+                service.set_resources_folder(avatar_folder/'resources/ParaphraseService')
                 service.on_initialize(None)
-                result = service.paraphrase(PlayableTextMessage(UtteranceSequenceCommand(
-                    Utterances.yes()
-                ), TextInfo(None, 'en')))
-                self.assertEqual('Sure!', result.text.utterances_sequence.utterances[0].to_str())
+                result = service.paraphrase(InternalTextCommand(Utterances.yes(), None, 'en'))
+                self.assertEqual('Sure!', result.get_text(True))
 
                 with Loc.create_test_folder() as folder_2:
                     cache = UtteranceParaphrasesCache(folder_2)
                     pipe = UtteranceParaphrasePipeline(buider, second_run, 1, 1)
                     pipe(cache)
 
-                    stats = cache.stats.read()
+                    stats = cache.stats_before.read()
                     self.check_stats(stats, 1, 1, 1, 0)
                     result = cache.batches.create_subcache(0).read_result()
                     self.assertEqual(

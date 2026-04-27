@@ -1,14 +1,13 @@
 from dataclasses import dataclass
+from enum import Enum
 from ....framework import ConnectionSettings
-from .model import WhisperModel
+
+
+class WhisperModels(str, Enum):
+    base = 'base'
 
 
 @dataclass
 class WhisperSettings:
-    connection: ConnectionSettings = ConnectionSettings(20102)
-
-    models_to_download: tuple[WhisperModel,...] = (
-        WhisperModel('base'),
-    )
-
-
+    connection = ConnectionSettings(20102)
+    models_to_install = [WhisperModels.base]
