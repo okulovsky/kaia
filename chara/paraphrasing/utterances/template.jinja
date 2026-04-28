@@ -46,10 +46,10 @@ The current, default answers are:
 * {{ sample }}
 {% endfor %}
 
-{% if variables_description|length %}
-Where:
-{% for desc in variables_description %}
-{{ desc }}
+{% if parsed_template.fragments %}
+The command contains the following variables:
+{% for fragment in parsed_template.fragments %}
+* `{{fragment.name}}`: {{fragment.description}}
 {% endfor %}
 All of these variables must be included in the paraphrase in the meaningful places, exactly in the way they are: no capitalization, not a slightest change. Do not use new variables, only use these from the list.
 

@@ -1,14 +1,42 @@
-from .case_builder import ParaphraseCase
 from ...common import CharaApis
-from ..common import ParaphraseFingerprint
+from .uterance_paraphrase_case import UtteranceParaphraseCase
 from avatar.daemon.paraphrase_service import ParaphraseRecord, ParaphraseService
 import json
 import pickle
 from dataclasses import dataclass
 
 @dataclass
+class ParaphraseFingerprint:
+    template_name: str
+    variables_tag: str
+    language: str
+    character: str|None
+    record: str|None
+
+    @staticmethod
+    def from_record(record: ParaphraseRecord) -> 'ParaphraseFingerprint':
+        return ParaphraseFingerprint(
+            record.original_template_name,
+            record.used_variables_tag,
+            record.language,
+            record.character,
+            record.user
+        )
+
+    @staticmethod
+    def from_case(case: UtteranceParaphraseCase) -> 'ParaphraseFingerprint':
+        return ParaphraseFingerprint(
+            case.original_template.get_name(),
+            case.parsed_template.variables_tag,
+            case.target_language_code,
+            None if case.character is None else case.character.name,
+            None if case.user is None else case.user.name
+        )
+
+
+@dataclass
 class ParaphraseStats:
-    case: ParaphraseCase
+    case: UtteranceParaphraseCase
     fingerprint: ParaphraseFingerprint
     existing: int = 0
     seen: int = 0
@@ -16,16 +44,6 @@ class ParaphraseStats:
     @property
     def availability(self) -> int:
         return self.existing - self.seen
-
-
-def record_to_fingerprint(record) -> ParaphraseFingerprint:
-    return ParaphraseFingerprint(
-        record.original_template_name,
-        record.used_variables_tag,
-        record.language,
-        record.character,
-        record.user
-    )
 
 
 
@@ -51,10 +69,10 @@ def _read_feedback() -> dict[str, dict[str, int]]:
     return json.loads(rs.read('paraphrases-feedback.json'))
 
 
-def _create_statistics(tasks: list[ParaphraseCase]) -> dict[ParaphraseFingerprint, ParaphraseStats]:
+def _create_statistics(tasks: list[UtteranceParaphraseCase]) -> dict[ParaphraseFingerprint, ParaphraseStats]:
     fp_to_task = {}
     for index, task in enumerate(tasks):
-        fp = task.get_fingerprint()
+        fp = ParaphraseFingerprint.from_case(task)
         if fp in fp_to_task:
             raise ValueError(
                 f"Paraphrase-to-fingrprint must describe only one paraphrase\n{fp}\n{index}, {fp_to_task[fp][0]}")
@@ -69,7 +87,7 @@ def _fill_statistics(
     name_to_fp = {}
 
     for record in _read_existing():
-        fp = record_to_fingerprint(record)
+        fp = ParaphraseFingerprint.from_record(record)
         name_to_fp[record.filename] = fp
         if fp not in fp_to_stat:
             continue
@@ -88,7 +106,7 @@ def _fill_statistics(
     stats = list(fp_to_stat.values())
     return stats
 
-def build_statistics(tasks: list[ParaphraseCase]) -> list[ParaphraseStats]:
+def build_statistics(tasks: list[UtteranceParaphraseCase]) -> list[ParaphraseStats]:
     stats = _create_statistics(tasks)
     stats = _fill_statistics(stats)
     return stats
@@ -98,7 +116,7 @@ def add_prior_result(stats: list[ParaphraseStats],
                      prior_result: list[ParaphraseRecord]) -> None:
     fp_to_stat = {s.fingerprint:s for s in stats}
     for record in prior_result:
-        fp = record_to_fingerprint(record)
+        fp = ParaphraseFingerprint.from_record(record)
         if fp not in fp_to_stat:
             continue
         fp_to_stat[fp].existing += 1

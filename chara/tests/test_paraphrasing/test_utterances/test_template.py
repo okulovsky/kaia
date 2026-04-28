@@ -1,3 +1,5 @@
+from hatch.cli import self_command
+
 from chara.paraphrasing.utterances import UtteranceParaphraseCase
 from grammatron import *
 from chara.common import Character, World
@@ -18,7 +20,6 @@ class TemplateToParaphraseTestCase(TestCase):
         parsed_cases = manager.prepare()
         self.assertEqual(1, len(parsed_cases))
         self.assertIsInstance(parsed_cases[0], UtteranceParaphraseCase)
-        print(parsed_cases[0].__dict__)
         task_builder = PromptTaskBuilder('')
         setup_default_prompter(task_builder)
         prompt = task_builder._get_prompt(parsed_cases[0])
@@ -33,32 +34,31 @@ class TemplateToParaphraseTestCase(TestCase):
 
     def test_with_variable(self):
         s = self._check(Template(f"The answer is {CardinalDub(10).as_variable('variable')}"))
-        self.assertIn('Where:', s)
-        self.assertIn('* {variable}.  Variable `variable`.', s)
+        self.assertIn('The command contains the following variables:', s)
+        self.assertIn('* `{variable}`: Example:', s)
 
     def test_with_variable_and_description(self):
         v = VariableDub("variable", CardinalDub(), "my description")
-        s = run(Template(f"The answer is {v}"))
-        self.assertIn('* {variable}.  Variable `variable`: my description.', s)
+        s = self._check(Template(f"The answer is {v}"))
+        self.assertIn('* `{variable}`: my description. Example:', s)
 
 
     def test_with_variable_and_plural(self):
-        s = run(Template(f"The answer is {PluralAgreement(CardinalDub(10).as_variable('count'), 'variable')}"))
-
-        self.assertIn('* {count/variable}. Variable `count`. Then, word `variable` is added in a grammatically correct form.', s)
+        s = self._check(Template(f"The answer is {PluralAgreement(CardinalDub(10).as_variable('count'), 'variable')}"))
+        self.assertIn('* `{count+variable}`: A grammatically correct agreement of numeric variable `count` with the word "variable". Example:', s)
 
     def test_with_context(self):
         t = Template(f"Yes").context(f'{World.character} agrees with {World.user}')
-        s = run(t)
+        s = self._check(t)
         self.assertIn('# Context', s)
         self.assertIn('The circumstances are following: Alice agrees with Bob', s)
 
     def test_with_reply(self):
-        s = run(Template("Yes").context(reply_to=start))
+        s = self._check(Template("Yes").context(reply_to=start))
         self.assertIn('The reply is a response for the following utterances from user:', s)
         self.assertIn('* Do something!', s)
 
     def test_with_reply_details(self):
-        s = run(Template("No").context(reply_to=start, reply_details=f'{World.character} disagrees with {World.user}'))
+        s = self._check(Template("No").context(reply_to=start, reply_details=f'{World.character} disagrees with {World.user}'))
         self.assertIn('The reply needs to express the following: Alice disagrees with Bob', s)
 
