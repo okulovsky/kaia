@@ -1,8 +1,9 @@
-from chara.paraphrasing.utterances import JinjaModel, UtteranceParaphrasingPrompter
-from chara.paraphrasing.common import ParaphraseCase, ParsedTemplate
+from chara.paraphrasing.utterances import UtteranceParaphraseCase
 from grammatron import *
 from chara.common import Character, World
-from foundation_kaia.prompters import Prompter
+from chara.paraphrasing.common import ParsedTemplate, TemplateParaphraseCaseManager
+from chara.paraphrasing.utterances.prompter import setup_default_prompter
+from chara.common.tools.llm import PromptTaskBuilder
 from unittest import TestCase
 
 char_1 = Character('Alice', Character.Gender.Feminine, 'Alice is Alice.')
@@ -10,21 +11,28 @@ char_2 = Character('Bob', Character.Gender.Masculine, 'Bob is Bob.')
 
 start = Template("Do something!")
 
-def run(template):
-    parsed = ParsedTemplate.parse(template)
-    case = ParaphraseCase(parsed[0], 'en', char_1, char_2)
-    result = UtteranceParaphrasingPrompter()(case)
-    print(result)
-    return result
-
-
 class TemplateToParaphraseTestCase(TestCase):
+    def _check(self, template):
+        case = UtteranceParaphraseCase(template, 'en', char_1, char_2, )
+        manager = TemplateParaphraseCaseManager([case])
+        parsed_cases = manager.prepare()
+        self.assertEqual(1, len(parsed_cases))
+        self.assertIsInstance(parsed_cases[0], UtteranceParaphraseCase)
+        print(parsed_cases[0].__dict__)
+        task_builder = PromptTaskBuilder('')
+        setup_default_prompter(task_builder)
+        prompt = task_builder._get_prompt(parsed_cases[0])
+        print(prompt)
+        return prompt
+
+
+
     def test_simple(self):
-        s = run(Template(f"Yes"))
+        s = self._check(Template(f"Yes"))
         self.assertIn('* Yes', s)
 
     def test_with_variable(self):
-        s = run(Template(f"The answer is {CardinalDub(10).as_variable('variable')}"))
+        s = self._check(Template(f"The answer is {CardinalDub(10).as_variable('variable')}"))
         self.assertIn('Where:', s)
         self.assertIn('* {variable}.  Variable `variable`.', s)
 

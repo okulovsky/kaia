@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from fastapi.responses import PlainTextResponse
-from loguru import logger
 from .web_app_entry_point import WebAppEntryPoint
 from .components import IComponent
 from abc import ABC, abstractmethod
@@ -16,7 +15,7 @@ class IServer(ABC):
 
     def __call__(self):
         wp = self.create_web_app_entry_point()
-        logger.info(f"Starting server on http://127.0.0.1:{self.get_port()}")
+        print(f"Starting server on http://127.0.0.1:{self.get_port()}")
         wp.run()
 
 

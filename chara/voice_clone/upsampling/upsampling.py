@@ -1,6 +1,7 @@
 import os
 
-from chara.common import ICache, ListCache, logger, Language
+from chara.common import ICache, ListCache, logger
+from chara.common.pipelines import ICasePipeline
 from .dto import UpsamplingResult
 from .step import StepCache
 from pathlib import Path
@@ -9,6 +10,8 @@ from ..common import VoiceModel, VoiceInference, VoiceTrain
 from dataclasses import dataclass
 from chara.common.tools import Wav
 import zipfile
+from .upsampling_step import UpsamplingCase, CaseCache
+
 
 class UpsamplingCache(ICache):
     def __init__(self, working_folder: Path|None = None):

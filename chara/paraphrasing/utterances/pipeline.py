@@ -1,5 +1,6 @@
 from chara.common import ICache, FileCache, logger, ListCache
-from ..common import ParaphraseRecord, ParaphraseCache, ParaphraseCase
+
+
 from .case_builder import CaseBuilder
 from .stats_builder import build_statistics, add_prior_result, sort_statistics, ParaphraseStats
 from pathlib import Path

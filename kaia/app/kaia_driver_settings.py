@@ -93,7 +93,7 @@ class AssistantFactory(IAssistantFactory):
 class KaiaDriverSettings(IAppInitializer):
     def create_client(self, app: KaiaApp):
         client = app.create_avatar_client()
-        client.set_allowed_types(TextEvent, ButtonPressedEvent, TickEvent, InitializationEvent)
+        client.set_allowed_types(TextEvent, ButtonPressedEvent, TickEvent, InitializationEvent, UserWalkInService.Event)
         return client
 
     def bind_app(self, app: 'KaiaApp'):

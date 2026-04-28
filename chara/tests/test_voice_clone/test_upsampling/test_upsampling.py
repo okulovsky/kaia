@@ -1,5 +1,5 @@
 from unittest import TestCase
-from chara.voice_clone.upsampling import UpsamplingPipeline, StepCache, UpsamplingResult, VerifierResult
+from chara.voice_clone.upsampling import UpsamplingPipeline, StepCache, UpsamplingResult, VerifierResult, UpsamplingSettings
 from chara.voice_clone.common import VoiceModel, VoiceInference
 from pathlib import Path
 from foundation_kaia.misc import Loc
@@ -41,7 +41,7 @@ class MockChatterbox:
 class UpsamplingPipelineTest(TestCase):
     def test_upsampling(self):
         mock = MockStep()
-        pipe = UpsamplingPipeline(Path('test'), None, None, ['1', '2', '3', '4', '5', '6'], mock, 5, 3, 3)
+        pipe = UpsamplingPipeline(Path('test'), None, None, ['1', '2', '3', '4', '5', '6'], mock, UpsamplingSettings(5, 3, 3))
         with Loc.create_test_folder() as folder:
             cache = UpsamplingCache(folder)
             cache.training.write_result([None])

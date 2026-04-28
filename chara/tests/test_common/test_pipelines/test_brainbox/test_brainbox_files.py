@@ -2,7 +2,7 @@ import shutil
 
 from brainbox import BrainBox, File, ISelfManagingDecider
 from brainbox.deciders import Collector
-from chara.common import BrainBoxPipeline, BrainBoxCache, BrainBoxMerger, CharaApis
+from chara.common import BrainBoxPipeline, BrainBoxCache, CharaApis
 from unittest import TestCase
 from foundation_kaia.misc import Loc
 from pathlib import Path
@@ -30,7 +30,7 @@ class BrainBoxPipelineTestCase(TestCase):
                 create_task,
                 options_as_files=True
             )
-            with BrainBox.Api.test([MyMock(), Collector()]) as api:
+            with BrainBox.Api.serverless_test([MyMock(), Collector()]) as api:
                 CharaApis.brainbox_api = api
                 unit.run(cache, ['a', 'b'])
 

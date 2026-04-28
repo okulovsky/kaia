@@ -12,7 +12,8 @@ class RepoImageBuilder(IImageBuilder):
                  dockerfile_template: str,
                  repo_folders: tuple[str,...],
                  container_folder_name: str|None = None,
-                 dockerignore: tuple[str,...]|None = None
+                 dockerignore: tuple[str,...]|None = None,
+                 additional_dependencies: tuple[str,...] = ()
                  ):
         self.dockerfile_template = dockerfile_template
         self.repo_folders = repo_folders
@@ -26,6 +27,7 @@ class RepoImageBuilder(IImageBuilder):
                 '**/*.pyo',
             )
         self.dockerignore = dockerignore
+        self.additional_dependencies = additional_dependencies
 
     def build_image(self, image_name: str, exec: IExecutor) -> None:
         return self._create_builder().build_image(image_name, exec)
@@ -57,6 +59,9 @@ class RepoImageBuilder(IImageBuilder):
                 if d in dependencies:
                     continue
                 dependencies.append(d)
+        for dep in self.additional_dependencies:
+            if dep not in dependencies:
+                dependencies.append(dep)
 
         return SmallImageBuilder(
             build_folder,

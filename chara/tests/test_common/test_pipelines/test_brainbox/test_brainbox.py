@@ -1,6 +1,6 @@
 from brainbox import BrainBox, ISelfManagingDecider
 from brainbox.deciders import Ollama, Collector
-from chara.common import BrainBoxPipeline, BrainBoxCache, BrainBoxMerger, CharaApis
+from chara.common import BrainBoxPipeline, BrainBoxCache, CharaApis
 from unittest import TestCase
 from foundation_kaia.misc import Loc
 
@@ -30,7 +30,7 @@ class BrainBoxPipelineTestCase(TestCase):
             unit = BrainBoxPipeline(
                 create_task
             )
-            with BrainBox.Api.test([MyMock(), Collector()]) as api:
+            with BrainBox.Api.serverless_test([MyMock(), Collector()]) as api:
                 CharaApis.brainbox_api = api
                 unit.run(cache, ['a', 'error'])
 
@@ -77,7 +77,7 @@ class BrainBoxPipelineTestCase(TestCase):
                 _merge,
                 _divide
             )
-            with BrainBox.Api.test([MyMock(), Collector()]) as api:
+            with BrainBox.Api.serverless_test([MyMock(), Collector()]) as api:
                 CharaApis.brainbox_api = api
                 unit.run(cache, ['a', 'b', 'c', 'error'])
 

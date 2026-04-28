@@ -31,7 +31,7 @@ class MyMock(ISelfManagingDecider):
 
 class ChatterboxTrainTest(TestCase):
     def test_train(self):
-        with BrainBox.Api.test([MyMock(), Collector()]) as api:
+        with BrainBox.Api.serverless_test([MyMock(), Collector()]) as api:
             CharaApis.brainbox_api = api
 
             with Loc.create_test_folder() as folder:

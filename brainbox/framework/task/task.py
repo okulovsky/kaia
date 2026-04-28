@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from foundation_kaia.marshalling import JSON
-from typing import Dict, Union, List, Iterable
+from typing import Any, Dict, Union, List, Iterable
 from .job_request import JobRequest, JobDescription, IJobRequestFactory
 from uuid import uuid4
 
@@ -61,7 +61,7 @@ class JobRequestCollector:
 class BrainBoxTask(IJobRequestFactory):
     decider: str
     method: str
-    arguments: dict[str, JSON]
+    arguments: dict[str, Any]
     dependencies: Dict[str, Union[str,'BrainBoxTask']] = field(default_factory=dict)
     fake_dependencies: List[Union[str,'BrainBoxTask']] = field(default_factory=list)
     ordering_token: str = ''

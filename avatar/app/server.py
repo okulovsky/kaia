@@ -25,6 +25,7 @@ class AvatarServerSettings:
     custom_html: str|None = None
     custom_aliases: dict[str, type]|None = None
     starting_messages: dict[str, tuple[IMessage,...]]|None = None
+    additional_web_static_folders: dict[str, Path]|None = None
 
 
 
@@ -88,6 +89,10 @@ class AvatarServer(IServer):
 
         if self.settings.frontend_folder is not None:
             StaticFilesComponent(self.settings.frontend_folder, '/frontend').mount(app)
+
+        if self.settings.additional_web_static_folders is not None:
+            for target, source in self.settings.additional_web_static_folders.items():
+                StaticFilesComponent(source, target).mount(app)
 
         for component in self.settings.extra_components:
             component.mount(app)

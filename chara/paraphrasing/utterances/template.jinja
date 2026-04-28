@@ -15,25 +15,25 @@ The user's name is {{user}}. {{user.description}}
 
 You're currently working on one of the assistant replies.
 
-{%if model.has_context %}
+{%if context is not none %}
 
 # Context
 
-{% if model.context.context is not none %}
+{% if context.context is not none %}
 The circumstances are following:
-{{model.context.context(_)}}
+{{context.context(_)}}
 {% endif %}
 
-{% if model.reply_to_examples is not none %}
+{% if reply_to_examples is not none %}
 The reply is a response for the following utterances from user:
-{% for example in model.reply_to_examples %}
+{% for example in reply_to_examples %}
 * {{ example }}
 {% endfor %}
 {% endif %}
 
-{% if model.context.reply_details is not none %}
+{% if context.reply_details is not none %}
 The reply needs to express the following:
-{{ model.context.reply_details(_) }}
+{{ context.reply_details(_) }}
 {% endif %}
 
 {% endif %}
@@ -42,16 +42,16 @@ The reply needs to express the following:
 
 The current, default answers are:
 
-{% for sample in model.samples %}
+{% for sample in samples %}
 * {{ sample }}
 {% endfor %}
 
-{% if model.has_description %}
+{% if variables_description|length %}
 Where:
-{% for desc in model.variables_description %}
+{% for desc in variables_description %}
 {{ desc }}
 {% endfor %}
-All of these variables must be included in the paraphrase in the meaningful places, exactly in the way they are. Do not use new variables, only use these from the list.
+All of these variables must be included in the paraphrase in the meaningful places, exactly in the way they are: no capitalization, not a slightest change. Do not use new variables, only use these from the list.
 
 The variables can turn into anything. The paraphrase should not assume the values, and must remain correct for any possible value of the variable.
 {% endif %}
@@ -60,4 +60,4 @@ You now need to paraphrase the default answers so that they match character's an
 
 You should not extend or shorten the lines too much.
 
-You should write 10 paraphrases as a bullet point list.
+You should write {{ variations_per_template }} paraphrases as a bullet point list.
