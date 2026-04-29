@@ -1,0 +1,2 @@
+chromadb
+sentence-transformers

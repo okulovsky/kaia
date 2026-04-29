@@ -40,6 +40,9 @@ dependencies = [
     "kaleido",
     "graphviz",
     "openai>=2.29.0",
+    "chromadb",
+    "sentence-transformers",
+    "cloudpickle>=3.1.2",
 ]
 
 [[project.authors]]
