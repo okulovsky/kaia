@@ -4,8 +4,6 @@ from typing import Callable, Any
 from avatar.messaging import AvatarClient
 from avatar.daemon import TextCommand, STTService, SoundCommand
 from loguru import logger
-
-from chara.common import Logger
 from ..assistant import KaiaContext
 from eaglesong import Automaton
 from .interpreter import KaiaInterpreter

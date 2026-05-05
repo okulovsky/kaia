@@ -527,19 +527,19 @@ training_id = api.add(HelloBrainBox.new_task().training(b'abcd'))
 
 while True:
     try:
-        status = api.tasks.get_job_summary(training_id)
+        status = api.jobs.get_job_summary(training_id)
         if status.progress is not None and status.progress > 0:
             break
     except Exception:
         pass
     time.sleep(0.1)
 
-log = api.tasks.get_log(training_id)
+log = api.jobs.get_job(training_id).log
 ```
 
 The training task is submitted with `api.add`, which returns immediately
 with the task ID. Progress and log entries are available via
-`api.tasks.get_job_summary` (for progress) and `api.tasks.get_log` (for log lines).
+`api.jobs.get_job_summary` (for progress) and `api.jobs.get_log` (for log lines).
 
 The `log` will be:
 
@@ -728,7 +728,7 @@ To add the task, you need to use `/tasks-service/base-add` with the list of task
 from uuid import uuid4
 
 id = str(uuid4())
-response = requests.post("http://127.0.0.1:8090/tasks-service/base-add", json={
+response = requests.post("http://127.0.0.1:8090/jobs-service/base-add", json={
     "jobs":
         [
             {
@@ -767,7 +767,7 @@ For the second task, we may omit ID, it will be assigned automatically.
 ```python
 ids = response.json()
 response = requests.post(
-    "http://127.0.0.1:8090/tasks-service/base-join",
+    "http://127.0.0.1:8090/jobs-service/base-join",
     json = {
         "ids": ids
     }
@@ -798,7 +798,7 @@ Then, we will run the decider:
 
 ```python
 response = requests.post(
-    "http://127.0.0.1:8090/tasks-service/base-add",
+    "http://127.0.0.1:8090/jobs-service/base-add",
     json = {
         "jobs" : [{
             "decider": "HelloBrainBox",
@@ -811,7 +811,7 @@ response = requests.post(
 )
 ids = response.json()
 response = requests.post(
-    "http://127.0.0.1:8090/tasks-service/base-join",
+    "http://127.0.0.1:8090/jobs-service/base-join",
     json = {"ids": ids}
 )
 response.raise_for_status()

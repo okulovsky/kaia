@@ -53,3 +53,6 @@ repository = "https://github.com/okulovsky/kaia/tree/main/grammatron"
 
 [tool.setuptools.packages.find]
 where = ["."]
+
+[tool.setuptools.package-data]
+"*" = ["**/*"]

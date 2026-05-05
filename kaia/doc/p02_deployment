@@ -9,14 +9,14 @@ in peace. Avatar and Kaia, however, are areas of the active development, and mos
 will need these systems redeployed. Therefore, they are bundled into the second container.
 
 To build, deliver and run the containers, I use `brainbox.framework.deployment` subsystem,
-the same I use for managing the containers in BrainBox. I admit this choice is quetionable
+the same I use for managing the containers in BrainBox. I admit this choice is questionable
 and perhaps more mature dev-ops infrastructure would be an improvement.
 With the current solution, however, I'm able to manage the deployment by running exactly one script and zero additional tools,
 which makes the onboarding easier for Python developers and especially Data Scientists, who are not always fluent with devops.
-Especially that there is still a ton of the infrastructural work to do.
+Therefore, a mature devops is not my priority, especially given that there is a ton of other, AI-related work to do.
 
 To deploy Kaia, you need to configure the remote and the local machines:
-* The remote machine is acessible via SSH without entering the password (e.g. with `ssh-copy-id`)
+* The remote machine is accessible via SSH without entering the password (e.g. with `ssh-copy-id`)
 * Docker is installed on both machines
 * `rsync` is installed on both machines
 

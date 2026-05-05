@@ -2,7 +2,6 @@ from ..task import LegacyTaskBuilder
 from ..controllers import ControllerRegistry, ControllerLike
 from .controllers import ControllerInstance
 from dataclasses import dataclass, field
-from loguru import logger
 from .api import BrainBoxApi
 from foundation_kaia.brainbox_utils.models import IModelLoadingSupport
 
@@ -26,11 +25,11 @@ class BrainBoxSetup:
 
     def _start_decider(self, api: BrainBoxApi, decider: str, parameter: str | None, is_running: bool):
         if is_running:
-            logger.info(f"Decider {decider} is running")
+            print(f"Decider {decider} is running")
         else:
-            logger.info(f"Decider {decider} is not running, starting...")
+            print(f"Decider {decider} is not running, starting...")
             api.controllers.run(decider, parameter)
-            logger.info(f"Decider {decider} is started")
+            print(f"Decider {decider} is started")
 
     def _instantiate(self, api: BrainBoxApi, decider_to_instances: dict[str, list[ControllerInstance]]):
         for decider in self.simple_deciders:
@@ -55,7 +54,7 @@ class BrainBoxSetup:
     def _monitor_side_proces(self, api, key):
         is_error = False
         for item in api.follow_report(key):
-            logger.info(f'[{item.timestamp}] {item.line}')
+            print(f'[{item.timestamp}] {item.line}')
             if item.is_error:
                 is_error = True
         return not is_error
@@ -69,28 +68,28 @@ class BrainBoxSetup:
 
         for decider in all_deciders:
             if decider in installed:
-                logger.info(f"Decider {decider} already installed")
+                print(f"Decider {decider} already installed")
             else:
-                logger.info(f"Installing decider {decider}...")
+                print(f"Installing decider {decider}...")
                 key = api.controllers.install.start(decider)
                 if not self._monitor_side_proces(api.controllers.install, key):
-                    logger.info(f"Installation of {decider} failed")
+                    print(f"Installation of {decider} failed")
                     break
                 else:
-                    logger.info(f"Installation of {decider} is completed")
+                    print(f"Installation of {decider} is completed")
 
-                logger.info(f"Self-testing decider {decider}...")
+                print(f"Self-testing decider {decider}...")
                 key = api.controllers.self_test.start(decider)
                 if not self._monitor_side_proces(api.controllers.self_test, key):
-                    logger.info(f"Self-testing decider {decider} failed")
+                    print(f"Self-testing decider {decider} failed")
                     break
                 else:
-                    logger.info(f"Self-testing decider {decider} is completed")
+                    print(f"Self-testing decider {decider} is completed")
 
 
 
     def execute(self, api: BrainBoxApi):
-        logger.info(f"Setting up BrainBox at {api.base_url}")
+        print(f"Setting up BrainBox at {api.base_url}")
         status = api.controllers.status()
         installed = {c.name for c in status.controllers if c.installed}
 

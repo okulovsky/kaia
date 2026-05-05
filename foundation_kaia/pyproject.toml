@@ -27,6 +27,7 @@ dependencies = [
     "cloudpickle"
 ]
 
+
 classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -42,8 +43,11 @@ classifiers = [
 [project.urls]
 repository = "https://github.com/okulovsky/kaia/tree/main/foundation_kaia"
 
+[project.optional-dependencies]
+test = ["sqlalchemy"]
+
 [tool.setuptools.packages.find]
 where = ["."]
 
 [tool.setuptools.package-data]
-"*" = ["**/example"]
+"*" = ["**/*"]

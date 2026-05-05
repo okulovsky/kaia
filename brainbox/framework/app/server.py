@@ -19,7 +19,6 @@ from foundation_kaia.marshalling.amenities import DocumentationService
 from .batches.service import BatchesService
 from .diagnostics.service import DiagnosticsService
 from .jobs.service import JobsService
-from .tasks.service import TasksService
 from .controllers.service import ControllersService
 from .controllers.side_process import SideProcessService, InstallationSideProcess, SelfTestSideProcess, SideProcessPool
 from foundation_kaia.marshalling.amenities import Storage
@@ -41,7 +40,6 @@ class BrainBoxServices:
     engine: Any
     command_queue: CommandQueue
     loop: MainLoop
-    tasks: TasksService
     diagnostics: DiagnosticsService
     controllers: ControllersService
     cache: Storage
@@ -74,7 +72,6 @@ class BrainBoxServer(IServer):
             engine=engine,
             command_queue=core.command_queue,
             loop=loop,
-            tasks=TasksService(engine, core.command_queue),
             diagnostics=DiagnosticsService(engine, settings.locations.cache_folder, loop),
             controllers=ControllersService(settings.registry, settings.locations.self_test_folder, api),
             cache=Storage(settings.locations.cache_folder),
@@ -109,7 +106,6 @@ class BrainBoxServer(IServer):
         service_components = [
             ServiceComponent(services.jobs),
             ServiceComponent(services.batches),
-            ServiceComponent(services.tasks),
             ServiceComponent(services.diagnostics),
             ServiceComponent(services.controllers),
             ServiceComponent(services.install_side_process, 'controllers-service/install'),

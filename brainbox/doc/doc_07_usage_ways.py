@@ -108,7 +108,7 @@ if __name__ == '__main__':
     from uuid import uuid4
 
     id = str(uuid4())
-    response = requests.post("http://127.0.0.1:8090/tasks-service/base-add", json={
+    response = requests.post("http://127.0.0.1:8090/jobs-service/base-add", json={
         "jobs":
             [
                 {
@@ -147,7 +147,7 @@ if __name__ == '__main__':
 
     ids = response.json()
     response = requests.post(
-        "http://127.0.0.1:8090/tasks-service/base-join",
+        "http://127.0.0.1:8090/jobs-service/base-join",
         json = {
             "ids": ids
         }
@@ -180,7 +180,7 @@ if __name__ == '__main__':
     """
 
     response = requests.post(
-        "http://127.0.0.1:8090/tasks-service/base-add",
+        "http://127.0.0.1:8090/jobs-service/base-add",
         json = {
             "jobs" : [{
                 "decider": "HelloBrainBox",
@@ -193,7 +193,7 @@ if __name__ == '__main__':
     )
     ids = response.json()
     response = requests.post(
-        "http://127.0.0.1:8090/tasks-service/base-join",
+        "http://127.0.0.1:8090/jobs-service/base-join",
         json = {"ids": ids}
     )
     response.raise_for_status()

@@ -56,19 +56,19 @@ if __name__ == '__main__':
 
     while True:
         try:
-            status = api.tasks.get_job_summary(training_id)
+            status = api.jobs.get_job_summary(training_id)
             if status.progress is not None and status.progress > 0:
                 break
         except Exception:
             pass
         time.sleep(0.1)
 
-    log = api.tasks.get_log(training_id)
+    log = api.jobs.get_job(training_id).log
 
     """
     The training task is submitted with `api.add`, which returns immediately
     with the task ID. Progress and log entries are available via
-    `api.tasks.get_job_summary` (for progress) and `api.tasks.get_log` (for log lines).
+    `api.jobs.get_job_summary` (for progress) and `api.jobs.get_log` (for log lines).
     
     The `log` will be:
     

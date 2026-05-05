@@ -29,7 +29,7 @@ class BrainBoxLocations:
 
     @staticmethod
     def default_resources_folder() -> Path:
-        path = Loc.data_folder / 'resources'
+        path = Loc.data_folder / 'brainbox/resources'
         os.makedirs(path, exist_ok=True)
         return path
 
@@ -41,6 +41,6 @@ class BrainBoxLocations:
 
     @staticmethod
     def default_self_tests_folder() -> Path:
-        path = Loc.data_folder/'self_tests'
+        path = Loc.data_folder/'brainbox/self_tests'
         os.makedirs(path, exist_ok=True)
         return path

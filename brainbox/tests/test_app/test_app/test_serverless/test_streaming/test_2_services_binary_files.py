@@ -46,9 +46,9 @@ class TwoServicesStreamingTestCase(TestCase):
             output = _read_bytes(storage, final_filename, len(chunk))
             self.assertEqual(expected, output)
 
-            self.assertIsNone(api.tasks.get_job_summary(job_id1).finished_timestamp, "Job 1 should still be running")
-            self.assertIsNone(api.tasks.get_job_summary(job_id2).finished_timestamp, "Job 2 should still be running")
+            self.assertIsNone(api.jobs.get_job_summary(job_id1).finished_timestamp, "Job 1 should still be running")
+            self.assertIsNone(api.jobs.get_job_summary(job_id2).finished_timestamp, "Job 2 should still be running")
 
             storage.commit(input_filename)
             summary2 = _poll(api, job_id2, lambda s: s.finished_timestamp is not None)
-            self.assertTrue(summary2.success, f"Job 2 failed after commit:\n{api.tasks.get_error(job_id2)}")
+            self.assertTrue(summary2.success, f"Job 2 failed after commit:\n{api.jobs.get_job(job_id2).error}")

@@ -1,6 +1,5 @@
 from typing import *
 from dataclasses import dataclass
-from loguru import logger
 from .fork import Fork
 
 @dataclass
@@ -11,7 +10,7 @@ class ForkApp:
 
     def run(self):
         for service in self.supporting:
-            logger.info(f"Starting supporting service {service}")
+            print(f"Starting supporting service {service}")
             self._forks.append(Fork(service).start())
         if self.main is not None:
             self.main()

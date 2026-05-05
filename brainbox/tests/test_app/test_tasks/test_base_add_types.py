@@ -21,7 +21,7 @@ from sqlalchemy.pool import StaticPool
 
 from brainbox.framework.job_processing.core.job import Job, BrainBoxBase
 from brainbox.framework.task import JobDescription
-from brainbox.framework.app.tasks.api import TasksApi
+from brainbox.framework.app.jobs.api import JobsApi
 
 
 def _engine():
@@ -62,7 +62,7 @@ class PlainPoint:
 class TestArgumentTypes(TestCase):
     def _check(self, arguments: dict):
         engine = _engine()
-        with TasksApi.test(engine) as api:
+        with JobsApi.test(engine) as api:
             api.base_add([_desc(arguments)])
             job_via_api = api.get_job('j1')
         with Session(engine) as s:

@@ -14,6 +14,20 @@ def _compute_folder_hash(folder: Path) -> str:
     return hasher.hexdigest()
 
 
+def _find_node() -> str:
+    nvm_dir = Path.home() / '.nvm' / 'versions' / 'node'
+    if nvm_dir.exists():
+        versions = sorted(nvm_dir.iterdir(), reverse=True)
+        for v in versions:
+            candidate = v / 'bin' / 'node'
+            if candidate.exists():
+                return str(candidate)
+    node = subprocess.check_output(['bash', '-ic', 'which node'], stderr=subprocess.DEVNULL, text=True).strip().splitlines()[-1]
+    if node:
+        return node
+    raise RuntimeError("node not found")
+
+
 def compile(src_folder: Path, dst_folder: Path):
     """
     1. Compute the hash of src folder, including the subfolders
@@ -30,7 +44,7 @@ def compile(src_folder: Path, dst_folder: Path):
     web_root = src_folder.parent
 
     npm_install = subprocess.run(
-        ['npm', 'install'],
+        ['npm', 'install', '--include=optional'],
         cwd=str(web_root),
         capture_output=True,
         text=True,
@@ -42,7 +56,8 @@ def compile(src_folder: Path, dst_folder: Path):
     if not vite_js.exists():
         raise RuntimeError(f"Vite not found at {vite_js} even after npm install")
 
-    node = subprocess.check_output(['bash', '-ic', 'which node'], text=True).strip()
+    node = _find_node()
+    print(f"Using node: {node}")
     result = subprocess.run(
         [node, str(vite_js), 'build', '--outDir', str(dst_folder)],
         cwd=str(web_root),
@@ -53,5 +68,3 @@ def compile(src_folder: Path, dst_folder: Path):
         raise RuntimeError(f"vite build failed:\n{result.stdout}\n{result.stderr}")
 
     hash_file.write_text(src_hash)
-
-
