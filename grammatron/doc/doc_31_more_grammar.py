@@ -13,25 +13,26 @@ if __name__ == '__main__':
     In germanic and slavic languages, this is more complicated: 
     
     | English | German | Russian | 
-    --
-    I carry one small suitcase | Ich trage einen kleinen Koffer | Я несу один маленький чемодан
-    I travel with one small suitcase | Ich fahre mit einem kleinen Koffer | Я еду с одним маленьким чемоданом
-    I carry one small bag | Ich trage eine kleine Tasche | Я несу одну маленькую сумку
-    I travel with one small bag | Ich fahre mit einer kleinen Tasche | Я еду с одной маленькой сумкой
-    I carry two small suitcases | Ich trage zwei kleine Koffer | Я несу два маленьких чемодана 
-    I travel with two small suitcases | Ich fahre mit zwei kleinen Koffern | Я еду с двумя маленькими чемоданами
-    I carry two small bags | Ich trage zwei kleine Taschen | Я несу одну маленькую сумку
-    I traver with two small bags | Ich fahre mit zwei kleinen Taschen | Я еду с двумя маленькими сумками
+    | ------- | ------ | ------- |
+    | I carry one small suitcase | Ich trage einen kleinen Koffer | Я несу один маленький чемодан |
+    | I travel with one small suitcase | Ich fahre mit einem kleinen Koffer | Я еду с одним маленьким чемоданом |
+    | I carry one small bag | Ich trage eine kleine Tasche | Я несу одну маленькую сумку | 
+    | I travel with one small bag | Ich fahre mit einer kleinen Tasche | Я еду с одной маленькой сумкой |
+    | I carry two small suitcases | Ich trage zwei kleine Koffer | Я несу два маленьких чемодана | 
+    | I travel with two small suitcases | Ich fahre mit zwei kleinen Koffern | Я еду с двумя маленькими чемоданами |
+    | I carry two small bags | Ich trage zwei kleine Taschen | Я несу две маленькие сумки | 
+    | I traver with two small bags | Ich fahre mit zwei kleinen Taschen | Я еду с двумя маленькими сумками |l
     
     So, to put correctly together a number and "kleine Tasche/klein Koffer" or "маленькая сумка/маленький чемодан", one must take into account:
-    * The case of the noun group ("tragen" and "нести" requires accusative, "fahre mit" - dative, "ехать" - prepositional case)
+    * The case of the noun group ("tragen" and "нести" requires accusative, "fahre mit" - dative, "ехать с" - prepositional case)
     * The genus of the noun (Koffer and чемодан are mascular, Tasche and сумка are feminar, neutrum is also possible)
     * The value of the numeral
     
     These parameters determine the form of noun, adjective and the numeral. 
-    And this is not something you may ignore: natives see these errors instantly, and their impression of the product declines.
+    And this is not something you may ignore: natives see these errors instantly, 
+    and if the grammar of the phrases is wrong, their impression of the product immediately and deeply declines.
     
-    `grammatron` takes case of that too (but may fail in some cases, as it was with English):
+    `grammatron` takes care of that too (but may fail in some cases, as it was with English):
     
     """
 

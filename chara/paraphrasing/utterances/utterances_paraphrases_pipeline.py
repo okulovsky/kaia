@@ -13,22 +13,22 @@ class UtteranceParaphrasePipeline:
                  manager: UtteranceParaphraseCaseManager,
                  settings: Paraphrase.Settings,
                  templates_in_batch: int = 20,
-                 only_completely_missing: bool = False,
+                 paraphrases_upper_count: int|None = None,
                  max_attempts: int = 10
                  ):
         self.manager = manager
         self.settings = settings
         self.templates_in_batch = templates_in_batch
         self.max_attempts = max_attempts
-        self.only_completely_missing = only_completely_missing
+        self.paraphrases_upper_count = paraphrases_upper_count
 
     def _score(self, s: CaseRepetition.Summary[UtteranceParaphraseCase]):
         return max(0, s.case.stats.existing - s.case.stats.seen) + len(s.successes)
 
     def _selector(self, attempts: list[CaseRepetition.Summary[UtteranceParaphraseCase]]) -> list[UtteranceParaphraseCase]:
         remaining = [s for s in attempts if len(s.successes) == 0]
-        if self.only_completely_missing:
-            remaining = [s for s in remaining if s.case.stats.existing == 0]
+        if self.paraphrases_upper_count is not None:
+            remaining = [s for s in remaining if s.case.stats.existing <= self.paraphrases_upper_count]
         remaining = sorted(remaining, key=self._score)
         return [s.case for s in remaining[:self.templates_in_batch]]
 

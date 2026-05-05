@@ -6,6 +6,8 @@ import os
 import toml
 from .small_image_builder import SmallImageBuilder, IImageBuilder
 from ..executor import IExecutor
+from pathlib import Path
+from typing import Iterable
 
 class RepoImageBuilder(IImageBuilder):
     def __init__(self,
@@ -32,6 +34,47 @@ class RepoImageBuilder(IImageBuilder):
     def build_image(self, image_name: str, exec: IExecutor) -> None:
         return self._create_builder().build_image(image_name, exec)
 
+    @staticmethod
+    def collect_dependencies_from_folders(folders: Iterable[Path], additional_toml_paths: list[list[str]]|None = None) -> list[str]:
+        dependencies = []
+        for folder in folders:
+            filename = folder/'pyproject.toml'
+            if not filename.is_file():
+                continue
+            toml_data = toml.loads(filename.read_text())
+            paths = [
+                ['project', 'dependencies']
+            ]
+            if additional_toml_paths is not None:
+                paths.extend(additional_toml_paths)
+
+            for toml_path in paths:
+
+                section = toml_data
+                for item in toml_path:
+                    if item in section:
+                        section = section[item]
+                    else:
+                        section = None
+                        break
+
+                if section is None:
+                    continue
+
+                section_dependencies = []
+                for d in section:
+                    if d.startswith('kaia-'):
+                        continue
+                    if d in dependencies:
+                        continue
+                    section_dependencies.append(d)
+
+                #print(folder, toml_path, section_dependencies)
+                dependencies.extend(section_dependencies)
+
+        return dependencies
+
+
     def _create_builder(self):
         build_folder = Loc.temp_folder / 'containers' / self.container_folder_name
         if build_folder.is_dir():
@@ -47,18 +90,10 @@ class RepoImageBuilder(IImageBuilder):
         toml_data["tool"]["setuptools"]["packages"] = list(self.repo_folders)
         final_toml = toml.dumps(toml_data)
 
-        dependencies = []
-        for folder in self.repo_folders:
-            filename = src_folder/folder/'pyproject.toml'
-            if not filename.is_file():
-                continue
-            toml_data = toml.loads(filename.read_text())
-            for d in toml_data['project']['dependencies']:
-                if d.startswith('kaia-'):
-                    continue
-                if d in dependencies:
-                    continue
-                dependencies.append(d)
+        dependencies = RepoImageBuilder.collect_dependencies_from_folders(
+            src_folder/folder for folder in self.repo_folders
+        )
+
         for dep in self.additional_dependencies:
             if dep not in dependencies:
                 dependencies.append(dep)
