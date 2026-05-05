@@ -4,30 +4,31 @@ from typing import Any
 from abc import ABC, abstractmethod
 from ..job_processing import Job
 from datetime import datetime
+from uuid import uuid4
 
 class IJobRequestFactory(ABC):
     @abstractmethod
     def to_job_request(self) -> 'JobRequest':
         pass
 
-@dataclass
+@dataclass(kw_only=True)
 class JobDescription(IJobRequestFactory):
-    id: str
     decider: str
-    parameter: str|None
-    method: str|None
     arguments: dict[str, Any]
-    info: JSON
-    batch: str|None
-    ordering_token: str | None
-    dependencies: dict[str,str]
+    id: str|None = None
+    parameter: str|None = None
+    method: str|None = None
+    info: JSON = None
+    batch: str|None = None
+    ordering_token: str | None = None
+    dependencies: dict[str,str]|None = None
 
     def to_job_request(self) -> 'JobRequest':
         return JobRequest((self,))
 
     def to_job(self):
         return Job(
-            id = self.id,
+            id = self.id if self.id else str(uuid4()),
             decider = self.decider,
             parameter = self.parameter,
             method = self.method,
@@ -35,9 +36,9 @@ class JobDescription(IJobRequestFactory):
             info = self.info,
             batch = self.batch if self.batch else self.id,
             ordering_token = self.ordering_token,
-            dependencies = self.dependencies,
+            dependencies = self.dependencies if self.dependencies else {},
             received_timestamp = datetime.now(),
-            has_dependencies = len(self.dependencies)>0
+            has_dependencies = (0 if not self.dependencies else len(self.dependencies))>0,
         )
 
 

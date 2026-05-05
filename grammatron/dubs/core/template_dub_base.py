@@ -96,6 +96,11 @@ class TemplateDub(IDub, ABC):
         result = []
         for part in prompt.template:
             if isinstance(part, ConstantTemplatePart):
+                if IDub.SENTINEL in part.value:
+                    raise ValueError(
+                        f"A Dub instance was used directly in an f-string template. "
+                        f"Use `.as_variable('name')` to embed it as a variable."
+                    )
                 result.append(ConstantDub(part.value))
             elif isinstance(part, AddressTemplatePart):
                 info = part.misc

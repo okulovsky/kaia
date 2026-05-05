@@ -3,6 +3,7 @@ import threading
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import uuid
+from foundation_kaia.logging import ILogItem
 
 class ISideProcess(ABC):
     @abstractmethod
@@ -10,7 +11,7 @@ class ISideProcess(ABC):
         pass
 
     @abstractmethod
-    def get_html_report(self):
+    def get_report(self) -> list[ILogItem]:
         pass
 
 @dataclass
@@ -23,7 +24,7 @@ class SideProcessInstance:
 class SideProcessPool:
     def __init__(self):
         self.id_to_instance: dict[str, SideProcessInstance] = {}
-        self.id_to_report: dict[str, str] = {}
+        self.id_to_report: dict[str, list[ILogItem]] = {}
 
     def start(self, process: ISideProcess) -> str:
         key = str(uuid.uuid4())
@@ -38,7 +39,7 @@ class SideProcessPool:
         thread = threading.Thread(target=_target, daemon=True)
         instance.thread = thread
         self.id_to_instance[key] = instance
-        self.id_to_report[key] = ''
+        self.id_to_report[key] = []
         thread.start()
         return key
 
@@ -46,7 +47,7 @@ class SideProcessPool:
         for key in list(self.id_to_instance.keys()):
             instance = self.id_to_instance[key]
             if not instance.thread.is_alive():
-                self.id_to_report[key] = instance.process.get_html_report()
+                self.id_to_report[key] = instance.process.get_report()
                 del self.id_to_instance[key]
 
 
@@ -61,7 +62,7 @@ class SideProcessPool:
     def get_report(self, key: str):
         self.update()
         if key in self.id_to_instance:
-            self.id_to_report[key] = self.id_to_instance[key].process.get_html_report()
+            self.id_to_report[key] = self.id_to_instance[key].process.get_report()
         return self.id_to_report[key]
 
     def join(self, key: str):

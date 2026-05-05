@@ -42,21 +42,11 @@ class CallModel:
         parse_url(kwargs, model, path_params_dict, query_params_dict)
 
         # --- JSON params ---
-        parse_json(kwargs, self.content.json, model.params.json_params)
+        parse_json(kwargs, self.content.json_values, model.params.json_params)
 
-        # --- File params ---
-        for param in model.params.file_params:
-            kwargs[param.name] = self.content.files[param.name]
-
-        # --- Binary stream ---
-        if model.params.binary_stream_param is not None:
-            name = model.params.binary_stream_param.name
-            kwargs[name] = self.content.binary_stream.iterable
-
-        # --- Custom stream ---
-        if model.params.custom_stream_param is not None:
-            name = model.params.custom_stream_param.name
-            kwargs[name] = self.content.custom_stream.iterable
+        # --- File, binary stream, and custom stream params ---
+        for name, value in self.content.raw_values.items():
+            kwargs[name] = value
 
         return function(**kwargs)
 

@@ -48,9 +48,9 @@ class StreamingCustomStreamTestCase(TestCase):
             job_id = api.add(task)
 
             summary = _poll(api, job_id, lambda s: s.finished_timestamp is not None)
-            self.assertTrue(summary.success, f"Job failed:\n{api.tasks.get_error(job_id)}")
+            self.assertTrue(summary.success, f"Job failed:\n{api.jobs.get_job(job_id).error}")
 
-            output_filename = api.tasks.get_result(job_id)
+            output_filename = api.jobs.get_job(job_id).result
             raw = b''.join(storage.read(output_filename))
             records = [json.loads(line) for line in raw.split(b'\n') if line]
             expected = [{'value': b} for b in chunk]

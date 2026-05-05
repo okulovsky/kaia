@@ -1,10 +1,4 @@
-from dataclasses import dataclass
-from brainbox.framework.deployment import SmallImageBuilder
-from pathlib import Path
-from foundation_kaia.misc import Loc
-import shutil
-import os
-import toml
+from brainbox.framework.deployment import RepoImageBuilder, SmallImageBuilder
 
 DEFAULT_FOLDERS = (
     'foundation_kaia',
@@ -17,75 +11,29 @@ DEFAULT_FOLDERS = (
     'talents',
 )
 
-@dataclass
-class KaiaImageBuilder:
-    additional_folders: tuple[str,...] = ()
-    entry_point: str = 'kaia.containerization.main'
-    container_folder_name: str = 'kaia_container'
-
-    def create_builder(self):
-        build_folder = Loc.temp_folder / self.container_folder_name
-        if build_folder.is_dir():
-            shutil.rmtree(build_folder)
-        os.makedirs(build_folder)
-
-        src_folder = Loc.root_folder
-        all_folders = DEFAULT_FOLDERS+self.additional_folders
-        copy_to_code_path = {}
-        for folder in all_folders:
-            copy_to_code_path[src_folder/folder] = '/'+folder
-
-        toml_data = toml.loads(TOML)
-        toml_data["tool"]["setuptools"]["packages"] = list(all_folders)
-        final_toml = toml.dumps(toml_data)
-
-        dependencies = []
-        for folder in all_folders:
-            filename = src_folder/folder/'pyproject.toml'
-            if not filename.is_file():
-                continue
-            toml_data = toml.loads(filename.read_text())
-            for d in toml_data['project']['dependencies']:
-                if d.startswith('kaia-'):
-                    continue
-                if d in dependencies:
-                    continue
-                dependencies.append(d)
-
-        dockerignore = (
-            '**/__pycache__/',
-            '**/*.pyc',
-            '**/*.pyo',
-            'avatar/web/frontend/',
-            'avatar/web/node_modules/'
+class KaiaImageBuilder(RepoImageBuilder):
+    def __init__(self):
+        super().__init__(
+            TEMPLATE,
+            (
+                'foundation_kaia',
+                'brainbox',
+                'grammatron',
+                'eaglesong',
+                'avatar',
+                'chara',
+                'kaia',
+                'talents',
+            ),
+            'kaia-demo',
+            (
+                '**/__pycache__/',
+                '**/*.pyc',
+                '**/*.pyo',
+                'avatar/web/frontend/',
+                'avatar/web/node_modules/'
+            )
         )
-        return SmallImageBuilder(
-            build_folder,
-            TEMPLATE.replace('#ENTRYPOINT', self.entry_point),
-            dependencies,
-            add_current_user=True,
-            copy_to_code_path=copy_to_code_path,
-            write_to_code_path={
-                '/pyproject.toml': final_toml,
-            },
-            docker_ignore=dockerignore
-
-        )
-
-
-TOML = '''
-[build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
-
-[project]
-version = "0.0.0"
-name = "kaia-container"
-
-[tool.setuptools]
-packages = []
-
-'''
 
 TEMPLATE = f'''
 FROM python:3.11
@@ -107,5 +55,6 @@ WORKDIR /home/app
 
 RUN pip install  --no-cache-dir --no-compile --user -e .
 
-ENTRYPOINT ["python", "-m", "#ENTRYPOINT"]
+ENTRYPOINT ["python", "-m", "kaia.containerization.main"]
+
 '''

@@ -1,10 +1,5 @@
 from chara.common import (
-    CharaApis,
-    ICache,
-    BrainBoxCache,
-    logger,
-    BrainBoxUnit,
-    DictCache,
+    Chara,
 )
 from pathlib import Path
 from brainbox.deciders.text.llama_lora_sft_trainer.api import TrainingSettings, TrainingRun
@@ -110,7 +105,7 @@ class LlamaLoraPipeline:
     ):
         @logger.phase(cache.train_checkpoints, "Training a LoRA adapter")
         def _():
-            unit = BrainBoxUnit(self._create_training_task)
+            unit = BrainBoxPipeline(self._create_training_task)
             unit.run(
                 cache.train_checkpoints,
                 [LoraTrainCase(adapter_name=adapter_name, train_dataset=train_dataset)],
@@ -130,7 +125,7 @@ class LlamaLoraPipeline:
                 checkpoint_adapter_dest = (
                     f"models/{self.model_id}/lora_adapters/{checkpoint_task_name}.gguf"
                 )
-                CharaApis.brainbox_api.resources(LlamaLoraServer).upload(
+                Chara.Apis.brainbox_api.resources(LlamaLoraServer).upload(
                     checkpoint_adapter_dest, gguf_checkpoint
                 )
 
@@ -138,7 +133,7 @@ class LlamaLoraPipeline:
 
                 @logger.phase(subcache, f"Generating for checkpoint {checkpoint_number}")
                 def _():
-                    unit = BrainBoxUnit(self._create_generation_task)
+                    unit = BrainBoxPipeline(self._create_generation_task)
                     unit.run(
                         subcache,
                         self._get_generation_cases(
@@ -148,7 +143,7 @@ class LlamaLoraPipeline:
                         ),
                     )
 
-                CharaApis.brainbox_api.resources(LlamaLoraServer).delete(
+                Chara.Apis.brainbox_api.resources(LlamaLoraServer).delete(
                     checkpoint_adapter_dest
                 )
             cache.val_outputs.finalize()

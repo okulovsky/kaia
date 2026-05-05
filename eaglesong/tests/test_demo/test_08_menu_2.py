@@ -1,5 +1,5 @@
 from eaglesong.tests.test_demo.common import *
-from eaglesong.demo.example_08_menu_2 import bot
+from eaglesong.doc.doc_08_menu_2 import bot
 from eaglesong.drivers.telegram.menu import MenuItem
 from eaglesong.drivers.telegram.primitives import Options, SelectedOption,Delete
 
@@ -15,7 +15,7 @@ class Demo0TestCase(TestCase):
             .send(SelectedOption('Small talk'))
             .check(Delete, Options)
             .send(SelectedOption('Naughty'))
-            .check(Delete, lambda z: 'horny' in z, Options)
+            .check(Delete, lambda z: 'ugly' in z, Options)
             .send(SelectedOption('Nice'))
             .check(Delete, lambda z: 'handsome' in z)
             .validate()

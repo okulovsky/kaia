@@ -5,9 +5,11 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "kaia-foundation"
 description = "Utilities used in Kaia project"
-version = "4.0.9"
+version = "5.0.0"
+readme = "README.md"
 requires-python = ">=3.10, <4.0"
 license = "LGPL-3.0-or-later"
+
 authors = [
     {name = "Yuri Okulovsky", email = "yuri.okulovsky@gmail.com"}
 ]
@@ -27,6 +29,7 @@ dependencies = [
     "cloudpickle"
 ]
 
+
 classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -36,14 +39,17 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Intended Audience :: Information Technology",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
-    "Development Status :: 4 - Beta"
+    "Development Status :: 5 - Production/Stable"
 ]
 
 [project.urls]
 repository = "https://github.com/okulovsky/kaia/tree/main/foundation_kaia"
 
+[project.optional-dependencies]
+test = ["sqlalchemy"]
+
 [tool.setuptools.packages.find]
 where = ["."]
 
 [tool.setuptools.package-data]
-"*" = ["**/example"]
+"*" = ["**/*"]

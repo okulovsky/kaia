@@ -41,7 +41,7 @@ def make_api_test(self: TestCase, api: BrainBoxApi):
 
     instance_id = api.controllers.run(HelloBrainBox, None)
 
-    brainbox_api = HelloBrainBox.Api('127.0.0.1:20000')
+    brainbox_api = HelloBrainBox.Api('http://127.0.0.1:20000')
     result = brainbox_api.sum(2, 4)
     self.assertEqual(6, result)
 

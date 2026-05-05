@@ -16,8 +16,10 @@ class AnalysisSettings:
 class VideoToImagesInterface:
     @brainbox_websocket
     def process(self, video: FileLike, settings: AnalysisSettings) -> Iterable[BrainboxReportItem[list[dict]]]:
+        """Extracts frames from a video according to the analysis settings, streaming progress."""
         ...
 
     @brainbox_endpoint
     def get_tar(self) -> FileLike:
+        """Returns the last processed frame set as a tar archive."""
         ...

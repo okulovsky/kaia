@@ -51,6 +51,12 @@ class WakeWordTestCase(TestCase):
     def test_bumblebee(self):
         self._run('bumblebee')
 
+    def test_kaldi_silence(self):
+        self._run('kaldi_silence')
+
+    def test_bumblebee_silence(self):
+        self._run('bumblebee_silence')
+
 
 
 def create_html(model: str) -> str:
@@ -64,13 +70,26 @@ def create_html(model: str) -> str:
     elif model == 'bumblebee':
         detector_import = "import { BumblebeeWakeWordDetector } from '/frontend/scripts/bumblebee-wake-word-detector.js';"
         detector_init = "const wake = new BumblebeeWakeWordDetector({ words: ['computer'], dispatcher });"
+    elif model == 'kaldi_silence':
+        detector_import = "import { KaldiWakeWordDetector } from '/frontend/scripts/kaldi-wake-word-detector.js';"
+        detector_init = (
+            "const inner = new KaldiWakeWordDetector({ sampleRateOfTheModel: 16000, words: ['computer'], "
+            "modelUrl: '/frontend/models/vosk-model-small-en-us-0.15.zip', dispatcher });\n"
+            "  const wake = new SilenceControllingWakeWordDetector({ detector: inner, dispatcher, deactivationWindowSeconds: 2.0 });"
+        )
+    elif model == 'bumblebee_silence':
+        detector_import = "import { BumblebeeWakeWordDetector } from '/frontend/scripts/bumblebee-wake-word-detector.js';"
+        detector_init = (
+            "const inner = new BumblebeeWakeWordDetector({ words: ['computer'], dispatcher });\n"
+            "  const wake = new SilenceControllingWakeWordDetector({ detector: inner, dispatcher });"
+        )
     else:
         raise ValueError(f'Unknown model: {model}')
 
     return '''<!DOCTYPE html>
 <html><head><meta charset="UTF-8"></head><body>
 <script type="module">
-  import { AvatarClient, Dispatcher, FakeMicrophone, MicController, Message, Envelop, LoadingScreen } from '/frontend/scripts/kaia-frontend.js';
+  import { AvatarClient, Dispatcher, FakeMicrophone, MicController, Message, Envelop, LoadingScreen, SilenceControllingWakeWordDetector } from '/frontend/scripts/kaia-frontend.js';
 
 ''' + detector_import + '''
 

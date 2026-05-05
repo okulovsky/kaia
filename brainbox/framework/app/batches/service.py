@@ -6,6 +6,7 @@ from brainbox.framework.job_processing.core.job import Job
 from brainbox.framework.job_processing.main_loop import CancelAction, CommandQueue
 from .dto import Batches, BatchSummary
 from .interface import IBatchesService
+from ..jobs.dto import JobSummary
 
 
 class BatchesService(IBatchesService):
@@ -119,6 +120,13 @@ class BatchesService(IBatchesService):
             ))
 
         return Batches(items=summaries, total=total)
+
+    def get_job_summaries_by_batch(self, batch_id: str) -> list[JobSummary]:
+        with Session(self.engine) as session:
+            jobs = list(session.scalars(
+                select(Job).where(Job.batch == batch_id).order_by(Job.received_timestamp)
+            ))
+        return [JobSummary.from_job(job) for job in jobs]
 
     def cancel_batch(self, batch_id: str) -> None:
         self.command_queue.put_action(CancelAction(None, batch_id))

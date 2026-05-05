@@ -41,15 +41,11 @@ class TaskBuilder:
             descriptions.extend(record.job_request.jobs)
 
         collector_description = JobDescription(
-            str(uuid.uuid4()),
-            'Collector',
-            None,
-            method,
-            dict(tags = tags),
-            None,
-            None,
-            '',
-            dependencies
+            decider='Collector',
+            arguments=dict(tags=tags),
+            id = str(uuid.uuid4()),
+            dependencies=dependencies,
+            method=method
         )
         jobs = (collector_description,)+tuple(descriptions)
 

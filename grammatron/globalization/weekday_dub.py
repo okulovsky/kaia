@@ -22,5 +22,14 @@ class WeekdayDub(LanguageDispatchDub):
                 'пятница': 4,
                 'суббота': 5,
                 'воскресенье': 6
-            })
+            }),
+            de = OptionsDub({
+                'Montag': 0,
+                'Dienstag': 1,
+                'Mittwoch': 2,
+                'Donnerstag': 3,
+                'Freitag': 4,
+                'Samstag': 5,
+                'Sonntag': 6,
+            }),
         )

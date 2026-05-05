@@ -42,6 +42,8 @@ Some people suggested yield approach can be replaced with async/await, keeping t
 * Both approaches should be able to coexist side-by-side with Automaton class abstraction.
 * `aiogram` seems to implement this approach for Telegram; however, it seems like using this approach in Kaia would bring `async/await` everywhere inside it, which is not my wish.
 
+# eaglesong demo
+
 There are a few demos demonstrating the different designs of the chatflow with eaglesong, located in `demo` subfolder. 
 They are all runnable and you should be able to run a Telegram bot with each of them.
 Before running the bots from demos/eaglesong, you will need:
@@ -55,7 +57,7 @@ If you don't wish to do it, the Appendix to this readme will contain the source 
 
 `eaglesong` also offer elegant method to test the conversation flows, written in this fashion. To see how, consult `tests/test_demo/` folder.
 
-# eaglesong demo
+
 
 
 
@@ -75,8 +77,8 @@ along the demo, right now it's simple: just bot over `main` function. `run` star
 this bot.
 
 ```python
+from eaglesong.doc.common import *
 
-from eaglesong.demo.common import *
 
 def main():
     yield f'Say anything and I will repeat. Or /start to reset.'
@@ -84,11 +86,12 @@ def main():
         input = yield Listen()
         yield input
 
+
 bot = Bot("echobot", main)
+
 
 if __name__ == '__main__':
     run(bot)
-
 ```
 
 ## Questionnaire: Calling other functions
@@ -107,9 +110,9 @@ is assigned to the result of the whole `yield from questionnaire()` call
 (and thus to `name, country` variables in `main` method).
 
 ```python
-
-from eaglesong.demo.common import *
+from eaglesong.doc.common import *
 from datetime import datetime
+
 
 def questionnaire():
     yield 'What is your name?'
@@ -120,10 +123,12 @@ def questionnaire():
 
     return name, country
 
+
 def main():
     name, country = yield from questionnaire()
     current_time = datetime.now()
     yield f"Nice to meet you, {name} from {country}! By the way, the current time is {current_time}"
+
 
 bot = Bot("quest", main)
 
@@ -142,8 +147,8 @@ to authorize only yourself as a user of the chatbot: you just write your chat id
 and check that the user is legit.
 
 ```python
+from eaglesong.doc.common import *
 
-from eaglesong.demo.common import *
 
 def main():
     context = yield ContextRequest()
@@ -161,6 +166,8 @@ def main():
         input = yield Listen()
         yield input
 
+
+
 bot = Bot("auth1", main)
 
 if __name__ == '__main__':
@@ -174,8 +181,9 @@ Now let's see how we can organize the authorization code better, to be able to r
 First, we can decompose the code to `authorize` and `echobot` methods, and combine the calls in `main`.
 
 ```python
-from eaglesong.demo.common import *
-from eaglesong.demo.example_01_echobot import main as echobot
+from eaglesong.doc.common import *
+from eaglesong.doc.doc_01_echobot import main as echobot
+
 
 def authorize(env_variable):
     context = yield ContextRequest()
@@ -188,15 +196,17 @@ def authorize(env_variable):
     if user_id != allowed_user_id:
         raise Terminate(f'User {user_id} is not authorized')
 
+
 def main():
     yield from authorize('KAIA_TEST_BOT_CHAT_ID')
     yield from echobot()
 
+
 bot = Bot("auth2", main)
+
 
 if __name__ == '__main__':
     run(bot)
-
 ```
 
 ### Implementing chat flow as a class
@@ -211,8 +221,8 @@ Those double brackets may seem weird, but this is totally fine thanks to `Author
 implementing `__call__` method.
 
 ```python
-from eaglesong.demo.common import *
-from eaglesong.demo.example_01_echobot import main as echobot
+from eaglesong.doc.common import *
+from eaglesong.doc.doc_01_echobot import main as echobot
 
 class Authorize:
     def __init__(self, env_variable):
@@ -229,17 +239,19 @@ class Authorize:
         if user_id != allowed_user_id:
             raise Terminate(f'User {user_id} is not authorized')
 
+
 def main():
     authorize = Authorize('KAIA_TEST_BOT_CHAT_ID')
     # Here some fine-tuning of `authorize` object can take place
     yield from authorize()
     yield from echobot()
 
+
 bot = Bot("auth2", main)
+
 
 if __name__ == '__main__':
     run(bot)
-
 ```
 
 ### Providing the chatflow as inner routine
@@ -258,8 +270,8 @@ for all the users of the chatbot, and all of them will share its fields values!
 Sometimes it's a desirable behaviour. But often enough we want to avoid it, use the `lambda` syntax as below.
 
 ```python
-from eaglesong.demo.common import *
-from eaglesong.demo.example_01_echobot import main as echobot
+from eaglesong.doc.common import *
+from eaglesong.doc.doc_01_echobot import main as echobot
 
 class Authorize:
     def __init__(self, env_variable, inner_routine):
@@ -278,7 +290,6 @@ class Authorize:
             raise Terminate(f'User {user_id} is not authorized')
 
         yield from self.inner_routine()
-
 ```
 
 INCORRECT way to create a bot would be:
@@ -289,12 +300,10 @@ It can be fixed with deepcopy, but that is sometimes desired behaviour, so facto
 The correct way is:
 
 ```python
-
 bot = Bot("auth2", lambda: Authorize('KAIA_TEST_BOT_CHAT_ID', echobot)())
 
 if __name__ == '__main__':
     run(bot)
-
 ```
 
 ## Example library
@@ -304,7 +313,7 @@ This will demonstrate a reusable `menu` component, handy for different Telegram 
 The following menu allows you to pick a value from the lists. The value is then displayed to you.
 
 ```python
-from eaglesong.demo.common import *
+from eaglesong.doc.common import *
 from eaglesong.drivers.telegram.menu import *
 
 def create_menu():
@@ -333,7 +342,6 @@ bot = Bot("menu1", main)
 
 if __name__ == '__main__':
     run(bot)
-
 ```
 
 ### Custom actions in menu
@@ -345,10 +353,10 @@ The first way is to create a class inherited from `MenuItem`, and implement it's
 Alternatively, you can just write the Routine in the function and create `FunctionalMenuItem` in it.
 
 ```python
-
-from eaglesong.demo.common import *
+from eaglesong.doc.common import *
 from eaglesong.drivers.telegram import menu
 import requests
+
 
 class WeatherMenu(menu.MenuItem):
     def __init__(self, city, lat, long):
@@ -364,11 +372,12 @@ class WeatherMenu(menu.MenuItem):
     def get_caption(self):
         return self.city
 
+
 def say_nice_thing():
     yield "You are handsome!"
 
 def say_naugty_thing():
-    yield "I'm horny!"
+    yield "You are ugly!"
 
 def create_menu():
     main = (
@@ -395,6 +404,7 @@ def main():
             continue
         yield input_text
 
+
 bot = Bot("menu", main)
 
 if __name__ == '__main__':
@@ -416,8 +426,7 @@ compatible with other media (such as voice assistant). Also, Telegram skills are
 write and to test.
 
 ```python
-
-from eaglesong.demo.common import *
+from eaglesong.doc.common import *
 from eaglesong.drivers.telegram import TgCommand, TelegramSimplifier
 
 def main():
@@ -433,6 +442,7 @@ def main():
         message_text = update.message.text
         yield TgCommand.mock().send_message(chat_id=chat_id, text=message_text)
 
+
 bot = Bot("telegram", TelegramSimplifier(main), add_telegram_filter=False)
 
 if __name__ == '__main__':
@@ -447,7 +457,8 @@ means, and in this case the timer is used to poll the bot and produce the output
 This timer input is fed into the chatflow in the same fashion as the normal input.
 
 ```python
-from eaglesong.demo.common import *
+from eaglesong.doc.common import *
+
 
 def main():
     timer_state = False
@@ -462,7 +473,9 @@ def main():
             timer_state = not timer_state
             yield 'Timer set to '+str(timer_state)
 
+
 bot = Bot("timer1", main, timer = True)
+
 
 if __name__ == '__main__':
     run(bot)
@@ -481,9 +494,8 @@ Automaton is an entity that translates these chatflows with all the `yield` into
 consumes one input and produces one output.
 
 ```python
-
-from eaglesong.demo.common import *
-from eaglesong.demo.example_08_menu_2 import create_menu
+from eaglesong.doc.common import *
+from eaglesong.doc.doc_08_menu_2 import create_menu
 
 def main():
     context = yield ContextRequest()
@@ -520,9 +532,10 @@ def main():
         yield f'Unexpected input: {input}'
         input = yield Listen()
 
+
+
 bot = Bot("timer2", main, timer=True)
 
 if __name__ == '__main__':
     run(bot)
 ```
-

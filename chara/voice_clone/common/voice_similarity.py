@@ -1,4 +1,4 @@
-from chara.common import CharaApis, BrainBoxCache, ICache, BrainBoxUnit, logger
+from chara.common import Chara.Apis, BrainBoxCache, ICache, BrainBoxPipeline, logger
 from brainbox import BrainBox
 from brainbox.deciders import Resemblyzer
 from dataclasses import dataclass
@@ -104,10 +104,10 @@ class VoiceSimilarityCache(ICache[dict[Path,CandidateMatch]]):
 
         @logger.phase(self.encodings)
         def _():
-            unit = BrainBoxUnit(self._create_task)
+            unit = BrainBoxPipeline(self._create_task)
             e_files = [p for lst in etalon.values() for p in lst ]
             for e in e_files:
-                CharaApis.brainbox_api.cache.upload(e.name, e)
+                Chara.Apis.brainbox_api.cache.upload(e.name, e)
             unit.run(
                 self.encodings,
                 e_files + list(candidates)

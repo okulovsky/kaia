@@ -40,7 +40,7 @@ class IncrementingDecider(ISelfManagingDecider):
 def _poll(api, job_id, condition, steps=10, delay=0.1):
     for _ in range(steps):
         time.sleep(delay)
-        summary = api.tasks.get_job_summary(job_id)
+        summary = api.jobs.get_job_summary(job_id)
         if condition(summary):
             return summary
     raise ValueError("_poll failed to wait for condition")
@@ -53,10 +53,10 @@ def _wait_for_responding(api, job_id: str):
         lambda s: s.responding_timestamp is not None or s.finished_timestamp is not None
     )
     if summary.finished_timestamp is not None:
-        raise AssertionError(f"Job {job_id} finished unexpectedly:\n{api.tasks.get_error(job_id)}")
+        raise AssertionError(f"Job {job_id} finished unexpectedly:\n{api.jobs.get_error(job_id)}")
     if summary.responding_timestamp is None:
         raise AssertionError(f"Job {job_id} never called report_responding (timeout)")
-    output_filename = api.tasks.get_result(job_id)
+    output_filename = api.jobs.get_job(job_id).result
     if output_filename is None:
         raise AssertionError(f"Job {job_id} output filename not set by report_responding")
     return output_filename

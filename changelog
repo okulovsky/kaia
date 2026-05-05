@@ -1,3 +1,28 @@
+5.0.0
+    EVERYTHING HAS CHANGED
+    foundation_kaia
+        Now contains a `marshalling` module that can:
+            analyze the classes and give the precise generic-aware descriptions of types and objects
+            serialize dataclasses, sqlalchemy entities, and some primitives (datetime, Path, enums) in JSON
+            declare interfaces and build API and flask-based web-servers that handle complex JSONs, files and streaming
+            build documentation for such APIs
+    brainbox
+        All the deciders are switched to the `marshalling` and thus greatly simplified
+        Installation, model loading, etc are standardized and now every decider is completely functional outside of BrainBox
+        BrainBox API and Server are switched to `marshalling` and documented
+        A decent GUI is designed
+    avatar
+        Switched to the new marhsalling too
+        Now contains web components interacting with common bus, including web-camera and microphone control
+    grammatron
+        Now supports German language
+    kaia
+        Running and deployment procedures are greatly simplified, documentation is now available
+    chara
+        Completely refactored, now uses the lightweight caching approach
+        Pipelines for voice cloning and paraphrasing are documented and tested
+
+
 4.0.9
     Brainbox
         CoquiTTS and Zonos are now working with the latest pytorch

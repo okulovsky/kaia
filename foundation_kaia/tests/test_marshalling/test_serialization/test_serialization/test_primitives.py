@@ -63,8 +63,8 @@ class TestAllPrimitives(unittest.TestCase):
         self.assertAlmostEqual(json_data['f'], 3.14)
         self.assertEqual(json_data['s'], 'hello')
         self.assertIs(json_data['b'], True)
-        self.assertEqual(json_data['color'], 'green')
-        self.assertEqual(json_data['priority'], 3)
+        self.assertEqual(json_data['color'], 'GREEN')
+        self.assertEqual(json_data['priority'], 'HIGH')
         self.assertEqual(json_data['when'], '2025-06-15T10:30:00')
 
     def test_int_to_float_coercion(self):

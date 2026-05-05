@@ -22,7 +22,6 @@ class AvatarServerAppSettings(IAppInitializer):
             raise ValueError("KaiaApp.avatar_resources_folder must be set before AvatarServerAppSettings.bind_app")
 
         start_message = ServerStartedEvent()
-        start_message_id = start_message.envelop.id
 
         settings = AvatarServerSettings(
             port = self.port,
@@ -34,7 +33,8 @@ class AvatarServerAppSettings(IAppInitializer):
             frontend_folder=app.working_folder/'avatar/frontend' if self.custom_frontend_folder is None else self.custom_frontend_folder,
             resources_folder=app.avatar_resources_folder,
             custom_html=self.custom_html,
-            starting_messages=dict(default=(start_message,))
+            starting_messages=dict(default=(start_message,)),
+            additional_web_static_folders=self.additional_static_folders
         )
 
         app.avatar_api = AvatarApi(f'http://127.0.0.1:{self.port}')

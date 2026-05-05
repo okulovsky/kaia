@@ -1,7 +1,10 @@
 from typing import *
 from dataclasses import dataclass
 from foundation_kaia.misc import Loc
+from foundation_kaia.releasing.mddoc import create_documentation
 import shutil
+import tarfile
+import io
 from pathlib import Path
 import subprocess
 import sys
@@ -21,10 +24,32 @@ class Releaser:
     module_name: str
     folders_to_export: tuple[str,...]
     files_to_export: tuple[str,...]
-    readme_md_generator: Optional[Callable[[], str]] = None
     tox_python: Optional[str] = None
     tox_versions: Optional[Tuple[str,...]] = None
     inner_dependencies: Tuple[str,...] = ()
+    compile_documentation: bool = True
+    pre_test_file: Optional[str] = None
+
+    def _export_module(self, destination: Path, extra_folders: tuple[str,...] = ()):
+        shutil.rmtree(destination, ignore_errors=True)
+        os.makedirs(destination)
+        archive = subprocess.run(
+            ['git', 'archive', 'HEAD', '--', self.module_name + '/'],
+            cwd=self.root_folder,
+            capture_output=True,
+            check=True
+        )
+        with tarfile.open(fileobj=io.BytesIO(archive.stdout)) as tar:
+            tar.extractall(destination, filter='data')
+
+        module_dir = destination / self.module_name
+        keep_folders = set(self.folders_to_export) | set(extra_folders)
+        keep_files = set(self.files_to_export)
+        for item in list(module_dir.iterdir()):
+            if item.is_dir() and item.name not in keep_folders:
+                shutil.rmtree(item)
+            elif item.is_file() and item.name not in keep_files:
+                item.unlink()
 
     def fix_toml_for_tox(self, path):
         lines = []
@@ -42,21 +67,25 @@ class Releaser:
         if self.tox_versions is None:
             raise ValueError(f"Cannot run tox, `tox_versions` are not set")
 
-        commands_pre = []
+        folder = Loc.temp_folder / 'tox' / self.module_name
+
+        commands_pre_lines = []
         if len(self.inner_dependencies) > 0:
-            commands_pre.append('commands_pre =')
             for d in self.inner_dependencies:
                 location = next(
                     p for p in (Loc.temp_folder / f"pypi/{d}/dist/").glob("*.whl")
                 )
-                commands_pre.append(f'    pip install {location}')
+                commands_pre_lines.append(f'pip install {location}')
+        if self.pre_test_file is not None:
+            commands_pre_lines.append(f'python {folder / self.pre_test_file}')
+        commands_pre = ('commands_pre =\n' + '\n'.join(f'    {c}' for c in commands_pre_lines)) if commands_pre_lines else ''
 
-        tox_file = TOX_FILE.format(directory = self.module_name, commands_pre = '\n'.join(commands_pre), pythons = ', '.join(self.tox_versions))
-        folder = Loc.temp_folder / 'tox' / self.module_name
+        tox_file = TOX_FILE.format(directory=self.module_name, commands_pre=commands_pre, pythons=', '.join(self.tox_versions))
         shutil.rmtree(folder, ignore_errors=True)
+        os.makedirs(folder)
 
-        shutil.copytree(self.root_folder/self.module_name, folder / self.module_name)
-        file_io_write_text(self.fix_toml_for_tox(self.root_folder/self.module_name/ 'pyproject.toml'), folder/'pyproject.toml')
+        self._export_module(folder, extra_folders=('tests', 'doc'))
+        file_io_write_text(self.fix_toml_for_tox(self.root_folder / self.module_name / 'pyproject.toml'), folder / 'pyproject.toml')
 
         with open(folder / 'tox.ini', 'w') as stream:
             stream.write(tox_file)
@@ -65,7 +94,7 @@ class Releaser:
         if self.tox_python is not None:
             to_execute = self.tox_python
         result = subprocess.call([to_execute, '-m', 'tox', '-rvv'], cwd=folder, env={**os.environ, "PYTHONPATH": ""})
-        if result!=0:
+        if result != 0:
             print(f"TESTS FAILED for {self.package_name}")
             return self.package_name
         return None
@@ -86,25 +115,22 @@ class Releaser:
 
     def package(self):
         release_folder = self.release_folder
-        module_release_folder = release_folder / self.module_name
-        src_folder = self.root_folder/self.module_name
+        src_folder = self.root_folder / self.module_name
         shutil.rmtree(release_folder, ignore_errors=True)
-        os.makedirs(module_release_folder)
+        os.makedirs(release_folder)
 
-        for folder in self.folders_to_export:
-            shutil.copytree(src_folder / folder, module_release_folder / folder)
-        for file in self.files_to_export:
-            shutil.copy(src_folder / file, module_release_folder / file)
+        self._export_module(release_folder)
 
-        if self.readme_md_generator is not None:
-            doc = self.readme_md_generator()
-            file_io_write_text(doc, src_folder/'README.md')
+        if self.compile_documentation:
+            doc_folder = src_folder / 'doc'
+            doc = create_documentation(doc_folder)
+            file_io_write_text(doc, src_folder / 'README.md')
             file_io_write_text(doc, release_folder / 'README.md')
         else:
-            shutil.copyfile(src_folder/'README.md', release_folder/'README.md')
+            shutil.copyfile(src_folder / 'README.md', release_folder / 'README.md')
 
-        toml = self.fix_toml_for_packaging(src_folder/'pyproject.toml')
-        file_io_write_text(toml, src_folder/'pyproject.toml')
+        toml = self.fix_toml_for_packaging(src_folder / 'pyproject.toml')
+        file_io_write_text(toml, src_folder / 'pyproject.toml')
         file_io_write_text(toml, release_folder / 'pyproject.toml')
 
         os.chdir(release_folder)
@@ -122,6 +148,7 @@ envlist = {pythons}
 isolated_build = True
 
 [testenv]
+extras = test
 changedir = {directory}/tests
 {commands_pre}
 commands =

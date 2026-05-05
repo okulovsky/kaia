@@ -1,5 +1,6 @@
 import tempfile
 import unittest
+from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
 
@@ -50,6 +51,86 @@ class TestToBytesIterable(unittest.TestCase):
     def test_unsupported_type_raises(self):
         with self.assertRaises(ValueError):
             list(FileLikeHandler.to_bytes_iterable(42))
+
+
+class TestToJsonlinesIterable(unittest.TestCase):
+
+    def test_single_object(self):
+        data = b'{"a": 1}\n'
+        result = list(FileLikeHandler.to_jsonlines_iterable(data))
+        self.assertEqual([{"a": 1}], result)
+
+    def test_multiple_objects(self):
+        data = b'{"a": 1}\n{"b": 2}\n{"c": 3}\n'
+        result = list(FileLikeHandler.to_jsonlines_iterable(data))
+        self.assertEqual([{"a": 1}, {"b": 2}, {"c": 3}], result)
+
+    def test_chunked_across_newline(self):
+        chunks = iter([b'{"x":', b' 1}\n{"y"', b': 2}\n'])
+        result = list(FileLikeHandler.to_jsonlines_iterable(chunks))
+        self.assertEqual([{"x": 1}, {"y": 2}], result)
+
+    def test_empty_lines_skipped(self):
+        data = b'{"a": 1}\n\n{"b": 2}\n'
+        result = list(FileLikeHandler.to_jsonlines_iterable(data))
+        self.assertEqual([{"a": 1}, {"b": 2}], result)
+
+    def test_no_trailing_newline(self):
+        data = b'{"a": 1}\n{"b": 2}'
+        result = list(FileLikeHandler.to_jsonlines_iterable(data))
+        self.assertEqual([{"a": 1}, {"b": 2}], result)
+
+
+@dataclass
+class _Point:
+    x: int
+    y: int
+
+
+class TestToJsonlinesIterable(unittest.TestCase):
+
+    def test_single_object(self):
+        data = b'{"a": 1}\n'
+        result = list(FileLikeHandler.to_jsonlines_iterable(data))
+        self.assertEqual([{"a": 1}], result)
+
+    def test_multiple_objects(self):
+        data = b'{"a": 1}\n{"b": 2}\n{"c": 3}\n'
+        result = list(FileLikeHandler.to_jsonlines_iterable(data))
+        self.assertEqual([{"a": 1}, {"b": 2}, {"c": 3}], result)
+
+    def test_chunked_across_newline(self):
+        chunks = iter([b'{"x":', b' 1}\n{"y"', b': 2}\n'])
+        result = list(FileLikeHandler.to_jsonlines_iterable(chunks))
+        self.assertEqual([{"x": 1}, {"y": 2}], result)
+
+    def test_empty_lines_skipped(self):
+        data = b'{"a": 1}\n\n{"b": 2}\n'
+        result = list(FileLikeHandler.to_jsonlines_iterable(data))
+        self.assertEqual([{"a": 1}, {"b": 2}], result)
+
+    def test_no_trailing_newline(self):
+        data = b'{"a": 1}\n{"b": 2}'
+        result = list(FileLikeHandler.to_jsonlines_iterable(data))
+        self.assertEqual([{"a": 1}, {"b": 2}], result)
+
+
+class TestToTypedJsonlinesIterable(unittest.TestCase):
+
+    def test_deserializes_dataclass(self):
+        data = b'{"x": 1, "y": 2}\n{"x": 3, "y": 4}\n'
+        result = list(FileLikeHandler.to_typed_jsonlines_iterable(data, _Point))
+        self.assertEqual([_Point(1, 2), _Point(3, 4)], result)
+
+    def test_no_trailing_newline(self):
+        data = b'{"x": 1, "y": 2}\n{"x": 3, "y": 4}'
+        result = list(FileLikeHandler.to_typed_jsonlines_iterable(data, _Point))
+        self.assertEqual([_Point(1, 2), _Point(3, 4)], result)
+
+    def test_chunked(self):
+        chunks = iter([b'{"x": 1,', b' "y": 2}\n', b'{"x": 3, "y": 4}\n'])
+        result = list(FileLikeHandler.to_typed_jsonlines_iterable(chunks, _Point))
+        self.assertEqual([_Point(1, 2), _Point(3, 4)], result)
 
 
 class TestToBytes(unittest.TestCase):

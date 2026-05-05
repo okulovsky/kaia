@@ -31,10 +31,10 @@ class ServerStreamingTestCase(TestCase):
             self.assertEqual(expected, output, "Output bytes do not match incremented input")
 
             self.assertIsNone(
-                api.tasks.get_job_summary(job_id).finished_timestamp,
+                api.jobs.get_job_summary(job_id).finished_timestamp,
                 "Job should still be running (blocked on uncommitted input)",
             )
 
             storage.commit(input_filename)
             summary = _poll(api, job_id, lambda s: s.finished_timestamp is not None)
-            self.assertTrue(summary.success, f"Job failed after commit:\n{api.tasks.get_error(job_id)}")
+            self.assertTrue(summary.success, f"Job failed after commit:\n{api.jobs.get_job(job_id).error}")

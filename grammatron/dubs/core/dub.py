@@ -27,11 +27,15 @@ class DubParameters:
     spoken: bool = True
     language: str = 'en'
     grammar_rule: GrammarRule = field(default_factory=GrammarRule)
+    debug_mode: bool = False
 
     def change_grammar(self, new_rule: GrammarRule|None):
         if new_rule is None:
             new_rule = GrammarRule()
-        return DubParameters(self.spoken, self.language, new_rule)
+        return DubParameters(self.spoken, self.language, new_rule, self.debug_mode)
+
+    def change_debug(self, new_debug_mode: bool):
+        return DubParameters(self.spoken, self.language, self.grammar_rule, new_debug_mode)
 
     @staticmethod
     def default_language():
@@ -62,7 +66,10 @@ class IDub(ABC):
             return parameters
 
     def to_str(self, value, parameters: DubParameters|None = None):
-        return self._to_str_internal(value, self.adjust_parameters(parameters))
+        value = self._to_str_internal(value, self.adjust_parameters(parameters))
+        if parameters is not None and parameters.debug_mode:
+            self.debug_to_str_result = value
+        return value
 
     @abstractmethod
     def _to_str_internal(self, value, parameters: DubParameters):
@@ -107,6 +114,12 @@ class IDub(ABC):
         uid = id(self)
         if DubGlobalCache is not None and DubGlobalCache.cache is not None and uid in DubGlobalCache.cache:
             del DubGlobalCache.cache[uid]
+
+    SENTINEL = '\u200b'
+
+    def __str__(self):
+        fields = ', '.join(f'{k}={v!r}' for k, v in vars(self).items())
+        return f'{type(self).__name__}({fields}){IDub.SENTINEL}'
 
     def as_variable(self, name: str):
         from .variable_dub import VariableDub

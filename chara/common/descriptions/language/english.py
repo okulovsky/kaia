@@ -11,7 +11,8 @@ ENGLISH_PHONEMES = [
 def english():
     from .language import Language
     return Language(
-        name='en',
+        code='en',
+        name="English",
         words_symbols=set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'"),
         native_espeak_phonemes=set(ENGLISH_PHONEMES),
         sample_text=(

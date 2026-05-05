@@ -1,7 +1,9 @@
 from ..marshalling import Server, ServiceComponent, IComponent
+from ..marshalling.amenities import DocumentationService
 import argparse
 import subprocess
 import sys
+
 
 def run_brainbox_app(
         services: list,
@@ -25,13 +27,17 @@ def run_brainbox_app(
 
     print("Running server")
     components = []
-    for index, service in enumerate(services):
-        print(f"Mounting service {type(service).__name__} at index {index}")
-        if isinstance(service, IComponent):
-            components.append(service)
+    service_components = []
+    for index, svc in enumerate(services):
+        print(f"Mounting service {type(svc).__name__} at index {index}")
+        if isinstance(svc, IComponent):
+            components.append(svc)
         else:
-            component = ServiceComponent(service)
-            components.append(component)
+            sc = ServiceComponent(svc)
+            components.append(sc)
+            service_components.append(sc)
+
+    components.append(ServiceComponent(DocumentationService(service_components), 'doc'))
 
     print("Starting web-server")
     server = Server(8080, *components)

@@ -52,16 +52,19 @@ class VectorIdentificator:
                 file_path = subfolder/file
                 if not file_path.is_file():
                     continue
-                if file not in base[class_name]:
-                    base[class_name][file] = self.sample_to_vector(file_path)
+                if file not in base[class_name] or base[class_name][file] is None:
+                    vector = self.sample_to_vector(file_path.name)
+                    base[class_name][file] = vector
+
 
         FileIO.write_json(base, base_file)
         array = []
         classes = []
         for class_name, data in base.items():
             for filename, vector in data.items():
-                array.append(vector)
-                classes.append(class_name)
+                if vector is not None:
+                    array.append(vector)
+                    classes.append(class_name)
         self.base = base
         self.df = pd.DataFrame(array, index=classes)
 

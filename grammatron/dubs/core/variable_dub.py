@@ -17,6 +17,7 @@ class VariableDub(ISubSequenceDub):
     dub: IDub = field(default_factory=ToStrDub)
     description: str | None = None
 
+
     def rename(self, name: str) -> 'VariableDub':
         return VariableDub(
             name,

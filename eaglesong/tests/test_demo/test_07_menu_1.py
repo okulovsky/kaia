@@ -1,5 +1,5 @@
 from eaglesong.tests.test_demo.common import *
-from eaglesong.demo.example_07_menu_1 import bot
+from eaglesong.doc.doc_07_menu_1 import bot
 from eaglesong.drivers.telegram.menu import MenuItem
 
 class Menu1TestCase(TestCase):

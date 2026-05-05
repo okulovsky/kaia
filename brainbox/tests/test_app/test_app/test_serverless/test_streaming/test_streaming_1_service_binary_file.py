@@ -35,13 +35,13 @@ class StreamingTestCase(TestCase):
             self.assertEqual(expected, output)
 
             self.assertIsNone(
-                api.tasks.get_job_summary(job_id).finished_timestamp,
+                api.jobs.get_job_summary(job_id).finished_timestamp,
                 "Job should still be running (blocked on uncommitted input)",
             )
 
             storage.commit(input_filename)
             summary = _poll(api, job_id, lambda s: s.finished_timestamp is not None)
-            self.assertTrue(summary.success, f"Job failed after commit:\n{api.tasks.get_error(job_id)}")
+            self.assertTrue(summary.success, f"Job failed after commit:\n{api.jobs.get_job(job_id).error}")
 
     def test_sentinel_causes_failure(self):
         """Feeding a 0xFF byte must cause the job to fail."""
@@ -57,4 +57,4 @@ class StreamingTestCase(TestCase):
 
             summary = _poll(api, job_id, lambda s: s.finished_timestamp is not None)
             self.assertFalse(summary.success, "Job should have failed due to sentinel byte")
-            self.assertIn('0xFF', api.tasks.get_error(job_id))
+            self.assertIn('0xFF', api.jobs.get_job(job_id).error)

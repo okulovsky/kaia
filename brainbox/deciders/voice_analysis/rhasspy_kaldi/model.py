@@ -35,7 +35,7 @@ class RhasspyKaldiModel(DownloadableModel):
             instance_id = controller.run_with_configuration(cfg)
             controller.wait_for_boot()
             controller.context.api_callback.log("Endpoint booted, requesting download")
-            requests.post(f'http://127.0.0.1:{controller.settings.connection.port}/api/download-profile')
+            requests.post(f'{controller.base_url}/api/download-profile')
             controller.stop(instance_id)
             path = controller.resource_folder('profiles')/model.language
             if not path.is_dir():

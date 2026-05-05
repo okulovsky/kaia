@@ -26,6 +26,7 @@
 <nav>
   <a href="/static/batches.html">All Batches</a>
   <a href="/static/operator_log.html">Operator Log</a>
+  <a href="/doc/html">API Documentation</a>
 </nav>
 <div id="status">Loading...</div>
 <table id="jobs-table">
@@ -59,9 +60,27 @@ function fmtNum(n) {
   return n.toFixed(2);
 }
 
+function jobStatus(j) {
+  if (j.finished_timestamp !== null && j.finished_timestamp !== undefined) return j.success ? 'success' : 'failure';
+  if (j.accepted_timestamp !== null && j.accepted_timestamp !== undefined) return 'in_work';
+  return 'waiting';
+}
+
+function inQueue(j) {
+  if (!j.accepted_timestamp) return null;
+  return (new Date(j.accepted_timestamp) - new Date(j.received_timestamp)) / 1000;
+}
+
+function inWork(j) {
+  if (!j.accepted_timestamp) return null;
+  const start = new Date(j.accepted_timestamp);
+  const end = j.finished_timestamp ? new Date(j.finished_timestamp) : new Date();
+  return (end - start) / 1000;
+}
+
 async function loadJobs() {
   try {
-    const resp = await fetch('/jobs-service/get-jobs/' + encodeURIComponent(batchId));
+    const resp = await fetch('/batches-service/get-job-summaries-by-batch/' + encodeURIComponent(batchId));
     if (!resp.ok) { document.getElementById('status').textContent = 'Error: ' + resp.status; return; }
     const jobs = await resp.json();
     document.getElementById('status').textContent = 'Last update: ' + new Date().toLocaleTimeString() + ' (' + jobs.length + ' jobs)';
@@ -76,7 +95,7 @@ async function loadJobs() {
       tr.appendChild(tdId);
 
       const tdDec = document.createElement('td');
-      tdDec.textContent = j.decider;
+      tdDec.textContent = j.method ? j.decider + ':' + j.method : j.decider;
       tr.appendChild(tdDec);
 
       const tdRec = document.createElement('td');
@@ -84,16 +103,17 @@ async function loadJobs() {
       tr.appendChild(tdRec);
 
       const tdQ = document.createElement('td');
-      tdQ.textContent = fmtNum(j.in_queue);
+      tdQ.textContent = fmtNum(inQueue(j));
       tr.appendChild(tdQ);
 
       const tdW = document.createElement('td');
-      tdW.textContent = fmtNum(j.in_work);
+      tdW.textContent = fmtNum(inWork(j));
       tr.appendChild(tdW);
 
+      const status = jobStatus(j);
       const tdSt = document.createElement('td');
-      tdSt.textContent = j.status;
-      tdSt.className = 'status-' + j.status;
+      tdSt.textContent = status;
+      tdSt.className = 'status-' + status;
       tr.appendChild(tdSt);
 
       const tdProg = document.createElement('td');
@@ -106,7 +126,7 @@ async function loadJobs() {
       cancelBtn.onclick = async () => {
         cancelBtn.disabled = true;
         try {
-          await fetch('/jobs-service/cancel?job_id=' + encodeURIComponent(j.id), { method: 'POST' });
+          await fetch('/jobs-service/cancel-job?job_id=' + encodeURIComponent(j.id), { method: 'POST' });
         } finally {
           cancelBtn.disabled = false;
           loadJobs();
@@ -117,12 +137,13 @@ async function loadJobs() {
 
       tbody.appendChild(tr);
 
-      if (j.error) {
+      if (status === 'failure') {
         const errTr = document.createElement('tr');
         errTr.className = 'error-row';
         const errTd = document.createElement('td');
         errTd.colSpan = 8;
-        errTd.innerHTML = 'Error: ' + j.error.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+        const errorText = j.error || '(no error message)';
+        errTd.innerHTML = 'Error: ' + errorText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
         errTr.appendChild(errTd);
         tbody.appendChild(errTr);
       }

@@ -12,6 +12,7 @@ from .controller import LlamaLoraServerController
 class ILlamaLoraServer:
     @brainbox_endpoint
     def completion(self, *, task_name: str, prompt: str|None = None, prompts: list[str]|None = None, max_tokens: int = -1) -> str:
+        """Generates text completion using a named LoRA adapter task."""
         ...
 
 
