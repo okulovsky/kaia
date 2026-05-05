@@ -6,7 +6,7 @@
   * [Integrations](#integrations)
   * [Cases](#cases)
 * [Paraphrases](#paraphrases)
-* [`paraphrases.common`](#`paraphrases.common`)
+  * [`paraphrases.common`](#`paraphrases.common`)
   * [`paraphrasing.utterances`](#`paraphrasing.utterances`)
 * [Voice Cloning](#voice-cloning)
 
@@ -126,7 +126,7 @@ There are also collective actions on the cases. Such pipelines accept `inner_pip
 
 # Paraphrases
 
-# `paraphrases.common`
+## `paraphrases.common`
 
 This pipeline paraphrases the `grammatron.Template`, possible also translating it to other languages.
 
