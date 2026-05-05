@@ -1,4 +1,4 @@
-from chara.common import logger, CharaApis
+from chara.common import logger, Chara.Apis
 from chara.llama_lora.pipeline import (
     LlamaLoraPipeline,
     TrainingSettings,
@@ -88,7 +88,7 @@ def run_llama_lora_test(
 ):
     with Loc.create_test_folder() as working_folder:
         with BrainBox.Api.Test() as api:
-            CharaApis.brainbox_api = api
+            Chara.Apis.brainbox_api = api
             cache = LlamaLoraCache(working_folder)
             pipeline = LlamaLoraPipeline(
                 model_id=model_id,

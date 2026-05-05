@@ -1,4 +1,4 @@
-from chara.paraphrasing.common.template_paraphrasing import ParsedTemplate
+from chara.paraphrasing.common import ParsedTemplate
 from grammatron import Template, CardinalDub, PluralAgreement, OptionsDub
 from unittest import TestCase
 

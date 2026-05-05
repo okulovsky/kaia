@@ -1,12 +1,10 @@
-from chara.common import logger, CharaApis, CaseCache
+from chara.common import Chara
 from chara.common.tools.llm import PromptTaskBuilder
-from chara.paraphrasing.common.words_translation import WordTranslationPipeline, WordTranslationCaseManager
+from chara.paraphrasing.common import WordTranslation
 from unittest import TestCase
-from chara.tests.test_voice_clone.test_common.test_chatterbox import ChatterboxTrainTest
 from grammatron import Template, OptionsDub, CardinalDub, PluralAgreement
 from foundation_kaia.misc import Loc
 from brainbox import BrainBox, ISelfManagingDecider
-from brainbox.deciders import Collector
 
 
 class OllamaMock(ISelfManagingDecider):
@@ -29,30 +27,31 @@ class OllamaMock(ISelfManagingDecider):
 
 
 def f(case):
-    return case.source+'/'+case.target_language_code
+    return case.source + '/' + case.target_language_code
+
 
 class TestWordTranslationPipeline(TestCase):
+    def _run(self, templates, also_translate_options_header=False):
+        manager = WordTranslation(templates, also_translate_options_header)
+        translation_cases = manager.prepare()
+        with Loc.create_test_folder() as folder:
+            Chara.start(folder)
+            pipe = WordTranslation.Pipeline(PromptTaskBuilder("test", f))
+            with BrainBox.Api.serverless_test([OllamaMock()]) as api:
+                Chara.Apis.brainbox_api = api
+                result = Chara.call(pipe)(translation_cases)
+        return manager.apply(result.cases)
+
     def test_word_translation_pipeline(self):
         templates = [
             Template(ru=f"Таймер заведен на {PluralAgreement(CardinalDub().as_variable('amount'), 'minute')}"),
             Template(ru=f"Нужно купить {OptionsDub(['banana', 'orange']).as_variable('fruit')}"),
             Template(de=f"Ich gehe in {OptionsDub(['bathroom', 'living room']).as_variable('room')}")
         ]
-        manager = WordTranslationCaseManager(templates)
-
-        with Loc.create_test_folder() as folder:
-            with BrainBox.Api.serverless_test([OllamaMock(), Collector()]) as api:
-                CharaApis.brainbox_api = api
-                cache = CaseCache(folder)
-                pipe = WordTranslationPipeline(PromptTaskBuilder("test", f))
-                pipe(cache, manager.prepare())
-                result = cache.read_result()
-
-        result_templates = manager.apply(result)
-        self.assertEqual("Таймер заведен на десять минут", result_templates[0].utter(10).to_str())
-        self.assertEqual("Нужно купить банан", result_templates[1].utter('banana').to_str())
-        self.assertEqual("Ich gehe in Wohnzimmer", result_templates[2].utter("living room").to_str())
-
+        result = self._run(templates)
+        self.assertEqual("Таймер заведен на десять минут", result[0].utter(10).to_str())
+        self.assertEqual("Нужно купить банан", result[1].utter('banana').to_str())
+        self.assertEqual("Ich gehe in Wohnzimmer", result[2].utter("living room").to_str())
 
     def test_with_translating_headers(self):
         templates = [
@@ -60,18 +59,7 @@ class TestWordTranslationPipeline(TestCase):
             Template(ru=f"Нужно купить {OptionsDub(['banana', 'orange']).as_variable('fruit')}"),
             Template(de=f"Ich gehe in {OptionsDub(['bathroom', 'living room']).as_variable('room')}")
         ]
-        manager = WordTranslationCaseManager(templates, also_translate_options_header=True)
-        with Loc.create_test_folder() as folder:
-            with BrainBox.Api.serverless_test([OllamaMock(), Collector()]) as api:
-                CharaApis.brainbox_api = api
-                cache = CaseCache(folder)
-                pipe = WordTranslationPipeline(PromptTaskBuilder("test", f))
-                pipe(cache, manager.prepare())
-                result = cache.read_result()
-
-        result = manager.apply(result)
+        result = self._run(templates, also_translate_options_header=True)
         self.assertEqual("Таймер заведен на десять минут", result[0].utter(10).to_str())
         self.assertEqual("Нужно купить банан", result[1].utter('банан').to_str())
         self.assertEqual("Ich gehe in Wohnzimmer", result[2].utter("Wohnzimmer").to_str())
-
-

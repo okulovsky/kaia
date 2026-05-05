@@ -1,5 +1,5 @@
 from chara.voice_clone.exploring import VoiceVoiceCloneCache
-from chara.common import Samples, Language, logger, CharaApis
+from chara.common import Samples, Language, logger, Chara.Apis
 from chara.voice_clone.common import XTTSTrain, XTTSInference, ZonosTrain, ZonosInference, ChatterboxTrain, ChatterboxInference
 from brainbox import BrainBox
 from unittest import TestCase
@@ -18,7 +18,7 @@ class VoiceClonersTestCase(TestCase):
 
         data = Wav.List()
         with BrainBox.Api.Test() as api:
-            CharaApis.brainbox_api = api
+            Chara.Apis.brainbox_api = api
             with Loc.create_test_folder() as folder:
                 for name, train, inference in cloners:
                     cache = VoiceCloneCache(folder/name)

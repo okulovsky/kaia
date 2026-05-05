@@ -1,11 +1,10 @@
-from chara.common import CharaApis, CaseCache
+from chara.common import Chara
 from chara.common.tools.llm import PromptTaskBuilder
-from chara.paraphrasing.common.options_expanding import OptionExpandingPipeline, OptionExpandingCaseManager
+from chara.paraphrasing.common import OptionExpanding
 from unittest import TestCase
 from grammatron import Template, OptionsDub
 from foundation_kaia.misc import Loc
 from brainbox import BrainBox, ISelfManagingDecider
-from brainbox.deciders import Collector
 
 
 class OllamaMock(ISelfManagingDecider):
@@ -36,21 +35,17 @@ class TestOptionExpandingPipeline(TestCase):
             Template(f"We need to buy {fruit_dub}"),
             Template(f"You ordered {fruit_dub_1}"),
         ]
-        manager = OptionExpandingCaseManager(templates)
+        manager = OptionExpanding(templates)
 
         with Loc.create_test_folder() as folder:
-            with BrainBox.Api.serverless_test([OllamaMock(), Collector()]) as api:
-                CharaApis.brainbox_api = api
-                cache = CaseCache(folder)
-                pipe = OptionExpandingPipeline(PromptTaskBuilder("test", f))
-                pipe(cache, manager.prepare())
-                result = cache.read_result()
+            Chara.start(folder)
+            pipe = OptionExpanding.Pipeline(PromptTaskBuilder("test", f))
+            with BrainBox.Api.serverless_test([OllamaMock()]) as api:
+                Chara.Apis.brainbox_api = api
+                result = Chara.call(pipe)(manager.prepare())
 
-        print(result)
-        templates = manager.apply(result)
+        templates = manager.apply(result.successes)
         self.assertEqual("We need to buy kiwi", templates[0].to_str("kiwi"))
         with self.assertRaises(Exception):
             templates[0].to_str("lemon")
-
         self.assertEqual("You ordered mango", templates[1].to_str("mango"))
-

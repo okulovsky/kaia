@@ -1,11 +1,14 @@
-from chara.common import logger, CharaApis
+from typing import Iterable
+
+from chara.common import logger, Chara
 from avatar.daemon import ParaphraseService, ParaphraseRecord
 import pickle
 
-def upload(records: list[ParaphraseRecord], index_length: int = 4):
+def upload(records: Iterable[ParaphraseRecord], index_length: int = 4):
+    records = list(records)
     logger.log(f"Uploading paraphrases to avatar server. Searching for a filename")
 
-    rs = CharaApis.avatar_api.resources(ParaphraseService).list('/')
+    rs = Chara.Apis.avatar_api.resources(ParaphraseService).list('/')
     index = 0
     while True:
         filename = (
@@ -24,4 +27,4 @@ def upload(records: list[ParaphraseRecord], index_length: int = 4):
         index += 1
 
     package = pickle.dumps(records)
-    CharaApis.avatar_api.resources(ParaphraseService).upload(filename, package)
+    Chara.Apis.avatar_api.resources(ParaphraseService).upload(filename, package)

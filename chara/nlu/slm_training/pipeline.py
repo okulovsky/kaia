@@ -1,10 +1,5 @@
 from chara.common import (
-    CharaApis,
-    ICache,
-    BrainBoxCache,
-    logger,
-    BrainBoxPipeline,
-    DictCache,
+    Chara,
 )
 from pathlib import Path
 from brainbox.deciders.text.llama_lora_sft_trainer.api import TrainingSettings, TrainingRun
@@ -130,7 +125,7 @@ class LlamaLoraPipeline:
                 checkpoint_adapter_dest = (
                     f"models/{self.model_id}/lora_adapters/{checkpoint_task_name}.gguf"
                 )
-                CharaApis.brainbox_api.resources(LlamaLoraServer).upload(
+                Chara.Apis.brainbox_api.resources(LlamaLoraServer).upload(
                     checkpoint_adapter_dest, gguf_checkpoint
                 )
 
@@ -148,7 +143,7 @@ class LlamaLoraPipeline:
                         ),
                     )
 
-                CharaApis.brainbox_api.resources(LlamaLoraServer).delete(
+                Chara.Apis.brainbox_api.resources(LlamaLoraServer).delete(
                     checkpoint_adapter_dest
                 )
             cache.val_outputs.finalize()

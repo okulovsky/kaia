@@ -1,7 +1,9 @@
+from pathlib import Path
+
 import gradio as gr
 from abc import abstractmethod
-from typing import Any
-from ..core import IGradioAnnotator, ITaskPlanner, SimpleTaskPlanner
+from typing import Any, Generic, Callable
+from ..core import IAnnotator, ITaskPlanner, SimpleTaskPlanner, TCase
 from dataclasses import dataclass
 from .annotation_cache import LabelAnnotationCache
 
@@ -16,15 +18,19 @@ class LabelAnnotatorSettings:
         return self.labels
 
 
-class LabelAnnotator(IGradioAnnotator[LabelAnnotationCache]):
+class LabelAnnotator(Generic[TCase], IAnnotator[TCase]):
     Settings = LabelAnnotatorSettings
 
     def __init__(self,
                  settings: LabelAnnotatorSettings,
                  task_planner: ITaskPlanner|None,
+                 mock_annotation: Callable[[TCase], Any]|None,
                  ):
         self.settings = settings
         self.task_planner = task_planner if task_planner is not None else SimpleTaskPlanner()
+        self.cases: list[TCase]|None = None
+        self.cache: LabelAnnotationCache|None = None
+        self.mock_annotation = mock_annotation
 
         self._progress: gr.Slider | None = None
         self._summary: gr.Slider | None = None
@@ -35,9 +41,20 @@ class LabelAnnotator(IGradioAnnotator[LabelAnnotationCache]):
 
         self.last_id: str | None = None
 
-    @abstractmethod
-    def get_tasks(self) -> dict[str, Any]:
-        pass
+    def get_result(self, folder: Path):
+        return LabelAnnotationCache(folder).get_result()
+
+
+    def run(self, cases: list[TCase], folder: Path):
+        self.cache = LabelAnnotationCache(folder)
+        self.cases = cases
+        if self.mock_annotation is not None:
+            self._perform_mock_annotation()
+            return
+
+        interface = self.create_interface()
+        interface.launch(show_error=True)
+
 
     @abstractmethod
     def create_inner_interface(self) -> list:
@@ -48,7 +65,7 @@ class LabelAnnotator(IGradioAnnotator[LabelAnnotationCache]):
         ...
 
     def create_interface(self) -> gr.Blocks:
-        self.task_planner.setup(self.cache, self.get_tasks())
+        self.task_planner.setup(self.cache, self.cases)
         with gr.Blocks() as interface:
             with gr.Row():
                 self._progress = gr.Slider()
@@ -80,7 +97,7 @@ class LabelAnnotator(IGradioAnnotator[LabelAnnotationCache]):
         return interface
 
     def _final_state(self):
-        tasks_count = len(self.get_tasks())
+        tasks_count = len(self.cases)
         summary = self.cache.get_summary()
         result = {
             self._progress: gr.update(
@@ -107,7 +124,7 @@ class LabelAnnotator(IGradioAnnotator[LabelAnnotationCache]):
 
         summary = self.cache.get_summary()
         annotated_count = sum(status.annotated for status in self.cache.get_annotation_status().values())
-        tasks_count = len(self.get_tasks())
+        tasks_count = len(self.cases)
         result = {
             self._progress: gr.update(
                 minimum=0,
@@ -139,15 +156,17 @@ class LabelAnnotator(IGradioAnnotator[LabelAnnotationCache]):
         return self._get_state()
 
 
-    def mock_annotation(self, cache: LabelAnnotationCache):
-        ptr = 0
-        self.task_planner.setup(cache, self.get_tasks())
+    def _perform_mock_annotation(self):
+        self.task_planner.setup(self.cache, self.cases)
         while True:
             next_id = self.task_planner.get_next()
             if next_id is None:
                 break
-            cache.add(next_id, self.settings.labels[ptr])
-            ptr = (ptr+1) % len(self.settings.labels)
+            case = next(c for c in self.cases if c.get_id()==next_id)
+            annotation = self.mock_annotation(case)
+            self.cache.add(next_id, annotation)
+        self.cache.finish_annotation()
+
 
 
 

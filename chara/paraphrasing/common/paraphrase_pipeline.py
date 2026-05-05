@@ -1,100 +1,73 @@
 from dataclasses import dataclass
-from chara.common import *
+from chara.common import Chara, ChooseBestAnswerPipeline, CaseCollection
 from chara.common.tools.llm import PromptTaskBuilder
-from .template_paraphrasing import  (
-    TemplateParaphrasePipeline, TemplateParaphraseCase,
-    TemplateParaphraseCaseManager
-)
-from .words_translation import WordTranslationCaseManager, WordTranslationPipeline, WordTranslationCase
-from .grammar_correction import GrammarCorrectionPipeline, GrammarCorrectionCase, GrammarCorrectionCaseManager
-from .options_expanding import OptionExpandingCase, OptionExpandingCaseManager, OptionExpandingPipeline
-from pathlib import Path
+from .template_paraphrasing import TemplateParaphrase, ParaphraseCase
+from .words_translation import WordTranslation
+from .grammar_correction import GrammarCorrection
+from .options_expanding import OptionExpanding
+
 
 @dataclass
 class ParaphrasePipelineSettings:
-    paraphrase_task_builder: PromptTaskBuilder[TemplateParaphraseCase]
+    paraphrase_task_builder: PromptTaskBuilder[ParaphraseCase]
     enable_words_translation: bool = True
-    grammar_correction_attempts: int|None = 1
-    words_translation_attempts: int|None = 1
+    grammar_correction_attempts: int | None = 1
+    words_translation_attempts: int | None = 1
     enable_options_expanding: bool = False
-
-
-class ParaphraseCache(CaseCache[TemplateParaphraseCase]):
-    def __init__(self, working_folder: Path | None = None):
-        super().__init__(working_folder)
-        self.parsed_template_paraphrasing = CaseCache[TemplateParaphraseCase]()
-        self.words_translation = CaseCache[WordTranslationCase]()
-        self.grammar_correction = CaseCache[GrammarCorrectionCase]()
-        self.options_expanding = CaseCache[OptionExpandingCase]()
+    enable_option_values_translation: bool = False
 
 
 class ParaphrasePipeline:
     def __init__(self, settings: ParaphrasePipelineSettings):
         self.settings = settings
 
-    def __call__(self, cache: ParaphraseCache, cases: list[TemplateParaphraseCase]):
+    def __call__(self, cases: CaseCollection[ParaphraseCase]) -> CaseCollection[ParaphraseCase]:
+        from .paraphrase import Paraphrase
 
-        parsed_template_manager = TemplateParaphraseCaseManager(cases)
-        cases = parsed_template_manager.prepare()
-        @logger.phase(cache.parsed_template_paraphrasing)
-        def _():
-            pipe = TemplateParaphrasePipeline(self.settings.paraphrase_task_builder)
-            pipe(cache.parsed_template_paraphrasing, cases=cases)
-        templates = parsed_template_manager.apply(cache.parsed_template_paraphrasing.read_cases())
+        paraphrase_manager = Paraphrase(cases.successes)
+        expanded_cases = paraphrase_manager.prepare()
+
+        paraphrase_pipe = TemplateParaphrase.Pipeline(self.settings.paraphrase_task_builder)
+        paraphrase_results = Chara.call(paraphrase_pipe)(expanded_cases)
+        templates = paraphrase_manager.apply(paraphrase_results.successes)
 
         if self.settings.enable_words_translation:
-            manager = WordTranslationCaseManager(templates, True)
-            translation_cases = manager.prepare()
-            @logger.phase(cache.words_translation)
-            def _():
-                task_builder = PromptTaskBuilder(self.settings.paraphrase_task_builder.model)
-                pipe = WordTranslationPipeline(task_builder)
-                pipe(cache.words_translation, translation_cases)
-            templates = manager.apply(cache.words_translation.read_result())
-        else:
-            cache.words_translation.finalize()
+            translation_manager = WordTranslation(templates, self.settings.enable_option_values_translation)
+            translation_cases = translation_manager.prepare()
+            if translation_cases:
+                translation_pipe = WordTranslation.Pipeline(
+                    PromptTaskBuilder(self.settings.paraphrase_task_builder.model)
+                )
+                translation_result = Chara.call(translation_pipe)(translation_cases)
+                templates = translation_manager.apply(translation_result.successes)
 
         if self.settings.grammar_correction_attempts is not None:
-            manager = GrammarCorrectionCaseManager(templates)
-            grammar_cases = manager.prepare()
-            @logger.phase(cache.grammar_correction)
-            def _():
-                task_builder = PromptTaskBuilder(self.settings.paraphrase_task_builder.model)
-                pipe = GrammarCorrectionPipeline(task_builder)
+            grammar_manager = GrammarCorrection(templates)
+            grammar_cases = grammar_manager.prepare()
+            if grammar_cases:
+                grammar_pipe = GrammarCorrection.Pipeline(
+                    PromptTaskBuilder(self.settings.paraphrase_task_builder.model)
+                )
                 if self.settings.grammar_correction_attempts > 1:
-                    pipe = ChooseBestAnswerPipeline(pipe, self.settings.grammar_correction_attempts)
-                pipe(cache.grammar_correction, grammar_cases)
-            templates = manager.apply(cache.grammar_correction.read_result())
-        else:
-            cache.grammar_correction.finalize()
+                    grammar_pipe = ChooseBestAnswerPipeline(grammar_pipe, self.settings.grammar_correction_attempts)
+                grammar_result = Chara.call(grammar_pipe)(grammar_cases)
+                templates = grammar_manager.apply(grammar_result.successes)
 
         if self.settings.enable_options_expanding:
-            manager = OptionExpandingCaseManager(templates)
-            options_cases = manager.prepare()
-            @logger.phase(cache.options_expanding)
-            def _():
-                task_builder = PromptTaskBuilder(self.settings.paraphrase_task_builder.model)
-                pipe = OptionExpandingPipeline(task_builder)
-                pipe(cache.options_expanding, options_cases)
-            templates = manager.apply(cache.options_expanding.read_result())
-        else:
-            cache.options_expanding.finalize()
+            options_manager = OptionExpanding(templates)
+            options_cases = options_manager.prepare()
+            if options_cases:
+                options_pipe = OptionExpanding.Pipeline(
+                    PromptTaskBuilder(self.settings.paraphrase_task_builder.model)
+                )
+                options_results = Chara.call(options_pipe)(options_cases)
+                templates = options_manager.apply(options_results.successes)
 
         result = []
         for template in templates:
-            case: TemplateParaphraseCase = template._stored_info
+            case: ParaphraseCase = template._case
             case.resulting_template = template
-            del template._stored_info
+            del template._case
             result.append(case)
-        cache.write_result(result)
 
-
-
-
-
-
-
-
-
-
-
+        return CaseCollection(result)

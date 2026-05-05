@@ -10,4 +10,11 @@ Currently, it has options:
 * {{ option }}
 {%endfor%}
 
-Write at least 30 options as a bullet-point list. Do not add any clarifications or comments.
+This variable is used in the following templates:
+{% for example in example_templates %}
+* {{ example }}
+{% endfor %}
+
+Write a bullet-point list with at least 30 points with the words, that could be used in this templates,
+and close in meaning to the current options. Bring the diverse words!
+The replies must be written in {{ target_language_name }}.

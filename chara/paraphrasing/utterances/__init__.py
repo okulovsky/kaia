@@ -1,2 +1,3 @@
 from .uterance_paraphrase_case import UtteranceParaphraseCase
 from .utterance_paraphrase_case_manager import UtteranceParaphraseCaseManager
+from .utterances_paraphrases_pipeline import UtteranceParaphrasePipeline

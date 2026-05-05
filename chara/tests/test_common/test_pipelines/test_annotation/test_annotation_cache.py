@@ -6,8 +6,7 @@ from yo_fluq import FileIO
 class AnnotationCacheTestCase(TestCase):
     def test_annotation_cache(self):
         with Loc.create_test_folder() as folder:
-            cache = LabelAnnotationCache()
-            cache.initialize(folder)
+            cache = LabelAnnotationCache(folder)
 
             cache.skip('id1')
             self.assertTrue(cache.temp_file.exists())
@@ -23,12 +22,9 @@ class AnnotationCacheTestCase(TestCase):
             self.assertEqual(status['id2'].value, 'X')
             self.assertEqual(status['id2'].skipped_times, 0)
 
-            with self.assertRaises(ValueError):
-                cache.get_result()
+            self.assertFalse(cache.ready)
 
             cache.finish_annotation()
+            self.assertTrue(cache.ready)
             result = cache.get_result()
             self.assertEqual({'id2': 'X'}, result)
-
-
-

@@ -1,4 +1,4 @@
-from chara.common import CharaApis
+from chara.common import Chara.Apis
 from chara.common.tools.llm import PromptTaskBuilder
 from grammatron import OptionsDub, Template, PluralAgreement, CardinalDub
 from grammatron.grammars.ru import RuCase
@@ -46,7 +46,7 @@ class GrammarCorrectiomPipelineTestCase(TestCase):
                 ))
         with Loc.create_test_folder() as folder:
             with BrainBox.Api.test() as api:
-                CharaApis.brainbox_api = api
+                Chara.Apis.brainbox_api = api
                 cache = GrammarCorrectionCache[ParaphraseCase](folder)
                 pipe = GrammarCorrectionPipeline[ParaphraseCase](
                     PromptTaskBuilder('mistral-small'),

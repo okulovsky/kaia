@@ -1,4 +1,4 @@
-from chara.common import Character
+from chara.common import Character, CaseCollection
 from typing import Iterable
 from grammatron import Template
 from .uterance_paraphrase_case import UtteranceParaphraseCase
@@ -31,7 +31,7 @@ class UtteranceParaphraseCaseManager:
             filtered_templates.append(template)
         return filtered_templates
 
-    def prepare(self) -> list[UtteranceParaphraseCase]:
+    def prepare(self) -> CaseCollection[UtteranceParaphraseCase]:
         tasks = []
         users = [None] if self.users is None else self.users
         characters = [None] if self.characters is None else self.characters
@@ -53,10 +53,10 @@ class UtteranceParaphraseCaseManager:
                             user,
                             relationship,
                         ))
-        return tasks
+        return CaseCollection(tasks)
 
 
-    def apply(self, cases: list[UtteranceParaphraseCase]) -> list[ParaphraseRecord]:
+    def apply(self, cases: Iterable[UtteranceParaphraseCase]) -> list[ParaphraseRecord]:
         result = []
         for case in cases:
             result.append(ParaphraseRecord(
@@ -69,6 +69,8 @@ class UtteranceParaphraseCaseManager:
                 None if case.user is None else case.user.name
             ))
         return result
+
+
 
 
 

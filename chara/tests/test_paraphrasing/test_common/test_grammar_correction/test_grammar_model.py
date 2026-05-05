@@ -1,4 +1,4 @@
-from chara.paraphrasing.common.grammar_correction.grammar_model import GrammarModel
+from chara.paraphrasing.common import GrammarModel
 from grammatron import Template, PluralAgreement, CardinalDub, DubParameters
 from unittest import TestCase
 

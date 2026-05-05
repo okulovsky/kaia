@@ -1,9 +1,13 @@
-from ..common import TemplateParaphraseCase, ParsedTemplate
+from __future__ import annotations
+from ..common import ParaphraseCase, ParsedTemplate
 from grammatron import Template
-from chara.common import Character
+from chara.common.descriptions import Character
 from grammatron import TemplateContext
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .stats_builder import ParaphraseStats
 
-class UtteranceParaphraseCase(TemplateParaphraseCase):
+class UtteranceParaphraseCase(ParaphraseCase):
     def __init__(self,
                  template: Template,
                  target_language_code: str,
@@ -17,6 +21,8 @@ class UtteranceParaphraseCase(TemplateParaphraseCase):
         self.user = user
         self.relationship = relationship
         self.variations_per_template = variations_per_template
+
+        self.stats: ParaphraseStats|None = None
 
         self.samples: tuple[str, ...]|None = None
         self.context: TemplateContext|None = None

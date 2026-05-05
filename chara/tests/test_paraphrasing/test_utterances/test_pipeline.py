@@ -1,93 +1,50 @@
-from avatar.app import AvatarApi, AvatarServerSettings
-from avatar.daemon import *
+from avatar.app import AvatarApi
 from unittest import TestCase
-from grammatron import Template, TemplatesCollection, TimedeltaDub
-from chara.paraphrasing.utterances import CaseBuilder, UtteranceParaphrasePipeline, UtteranceParaphrasesCache, ParaphraseStats
-from chara.paraphrasing.common import ParaphrasePipeline, ParaphraseCache, ParaphraseCase
+from grammatron import Template
+from chara.paraphrasing.utterances import UtteranceParaphraseCaseManager, UtteranceParaphrasePipeline
+from chara.paraphrasing.common import Paraphrase
+from chara.paraphrasing.utterances.prompter import setup_default_prompter
+from chara.common import Chara
+from chara.common.tools.llm import PromptTaskBuilder
 from foundation_kaia.misc import Loc
-from chara.common import CharaApis
+from brainbox import BrainBox, ISelfManagingDecider
 
 
+class Mock(ISelfManagingDecider):
+    def get_name(self):
+        return "Ollama"
 
-class Utterances(TemplatesCollection):
-    yes = Template("yes")
-    timer_is_set = Template(f"The timer is set for {TimedeltaDub().as_variable('duration')}")
-
-
-
-def first_run(cache: ParaphraseCache, cases: list[ParaphraseCase]):
-    if len(cases) != 1:
-        raise AssertionError("Expected exactly 1 case")
-    if cases[0].template.template.get_name().endswith('yes'):
-        option = 'Sure!'
-    else:
-        option = "Timer's ticking for {duration}"
-    cache.write_result([
-        ParaphrasePipeline.case_and_option_to_record(cases[0], option)
-    ])
-
-def second_run(cache: ParaphraseCache, cases: list[ParaphraseCase]):
-    if len(cases) != 1:
-        raise AssertionError("Expected exactly 1 case")
-    cache.write_result([
-        ParaphrasePipeline.case_and_option_to_record(cases[0], "Yep!")
-    ])
+    def question(self, prompt: str, system_prompt=None, options=None, num_predict=None):
+        return "* Sure!\n* Yep!"
 
 
-
-class UtteranceParaphrasePipelineTestCase(TestCase):
-    def check_stats(self, stats: list[ParaphraseStats], yes_existing, yes_seen, timer_existing, timer_seen):
-        for s in stats:
-            if s.case.template.template.get_name().endswith('yes'):
-                self.assertEqual(yes_existing, s.existing)
-                self.assertEqual(yes_seen, s.seen)
-            else:
-                self.assertEqual(timer_existing, s.existing)
-                self.assertEqual(timer_seen, s.seen)
-
-
-
+class UtterancePipelineTestCase(TestCase):
     def test_pipeline(self):
-        buider = CaseBuilder(Utterances.get_templates())
+        builder = PromptTaskBuilder('test')
+        setup_default_prompter(builder)
+        settings = Paraphrase.Settings(
+            paraphrase_task_builder=builder,
+            enable_words_translation=False,
+            grammar_correction_attempts=None,
+            enable_options_expanding=False,
+        )
+        manager = UtteranceParaphraseCaseManager(
+            [Template("yes"), Template("no")],
+            target_languages=('en',)
+        )
+        pipe = UtteranceParaphrasePipeline(manager, settings, templates_in_batch=10, max_attempts=1)
+
         with Loc.create_test_folder() as avatar_folder:
-            with AvatarApi.test(avatar_folder) as api:
-                CharaApis.avatar_api = api
-                with Loc.create_test_folder() as folder_1:
-                    cache = UtteranceParaphrasesCache(folder_1)
-                    pipe = UtteranceParaphrasePipeline(buider, first_run, 2, 1)
-                    pipe(cache)
+            with Loc.create_test_folder() as folder:
+                Chara.start(folder)
+                with AvatarApi.test(avatar_folder) as avatar_api:
+                    Chara.Apis.avatar_api = avatar_api
+                    with BrainBox.Api.serverless_test([Mock()]) as api:
+                        Chara.Apis.brainbox_api = api
+                        result = Chara.call(pipe)()
 
-                    stats = cache.stats_before.read()
-                    self.check_stats(stats, 0, 0, 0, 0)
-
-                state = State(None, None, 'en')
-                service = ParaphraseService(state)
-                service.set_resources_folder(avatar_folder/'resources/ParaphraseService')
-                service.on_initialize(None)
-                result = service.paraphrase(InternalTextCommand(Utterances.yes(), None, 'en'))
-                self.assertEqual('Sure!', result.get_text(True))
-
-                with Loc.create_test_folder() as folder_2:
-                    cache = UtteranceParaphrasesCache(folder_2)
-                    pipe = UtteranceParaphrasePipeline(buider, second_run, 1, 1)
-                    pipe(cache)
-
-                    stats = cache.stats_before.read()
-                    self.check_stats(stats, 1, 1, 1, 0)
-                    result = cache.batches.create_subcache(0).read_result()
-                    self.assertEqual(
-                        Utterances.yes.get_name(),
-                        result[0].original_template_name
-                    )
-
-
-
-
-
-
-
-
-
-
-
-
+        self.assertEqual(4, len(result))
+        self.assertIsInstance(result[0].template, Template)
+        names = {r.original_template_name for r in result}
+        self.assertIn(Template("yes").get_name(), names)
+        self.assertIn(Template("no").get_name(), names)

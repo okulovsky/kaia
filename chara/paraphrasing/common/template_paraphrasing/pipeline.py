@@ -1,13 +1,10 @@
-import copy
-
-from chara.common import ICase, CaseCache, logger, BrainBoxCasePipeline, Language
+from chara.common import BrainBoxCasePipeline, Chara, ICase, CaseCollection
 from chara.common.tools.llm import BulletPointDivider, PromptTaskBuilder
 import traceback
 from .parsed_template import ParsedTemplate
 from grammatron import Template
-from dataclasses import dataclass
 
-class TemplateParaphraseCase(ICase):
+class ParaphraseCase(ICase):
     def __init__(self, template: Template, target_language_code: str|None = None):
         self.original_template = template
         self.target_language_code: str|None = target_language_code
@@ -18,32 +15,25 @@ class TemplateParaphraseCase(ICase):
     def prepare(self):
         pass
 
+class TemplateParaphrase:
+    Case = ParaphraseCase
 
+    class Pipeline:
+        def __init__(self, builder: PromptTaskBuilder[ParaphraseCase]):
+            self.builder = builder
 
+        def _merge(self, case: ParaphraseCase, option: str):
+            try:
+                parsed_template = case.parsed_template
+                template = parsed_template.restore_template(option, case.target_language_code)
+                case.resulting_template = template
+            except Exception:
+                case.error = f"Option `{option}` failed: {traceback.format_exc()}"
 
-
-class TemplateParaphrasePipeline:
-    def __init__(self, builder: PromptTaskBuilder[TemplateParaphraseCase]):
-        self.builder = builder
-
-    def _merge(self, case: TemplateParaphraseCase, option: str):
-        try:
-            parsed_template = case.parsed_template
-            template = parsed_template.restore_template(option, case.target_language_code)
-            case.resulting_template = template
-        except Exception:
-            case.error = f"Option `{option}` failed: {traceback.format_exc()}"
-
-    def __call__(self, cache: CaseCache[TemplateParaphraseCase], cases: list[TemplateParaphraseCase]):
-
-        subcache: CaseCache = cache.create_subcache('llm')
-        @logger.phase(subcache, "Running LLM")
-        def _():
+        def __call__(self, cases: CaseCollection[ParaphraseCase]) -> CaseCollection[ParaphraseCase]:
             pipe = BrainBoxCasePipeline(self.builder, self._merge, BulletPointDivider())
-            pipe(subcache, cases)
-
-        result = subcache.read_cases()
-        cache.write_result(result)
+            result = Chara.call(pipe.__call__)(cases.successes_collection).raise_if_all_errors()
+            return CaseCollection(cases.errors, result)
 
 
 

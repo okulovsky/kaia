@@ -1,5 +1,5 @@
 from unittest import TestCase
-from chara.paraphrasing.common.template_paraphrasing import ParsedTemplate
+from chara.paraphrasing.common import ParsedTemplate
 from grammatron import Template, PluralAgreement, CardinalDub
 
 
