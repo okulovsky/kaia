@@ -2,9 +2,9 @@ from avatar.app import compile_frontend
 from kaia.app import KaiaAppSettings, KaiaApp
 from pathlib import Path
 from brainbox import BrainBox
+from loguru import logger
 import argparse
-
-
+import time
 
 def start_kaia(settings: KaiaAppSettings):
     parser = argparse.ArgumentParser()
@@ -14,14 +14,19 @@ def start_kaia(settings: KaiaAppSettings):
     args = parser.parse_args()
     port = int(args.port)
     data_folder = Path(args.data_folder)
-    print(f"Running kaia at the port {port} in the folder {data_folder}")
 
+    logger.info(f"Running kaia at the port {port} in the folder {data_folder}")
     compile_frontend(data_folder / 'avatar' / 'frontend')
     settings.brainbox = None
     settings.avatar_server.port = port
 
     app = KaiaApp(data_folder)
     app.brainbox_api = BrainBox.Api("http://127.0.0.1:8090")
-    app.brainbox_cache_folder = data_folder/'brainbox/cache'
+    app.brainbox_cache_folder = data_folder / 'brainbox/cache'
     settings.bind_app(app)
-    app.get_fork_app().run()
+    app.get_fork_app(None).run()
+
+    settings.brainbox_setup.execute(app.brainbox_api)
+    while True:
+        time.sleep(1)
+

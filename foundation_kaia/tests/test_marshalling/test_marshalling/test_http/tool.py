@@ -4,8 +4,8 @@ def make_content_test(f, *args):
     call_model = CallModel.Factory.test(f)(*args)
     content = call_model.content
     model = call_model.endpoint_model
-    producer = ContentProducer(content)
+    producer = ContentProducer(content, model)
     body = list(producer.produce())
     kwargs = {}
-    parse_content(kwargs, producer.content_type, body, model)
+    parse_content(kwargs, body, model, producer.content_type)
     return content, kwargs

@@ -1,5 +1,5 @@
 from eaglesong.tests.test_demo.common import *
-from eaglesong.demo.example_01_echobot import bot
+from eaglesong.doc.doc_01_echobot import bot
 
 class Demo0TestCase(TestCase):
     def test_echobot(self):

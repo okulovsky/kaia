@@ -55,7 +55,7 @@ class TestSimple(TestCase):
             ids = api.add(tasks)
             result = api.join(ids)
 
-            self.assertListEqual([True] * 6, [api.tasks.get_job(id).success for id in ids])
+            self.assertListEqual([True] * 6, [api.jobs.get_job(id).success for id in ids])
             self.assertListEqual(['OK'] * 6, result)
 
 
@@ -108,8 +108,8 @@ class TestErrorHandling(TestCase):
                 ),
             ]
             ids = api.add(tasks)
-            api.tasks.base_join(ids, ignore_errors=True)
-            jobs = [api.tasks.get_job(id) for id in ids]
+            api.jobs.base_join(ids, ignore_errors=True)
+            jobs = [api.jobs.get_job(id) for id in ids]
 
             self.assertTrue(jobs[0].success)
             self.assertFalse(jobs[1].success)
@@ -124,8 +124,8 @@ class TestErrorHandling(TestCase):
                 BrainBox.TaskBuilder.call(WarmupErroneousDecider, id='src-y').run(),
             ]
             ids = api.add(tasks)
-            api.tasks.base_join(ids, ignore_errors=True)
-            jobs = [api.tasks.get_job(id) for id in ids]
+            api.jobs.base_join(ids, ignore_errors=True)
+            jobs = [api.jobs.get_job(id) for id in ids]
             for job in jobs:
                 self.assertFalse(job.success)
                 self.assertIsNotNone(job.error)
@@ -136,7 +136,7 @@ class TestResultRetrieval(TestCase):
         with ServerlessTest(registry=ControllerRegistry(services)) as api:
             task = BrainBox.TaskBuilder.call(WaitingDecider, id='test').run()
             self.assertEqual('OK', api.execute(task))
-            self.assertEqual('OK', api.tasks.get_result('test'))
+            self.assertEqual('OK', api.jobs.get_job('test').result)
 
 
 class CustomClass:

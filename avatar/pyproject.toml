@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "kaia-avatar"
 description = "Web-server and services that incapsulates the character's representation to a user"
-version = "4.0.9"
+version = "4.9.91"
 readme = 'README.md'
 requires-python = ">=3.10, <4.0"
 license = "LGPL-3.0-or-later"
@@ -38,14 +38,14 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-dev = [
-    "tox",
-    "tox-conda",
-    "twine",
-]
+test = ["selenium", "pillow", "kaleido"]
+
 
 [project.urls]
 repository = "https://github.com/okulovsky/kaia/tree/main/avatar"
 
 [tool.setuptools.packages.find]
 where = ["."]
+
+[tool.setuptools.package-data]
+"*" = ["**/*"]

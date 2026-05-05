@@ -1,6 +1,7 @@
 from typing import Callable, Any, TypeVar
 from .simple import HeaderItem, ILogItem
 from contextlib import contextmanager
+from datetime import datetime
 
 T = TypeVar('T')
 
@@ -38,6 +39,7 @@ class Logger:
     def log(self, message: Any):
         if not isinstance(message, ILogItem):
             message = self.resolve(message)
+        message.timestamp = datetime.now()
         for callback in Logger.ON_ITEM:
             callback(message)
 

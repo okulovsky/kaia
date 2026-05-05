@@ -6,8 +6,10 @@ from foundation_kaia.brainbox_utils import brainbox_endpoint
 class IEspeakPhonemizer:
     @brainbox_endpoint
     def phonemize(self, text: list[str], language: str = 'en-us', stress: bool = False) -> list[list[list[str]]]:
+        """Converts a list of text strings to phoneme sequences."""
         ...
 
     @brainbox_endpoint(content_type='application/json')
     def phonemize_to_file(self, text: list[str], language: str = 'en-us', stress: bool = False) -> FileLike:
+        """Converts a list of text strings to phonemes and returns the result as a JSON file."""
         ...

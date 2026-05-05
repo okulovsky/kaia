@@ -18,6 +18,10 @@ export class SoundBuffer {
         return this.totalSamples === 0
     }
 
+    get frames(): readonly MicData[] {
+        return this.queue
+    }
+
     add(data: MicData): void {
         if (this.sampleRate !== null && this.sampleRate !== data.sampleRate) {
             this.clear()

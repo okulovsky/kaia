@@ -8,11 +8,11 @@ class RuCardinalDubTestCase(TestCase):
         self.assertEqual("десять", s)
 
     def test_given_rule(self):
-        s = CardinalDub().to_str(10, DubParameters(language='ru', grammar_rule=RuGrammarRule(RuDeclension.GENITIVE)))
+        s = CardinalDub().to_str(10, DubParameters(language='ru', grammar_rule=RuGrammarRule(RuCase.GENITIVE)))
         self.assertEqual("десяти", s)
 
     def test_default_rule(self):
-        s = CardinalDub().grammar.ru(RuDeclension.GENITIVE).to_str(10, DubParameters(language='ru'))
+        s = CardinalDub().grammar.ru(RuCase.GENITIVE).to_str(10, DubParameters(language='ru'))
         self.assertEqual("десяти", s)
 
     def test_parse(self):

@@ -6,10 +6,12 @@ from brainbox.framework.job_processing import OperatorLogItem
 class IDiagnosticsService:
     @endpoint(method='GET')
     def last_call(self) -> LastCallDocumentation:
+        """Returns documentation for the most recently executed API call."""
         ...
 
     @endpoint(method='GET')
     def operator_log(self, entries_count: int|None = 100) -> list[OperatorLogItem]:
+        """Returns recent operator log entries."""
         ...
 
 

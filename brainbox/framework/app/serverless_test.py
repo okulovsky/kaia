@@ -37,7 +37,7 @@ class ServerlessTest:
         self._loop_thread.start()
 
         api = object.__new__(BrainBoxApi)
-        api.tasks = self._services.tasks
+        api.jobs = self._services.jobs
         api.controllers = self._services.controllers
         api.batches = self._services.batches
         api.cache = self._services.cache

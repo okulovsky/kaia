@@ -24,13 +24,10 @@ class JinjaPrompter(IPrompter, Generic[T]):
 
     def __call__(self, obj: T) -> str:
         values = {}
-        if is_dataclass(obj):
-            if isinstance(obj, type):
-                pass
-            else:
-                values = copy(obj.__dict__)
-        elif isinstance(obj, dict):
+        if isinstance(obj, dict):
             values = copy(obj)
+        else:
+            values = copy(obj.__dict__)
         values['_'] = obj
 
         s = self._template.render(**values)

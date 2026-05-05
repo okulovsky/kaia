@@ -42,6 +42,15 @@ class Template(TemplateBase[LanguageDispatchDub[TemplateDub]]):
     def get_language_to_sequences(self) -> dict[str,tuple[SequenceDub,...]]:
         return {language: dub.sequences for language, dub in self.dub.dispatch.items()}
 
+    def get_default_parameters(self) -> DubParameters:
+        if DubParameters.default_language() in self.dub.dispatch:
+            return DubParameters()
+        else:
+            language = next(iter(self.dub.dispatch.keys()))
+            return DubParameters(language=language)
+
+
+
 
     def with_type(self, _type: Type) -> 'Template':
         obj = self.clone()
@@ -95,7 +104,8 @@ class Template(TemplateBase[LanguageDispatchDub[TemplateDub]]):
         return found_name
 
     def __str__(self):
-        template = self.dub.get_dispatch(DubParameters())
+        parameters = self.get_default_parameters()
+        template = self.dub.get_dispatch(parameters)
         return 'Template: '+ ' | '.join(s.get_human_readable_representation(DubParameters()) for s in template.sequences)
 
     def __repr__(self):

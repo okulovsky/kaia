@@ -1,10 +1,9 @@
 import traceback
-from typing import Any, Type, Optional, Union, Callable, TypeVar, Generic
+from typing import Any, TypeVar, Generic
 from ..messaging import IMessage, message_handler
 from dataclasses import dataclass
 from brainbox import BrainBox
-from brainbox.framework import ControllersSetup
-from .common import AvatarService, ServerStartedEvent, ChatCommand
+from .common import AvatarService
 
 @dataclass
 class BrainBoxServiceCommand(IMessage):
@@ -26,10 +25,8 @@ class BrainBoxService(AvatarService):
 
     def __init__(self,
                  api: BrainBox.Api,
-                 setup: ControllersSetup|None = None
                  ):
         self.api = api
-        self.setup = setup
 
     def requires_brainbox(self):
         return True
@@ -44,7 +41,3 @@ class BrainBoxService(AvatarService):
             reply: IMessage = BrainBoxServiceConfirmation(None, ''.join(traceback.format_exception(ex)))
             return reply.as_confirmation_for(input)
 
-    @message_handler
-    def initialize(self, initialization: ServerStartedEvent) -> None:
-        if self.api is not None and self.setup is not None:
-            self.api.controllers.setup(self.setup)

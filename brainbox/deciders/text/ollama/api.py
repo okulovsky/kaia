@@ -14,28 +14,32 @@ SESSION_ID = str(uuid.uuid4())
 class IOllama:
     @brainbox_endpoint
     def completions_json(self, prompt: str) -> dict:
+        """Sends a raw completion prompt and returns the full Ollama JSON response."""
         ...
 
     @brainbox_endpoint
     def completions(self, prompt: str) -> str:
+        """Sends a raw completion prompt and returns the response text."""
         ...
 
     @brainbox_endpoint
     def question_json(self, prompt: str, system_prompt: str|None = None, options: dict|None = None, num_predict: int|None = None) -> dict:
+        """Sends a chat message with optional system prompt and returns the full Ollama JSON response."""
         ...
 
     @brainbox_endpoint
     def question(self, prompt: str, system_prompt: str|None = None, options: dict|None = None, num_predict: int|None = None) -> str:
+        """Sends a chat message with optional system prompt and returns the reply text."""
         ...
 
 
 class OllamaApi(DockerWebServiceApi[OllamaSettings, OllamaController], IOllama):
-    def __init__(self, address: str|None = None, parameter: str|None = None):
-        super().__init__(address, parameter)
+    def __init__(self, base_url: str|None = None, parameter: str|None = None):
+        super().__init__(base_url, parameter)
 
     def completions_json(self, prompt: str, **kwargs):
         reply = requests.post(
-            f'http://{self.address}/api/generate',
+            f'{self.base_url}/api/generate',
             json=dict(
                 model=self.container_parameter,
                 prompt=prompt,
@@ -65,7 +69,7 @@ class OllamaApi(DockerWebServiceApi[OllamaSettings, OllamaController], IOllama):
             json['options'] = options
         if num_predict is not None:
             json['num_predict'] = num_predict
-        reply = requests.post(f'http://{self.address}/api/chat', json=json)
+        reply = requests.post(f'{self.base_url}/api/chat', json=json)
         if reply.status_code != 200:
             raise ValueError(f'Status code {reply.status_code}, value\n{reply.text}')
         return reply.json()

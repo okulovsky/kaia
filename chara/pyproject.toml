@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "kaia-chara"
 description = "ML-Pipelines architecture and implementation for paraphrasing and voice cloning"
-version = "4.0.9"
+version = "4.9.91"
 readme = 'README.md'
 requires-python = ">=3.10, <4.0"
 license = "LGPL-3.0-or-later"
@@ -26,7 +26,9 @@ dependencies = [
     "matplotlib",
     "ipywidgets",
     "gradio",
-    "python-Levenshtein"
+    "python-Levenshtein",
+    "nltk",
+    "fastparquet"
 ]
 
 classifiers = [
@@ -58,4 +60,4 @@ include-package-data = true
 where = ["."]
 
 [tool.setuptools.package-data]
-"*" = ["**/*.jinja", "**/*.wav"]
+"*" = ["**/*"]

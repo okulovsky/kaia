@@ -1,35 +1,29 @@
+from typing import Any, TypeVar, Generic
+from ...cases import ICase
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar
-from .annotation_cache import IAnnotationCache
-from .....common import ICacheEntity
+from pathlib import Path
 
-import gradio as gr
 
-TCache = TypeVar('TCache', bound=IAnnotationCache)
-
-class IAnnotator(Generic[TCache], ABC):
-    @property
-    def cache(self) -> TCache:
-        if not hasattr(self, '_cache'):
-            raise AttributeError("Annotator has not been initialized")
-        return self._cache
-
-    def run(self, cache: TCache):
-        self._cache = cache
-
+class IAnnotationCase(ICase, ABC):
+    @abstractmethod
+    def get_id(self) -> str:
+        pass
 
     @abstractmethod
-    def mock_annotation(self, cache: TCache):
-        ...
+    def set_annotation(self, annotation: Any):
+        pass
+
+TCase = TypeVar("TCase", bound=IAnnotationCase)
 
 
-class IGradioAnnotator(Generic[TCache], IAnnotator[TCache]):
+class IAnnotator(Generic[TCase], ABC):
     @abstractmethod
-    def create_interface(self) -> gr.Blocks:
-        ...
+    def run(self, cases: list[TCase], folder: Path):
+        pass
 
-    def run(self, cache: TCache):
-        super().run(cache)
-        interface = self.create_interface()
-        interface.launch(show_error=True)
+    @abstractmethod
+    def get_result(self, folder: Path):
+        pass
+
+
 

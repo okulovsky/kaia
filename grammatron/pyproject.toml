@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "kaia-grammatron"
 description = "Library that allows you to define structured utterances"
-version = "4.0.9"
+version = "4.9.91"
 readme = 'README.md'
 requires-python = ">=3.10, <4.0"
 license = "LGPL-3.0-or-later"
@@ -24,7 +24,9 @@ dependencies = [
     "regex",
     "inflect",
     "lemminflect",
-    "pymorphy3"
+    "pymorphy3",
+    "simplemma",
+    "german_nouns"
 ]
 
 classifiers = [
@@ -36,7 +38,7 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Intended Audience :: Information Technology",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
-    "Development Status :: 4 - Beta"
+    "Development Status :: 5 - Production/Stable"
 ]
 
 [project.optional-dependencies]
@@ -51,3 +53,6 @@ repository = "https://github.com/okulovsky/kaia/tree/main/grammatron"
 
 [tool.setuptools.packages.find]
 where = ["."]
+
+[tool.setuptools.package-data]
+"*" = ["**/*"]

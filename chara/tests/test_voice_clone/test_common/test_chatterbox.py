@@ -2,15 +2,16 @@ import json
 import os
 import shutil
 
-from chara.voice_clone.common import ChatterboxModel, ChatterboxInference, ChatterboxTrain
-from chara.common import Samples, CharaApis
+from chara import CaseCollection
+from chara.voice_clone.common import ChatterboxModel, ChatterboxInference, ChatterboxTrain, VoiceTrain, VoiceInference
+from chara.common import Samples, Chara
 from unittest import TestCase
 from brainbox import BrainBox, File, ISelfManagingDecider
 from brainbox.deciders import Collector
 from uuid import uuid4
 from foundation_kaia.misc import Loc
-from yo_fluq import FileIO
 from pathlib import Path
+
 
 class MyMock(ISelfManagingDecider):
     def __init__(self):
@@ -19,7 +20,7 @@ class MyMock(ISelfManagingDecider):
     def get_name(self):
         return "Chatterbox"
 
-    def train(self, speaker: str, sample_file):
+    def train(self, speaker: str, file):
         pass
 
     def voiceover(self, **kwargs) -> File:
@@ -31,55 +32,39 @@ class MyMock(ISelfManagingDecider):
 
 class ChatterboxTrainTest(TestCase):
     def test_train(self):
-        with BrainBox.Api.test([MyMock(), Collector()]) as api:
-            CharaApis.brainbox_api = api
+        with BrainBox.Api.serverless_test([MyMock(), Collector()]) as api:
+            Chara.Apis.brainbox_api = api
 
             with Loc.create_test_folder() as folder:
-                folder = Path(__file__).parent/'cache'; shutil.rmtree(folder, ignore_errors=True)
+                os.makedirs(folder / 'source/one')
+                shutil.copy(Samples.lina / 'lina1.wav', folder / 'source/one')
 
-
-                os.makedirs(folder/'source/one')
-                shutil.copy(Samples.lina/'lina1.wav', folder/'source/one')
-
-                os.makedirs(folder/'source/two')
+                os.makedirs(folder / 'source/two')
                 shutil.copy(Samples.lina / 'lina2.wav', folder / 'source/two')
                 shutil.copy(Samples.lina / 'lina3.wav', folder / 'source/two')
 
-                cache = ChatterboxTrain.Cache(folder/'train')
+                Chara.start(folder / 'train')
+                train_cases = [
+                    VoiceTrain.Case(trainer=ChatterboxTrain(), source=path)
+                    for path in sorted((folder / 'source').iterdir())
+                ]
+                train_result = Chara.call(VoiceTrain.pipeline)(CaseCollection(train_cases)).raise_if_any_error().successes
 
-                ChatterboxTrain.pipeline(
-                    cache,
-                    [ChatterboxTrain()],
-                    (folder/'source').iterdir()
-                )
-
-                train_result = cache.read_result()
                 self.assertEqual(2, len(train_result))
-                self.assertEqual(str(folder/'source/one'), train_result[0].model_source)
-                self.assertEqual(str(folder / 'source/two'), train_result[1].model_source)
-                self.assertIsInstance(train_result[0], ChatterboxModel)
-                self.assertIsInstance(train_result[1], ChatterboxModel)
+                self.assertEqual(str(folder / 'source/one'), train_result[0].model.model_source)
+                self.assertEqual(str(folder / 'source/two'), train_result[1].model.model_source)
+                self.assertIsInstance(train_result[0].model, ChatterboxModel)
+                self.assertIsInstance(train_result[1].model, ChatterboxModel)
 
                 cloners = [ChatterboxInference('en', 0.6, 0.6), ChatterboxInference('ru', 0.7, 0.7)]
-                texts = ['Text 1', "Text 2"]
+                texts = ['Text 1', 'Text 2']
 
-                cache = ChatterboxInference.Cache(folder/'inference')
-
-                ChatterboxInference.pipeline(
-                    cache,
-                    cloners,
-                    train_result,
-                    texts
-                )
-
-                result = cache.read_result()
-                self.assertEqual(8, len(result.wavs))
-
-                for wav in result.wavs:
-                    self.assertTrue(wav.path.is_file())
-                    js = FileIO.read_json(wav.path)
-                    for key, value in js.items():
-                        k = key if key != 'speaker' else 'model_name'
-                        self.assertEqual(value, wav.metadata[k])
-
-
+                Chara.start(folder / 'infer')
+                inference_cases = [
+                    VoiceInference.Case(inference=cloner, model=case.model, text=text)
+                    for cloner in cloners
+                    for case in train_result
+                    for text in texts
+                ]
+                inferred = Chara.call(VoiceInference.pipeline)(CaseCollection(inference_cases)).successes
+                self.assertEqual(8, len(inferred))

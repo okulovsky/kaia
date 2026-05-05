@@ -1,4 +1,5 @@
 import asyncio
+import json
 import traceback
 from typing import Any, Callable
 from fastapi import Request
@@ -8,84 +9,117 @@ from ...serialization import SerializationContext
 from .parse_content import parse_content
 
 
-def http_endpoint(data: EndpointRegistrationData) -> Callable:
-    """Build and return a FastAPI request handler for the given endpoint."""
-    model = data.endpoint
-    service = data.service
+class HttpEndpointHandler:
+    def __init__(self, data: EndpointRegistrationData):
+        self.model = data.endpoint
+        self.service = data.service
 
-    async def handler(request: Request):
-        kwargs: dict[str, Any] = {}
-
+    async def _fill_queue(self, request: Request, q: asyncio.Queue) -> None:
+        """Stream request body chunks into an async queue, then signal completion with None."""
         try:
-            parse_url(kwargs, model, request.path_params, request.query_params)
-        except ValueError as e:
-            return Response(content=str(e), status_code=400)
+            async for chunk in request.stream():
+                if chunk:
+                    await q.put(chunk)
+        finally:
+            await q.put(None)
 
-        content_type = request.headers.get('content-type', '')
+    def _sync_stream(self, q: asyncio.Queue, loop: asyncio.AbstractEventLoop):
+        """Yield body chunks from the async queue in a synchronous context."""
+        while True:
+            chunk = asyncio.run_coroutine_threadsafe(q.get(), loop).result()
+            if chunk is None:
+                break
+            yield chunk
 
-        if model.params.json_params or model.params.file_params or model.params.binary_stream_param:
-            loop = asyncio.get_running_loop()
-            q: asyncio.Queue = asyncio.Queue()
+    def _parse_and_call(self, kwargs: dict, content_type: str, q: asyncio.Queue, loop: asyncio.AbstractEventLoop) -> Any:
+        """Parse the request body into kwargs, then call the service method."""
+        parse_content(kwargs, self._sync_stream(q, loop), self.model, content_type)
+        return self.service(**kwargs)
 
-            async def fill_queue():
-                try:
-                    async for chunk in request.stream():
-                        if chunk:
-                            await q.put(chunk)
-                finally:
-                    await q.put(None)
+    def _build_streaming_response(self, bytes_iter) -> Response:
+        """Wrap an Iterable[bytes] as a StreamingResponse with the endpoint's content type."""
+        result_ct = self.model.result.content_type
+        result_iter = iter(bytes_iter)
+        try:
+            first_chunk = next(result_iter)
+        except StopIteration:
+            return Response(b'', media_type=result_ct)
+        except Exception:
+            return Response(content=traceback.format_exc(), status_code=500)
 
-            def sync_stream():
-                while True:
-                    chunk = asyncio.run_coroutine_threadsafe(q.get(), loop).result()
-                    if chunk is None:
-                        break
-                    yield chunk
+        def stream():
+            yield first_chunk
+            yield from result_iter
 
-            fill_task = asyncio.create_task(fill_queue())
+        return StreamingResponse(stream(), media_type=result_ct)
 
-            def run():
-                parse_content(kwargs, content_type, sync_stream(), model)
-                return service(**kwargs)
+    def _build_binary_response(self, result) -> Response:
+        return self._build_streaming_response(FileLikeHandler.to_bytes_iterable(result))
 
-            try:
-                result = await loop.run_in_executor(None, run)
-            except Exception:
-                fill_task.cancel()
-                return Response(content=traceback.format_exc(), status_code=500)
-            await fill_task
+    def _build_string_streaming_response(self, result) -> Response:
+        return self._build_streaming_response(s.encode('utf-8') + b'\n' for s in result)
 
-        else:
-            loop = asyncio.get_running_loop()
-            try:
-                result = await loop.run_in_executor(None, lambda: service(**kwargs))
-            except Exception:
-                return Response(content=traceback.format_exc(), status_code=500)
+    def _build_custom_streaming_response(self, result) -> Response:
+        ctx = SerializationContext()
+        serializer = self.model.result.serializer
+        return self._build_streaming_response(
+            json.dumps(serializer.to_json(item, ctx)).encode('utf-8') + b'\n'
+            for item in result
+        )
 
-        if model.result.type == ResultType.BinaryFile:
-            result_ct = model.result.content_type
-            result_iter = iter(FileLikeHandler.to_bytes_iterable(result))
-            try:
-                first_chunk = next(result_iter)
-            except StopIteration:
-                return Response(b'', media_type=result_ct)
-            except Exception:
-                return Response(content=traceback.format_exc(), status_code=500)
-
-            def stream():
-                yield first_chunk
-                yield from result_iter
-
-            return StreamingResponse(stream(), media_type=result_ct)
-
+    def _build_json_response(self, result) -> Response:
+        """Serialize the result to JSON and return a JSONResponse."""
         try:
             ctx = SerializationContext()
-            json_value = model.result.serializer.to_json(result, ctx)
+            json_value = self.model.result.serializer.to_json(result, ctx)
         except Exception:
             return Response(content=traceback.format_exc(), status_code=500)
         return JSONResponse(json_value)
 
-    return handler
+    async def handle(self, request: Request) -> Response:
+        """Parse URL params, stream and parse the body, call the service, and return the response."""
+        kwargs: dict[str, Any] = {}
+
+        try:
+            parse_url(kwargs, self.model, request.path_params, request.query_params)
+        except ValueError as e:
+            return Response(content=str(e), status_code=400)
+
+        content_type = request.headers.get('content-type', '')
+        loop = asyncio.get_running_loop()
+
+        if self.model.params.json_params or self.model.params.file_params or self.model.params.binary_stream_param:
+            q: asyncio.Queue = asyncio.Queue()
+            fill_task = asyncio.create_task(self._fill_queue(request, q))
+            try:
+                result = await loop.run_in_executor(None, lambda: self._parse_and_call(kwargs, content_type, q, loop))
+            except Exception:
+                fill_task.cancel()
+                return Response(content=traceback.format_exc(), status_code=500)
+            await fill_task
+        else:
+            try:
+                result = await loop.run_in_executor(None, lambda: self.service(**kwargs))
+            except Exception:
+                return Response(content=traceback.format_exc(), status_code=500)
+
+        streaming_builders = {
+            ResultType.BinaryFile: self._build_binary_response,
+            ResultType.StringIterable: self._build_string_streaming_response,
+            ResultType.CustomIterable: self._build_custom_streaming_response,
+        }
+        if self.model.result.type in streaming_builders:
+            builder = streaming_builders[self.model.result.type]
+            try:
+                return await loop.run_in_executor(None, lambda: builder(result))
+            except Exception:
+                return Response(content=traceback.format_exc(), status_code=500)
+        return self._build_json_response(result)
+
+
+def http_endpoint(data: EndpointRegistrationData) -> Callable:
+    """Create a FastAPI request handler for the given endpoint."""
+    return HttpEndpointHandler(data).handle
 
 
 def build_route_path(model, address: str | None = None) -> str:

@@ -14,10 +14,15 @@ WORD_TO_LANGUAGE = {
         'hours': 'час',
         'minutes': 'минута',
         'seconds': 'секунда'
-    }
+    },
+    'de': {
+        'hours': 'Stunde',
+        'minutes': 'Minute',
+        'seconds': 'Sekunde'
+    },
 }
 
-CONJ = {'en': 'and', 'ru': 'и'}
+CONJ = {'en': 'and', 'ru': 'и', 'de': 'und'}
 
 def make_sequence(language: str, vars: list[VariableDub]):
     s = [f'{PluralAgreement(v, WORD_TO_LANGUAGE[language][v.name])}' for v in reversed(vars)]
@@ -41,7 +46,7 @@ class TimedeltaDub(LanguageDispatchDub):
             CardinalDub(24).as_variable('hours')
         ]
 
-        sequences = {language: [] for language in ['en', 'ru']}
+        sequences = {language: [] for language in ['en', 'ru', 'de']}
         for option in Query.combinatorics.cartesian(*([[True,False]]*3)):
             if sum(option)==0:
                 continue

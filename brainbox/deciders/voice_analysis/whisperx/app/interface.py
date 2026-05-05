@@ -7,4 +7,5 @@ from typing import Iterable
 class WhisperXInterface:
     @brainbox_websocket
     def execute(self, audio: FileLike, hf_token: str, language: str = 'en', model: str = 'base') -> Iterable[BrainboxReportItem[str]]:
+        """Transcribes and word-aligns audio using WhisperX, streaming progress updates."""
         ...

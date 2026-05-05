@@ -8,7 +8,8 @@ GERMAN_PHONEMES = [
 def german():
     from .language import Language
     return Language(
-        name = 'de',
+        code = 'de',
+        name="German",
         words_symbols= set('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÄÖÜäöüß'),
         native_espeak_phonemes=set(GERMAN_PHONEMES),
         sample_text = (

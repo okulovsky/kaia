@@ -1,5 +1,3 @@
-from .jinja_model import JinjaModel
-from .prompter import UtteranceParaphrasingPrompter
-from .case_builder import CaseBuilder
-from .pipeline import UtteranceParaphrasesCache, UtteranceParaphrasePipeline
-from .stats_builder import ParaphraseStats
+from .uterance_paraphrase_case import UtteranceParaphraseCase
+from .utterance_paraphrase_case_manager import UtteranceParaphraseCaseManager
+from .utterances_paraphrases_pipeline import UtteranceParaphrasePipeline

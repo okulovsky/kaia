@@ -6,6 +6,7 @@ from foundation_kaia.brainbox_utils import brainbox_endpoint
 class IZonos:
     @brainbox_endpoint
     def train(self, speaker: str, sample: FileLike) -> None:
+        """Registers a reference audio sample as a speaker voice for cloning."""
         ...
 
     @brainbox_endpoint(content_type='audio/wav')
@@ -16,4 +17,5 @@ class IZonos:
                   emotion: list[float] | None = None,
                   speaking_rate: float | None = None,
                   ) -> FileLike:
+        """Synthesizes speech with optional emotion vector and speaking rate control."""
         ...

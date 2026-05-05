@@ -5,9 +5,8 @@ from foundation_kaia.tests.test_marshalling.test_marshalling.test_model.test_con
 
 class TestPrimitivesInPath(unittest.TestCase):
     def check_no_content(self, c: ContentModel):
-        self.assertEqual({}, c.json)
-        self.assertEqual({}, c.files)
-        self.assertIsNone(c.binary_stream)
+        self.assertEqual({}, c.json_values)
+        self.assertEqual({}, c.raw_values)
 
     def test_int_in_url_path(self):
         @endpoint

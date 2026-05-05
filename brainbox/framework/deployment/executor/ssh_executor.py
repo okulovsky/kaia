@@ -28,6 +28,9 @@ class SSHExecutor(IExecutor):
         _command = self.fix(_command)
         return self.inner_executor.execute(_command, command.options)
 
+    def execute_shell(self, script: str):
+        self.execute([script])
+
     def get_fs(self) -> IFileSystem:
         return SSHFileSystem(self.machine)
 

@@ -18,29 +18,31 @@ def ws_api_call(data: CallModel) -> Any:
 
     ws = ws_client.create_connection(ws_url)
     try:
+        params = data.endpoint_model.params
+
         # Send JSON args
-        ws.send(json.dumps({'type': 'args', 'json': data.content.json}))
+        ws.send(json.dumps({'type': 'args', 'json': data.content.json_values}))
 
         # Send files
-        for name, filelike in data.content.files.items():
-            ws.send(json.dumps({'type': 'file', 'name': name}))
-            ws.send_binary(FileLikeHandler.to_bytes(filelike))
+        for param in params.file_params:
+            ws.send(json.dumps({'type': 'file', 'name': param.name}))
+            ws.send_binary(FileLikeHandler.to_bytes(data.content.raw_values[param.name]))
 
         # Send binary stream
-        if data.content.binary_stream is not None:
-            stream = data.content.binary_stream
-            ws.send(json.dumps({'type': 'stream', 'name': stream.name}))
-            for chunk in stream.iterable:
+        if params.binary_stream_param is not None:
+            name = params.binary_stream_param.name
+            ws.send(json.dumps({'type': 'stream', 'name': name}))
+            for chunk in data.content.raw_values[name]:
                 ws.send_binary(chunk)
             ws.send(json.dumps({'type': 'end'}))
 
         # Send custom stream
-        elif data.content.custom_stream is not None:
-            stream = data.content.custom_stream
-            ws.send(json.dumps({'type': 'stream', 'name': stream.name}))
+        elif params.custom_stream_param is not None:
+            name = params.custom_stream_param.name
+            ws.send(json.dumps({'type': 'stream', 'name': name}))
             ctx = SerializationContext()
-            for item in stream.iterable:
-                json_item = stream.serializer.to_json(item, ctx)
+            for item in data.content.raw_values[name]:
+                json_item = params.custom_stream_param.serializer.to_json(item, ctx)
                 ws.send(json.dumps({'type': 'item', 'value': json_item}))
             ws.send(json.dumps({'type': 'end'}))
 

@@ -1,8 +1,27 @@
-from .....common import TempfileCache
 from ..core import IAnnotationCache, AnnotationStatus
+from pathlib import Path
+from ....architecture.result_handling import write_result, find_result
+from ....architecture import Chara
 
 
-class LabelAnnotationCache(TempfileCache, IAnnotationCache):
+class LabelAnnotationCache(IAnnotationCache):
+    def __init__(self, folder: Path):
+        self.folder = folder
+
+
+    @property
+    def ready(self) -> bool:
+        return find_result(self.folder) is not None or  (self.folder/'.finished').is_file()
+
+    @property
+    def temp_file(self) -> Path:
+        return self.folder/'annotation.txt'
+
+    def _update(self, s: str):
+        with open(self.temp_file, 'a') as file:
+            file.write(s+"\n")
+
+
     def add(self, id: str, label: str):
         if self.ready:
             raise ValueError("Cannot update the finalized annotation")
@@ -27,11 +46,11 @@ class LabelAnnotationCache(TempfileCache, IAnnotationCache):
             stream.writelines(lines[:-1])
 
     def finish_annotation(self):
-        self.finalize()
+        (self.folder/'.finished').write_text('')
 
     def get_annotation_status(self) -> dict[str, AnnotationStatus]:
-        file = self.cache_file_path
-        if not self.ready:
+        file = find_result(self.folder)
+        if file is None:
             file = self.temp_file
 
         if not file.exists():
@@ -69,6 +88,4 @@ class LabelAnnotationCache(TempfileCache, IAnnotationCache):
         return ' '.join(f'{k}:{v}' for k, v in result.items())
 
     def get_result(self) -> dict[str, str]:
-        if not self.ready:
-            raise ValueError("Cannot read result from unfinished annotation")
         return {key:annotation.value for key, annotation in self.get_annotation_status().items() if annotation.value is not None}

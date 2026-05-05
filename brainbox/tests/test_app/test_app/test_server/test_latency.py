@@ -22,7 +22,7 @@ class LatencyTestCase(TestCase):
                 rows[id] = dict(start = start_time, end = datetime.now())
 
             for id, row in tqdm(rows.items(), total=len(rows)):
-                job = api.tasks.get_job(id)
+                job = api.jobs.get_job(id)
                 row['to_server_time'] = (job.received_timestamp - row['start']).total_seconds()
                 row['in_queue_time'] = (job.accepted_timestamp - job.received_timestamp).total_seconds()
                 row['in_operator_time'] = (job.finished_timestamp - job.accepted_timestamp).total_seconds()

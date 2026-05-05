@@ -77,25 +77,25 @@ class GenericTestCase(TestCase):
             # generic_argument(arg: T1=Input) -> str
             result = api.generic_argument(Input('test'))
             self.assertEqual("Input(s='test')", result)
-            self.assertEqual({'arg': {'s': 'test'}}, api.generic_argument.last_request.content.json)
+            self.assertEqual({'arg': {'s': 'test'}}, api.generic_argument.last_request.content.json_values)
             self.assertEqual("Input(s='test')", api.generic_argument.last_raw_response)
 
             # generic_return() -> T2=Output
             result = api.generic_return()
             self.assertEqual(Output(10), result)
-            self.assertEqual({}, api.generic_return.last_request.content.json)
+            self.assertEqual({}, api.generic_return.last_request.content.json_values)
             self.assertEqual({'i': 10}, api.generic_return.last_raw_response)
 
             # complex_generic_return() -> list[T2=Output]
             result = api.complex_generic_return()
             self.assertEqual([Output(10)] * 3, result)
-            self.assertEqual({}, api.complex_generic_return.last_request.content.json)
+            self.assertEqual({}, api.complex_generic_return.last_request.content.json_values)
             self.assertEqual([{'i': 10}] * 3, api.complex_generic_return.last_raw_response)
 
             # stream_translate(Iterable[T1=Input]) -> Iterable[T2=Output]  (WebSocket)
             # each input item triggers two output yields
             gen = api.stream_translate(iter([Input('a'), Input('b')]))
-            self.assertEqual({}, api.stream_translate.last_request.content.json)
+            self.assertEqual({}, api.stream_translate.last_request.content.json_values)
             result = list(gen)  # consume — also populates last_raw_response
             self.assertEqual([Output(10)] * 4, result)
             self.assertEqual([{'i': 10}] * 4, api.stream_translate.last_raw_response)

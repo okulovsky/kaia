@@ -8,7 +8,7 @@ from brainbox.framework.controllers.architecture import ControllerRegistry
 
 def _make(api: BrainBoxApi, task):
     id = api.add(task)
-    api.tasks.base_join([id], ignore_errors=True)
+    api.jobs.base_join([id], ignore_errors=True)
     log = api.diagnostics.operator_log()
     journey = [i.event for i in log if i.level == i.Level.Task and i.id == id]
     return journey
