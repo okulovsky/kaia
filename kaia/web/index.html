@@ -26,7 +26,7 @@
             Message, Envelop, DebugViewController, MicDebugView, ReloadDebugView, LoadingScreen,
             SilenceControllingWakeWordDetector,
             Webcam, WebcamProcessor } = await import(`/frontend/scripts/kaia-frontend.js?v=${v}`);
-    // const { KaldiWakeWordDetector } = await import(`/frontend/scripts/kaldi-wake-word-detector.js?v=${v}`);
+    //const { KaldiWakeWordDetector } = await import(`/frontend/scripts/kaldi-wake-word-detector.js?v=${v}`);
     const { BumblebeeWakeWordDetector } = await import(`/frontend/scripts/bumblebee-wake-word-detector.js?v=${v}`);
 
     const loadingDiv    = document.getElementById('loading');
@@ -53,7 +53,7 @@
     const recorder = new Recorder({ startBufferLength: 1.0, normalBufferLength: 0.3, dispatcher, baseUrl: window.location.origin });
     const stateful = new StatefulRecorder({ recorder, dispatcher });
     const silence  = new SilenceDetector({ timeBetweenReportsInSeconds: 0.5, decisionWindowSeconds: 1.0, reportingWindowSeconds: 0.1, silenceLevel: 0.01, dispatcher });
-    // const wake     = new KaldiWakeWordDetector({ sampleRateOfTheModel: 16000, words: ['computer'], modelUrl: '/frontend/models/vosk-model-small-en-us-0.15.zip?v=5', dispatcher });
+    //const inner     = new KaldiWakeWordDetector({ sampleRateOfTheModel: 16000, words: ['computer'], modelUrl: `/frontend/models/vosk-model-small-en-us-0.15.zip?v=${v}`, dispatcher });
     const inner    = new BumblebeeWakeWordDetector({ words: ['computer'], dispatcher });
     const wake     = new SilenceControllingWakeWordDetector({ detector: inner, dispatcher });
     const automaton   = new Automaton({ silenceDetector: silence, wakeWordDetector: wake, statefulRecorder: stateful, dispatcher });

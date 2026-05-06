@@ -6,6 +6,7 @@ class HtmlReport:
     def __init__(self, file: Path):
         self._file = file
 
+
     def __enter__(self):
         self._file_handle = open(self._file, 'w')
         self._file_handle.write(

@@ -34,7 +34,8 @@ class AvatarServerAppSettings(IAppInitializer):
             resources_folder=app.avatar_resources_folder,
             custom_html=self.custom_html,
             starting_messages=dict(default=(start_message,)),
-            additional_web_static_folders=self.additional_static_folders
+            additional_web_static_folders=self.additional_static_folders,
+            messages_log_folder=app.working_folder/'avatar/logs',
         )
 
         app.avatar_api = AvatarApi(f'http://127.0.0.1:{self.port}')

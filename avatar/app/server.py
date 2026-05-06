@@ -19,6 +19,7 @@ class AvatarServerSettings:
     cache_folder: Path|None = None
     web_folder: Path|None = None
     frontend_folder: Path|None = None
+    messages_log_folder: Path|None = None
 
     resources_folder: Path|None = None
     extra_components: tuple[IComponent,...] = ()
@@ -47,6 +48,7 @@ class AvatarServer(IServer):
             aliases or None,
             self.settings.messages_ttl_in_seconds,
             starting_messages=self.settings.starting_messages,
+            messages_log_folder = self.settings.messages_log_folder
         )
         service_components['messaging'] = messaging_service
 
