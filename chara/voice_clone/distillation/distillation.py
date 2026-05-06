@@ -20,17 +20,19 @@ class DistillationPipeline:
             self.settings.language_settings.piper_base_model,
             self.settings.training_settings
         )
+        for case in checkpoint_cases.successes:
+            case.text_to_voiceover = self.settings.language_settings.voiceover_example
         checkpoint_cases: CaseCollection[CheckpointCase] = Chara.call(evaluate)(checkpoint_cases)
         wavs = []
         for case in checkpoint_cases.successes:
             w = Wav.one(case.path_to_voiceover_file)
             w.metadata['epoch'] = case.checkpoint.epoch
             wavs.append(w)
-        lst = Wav.all(wavs)
+        lst = Wav.many(wavs)
 
-        report = HtmlReport(Chara.current.folder / 'report.html')
-        with logger.with_callback(report):
-            logger.info(lst.draw().tables(order_by='epoch').widget())
+        with HtmlReport(Chara.current.folder / 'report.html') as report:
+            with logger.with_callback(report):
+                logger.info(lst.draw().tables(order_by='epoch').widget())
         return checkpoint_cases
 
 
@@ -77,6 +79,10 @@ class DistillationPipeline:
         ])
         upsampling_cases = Chara.call(batching_pipe.__call__)(upsampling_cases)
 
+        successes = upsampling_cases.successes
+        total_time = sum(c.verification.duration for c in successes)
+        logger.info(f"Total samples: {len(successes)}")
+        logger.info(f'Total time: {total_time} seconds')
         dataset_path = Chara.current.folder/'dataset.zip'
         Upsampling.export(
             upsampling_cases.successes,

@@ -47,6 +47,9 @@ class CharaCaller(Generic[TCharaCallReturn]):
                         logger.error(e)
                         raise
                     finally:
-                        log_file.write_bytes(pickle.dumps(log))
+                        try:
+                            log_file.write_bytes(pickle.dumps(log))
+                        except Exception as e:
+                            logger.error("Cannot write the log")
         finally:
             self.stack.pop()

@@ -43,9 +43,9 @@ class UpsamplingPipeline:
 
     def __call__(self, cases: CaseCollection[UpsamplingCase]) -> CaseCollection[UpsamplingCase]:
         voiceover_pipe = BrainBoxCasePipeline(self._voiceover_task, 'voiceover_path', result_to_file=True)
-        cases = Chara.call(voiceover_pipe.__call__)(cases)
+        cases = Chara.call(voiceover_pipe.__call__, "Voiceover")(cases)
         recognition_pipe = BrainBoxCasePipeline(self._recognition_task, self._recognition_applicator)
-        cases = Chara.call(recognition_pipe.__call__)(cases)
+        cases = Chara.call(recognition_pipe.__call__, "Recognition")(cases)
 
         for case in cases.successes:
             case.verification = self.verifier.verify(case.text, case.recognition)
@@ -66,13 +66,13 @@ class Upsampling:
     def export(cases: Iterable[UpsamplingCase], path: Path):
         if path.is_file():
             os.unlink(path)
-            with zipfile.ZipFile(path, 'w') as zip:
-                for case in cases:
-                    if not case.verification.allowed:
-                        continue
-                    wav = Wav.one(case.voiceover_path).to_editable()
-                    wav = wav[case.verification.slice[0]['start']:case.verification.slice[-1]['end']]
-                    name = case.voiceover_path.name
-                    zip.writestr(f'voice/' + name, wav.to_bytes())
-                    zip.writestr('voice/' + name.replace('.wav', '.txt'), case.text.encode('utf-8'))
+        with zipfile.ZipFile(path, 'w') as zip:
+            for case in cases:
+                if not case.verification.allowed:
+                    continue
+                wav = Wav.one(case.voiceover_path).to_editable()
+                wav = wav[case.verification.slice[0]['start']:case.verification.slice[-1]['end']]
+                name = case.voiceover_path.name
+                zip.writestr(f'voice/' + name, wav.to_bytes())
+                zip.writestr('voice/' + name.replace('.wav', '.txt'), case.text.encode('utf-8'))
 

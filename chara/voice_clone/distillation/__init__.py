@@ -1,1 +1,2 @@
-#from .upsampling import UpsamplingSettings, UpsamplingMultiStep
+from .distillation import DistillationPipeline
+from .settings import LanguageSettings, DistillationSettings

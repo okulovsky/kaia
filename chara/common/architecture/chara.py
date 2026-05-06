@@ -52,7 +52,7 @@ class CharaInstance:
 
     def call(self, function: T, alternative_name: str|None = None) -> T:
         self._stack().check_exited()
-        return CharaCaller(self._stack(), function)
+        return CharaCaller(self._stack(), function, alternative_name)
 
     def phase(self, func_or_result_type=None):
         def decorator(func: Callable, result_type: ResultType = ResultType.Pickle):
