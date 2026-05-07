@@ -37,7 +37,7 @@ class CharaCaller(Generic[TCharaCallReturn]):
 
             log = []
             with logger.with_callback(log.append):
-                section_name = '/'.join(f'{c.name} ({c.index})' if c.name else '' for c in self.stack.stack)
+                section_name = ' / '.join(c.folder.name if c.name else '' for c in self.stack.stack)
                 with logger.section(section_name):
                     try:
                         result = self.function(*args, **kwargs)

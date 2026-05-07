@@ -58,26 +58,17 @@ class WavClass:
         return result
 
     def concat_with_ffmpeg(self, paths: Iterable[Path], output_path: Path, keep_temp_file: bool = False):
-        control_content_array = [f"file '{p}'" for p in paths]
-        control_content = '\n'.join(control_content_array)
-        with Loc.create_test_file('txt', dont_delete=keep_temp_file) as control_path:
-            FileIO.write_text(control_content, control_path)
-
-            args = [
-                'ffmpeg',
-                '-f',
-                'concat',
-                '-safe',
-                '0',
-                '-i',
-                str(control_path),
-                '-y',
-                str(output_path)
-            ]
-            try:
-                subprocess.check_output(args)
-            except subprocess.CalledProcessError as err:
-                raise ValueError(f'FFMpeg returned non-zero value. arguments are\n{" ".join(args)}. Output\n{err.output}')
+        paths_list = list(paths)
+        inputs = []
+        for p in paths_list:
+            inputs.extend(['-i', str(p)])
+        n = len(paths_list)
+        filter_complex = ''.join(f'[{i}:a]' for i in range(n)) + f'concat=n={n}:v=0:a=1[out]'
+        args = ['ffmpeg'] + inputs + ['-filter_complex', filter_complex, '-map', '[out]', '-y', str(output_path)]
+        try:
+            subprocess.check_output(args, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError as err:
+            raise ValueError(f'FFMpeg returned non-zero value. arguments are\n{" ".join(args)}. Output\n{err.output}')
 
 
 

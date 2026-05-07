@@ -53,7 +53,7 @@ class LabelAnnotator(Generic[TCase], IAnnotator[TCase]):
             return
 
         interface = self.create_interface()
-        interface.launch(show_error=True)
+        interface.launch(show_error=True, allowed_paths=["/"])
 
 
     @abstractmethod

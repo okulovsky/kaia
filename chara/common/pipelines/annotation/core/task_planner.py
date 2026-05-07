@@ -11,7 +11,7 @@ class ITaskPlanner(Generic[TCase], ABC):
         ...
 
     @abstractmethod
-    def get_next(self):
+    def get_next(self) -> str|None:
         ...
 
 

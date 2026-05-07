@@ -25,6 +25,9 @@ class Fork:
                 cloudpickle.dump(self.method, stream)
         except Exception as ex:
             raise ValueError(f"Cannot pickle {self.method} to run in fork") from ex
+        func = getattr(self.method, 'func', self.method)
+        name = getattr(func, '__qualname__', type(func).__name__)
+
         env = os.environ.copy()
         env['PYTHONPATH'] = os.pathsep.join(sys.path)
         self.process = subprocess.Popen(
@@ -32,7 +35,7 @@ class Fork:
                 sys.executable,
                 '-m',
                 'foundation_kaia.fork.fork_worker',
-                str(self.method),
+                name,
                 str(path)
             ],
             env=env,
@@ -49,7 +52,9 @@ class Fork:
         while True:
             if self.process.poll() is not None:
                 if not self.exception_raised:
-                    raise RuntimeError(f"Subprocess for {str(self.method)} exited unexpectedly with code {self.process.returncode}")
+                    func = getattr(self.method, 'func', self.method)
+                    name = getattr(func, '__qualname__', type(func).__name__)
+                    raise RuntimeError(f"Subprocess for {name} exited unexpectedly with code {self.process.returncode}")
                 break
             time.sleep(0.1)
 

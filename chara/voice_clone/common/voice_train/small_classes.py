@@ -27,5 +27,6 @@ class VoiceTrainCase(ICase):
     source: Path
     recoded_samples: list[Path]|None = None
     train_samples: list[Path]|None = None
+    leveled_samples: list[Path]|None = None
     task: BrainBox.Task|None = None
     model: VoiceModel|None = None

@@ -12,7 +12,7 @@ class AnnotationPipeline(Generic[TCase]):
     def __init__(self, annotator: IAnnotator):
         self.annotator = annotator
 
-    def start(self, cases: list[TCase]):
+    def start(self, cases: tuple[TCase,...]):
         fork = Fork(partial(self.annotator.run, cases=cases, folder=Chara.current.folder))
         fork.start()
         return fork
