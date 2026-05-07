@@ -80,7 +80,13 @@ class Releaser:
             commands_pre_lines.append(f'python {folder / self.pre_test_file}')
         commands_pre = ('commands_pre =\n' + '\n'.join(f'    {c}' for c in commands_pre_lines)) if commands_pre_lines else ''
 
-        tox_file = TOX_FILE.format(directory=self.module_name, commands_pre=commands_pre, pythons=', '.join(self.tox_versions))
+        node_env_vars = ''.join(
+            f'    {k} = {os.environ[k]}\n'
+            for k in ('NODE_JS_PATH', 'NPM_PATH')
+            if k in os.environ
+        )
+        setenv = (f'setenv =\n{node_env_vars}') if node_env_vars else ''
+        tox_file = TOX_FILE.format(directory=self.module_name, commands_pre=commands_pre, pythons=', '.join(self.tox_versions), setenv=setenv)
         shutil.rmtree(folder, ignore_errors=True)
         os.makedirs(folder)
 
@@ -150,6 +156,7 @@ isolated_build = True
 [testenv]
 extras = test
 changedir = {directory}/tests
+{setenv}
 {commands_pre}
 commands =
     python -m unittest discover -s . -p "test_*.py"

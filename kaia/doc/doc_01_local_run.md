@@ -1,5 +1,7 @@
 # Running Kaia locally
 
+Clone the repository `github.com/okulovsky/kaia` at your local machine.
+
 ## Docker
 
 You need [Docker](https://docs.docker.com/engine/install/) installed in your system,
@@ -27,6 +29,10 @@ source ~/.bashrc
 ```
 nvm install --lts
 ```
+
+Rename `environment.env.example` to `environment.env`. 
+Set the variable `NODE_JS_PATH` to the output of `which node` in Linux (`where node` in Windows).
+Set the variable `NPM_PATH` to the output of `which npm` (`where npm` in Linux)
 
 ## Python environment
 

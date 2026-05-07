@@ -20,8 +20,7 @@ To deploy Kaia, you need to configure the remote and the local machines:
 * Docker is installed on both machines
 * `rsync` is installed on both machines
 
-Rename `environment.env.example` to `environment.env`,
-collect following information from the remote machine and place it in the file:
+Сollect the following information from the remote machine and place it in the `environment.env` file:
 * username
 * user id (`id -u`)
 * ip-address

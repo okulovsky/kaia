@@ -44,7 +44,10 @@ RUN apt-get update \
     && apt-get install -y nodejs \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-    
+
+ENV NODE_JS_PATH=/usr/bin/node
+ENV NPM_PATH=/usr/bin/npm
+
 {{{SmallImageBuilder.ADD_USER_PLACEHOLDER}}}
 
 {{{SmallImageBuilder.PIP_INSTALL_PLACEHOLDER}}}

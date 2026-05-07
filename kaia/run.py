@@ -3,8 +3,6 @@ import webbrowser
 from kaia.app import KaiaAppSettings
 from foundation_kaia.misc import Loc
 from avatar.app import compile_frontend
-from brainbox.framework import BrainBoxSetup
-from brainbox.deciders import RhasspyKaldi, Piper, Resemblyzer, Whisper
 
 
 if __name__ == '__main__':

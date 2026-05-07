@@ -1,9 +1,7 @@
 import hashlib
 import subprocess
-import shutil
-import sys
 from pathlib import Path
-from typing import Optional
+import os
 
 HASH_FILE = '.src_hash'
 
@@ -17,50 +15,18 @@ def _compute_folder_hash(folder: Path) -> str:
     return hasher.hexdigest()
 
 
-def _resolve_executable(*candidates: str) -> Optional[str]:
-    for candidate in candidates:
-        resolved = shutil.which(candidate)
-        if resolved:
-            return resolved
-    return None
-
-
 def _find_node() -> str:
-    if sys.platform == 'win32':
-        node = _resolve_executable('node.exe', 'node')
-    else:
-        node = _resolve_executable('node')
-        if not node:
-            nvm_dir = Path.home() / '.nvm' / 'versions' / 'node'
-            if nvm_dir.exists():
-                versions = sorted(nvm_dir.iterdir(), reverse=True)
-                for version in versions:
-                    candidate = version / 'bin' / 'node'
-                    if candidate.exists():
-                        return str(candidate)
-
-    if node:
-        return node
-
-    raise RuntimeError("Node.js executable was not found in PATH")
+    node = os.environ['NODE_JS_PATH']
+    if not Path(node).is_file():
+        raise Exception(f"NODE_JS_PATH {node} is not a file")
+    return node
 
 
-def _find_npm(node_path: Optional[str] = None) -> str:
-    npm = _resolve_executable('npm.cmd', 'npm.exe', 'npm') if sys.platform == 'win32' else _resolve_executable('npm')
-    if npm:
-        return npm
-
-    # Fallback: npm may sit next to node but still be absent from PATH.
-    resolved_node = node_path or _find_node()
-    node_dir = Path(resolved_node).parent
-    for candidate in ('npm.cmd', 'npm.exe', 'npm'):
-        candidate_path = node_dir / candidate
-        if candidate_path.exists():
-            return str(candidate_path)
-
-    raise RuntimeError(
-        f"NPM executable was not found in PATH or near node at '{resolved_node}'"
-    )
+def _find_npm() -> str:
+    npm = os.environ['NPM_PATH']
+    if not Path(npm).is_file():
+        raise Exception(f"NPM {npm} is not a file")
+    return npm
 
 
 def compile(src_folder: Path, dst_folder: Path):
@@ -79,11 +45,18 @@ def compile(src_folder: Path, dst_folder: Path):
     web_root = src_folder.parent
 
     node = _find_node()
+    # Prepend node's bin dir to PATH so npm's shebang resolves the same node,
+    # not whatever system node is first in the inherited PATH.
+    node_bin_dir = str(Path(node).parent)
+    env = os.environ.copy()
+    env['PATH'] = node_bin_dir + os.pathsep + env.get('PATH', '')
+
     npm_install = subprocess.run(
-        [_find_npm(node), 'install', '--include=optional'],
+        [_find_npm(), 'install', '--include=optional'],
         cwd=str(web_root),
         capture_output=True,
         text=True,
+        env=env,
     )
     if npm_install.returncode != 0:
         raise RuntimeError(f"npm install failed:\n{npm_install.stdout}\n{npm_install.stderr}")
@@ -97,6 +70,7 @@ def compile(src_folder: Path, dst_folder: Path):
         cwd=str(web_root),
         capture_output=True,
         text=True,
+        env=env,
     )
     if result.returncode != 0:
         raise RuntimeError(f"vite build failed:\n{result.stdout}\n{result.stderr}")
