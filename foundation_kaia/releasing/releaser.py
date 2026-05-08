@@ -119,20 +119,23 @@ class Releaser:
     def release_folder(self):
         return Loc.temp_folder / f'pypi/{self.package_name}'
 
+    def compile_doc(self):
+        src_folder = self.root_folder / self.module_name
+        doc_folder = src_folder / 'doc'
+        doc = create_documentation(doc_folder)
+        file_io_write_text(doc, src_folder / 'README.md')
+
     def package(self):
         release_folder = self.release_folder
         src_folder = self.root_folder / self.module_name
         shutil.rmtree(release_folder, ignore_errors=True)
         os.makedirs(release_folder)
 
+        self.compile_doc()
+
         self._export_module(release_folder)
 
         if self.compile_documentation:
-            doc_folder = src_folder / 'doc'
-            doc = create_documentation(doc_folder)
-            file_io_write_text(doc, src_folder / 'README.md')
-            file_io_write_text(doc, release_folder / 'README.md')
-        else:
             shutil.copyfile(src_folder / 'README.md', release_folder / 'README.md')
 
         toml = self.fix_toml_for_packaging(src_folder / 'pyproject.toml')

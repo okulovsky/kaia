@@ -13,6 +13,8 @@
 
 # Running Kaia locally
 
+Clone the repository `github.com/okulovsky/kaia` at your local machine.
+
 ## Docker
 
 You need [Docker](https://docs.docker.com/engine/install/) installed in your system,
@@ -40,6 +42,10 @@ source ~/.bashrc
 ```
 nvm install --lts
 ```
+
+Rename `environment.env.example` to `environment.env`. 
+Set the variable `NODE_JS_PATH` to the output of `which node` in Linux (`where node` in Windows).
+Set the variable `NPM_PATH` to the output of `which npm` (`where npm` in Linux)
 
 ## Python environment
 
@@ -130,8 +136,7 @@ To deploy Kaia, you need to configure the remote and the local machines:
 * Docker is installed on both machines
 * `rsync` is installed on both machines
 
-Rename `environment.env.example` to `environment.env`,
-collect following information from the remote machine and place it in the file:
+Сollect the following information from the remote machine and place it in the `environment.env` file:
 * username
 * user id (`id -u`)
 * ip-address
