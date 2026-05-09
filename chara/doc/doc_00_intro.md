@@ -43,11 +43,11 @@ If you need to cache the results of the `function(*args, **kwargs)`, just write 
 so if the `function` is called again, the value will be restored and `function` won't be called again.
 If `function` calls other functions inside with `Chara.call`, the subfolders with the interpretable names
 will be created to cache the results of the internal calls. In case something went wrong,
-you can invalidate the cache: `invalidate_self(path)` will invalidate the result of the function's call,
-but not the results of the inner calls, while `invalidate_down` will reset the associated cache completely.
-Also, these functions remove the caches of all the functions called after the desired path, and
-remove the cached results of all the function up on the stack, so basically this corresponds to
-"repeat the pipeline from the selected place".
+you can invalidate the cache. Delete the subfolder completely to re-run all the associated computations,
+or only `result.*` file to re-run the tailing logic of the pipeline without running the subpipelines.
+On the next run, later siblings of the invalidated subcache will be removed completely, and parents will
+have result file reset automatically - so essentially Chara will rerun pipeline after the first deleted cache.
+It makes sense to have the cache folder open in the file browser and manually review e.g. files produced.
 
 Obviously, caches need a bit of architectural redesign of the code, e.g.
 1) If the code is called with the different parameters, the `folder` needs to be changed or reseted

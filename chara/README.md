@@ -8,6 +8,7 @@
 * [Paraphrases](#paraphrases)
   * [`paraphrases.common`](#`paraphrases.common`)
   * [`paraphrasing.utterances`](#`paraphrasing.utterances`)
+* [`user_identification`](#`user_identification`)
 * [Voice Cloning](#voice-cloning)
 
 # `chara`
@@ -55,11 +56,11 @@ If you need to cache the results of the `function(*args, **kwargs)`, just write 
 so if the `function` is called again, the value will be restored and `function` won't be called again.
 If `function` calls other functions inside with `Chara.call`, the subfolders with the interpretable names
 will be created to cache the results of the internal calls. In case something went wrong,
-you can invalidate the cache: `invalidate_self(path)` will invalidate the result of the function's call,
-but not the results of the inner calls, while `invalidate_down` will reset the associated cache completely.
-Also, these functions remove the caches of all the functions called after the desired path, and
-remove the cached results of all the function up on the stack, so basically this corresponds to
-"repeat the pipeline from the selected place".
+you can invalidate the cache. Delete the subfolder completely to re-run all the associated computations,
+or only `result.*` file to re-run the tailing logic of the pipeline without running the subpipelines.
+On the next run, later siblings of the invalidated subcache will be removed completely, and parents will
+have result file reset automatically - so essentially Chara will rerun pipeline after the first deleted cache.
+It makes sense to have the cache folder open in the file browser and manually review e.g. files produced.
 
 Obviously, caches need a bit of architectural redesign of the code, e.g.
 1) If the code is called with the different parameters, the `folder` needs to be changed or reseted
@@ -174,6 +175,34 @@ on the server side, and new paraphrases will become available.
 `paraphrases_upper_count` parameter manages the paraphrasing: no templates with more paraphrases than this amount will be taken into account.
 Set it to 0 if you added some new templates and want only them to be paraphrased. Set them to e.g. 30 to ensure that every template has at least 30 paraphrases.
 Without this parameter, the paraphrasing will continue until `max_attemps`, prioritizing the templates that are in the heavy usage.
+
+
+
+
+# `user_identification`
+
+Both voice- and face recognition work with the same pipeline:
+* Brainbox service converts a media file to vector (Resemblyzer for voice and InsightFace for face)
+* Respective Avatar service (SpeakerIdentificationService for voice and UserWalkIn for face) store the set of the 
+images/sounds, associated with users, and computed vectors. When the new image/sound arrive, 
+the `VectorIdentifier` instance finds the nearest neighbors to the vector and hence the winner.
+* That means "training" in this case actually means "annotating": you need to review a certain amount of samples and assign user to each of them.
+
+Pipelines `VoiceIdentification` and `FaceIdentification` have the same functionality, 
+they are only different in terms where do they take data from, which vectorizer they apply 
+and where the result is stored.
+
+`annotation` method will first download the files from Avatar's cache to you local
+machine, and from there to the local BrainBox (the assumption is that you're going
+to use a different BrainBox instance for the research, not the one supporting inference
+on you server). Then, it will run Gradio annotator. The annotator tries to be 
+smart, and employ different strategies depending on the state of the annotation:
+random at first, balancing the sets if they very be size too much, or fine-tunning borders.
+
+`refinement` method re-annotates currently used dataset. Sometimes Kaia make mistakes by identification,
+and you have the opportunity to correct it, which also stores sample in the service's resources.
+But sometimes you make mistake when correcting it, and `refinement` pipeline will help you with this.
+
 
 
 

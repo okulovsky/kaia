@@ -8,8 +8,8 @@
   * [Deployment](#deployment)
 * [Extending functionality](#extending-functionality)
   * [Adding a new skill](#adding-a-new-skill)
-  * [Defining your own character](#defining-your-own-character)
-  * [Kaia in a household with multiple users](#kaia-in-a-household-with-multiple-users)
+* [Kaia in a household with multiple users](#kaia-in-a-household-with-multiple-users)
+* [Creating the characters](#creating-the-characters)
 
 # Running Kaia locally
 
@@ -134,7 +134,22 @@ Therefore, a mature devops is not my priority, especially given that there is a 
 To deploy Kaia, you need to configure the remote and the local machines:
 * The remote machine is accessible via SSH without entering the password (e.g. with `ssh-copy-id`)
 * Docker is installed on both machines
-* `rsync` is installed on both machines
+
+Start a private Docker registry on the remote machine:
+
+```
+docker run -d -p 5000:5000 --restart unless-stopped --name registry registry:2
+```
+
+Allow the local machine to push to it: add the remote IP to Docker's insecure registries.
+Edit (or create) `/etc/docker/daemon.json` on the local machine:
+```json
+{ "insecure-registries": ["REMOTE_IP:5000"] }
+```
+Then restart Docker:
+```
+sudo systemctl restart docker
+```
 
 Сollect the following information from the remote machine and place it in the `environment.env` file:
 * username
@@ -142,11 +157,10 @@ To deploy Kaia, you need to configure the remote and the local machines:
 * ip-address
 * the folder that will host all data related to Kaia
 
-Run `deploy_brainbox`. It will:
-* build container on the local machine
-* export the container as a tar file, unpackages it, and sync the files with the remote machine
-(only changed layers will be synced which accelerates the following delployments)
-* assembles the tar back at the remote machine, loads and runs it
+Run `deploy_brainbox.py`. It will:
+* build the container on the local machine
+* push it to the private registry on the remote machine (only changed layers are transferred)
+* pull and run it on the remote machine
 
 After that, BrainBox should be running at the remote machine on the port `8090`.
 
@@ -277,7 +291,64 @@ as the natural dialogs: say this to the assistant, then expect this as a reactio
 `grammatron` library that you will use to define the intents and replies, are designed to be compatible with
 `eaglesong` testing procedures. You can, again, take the inspiration in the tests that are provided with the skills.
 
-## Defining your own character
+
+
+
+
+# Kaia in a household with multiple users
+
+Kaia can detect a user by voice and by face, but you need to show the algorithm, "who is who".
+
+To do that, let Kaia work for some time as is. Even though Kaia won't use the data 
+for identification, it will still collect the data, so after a couple of days 
+you will have your own media dataset.
+
+Define the names of the users who live in the household. 
+
+Then, using these names, annotate the dataset with `chara.user_identification` pipelines.
+
+In `avatar_daemon_app_settings.py`, add these methods:
+
+```
+def create_speaker_identification_service(self, app: KaiaApp, state: s.State):
+    return SpeakerIdentificationService(
+        app.avatar_api,
+        BestOfStrategy(10),
+    )
+
+def create_face_identification_service(self, app: KaiaApp, state: s.State):
+    return UserWalkInService(
+        app.avatar_api,
+        BestOfStrategy(10),
+    )
+```
+
+This will add the services to the Avatar middleware. 
+
+Then, in `kaia_driver_settings.py`, add this skill to the list of skills:
+
+```
+self.skills.append(skills.RecognitionFeedbackSkill(user_names))
+```
+
+where users are the names of the people living in the household.
+This will allow you to correct Kaia's identification: if you see that 
+the identification failed, you can say "I'm actually <your_name>",
+and the identification dataset will be expanded by an erroneous sample (with the proper annotation).
+
+In `avatar_daemon_app_settings.py` you can also make use of `_speaker_to_image_url`:
+place the avatars of your household's members to the `kaia/web/static` folder,
+and map username to the avatar's path.
+
+Finally, you can now use `UserWalkInSkill`. Define an array `announcements` of `WalkInAnnouncement` objects,
+and then `self.skills.append(skills.WalkInSkill(announcements))`. When Kaia sees you, you will
+receive the announcement according to the schedule.
+
+
+
+
+
+# Creating the characters
 
 For the various reasons we do not provide the library of the characters, nor do we plan it anywhere in the future.
 If you want to personalize your assistant, you have to do it yourself.
@@ -291,10 +362,6 @@ For that, you need:
 For the first two tasks, there are working and tested pipelines in `chara` project that you can use.
 For the third task, the pipeline is pending.
 
-## Kaia in a household with multiple users
 
-Kaia can detect a user by voice and by face. These pipelines require you to collect
-some samples from the working devices, annotate them to indicate which image/sound file corresponds to whom,
-and then upload samples to the server. There will be `chara` pipelines to do this, but at the current time
-they are under construction.
+
 
