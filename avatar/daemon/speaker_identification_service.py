@@ -1,4 +1,3 @@
-from brainbox import BrainBox
 from brainbox.deciders import Resemblyzer
 from .common import SoundEvent, IMessage, message_handler, State, AvatarService, InitializationEvent
 from .common.vector_identificator import VectorIdentificator, IStrategy
@@ -25,10 +24,10 @@ class SpeakerIdentificationService(AvatarService):
     Command = SpeakerIdentificationCommand
 
     def __init__(self,
-                 api: AvatarApi,
+                 avatar_api: AvatarApi,
                  identification_strategy: IStrategy,
                  ):
-        self.api = api
+        self.avatar_api = avatar_api
         self.identification_strategy = identification_strategy
 
         self.buffer: list[tuple[SoundEvent,str]] = []
@@ -37,10 +36,10 @@ class SpeakerIdentificationService(AvatarService):
     @message_handler.with_call(BrainBoxService.Command, BrainBoxService.Confirmation)
     def on_initialize(self, message: InitializationEvent) -> None:
         self.vector_identificator = VectorIdentificator(
-            self.resources_folder,
+            self.avatar_api,
+            self.resources_folder/'current',
             self.identification_strategy,
             self.sample_to_vector,
-            self.api.cache.read
         )
         self.vector_identificator.initialize()
 

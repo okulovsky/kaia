@@ -1,7 +1,6 @@
 from .common import AvatarService, message_handler, ImageEvent, IMessage, InitializationEvent
 from .common.vector_identificator import VectorIdentificator, IStrategy
 from .brainbox_service import BrainBoxService
-from brainbox import BrainBox
 from brainbox.deciders import InsightFace
 from ..app import AvatarApi
 from dataclasses import dataclass
@@ -25,20 +24,20 @@ class UserWalkInService(AvatarService):
 
 
     def __init__(self,
-                 api: AvatarApi,
+                 avatar_api: AvatarApi,
                  identification_strategy: IStrategy,
                  ):
-        self.api = api
+        self.avatar_api = avatar_api
         self.identification_strategy = identification_strategy
         self.identificator: VectorIdentificator|None = None
 
     @message_handler
     def on_initialize(self, message: InitializationEvent) -> None:
         self.identificator = VectorIdentificator(
-            self.resources_folder,
+            self.avatar_api,
+            self.resources_folder/'current',
             self.identification_strategy,
             self.image_to_vector,
-            self.api.cache.read
         )
         self.identificator.initialize()
 

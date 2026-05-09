@@ -35,6 +35,7 @@ class CharaCaller(Generic[TCharaCallReturn]):
                     logger.log(item)
                 return read_result(result_file)
 
+            (current.folder / '.cache').unlink(missing_ok=True)
             log = []
             with logger.with_callback(log.append):
                 section_name = ' / '.join(c.folder.name if c.name else '' for c in self.stack.stack)

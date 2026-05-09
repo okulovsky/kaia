@@ -18,7 +18,22 @@ Therefore, a mature devops is not my priority, especially given that there is a 
 To deploy Kaia, you need to configure the remote and the local machines:
 * The remote machine is accessible via SSH without entering the password (e.g. with `ssh-copy-id`)
 * Docker is installed on both machines
-* `rsync` is installed on both machines
+
+Start a private Docker registry on the remote machine:
+
+```
+docker run -d -p 5000:5000 --restart unless-stopped --name registry registry:2
+```
+
+Allow the local machine to push to it: add the remote IP to Docker's insecure registries.
+Edit (or create) `/etc/docker/daemon.json` on the local machine:
+```json
+{ "insecure-registries": ["REMOTE_IP:5000"] }
+```
+Then restart Docker:
+```
+sudo systemctl restart docker
+```
 
 Сollect the following information from the remote machine and place it in the `environment.env` file:
 * username
@@ -26,11 +41,10 @@ To deploy Kaia, you need to configure the remote and the local machines:
 * ip-address
 * the folder that will host all data related to Kaia
 
-Run `deploy_brainbox`. It will:
-* build container on the local machine
-* export the container as a tar file, unpackages it, and sync the files with the remote machine
-(only changed layers will be synced which accelerates the following delployments)
-* assembles the tar back at the remote machine, loads and runs it
+Run `deploy_brainbox.py`. It will:
+* build the container on the local machine
+* push it to the private registry on the remote machine (only changed layers are transferred)
+* pull and run it on the remote machine
 
 After that, BrainBox should be running at the remote machine on the port `8090`.
 

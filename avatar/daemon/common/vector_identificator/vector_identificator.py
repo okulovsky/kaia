@@ -1,12 +1,14 @@
 import os
 from pathlib import Path
+
+from avatar.app import AvatarApi
 from foundation_kaia.marshalling import FileLike
 from typing import Callable
 from yo_fluq import FileIO
 import numpy as np
 import pandas as pd
 from .straregies import IStrategy
-from dataclasses import dataclass
+from brainbox import BrainBox
 
 def cosine_distances(X, Y):
     X = np.array(X, dtype=float)
@@ -21,19 +23,25 @@ def cosine_distances(X, Y):
 
 class VectorIdentificator:
     def __init__(self,
+                 api: AvatarApi,
                  folder: Path,
                  strategy: IStrategy,
                  sample_to_vector: Callable[[FileLike], list[float]],
-                 content_retriever: Callable[[str], bytes]
                  ):
+        self.api = api
         self.folder = folder
         self.strategy = strategy
         self.sample_to_vector = sample_to_vector
-        self.content_retriever = content_retriever
         self.df: pd.DataFrame|None = None
         self.base: dict | None = None
 
+    def _local_file_to_vector(self, path: Path) -> list[float]:
+        if not self.api.cache.is_file(path.name):
+            self.api.cache.upload(path.name, path)
+        return self.sample_to_vector(path.name)
 
+    def _retrieve_content(self, file_id: str) -> bytes:
+        return self.api.cache.read(file_id)
 
     def initialize(self):
         base_file = self.folder/'base.json'
@@ -53,7 +61,7 @@ class VectorIdentificator:
                 if not file_path.is_file():
                     continue
                 if file not in base[class_name] or base[class_name][file] is None:
-                    vector = self.sample_to_vector(file_path.name)
+                    vector = self._local_file_to_vector(file_path)
                     base[class_name][file] = vector
 
 
@@ -80,7 +88,7 @@ class VectorIdentificator:
         return winner
 
     def add_sample(self, class_name, filename: str):
-        content = self.content_retriever(filename)
+        content = self._retrieve_content(filename)
         FileIO.write_bytes(
             content,
             self.folder / class_name / filename

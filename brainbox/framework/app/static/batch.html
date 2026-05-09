@@ -18,7 +18,10 @@
   .status-success { color: #2e7d32; }
   .status-failure { color: #c62828; font-weight: bold; }
   .error-row td { background: #fff3f3; color: #c62828; font-size: 0.85em; padding: 4px 12px; font-family: monospace; white-space: pre-wrap; }
-  button { padding: 4px 10px; cursor: pointer; }
+  .detail-row td { background: #f0f4ff; font-size: 0.85em; padding: 8px 12px; font-family: monospace; white-space: pre-wrap; }
+  .detail-section { margin-bottom: 6px; }
+  .detail-label { font-weight: bold; color: #444; font-family: Arial, sans-serif; }
+  button { padding: 4px 10px; cursor: pointer; margin-right: 4px; }
 </style>
 </head>
 <body>
@@ -50,6 +53,8 @@ const params = new URLSearchParams(window.location.search);
 const batchId = params.get('id') || '';
 document.getElementById('title').textContent = 'Batch: ' + batchId;
 
+const expandedJobs = new Set();
+
 function fmtTime(ts) {
   if (!ts) return '';
   return new Date(ts).toLocaleString();
@@ -58,6 +63,15 @@ function fmtTime(ts) {
 function fmtNum(n) {
   if (n === null || n === undefined) return '';
   return n.toFixed(2);
+}
+
+function esc(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function fmtValue(v) {
+  if (v === null || v === undefined) return '<em>(none)</em>';
+  return esc(String(v));
 }
 
 function jobStatus(j) {
@@ -76,6 +90,44 @@ function inWork(j) {
   const start = new Date(j.accepted_timestamp);
   const end = j.finished_timestamp ? new Date(j.finished_timestamp) : new Date();
   return (end - start) / 1000;
+}
+
+function buildDetailRow(jobId, data) {
+  const tr = document.createElement('tr');
+  tr.className = 'detail-row';
+  tr.dataset.detailFor = jobId;
+  const td = document.createElement('td');
+  td.colSpan = 8;
+  if (data === null) {
+    td.textContent = 'Loading...';
+  } else {
+    td.innerHTML = '<pre>' + esc(JSON.stringify(data, null, 2)) + '</pre>';
+  }
+  tr.appendChild(td);
+  return tr;
+}
+
+async function toggleDetails(jobId, afterRow) {
+  if (expandedJobs.has(jobId)) {
+    expandedJobs.delete(jobId);
+    const existing = document.querySelector('tr[data-detail-for="' + jobId + '"]');
+    if (existing) existing.remove();
+    return;
+  }
+  expandedJobs.add(jobId);
+  const placeholder = buildDetailRow(jobId, null);
+  afterRow.insertAdjacentElement('afterend', placeholder);
+  try {
+    const resp = await fetch('/jobs-service/get-job/' + encodeURIComponent(jobId));
+    const job = await resp.json();
+    const existing = document.querySelector('tr[data-detail-for="' + jobId + '"]');
+    if (existing) existing.replaceWith(buildDetailRow(jobId, job));
+  } catch (e) {
+    const existing = document.querySelector('tr[data-detail-for="' + jobId + '"]');
+    if (existing) {
+      existing.querySelector('td').textContent = 'Error loading details: ' + e.message;
+    }
+  }
 }
 
 async function loadJobs() {
@@ -121,6 +173,15 @@ async function loadJobs() {
       tr.appendChild(tdProg);
 
       const tdAct = document.createElement('td');
+
+      const moreBtn = document.createElement('button');
+      moreBtn.textContent = expandedJobs.has(j.id) ? 'Less' : 'More';
+      moreBtn.onclick = async () => {
+        await toggleDetails(j.id, tr);
+        moreBtn.textContent = expandedJobs.has(j.id) ? 'Less' : 'More';
+      };
+      tdAct.appendChild(moreBtn);
+
       const cancelBtn = document.createElement('button');
       cancelBtn.textContent = 'Cancel';
       cancelBtn.onclick = async () => {
@@ -137,15 +198,18 @@ async function loadJobs() {
 
       tbody.appendChild(tr);
 
-      if (status === 'failure') {
-        const errTr = document.createElement('tr');
-        errTr.className = 'error-row';
-        const errTd = document.createElement('td');
-        errTd.colSpan = 8;
-        const errorText = j.error || '(no error message)';
-        errTd.innerHTML = 'Error: ' + errorText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
-        errTr.appendChild(errTd);
-        tbody.appendChild(errTr);
+      if (expandedJobs.has(j.id)) {
+        const detailTr = document.querySelector('tr[data-detail-for="' + j.id + '"]');
+        if (!detailTr) {
+          const placeholder = buildDetailRow(j.id, null);
+          tbody.appendChild(placeholder);
+          fetch('/jobs-service/get-job/' + encodeURIComponent(j.id))
+            .then(r => r.json())
+            .then(job => {
+              const el = document.querySelector('tr[data-detail-for="' + j.id + '"]');
+              if (el) el.replaceWith(buildDetailRow(j.id, job));
+            });
+        }
       }
     }
   } catch (e) {

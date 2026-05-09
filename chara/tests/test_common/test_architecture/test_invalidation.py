@@ -1,10 +1,11 @@
+import shutil
 from unittest import TestCase
 from foundation_kaia.misc import Loc
 from chara.common import Chara
 
 def function(x):
-    call_1 = Chara.call(function_1)(x,3)
-    call_2 = Chara.call(function_1)(x,4)
+    call_1 = Chara.call(function_1)(x, 3)
+    call_2 = Chara.call(function_1)(x, 4)
     return call_1 + call_2 + x
 
 def function_1(x, y):
@@ -13,7 +14,7 @@ def function_1(x, y):
     return call_1 * call_2
 
 def function_2(x):
-    return x+1
+    return x + 1
 
 
 class CharaCallsTestCase(TestCase):
@@ -26,22 +27,17 @@ class CharaCallsTestCase(TestCase):
             for c in sorted(str(c.relative_to(folder)) for c in folder.glob('**/*')):
                 print(c)
 
+            (folder / 'result').unlink()
             Chara.start(folder)
-            Chara.invalidate_self('')
             result = Chara.call(function)(4)
             self.assertEqual(40, result)
 
+            shutil.rmtree(folder / '000-function_1' / '001-function_2')
             Chara.start(folder)
-            with self.assertRaises(ValueError):
-                Chara.invalidate_down('000_fun')
-            Chara.invalidate_down('000-function_1/001-function_2')
             result = Chara.call(function)(4)
             self.assertEqual(45, result)
 
-
+            shutil.rmtree(folder)
             Chara.start(folder)
-            Chara.invalidate_down('')
             result = Chara.call(function)(4)
             self.assertEqual(49, result)
-
-

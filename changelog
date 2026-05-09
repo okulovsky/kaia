@@ -1,3 +1,12 @@
+5.0.1
+    Chara
+        Contains voice- and face identification pipelines
+        Cache invalidation can now be done manually, with cache consistency enforcing before running
+    Kaia
+        Deploys with a local Docker repository instead of a hacky rsync deployment
+        NODE_JS_PATH and NPM_PATH are now needed to be supplied in env variables, documentation is updated
+        Documentation contains the detailed instructions of how to use Kaia in multi-user environment
+
 5.0.0
     EVERYTHING HAS CHANGED
     foundation_kaia

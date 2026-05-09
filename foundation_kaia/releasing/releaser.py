@@ -135,8 +135,7 @@ class Releaser:
 
         self._export_module(release_folder)
 
-        if self.compile_documentation:
-            shutil.copyfile(src_folder / 'README.md', release_folder / 'README.md')
+        shutil.copyfile(src_folder / 'README.md', release_folder / 'README.md')
 
         toml = self.fix_toml_for_packaging(src_folder / 'pyproject.toml')
         file_io_write_text(toml, src_folder / 'pyproject.toml')

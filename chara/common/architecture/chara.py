@@ -5,7 +5,7 @@ from .chara_stack import CharaStack, CharaStackItem
 from .chara_caller import CharaCaller
 
 T = TypeVar('T')
-from .invalidate import invalidate
+from .validate import restore_consistency
 from .result_handling import find_result, read_result, FileResult, ResultType
 from .apis import CharaApis
 
@@ -45,6 +45,7 @@ class CharaInstance:
 
 
     def start(self, working_folder: Path):
+        restore_consistency(working_folder)
         id = threading.get_ident()
         if id in self.thread_to_stack and not self._stack().exited:
             raise ValueError("Another chara process is already in progress in this thread")
@@ -77,16 +78,7 @@ class CharaInstance:
             return CharaFolder(stack.last_exited)
         raise ValueError("No exits were made yet in this Chara process")
 
-    def invalidate_down(self, path: Path|str):
-        self._invalidate(path, True)
 
-    def invalidate_self(self, path: Path|str):
-        self._invalidate(path, False)
-
-    def _invalidate(self, path: Path|str, down: bool):
-        path = Path(path)
-        root = self._stack().root
-        invalidate(path, root, down)
 
 
 

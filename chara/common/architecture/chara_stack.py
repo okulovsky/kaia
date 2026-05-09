@@ -35,15 +35,18 @@ class CharaStack:
                 0
             ))
         else:
-            new_index = self.stack[-1].childen_count
+            parent = self.stack[-1]
+            new_index = parent.childen_count
             folder_name = str(new_index).zfill(3) + "-" + name
-            self.stack[-1].childen_count += 1
+            parent.childen_count += 1
             self.stack.append(CharaStackItem(
-                self.stack[-1].folder / folder_name,
+                parent.folder / folder_name,
                 name,
                 new_index,
                 0
             ))
+            with open(parent.folder / '.cache', 'a') as f:
+                f.write(folder_name + '\n')
         os.makedirs(self.stack[-1].folder, exist_ok=True)
         return self.stack[-1]
 
