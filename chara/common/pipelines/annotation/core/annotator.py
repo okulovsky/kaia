@@ -9,9 +9,6 @@ class IAnnotationCase(ICase, ABC):
     def get_id(self) -> str:
         pass
 
-    @abstractmethod
-    def set_annotation(self, annotation: Any):
-        pass
 
 TCase = TypeVar("TCase", bound=IAnnotationCase)
 

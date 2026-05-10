@@ -25,7 +25,9 @@ class Drawer:
         return drawer
 
 
-    def blocks(self, first_selector_or_column_count: str|Callable|int|None = None, second_selector: str|Callable|None = None) -> 'Drawer':
+    def blocks(self,
+               first_selector_or_column_count: str|Callable|int|None = None,
+               second_selector: str|Callable|None = None) -> 'Drawer':
         drawer = copy(self)
         if second_selector is not None:
             if isinstance(first_selector_or_column_count, int):
@@ -52,15 +54,15 @@ class Drawer:
                head: int|None = None,
                order_by: str|Callable|None = None,
                ascending: bool = True,
-               exclude: list[str]|None = None,
-               include: list[str]|None = None) -> 'Drawer':
+               fields_to_exclude: list[str]|None = None,
+               fields_to_include: list[str]|None = None) -> 'Drawer':
         drawer = copy(self)
         drawer._table_view = TableView(
             head,
             Selector(order_by) if order_by is not None else None,
             ascending,
-            exclude,
-            include
+            fields_to_exclude,
+            fields_to_include
         )
         return drawer
 

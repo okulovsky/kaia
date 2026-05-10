@@ -27,6 +27,7 @@ class DistillationPipeline:
         for case in checkpoint_cases.successes:
             w = Wav.one(case.path_to_voiceover_file)
             w.metadata['epoch'] = case.checkpoint.epoch
+            w.metadata['path'] = case.local_path
             wavs.append(w)
         lst = Wav.many(wavs)
 
@@ -40,6 +41,9 @@ class DistillationPipeline:
     def _batcher(self, summaries: list[CaseRepetition.Summary[Upsampling.Case]]) -> list[Upsampling.Case]:
         candidates = summaries
         total_duration = sum(s.successes[0].verification.duration for s in summaries if len(s.successes) > 0)
+        logger.info(f"Total duration for now: {total_duration}")
+        logger.info(f"Successes: {sum(len(s.successes) for s in summaries)}")
+        logger.info(f"Failures: {sum(len(s.errors) for s in summaries)}")
         if total_duration > self.settings.required_samples_duration_in_seconds:
             return []
         candidates = [s for s in candidates if len(s.successes) == 0]

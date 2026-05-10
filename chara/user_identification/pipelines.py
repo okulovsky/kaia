@@ -22,10 +22,10 @@ class Identification:
     annotator_type: type
 
 
-    def _create_annotator(self, users: tuple[str,...], task_planer):
+    def _create_annotator(self, users: tuple[str,...], task_planer, mock_annotation=None):
         settings = LabelAnnotatorSettings(users, "SKIP")
-        annotator = self.annotator_type(lambda case: case.local_path, settings, task_planer)
-        pipe = AnnotationPipeline(annotator)
+        annotator = self.annotator_type(lambda case: case.local_path, settings, task_planer, mock_annotation=mock_annotation)
+        pipe = AnnotationPipeline(annotator, 'annotation')
         return pipe
 
     def _stash_current_dataset(self):
@@ -44,7 +44,8 @@ class Identification:
 
         @Chara.phase
         def delete_current_dataset():
-            Chara.Apis.avatar_api.resources(self.service).delete('current')
+            if Chara.Apis.avatar_api.resources(self.service).is_dir('current'):
+                Chara.Apis.avatar_api.resources(self.service).delete('current')
 
         @Chara.phase
         def upload_current_dataset():
@@ -54,23 +55,23 @@ class Identification:
 
 
 
-    def annotation(self, users: tuple[str,...]) -> CaseCollection[UserSampleCase]:
+    def annotation(self, users: tuple[str,...], mock_annotation=None) -> CaseCollection[UserSampleCase]:
         cases = Chara.call(collect_from_cache)(self.prefix, self.suffix)
         unit = BrainBoxCasePipeline(self.vector_task_factory, self.vector_applicator)
         cases = Chara.call(unit.__call__, 'computing_vectors')(cases).raise_if_all_errors()
         logger.info(f"{len(cases.cases)} total, {len(cases.successes)} to annotate")
         task_planner = VectorTaskPlanner(users)
-        pipe = self._create_annotator(users, task_planner)
+        pipe = self._create_annotator(users, task_planner, mock_annotation)
         cases = Chara.call(pipe.__call__)(cases).raise_if_any_error()
         Chara.call(self._upload_new_dataset)(users, cases)
         return cases
 
-    def refinement(self) -> CaseCollection[UserSampleCase]:
+    def refinement(self, mock_annotation=None) -> CaseCollection[UserSampleCase]:
         cases = Chara.call(collect_from_resources)(self.service)
         users = tuple(sorted(set(c.prior_annotation for c in cases.successes)))
         unit = BrainBoxCasePipeline(self.vector_task_factory, self.vector_applicator)
         cases = Chara.call(unit.__call__, "computing_vectors")(cases).raise_if_all_errors()
-        pipe = self._create_annotator(users+('DELETE',), SimpleTaskPlanner())
+        pipe = self._create_annotator(users+('DELETE',), SimpleTaskPlanner(), mock_annotation)
         cases = Chara.call(pipe.__call__)(cases).raise_if_all_errors()
         Chara.call(self._upload_new_dataset)(users, cases)
         return cases

@@ -21,8 +21,6 @@ class MyCase(IAnnotationCase):
     def get_id(self) -> str:
         return self.id
 
-    def set_annotation(self, annotation):
-        self.annotation = annotation
 
 def _mock(case: MyCase):
     return 'Yes' if '3' in case.text else 'No'
@@ -38,7 +36,7 @@ class MockAnnotationTestCase(TestCase):
                 TextLabelAnnotator.Settings(('Yes', 'No'), 'Skip'),
                 mock_annotation=_mock
             )
-            pipe = AnnotationPipeline(annotator)
+            pipe = AnnotationPipeline(annotator, 'annotation')
             result = Chara.call(pipe.__call__)(CaseCollection(cases)).cases
             self.assertEqual(3, len(result))
             self.assertEqual('No', result[0].annotation)

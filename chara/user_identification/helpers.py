@@ -25,7 +25,7 @@ class UserSampleCase(IVectorAnnotationCase):
     def set_annotation(self, annotation: Any):
         self.annotation = annotation
 
-def _send(bts: bytes, path: Path):
+def _send(path: Path, bts: bytes):
     if not path.is_file():
         path.write_bytes(bts)
     if not Chara.Apis.brainbox_api.cache.is_file(path.name):
@@ -34,7 +34,7 @@ def _send(bts: bytes, path: Path):
 
 
 def collect_from_cache(prefix: str, suffix: str) -> CaseCollection[UserSampleCase]:
-    files = Chara.Apis.avatar_api.cache.list('current/', prefix, suffix)
+    files = Chara.Apis.avatar_api.cache.list('', prefix, suffix)
     folder = Chara.current.folder/'files'
     os.makedirs(folder, exist_ok=True)
     cases = []
@@ -46,7 +46,7 @@ def collect_from_cache(prefix: str, suffix: str) -> CaseCollection[UserSampleCas
 
 
 def collect_from_resources(resource: type) -> CaseCollection[UserSampleCase]:
-    data = Chara.Apis.avatar_api.resources(resource).list('', glob=True)
+    data = Chara.Apis.avatar_api.resources(resource).list('current/', glob=True)
     folder = Chara.current.folder/'files'
     cases = []
     os.makedirs(folder, exist_ok=True)
@@ -56,7 +56,7 @@ def collect_from_resources(resource: type) -> CaseCollection[UserSampleCase]:
             continue
         class_, name = split
         path = folder/name
-        _send(Chara.Apis.avatar_api.resources(resource).read(file), path)
+        _send(path, Chara.Apis.avatar_api.resources(resource).read('current/'+file))
         cases.append(UserSampleCase(
             name,
             path,

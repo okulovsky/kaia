@@ -34,7 +34,7 @@ def algorithm_annotation_step(
         'SKIP'
     )
     annotator = TextLabelAnnotator(_get_text, settings, mock_annotation = mock_annotation)
-    pipeline = AnnotationPipeline(annotator)
+    pipeline = AnnotationPipeline(annotator, 'annotation')
     annotated = Chara.call(pipeline.__call__)(CaseCollection(algorithm_result))
     return annotated.successes
 

@@ -28,7 +28,8 @@ dependencies = [
     "gradio",
     "python-Levenshtein",
     "nltk",
-    "fastparquet"
+    "fastparquet",
+    "pyqt5"
 ]
 
 classifiers = [
