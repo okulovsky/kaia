@@ -61,3 +61,10 @@ class PyQtAnnotationCache(IAnnotationCache):
         if not ann_folder.exists():
             return {}
         return {p.stem: FileIO.read_json(p) for p in ann_folder.glob('*.json')}
+
+    def find_start_index(self, ids: list[str]) -> int:
+        statuses = self.get_annotation_status()
+        for i, id in enumerate(ids):
+            if not statuses.get(id, AnnotationStatus()).annotated:
+                return i
+        return 0

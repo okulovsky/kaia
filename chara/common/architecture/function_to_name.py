@@ -6,7 +6,7 @@ def function_to_name(f):
     try:
         signature = Signature.parse(f)
         if signature.kind == FunctionKind.FUNCTION:
-            return signature.name
+            return signature.name or type(f).__name__
         elif signature.kind == FunctionKind.LAMBDA:
             return 'lambda'
         else:

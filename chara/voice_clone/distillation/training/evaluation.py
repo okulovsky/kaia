@@ -40,4 +40,6 @@ def evaluate(cases: CaseCollection[CheckpointCase]) -> CaseCollection[Checkpoint
             if Chara.Apis.brainbox_api.cache.is_file(case.checkpoint.filename):
                 Chara.Apis.brainbox_api.cache.delete(case.checkpoint.filename)
 
+
+
     return cases

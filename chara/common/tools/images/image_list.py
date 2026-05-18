@@ -25,3 +25,6 @@ class ImageList(IDrawableCollection):
 
     def clone_for_other_set(self, other_set: Iterable[IDrawable]) -> 'IDrawableCollection':
         return ImageList(list(other_set))
+
+    def resize(self, width_or_bbox: int, height: int|None = None) -> 'ImageList':
+        return ImageList([i.resize(width_or_bbox, height) for i in self.images])

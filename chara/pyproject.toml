@@ -29,7 +29,8 @@ dependencies = [
     "python-Levenshtein",
     "nltk",
     "fastparquet",
-    "pyqt5"
+    "pyqt6",
+    "shapely"
 ]
 
 classifiers = [
