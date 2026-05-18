@@ -1,3 +1,4 @@
+import shutil
 from chara.voice_clone.distillation.dataset.algorithm_annotation_step import algorithm_annotation_step
 from chara.voice_clone.distillation.dataset.common import AnnotationCase
 from chara.voice_clone.distillation.dataset.prepare_sententes import prepare_sentences
@@ -37,7 +38,7 @@ class AlgorithmAnnotationStepTestCase(TestCase):
                 [False, True, True, False, False],
                 [c.accepted for c in result]
             )
-            Chara.invalidate_down('')
+            shutil.rmtree(folder)
             Chara.start(folder)
 
             result_1 = Chara.call(algorithm_annotation_step)(data, result, 5, mock_annotation=_mock)

@@ -23,7 +23,8 @@ class CharaCallsTestCase(TestCase):
 
             files = list(sorted(str(c.relative_to(folder)) for c in folder.glob('**/*')))
             self.assertEqual(
-                ['.log',
+                ['.cache',
+                 '.log',
                  '000-another_function',
                  '000-another_function/.log',
                  '000-another_function/result',

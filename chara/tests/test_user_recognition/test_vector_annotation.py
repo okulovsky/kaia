@@ -1,7 +1,7 @@
 from unittest import TestCase
 from unittest.mock import MagicMock
 import numpy as np
-from chara.user_recognition.vector_annotation import (
+from chara.user_identification.vector_annotation import (
     VectorSample, VectorClass, CurrentState,
     RandomStrategy, BorderlineStrategy, InsideStrategy, CombinedStrategy,
     VectorTaskPlanner, IVectorAnnotationCase,

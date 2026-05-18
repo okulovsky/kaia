@@ -1,7 +1,4 @@
 import random
-
-from spacy.util import logger_stream_handler
-
 from chara import Chara, CaseCollection, CaseRepetition, BatchingPipeline, logger
 from chara.common.tools import Wav
 from .settings import DistillationSettings

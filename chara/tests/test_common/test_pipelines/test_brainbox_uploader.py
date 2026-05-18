@@ -32,7 +32,7 @@ class UploaderUnitTestCase(TestCase):
         with BrainBox.Api.serverless_test([]) as api:
             Chara.Apis.brainbox_api = api
             names = uploader.upload(cases)
-            self.assertEqual({'a.bin', 'b.bin'}, names)
+            self.assertEqual({'a.bin', 'b.bin'}, names.cache)
             self.assertEqual(b'hello', api.cache.read('a.bin'))
             self.assertEqual(b'world', api.cache.read('b.bin'))
 
@@ -61,7 +61,7 @@ class UploaderUnitTestCase(TestCase):
         with BrainBox.Api.serverless_test([]) as api:
             Chara.Apis.brainbox_api = api
             names = uploader.upload(cases)
-            self.assertEqual({'shared.bin'}, names)
+            self.assertEqual({'shared.bin'}, names.cache)
             self.assertEqual(b'first', api.cache.read('shared.bin'))
 
     def test_multiple_files_per_case(self):
@@ -73,7 +73,7 @@ class UploaderUnitTestCase(TestCase):
         with BrainBox.Api.serverless_test([]) as api:
             Chara.Apis.brainbox_api = api
             names = uploader.upload(cases)
-            self.assertEqual({'x_1.bin', 'x_2.bin'}, names)
+            self.assertEqual({'x_1.bin', 'x_2.bin'}, names.cache)
             self.assertTrue(api.cache.is_file('x_1.bin'))
             self.assertTrue(api.cache.is_file('x_2.bin'))
 

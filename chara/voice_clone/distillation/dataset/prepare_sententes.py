@@ -1,7 +1,7 @@
 from typing import Iterable
 from itertools import tee
 from chara import Chara, Language, logger, brainbox_pipeline
-from chara.common.pipelines.brainbox_pipeline import BrainBoxResult
+from chara.common.pipelines.brainbox.brainbox_pipeline import BrainBoxResult
 from .common import create_phonemization_samples, Phonemization
 from .corpus import Corpus
 from .algorithm import AlgorithmData
