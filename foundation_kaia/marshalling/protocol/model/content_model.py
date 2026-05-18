@@ -69,9 +69,12 @@ class ContentModel:
         raw = {}
         for param in model.file_params:
             if param.name not in values:
+                if param.optional:
+                    raw[param.name] = None
+                    continue
                 raise ValueError(f"FileLike param {param.name} has no value")
             value = values[param.name]
-            if value is None:
+            if value is None and not param.optional:
                 raise ValueError(f"FileLike param {param.name} has null value")
             raw[param.name] = value
 

@@ -12,6 +12,11 @@ FileLike = Path | str | bytes | BytesIO | File
 
 class FileLikeHandler:
     @staticmethod
+    def is_file_like(filelike: Any) -> bool:
+        return isinstance(filelike, (Path, str, bytes, BytesIO, File))
+
+
+    @staticmethod
     def guess_name(filelike: FileLike, raise_if_no_name: bool = False):
         if isinstance(filelike, File):
             return filelike.name

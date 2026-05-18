@@ -17,11 +17,21 @@ class ParamDefinition:
 
 
 @dataclass
+class FileParamDefinition:
+    argument_description: FunctionArgumentDescription
+    optional: bool
+
+    @property
+    def name(self) -> str:
+        return self.argument_description.name
+
+
+@dataclass
 class ParamsModel:
     path_params: tuple[ParamDefinition, ...]
     query_params: tuple[ParamDefinition, ...]
     json_params: tuple[ParamDefinition, ...]
-    file_params: tuple[FunctionArgumentDescription,...]
+    file_params: tuple[FileParamDefinition,...]
     binary_stream_param: FunctionArgumentDescription|None
     custom_stream_param: ParamDefinition|None
     pathlike_param: ParamDefinition|None = None
@@ -61,7 +71,7 @@ class ParamsModel:
                 continue
 
             if atf.kind == AnnotationToFileKind.SimpleFile:
-                file_params.append(arg)
+                file_params.append(FileParamDefinition(arg, atf.optional))
                 continue
 
             serializer = Serializer(arg.annotation)

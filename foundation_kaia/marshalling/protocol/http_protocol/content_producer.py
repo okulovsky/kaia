@@ -49,9 +49,12 @@ class ContentProducer:
                 yield b'\r\n'
             for param in self.params.file_params:
                 name = param.name
+                value = self.content.raw_values[name]
+                if value is None:
+                    continue
                 yield b'--' + boundary_bytes + b'\r\n'
                 yield f'Content-Disposition: form-data; name="{name}"; filename="{name}"\r\n'.encode()
                 yield f'Content-Type: {CONTENT_TYPE_BINARY_FILE}\r\n\r\n'.encode()
-                yield from FileLikeHandler.to_bytes_iterable(self.content.raw_values[name])
+                yield from FileLikeHandler.to_bytes_iterable(value)
                 yield b'\r\n'
             yield b'--' + boundary_bytes + b'--\r\n'

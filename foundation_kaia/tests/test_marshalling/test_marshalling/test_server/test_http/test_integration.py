@@ -32,6 +32,12 @@ class ExampleImpl:
     def path_query_stream(self, id: int, data: Iterable[bytes], flag: bool | None = None) -> str:
         return f"path_query_stream:{id},{flag},{sum(len(chunk) for chunk in data)}"
 
+    @endpoint(verify_abstract=False)
+    def optional_files(self, f1: FileLike | None = None, f2: FileLike | None = None) -> str:
+        s1 = len(f1) if f1 is not None else -1
+        s2 = len(f2) if f2 is not None else -1
+        return f"optional_files:{s1},{s2}"
+
 
 class ExampleServer(Server):
     def __init__(self, port: int):
@@ -64,6 +70,18 @@ class TestIntegration(unittest.TestCase):
 
             result = api.path_query_stream(5, iter([b'abc', b'def']), False)
             self.assertEqual("path_query_stream:5,False,6", result)
+
+            result = api.optional_files(b'hello', b'world')
+            self.assertEqual("optional_files:5,5", result)
+
+            result = api.optional_files(b'hello')
+            self.assertEqual("optional_files:5,-1", result)
+
+            result = api.optional_files(None, b'world')
+            self.assertEqual("optional_files:-1,5", result)
+
+            result = api.optional_files()
+            self.assertEqual("optional_files:-1,-1", result)
 
 
 class PrefixServer(Server):

@@ -19,6 +19,7 @@ class AnnotationToFileKind(Enum):
 class AnnotationToFile:
     kind: AnnotationToFileKind
     custom_stream_item: Annotation | None = None  # set only for CustomStream
+    optional: bool = False
 
     @staticmethod
     def _detect_stream(declared_type: DeclaredType) -> 'AnnotationToFile|None':
@@ -41,8 +42,12 @@ class AnnotationToFile:
     def parse(annotation: Annotation) -> 'AnnotationToFile':
         annotation_to_file: AnnotationToFile | None = None
         has_file_type_main = False
+        has_none = False
         others = []
         for tp in annotation:
+            if tp.mro[0].type is type(None):
+                has_none = True
+                continue
             atf = AnnotationToFile._detect_stream(tp)
             if atf is not None:
                 if annotation_to_file is None:
@@ -72,4 +77,4 @@ class AnnotationToFile:
 
         if annotation_to_file is not None:
             return annotation_to_file
-        return AnnotationToFile(AnnotationToFileKind.SimpleFile, None)
+        return AnnotationToFile(AnnotationToFileKind.SimpleFile, None, has_none)
