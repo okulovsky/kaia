@@ -12,6 +12,11 @@ def download_vosk_model(folder: Path, model_name: str = DEFAULT_MODEL_NAME):
     if model_path.exists():
         return
     url = 'https://alphacephei.com/vosk/models/' + model_name
-    print(f"Downloading Vosk model from {url} ...")
-    urllib.request.urlretrieve(url, model_path)
+    fallback_vosk_url = "https://huggingface.co/rhasspy/vosk-models/resolve/main/en/" + DEFAULT_MODEL_NAME  # Fix for cases when alphacephei is down
+    try: 
+        print(f"Downloading Vosk model from {url} ...")
+        urllib.request.urlretrieve(url, model_path)
+    except Exception as e:  # Add correct exception
+        print(f"Downloading failed, trying fallback URL: {fallback_vosk_url}")
+        urllib.request.urlretrieve(fallback_vosk_url, model_path)
     print(f"Vosk model saved to {model_path}")
