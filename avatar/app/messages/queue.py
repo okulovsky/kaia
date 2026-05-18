@@ -42,19 +42,11 @@ class Queue:
         with self._lock:
             return self._offset
 
-    def __len__(self) -> int:
-        """
-        Returns the absolute upper bound (offset + current count).
-        """
+    def get_from(self, start: int) -> list[AvatarMessage]:
+        """Returns all messages from absolute index start onwards, atomically."""
         with self._lock:
-            return self._offset + len(self._messages)
-
-    def __getitem__(self, index: int) -> AvatarMessage:
-        """
-        Returns the message at the given absolute index.
-        """
-        with self._lock:
-            return self._messages[index - self._offset]
+            lo = max(start - self._offset, 0)
+            return list(self._messages[lo:])
 
     def find_index_from_timestamp(self, timestamp: datetime) -> int:
         """Returns the absolute index of the first message with timestamp >= given value."""
