@@ -1,0 +1,79 @@
+{
+    "__version": 10,
+    "training_method": "LORA",
+    "model_type": "STABLE_DIFFUSION_XL_10_BASE",
+
+    "workspace_dir": "#",
+    "cache_dir": "#",
+
+    "base_model_name": "#",
+    "output_model_destination": "#",
+    "output_model_format": "SAFETENSORS",
+    "output_dtype": "FLOAT_16",
+
+    "gradient_checkpointing": "ON",
+
+    "resolution": "1024",
+    "aspect_ratio_bucketing": true,
+    "latent_caching": true,
+    "clear_cache_before_training": true,
+
+    "epochs": 63,
+    "batch_size": 2,
+    "gradient_accumulation_steps": 1,
+
+    "train_dtype": "BFLOAT_16",
+
+    "learning_rate": 0.0001,
+    "learning_rate_scheduler": "COSINE",
+    "learning_rate_warmup_steps": 100,
+
+    "lora_rank": 32,
+    "lora_alpha": 16.0,
+
+    "optimizer": {
+        "optimizer": "ADAMW_8BIT"
+    },
+
+    "unet": {
+        "train": true,
+        "learning_rate": 0.0001,
+        "weight_dtype": "BFLOAT_16"
+    },
+    "text_encoder": {
+        "train": true,
+        "learning_rate": 0.000005,
+        "stop_training_after": null,
+        "stop_training_after_unit": "NEVER",
+        "weight_dtype": "BFLOAT_16"
+    },
+    "text_encoder_2": {
+        "train": true,
+        "learning_rate": 0.000005,
+        "stop_training_after": null,
+        "stop_training_after_unit": "NEVER",
+        "weight_dtype": "BFLOAT_16"
+    },
+
+    "save_every": 300,
+    "save_every_unit": "STEP",
+    "save_filename_prefix": "LoRA",
+
+    "sample_after": 300,
+    "sample_after_unit": "STEP",
+    "samples": [],
+
+    "concepts": [
+        {
+            "__version": 2,
+            "name": "#",
+            "path": "#",
+            "enabled": true,
+            "balancing": 1.0,
+            "type": "STANDARD",
+            "text": {
+                "prompt_source": "sample"
+            }
+        }
+    ]
+}

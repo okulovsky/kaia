@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BrainBox - Job</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+  h1 { color: #333; word-break: break-all; }
+  nav { margin-bottom: 16px; }
+  nav a { margin-right: 12px; color: #0066cc; text-decoration: none; }
+  nav a:hover { text-decoration: underline; }
+  #controls { margin-bottom: 12px; display: flex; align-items: center; gap: 16px; }
+  #status { color: #555; font-size: 0.9em; }
+  label { font-size: 0.9em; color: #555; cursor: pointer; }
+  pre { margin: 0; white-space: pre-wrap; word-break: break-all; font-size: 0.85em; background: #fff; padding: 16px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+</style>
+</head>
+<body>
+<h1 id="title">BrainBox - Job</h1>
+<nav>
+  <a id="back-link" href="/static/batches.html">Back</a>
+  <a href="/static/batches.html">All Batches</a>
+  <a href="/static/operator_log.html">Operator Log</a>
+  <a href="/doc/html">API Documentation</a>
+</nav>
+<div id="controls">
+  <span id="status">Loading...</span>
+  <label><input type="checkbox" id="freeze"> Freeze</label>
+</div>
+<div id="content"></div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const jobId = params.get('id') || '';
+document.getElementById('title').textContent = 'Job: ' + jobId;
+
+function esc(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+async function loadJob() {
+  if (document.getElementById('freeze').checked) return;
+  try {
+    const resp = await fetch('/jobs-service/get-job/' + encodeURIComponent(jobId));
+    if (!resp.ok) {
+      document.getElementById('status').textContent = 'Error: ' + resp.status;
+      return;
+    }
+    const j = await resp.json();
+    document.getElementById('status').textContent = 'Last update: ' + new Date().toLocaleTimeString();
+
+    if (j.batch) {
+      const backLink = document.getElementById('back-link');
+      backLink.href = '/static/batch.html?id=' + encodeURIComponent(j.batch);
+      backLink.textContent = 'Back to Batch';
+    }
+
+    document.getElementById('content').innerHTML = '<pre>' + esc(JSON.stringify(j, null, 2)) + '</pre>';
+  } catch (e) {
+    document.getElementById('status').textContent = 'Error: ' + e.message;
+  }
+}
+
+loadJob();
+setInterval(loadJob, 3000);
+</script>
+</body>
+</html>

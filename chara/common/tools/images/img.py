@@ -4,6 +4,7 @@ from pathlib import Path
 from PIL import Image
 import io
 from brainbox import File
+from copy import copy
 
 def _make_image(image) -> ImageWrap:
     if isinstance(image, Path) or isinstance(image, str):
@@ -17,7 +18,10 @@ def _make_image(image) -> ImageWrap:
     elif isinstance(image, Image.Image):
         return ImageWrap(image)
     elif isinstance(image, ImageWrap):
-        return ImageWrap(image.image, image.caption)
+        result = ImageWrap(image.image, image.caption)
+        if hasattr(image, '_metadata'):
+            result._metadata = copy(image._metadata)
+        return result
     else:
         raise TypeError(f"Unexpected type {type(image)}")
 
@@ -54,6 +58,15 @@ class ImgClass:
             return ImageList([result])
         else:
             return result
+
+    def from_cases(self, cases, case_to_image) -> ImageList:
+        result = []
+        for case in cases:
+            im = Img.one(case_to_image(case))
+            for attr, value in case.__dict__.items():
+                setattr(im.metadata,attr,value)
+            result.append(im)
+        return Img.many(result)
 
 Img = ImgClass()
 

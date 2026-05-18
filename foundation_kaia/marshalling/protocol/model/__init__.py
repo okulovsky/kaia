@@ -1,5 +1,5 @@
 from .result_model import ResultModel, ResultType
-from .params_model import ParamsModel, ParamDefinition
+from .params_model import ParamsModel, ParamDefinition, FileParamDefinition
 from .annotation_to_file import AnnotationToFile, AnnotationToFileKind
 from .endpoint_model import EndpointModel, ResultModel, ProtocolType, ProtocolModel
 from .endpoint_decorator import HttpMethod, endpoint, websocket, build_decorator, EndpointAttributes

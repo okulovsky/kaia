@@ -2,7 +2,7 @@ import os
 from brainbox import BrainBox
 from typing import Any, Callable, TypeAlias, Iterable
 from uuid import uuid4
-from ..architecture import Chara, logger
+from ...architecture import Chara, logger
 from tqdm import tqdm
 import time
 import tarfile
@@ -44,7 +44,11 @@ class BrainBoxResult:
         return Queryable(self.read_all().where(lambda z: z.error is None), stats.successes)
 
 
-def brainbox_pipeline(tasks: Iterable[BrainBox.Task], result_to_file: ResultToFiles = None) -> BrainBoxResult:
+def brainbox_pipeline(
+        tasks: Iterable[BrainBox.Task],
+        result_to_file: ResultToFiles = None,
+        remove_resulting_files_from_cache: bool = False,
+    ) -> BrainBoxResult:
     @Chara.phase(Chara.ResultType.Json)
     def sending_tasks():
         batch_id = str(uuid4())
@@ -98,6 +102,8 @@ def brainbox_pipeline(tasks: Iterable[BrainBox.Task], result_to_file: ResultToFi
         (Chara.current.folder/'stats.pkl').write_bytes(pickle.dumps(stats))
         for file in files_to_download:
             (files_folder/file).write_bytes(Chara.Apis.brainbox_api.cache.read(file))
+            if remove_resulting_files_from_cache:
+                Chara.Apis.brainbox_api.cache.delete(file)
         return None
 
     return BrainBoxResult(Chara.previous.folder)

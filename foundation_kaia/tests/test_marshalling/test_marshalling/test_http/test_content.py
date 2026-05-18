@@ -48,6 +48,24 @@ class TestContent(unittest.TestCase):
         c, kw = make_content_test(func, iter([b'chunk1', b'chunk2']))
         self.assertEqual([b'chunk1', b'chunk2'], list(kw['data']))
 
+    def test_two_optional_files_both_provided(self):
+        @endpoint
+        def func(f1: FileLike | None = None, f2: FileLike | None = None) -> None: ...
+        c, kw = make_content_test(func, b'aaa', b'bbb')
+        self.assertEqual({'f1': b'aaa', 'f2': b'bbb'}, kw)
+
+    def test_two_optional_files_one_none(self):
+        @endpoint
+        def func(f1: FileLike | None = None, f2: FileLike | None = None) -> None: ...
+        c, kw = make_content_test(func, b'aaa', None)
+        self.assertEqual({'f1': b'aaa'}, kw)
+
+    def test_two_optional_files_both_none(self):
+        @endpoint
+        def func(f1: FileLike | None = None, f2: FileLike | None = None) -> None: ...
+        c, kw = make_content_test(func, None, None)
+        self.assertEqual({}, kw)
+
 
 if __name__ == '__main__':
     unittest.main()

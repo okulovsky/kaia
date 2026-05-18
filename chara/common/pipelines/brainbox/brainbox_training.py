@@ -1,9 +1,6 @@
 import time
-from dataclasses import dataclass
-from ..architecture import Chara, logger
-from pathlib import Path
+from ...architecture import Chara, logger
 from brainbox import BrainBox
-from typing import Any, TextIO
 import json
 
 

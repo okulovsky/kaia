@@ -2,7 +2,7 @@ import sys
 from abc import abstractmethod
 from pathlib import Path
 from typing import Generic, Any
-from PyQt5.QtWidgets import QApplication, QWidget
+from PyQt6.QtWidgets import QApplication, QWidget
 from ..core import IAnnotator, TCase
 from .pyqt_annotation_cache import PyQtAnnotationCache
 
@@ -18,7 +18,7 @@ class PyQtAnnotator(Generic[TCase], IAnnotator[TCase]):
         app = QApplication(sys.argv)
         window = self.create_main_window(cases, cache)
         window.show()
-        app.exec_()
+        app.exec()
         statuses = cache.get_annotation_status()
         not_annotated = [id for id, s in statuses.items() if not s.annotated]
         if not_annotated:

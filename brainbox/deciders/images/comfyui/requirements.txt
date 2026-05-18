@@ -1,0 +1,2 @@
+comfy-cli
+comfyui-manager

@@ -76,9 +76,8 @@ class AvatarMessagingService(IAvatarMessagingService):
 
         begin_time = monotonic()
         while True:
-            current_len = len(queue)
-            if current_len > start_index:
-                messages = [queue[i] for i in range(start_index, current_len)]
+            messages = queue.get_from(start_index)
+            if messages:
                 if allowed_types is not None:
                     messages = [m for m in messages if any(m.content_type.endswith(t) for t in allowed_types)]
                 if messages:
@@ -106,17 +105,16 @@ class AvatarMessagingService(IAvatarMessagingService):
 
         if from_timestamp is not None:
             start = queue.find_index_from_timestamp(from_timestamp)
-            messages = [queue[i] for i in range(start, len(queue))]
+            messages = queue.get_from(start)
         elif count is not None:
             if allowed_types is not None:
-                messages = [queue[i] for i in range(queue.first_index, len(queue))]
+                messages = queue.get_from(queue.first_index)
                 messages = [m for m in messages if any(m.content_type.endswith(t) for t in allowed_types)]
                 messages = messages[-count:]
             else:
-                start = max(queue.first_index, len(queue) - count)
-                messages = [queue[i] for i in range(start, len(queue))]
+                messages = queue.get_from(queue.first_index)[-count:]
         else:
-            messages = [queue[i] for i in range(queue.first_index, len(queue))]
+            messages = queue.get_from(queue.first_index)
 
         if allowed_types is not None and from_timestamp is not None:
             messages = [m for m in messages if any(m.content_type.endswith(t) for t in allowed_types)]

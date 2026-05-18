@@ -78,6 +78,8 @@ class CharaInstance:
             return CharaFolder(stack.last_exited)
         raise ValueError("No exits were made yet in this Chara process")
 
+    def from_folder(self, folder: Path) -> CharaFolder:
+        return CharaFolder(CharaStackItem(folder,'',0,0))
 
 
 

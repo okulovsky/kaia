@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import io
 import base64
 from ..core import IDrawable
+from copy import copy
 
 @dataclass
 class ImageWrap(IDrawable):
@@ -11,7 +12,10 @@ class ImageWrap(IDrawable):
     caption: str | None = None
 
     def replace_image(self, new_image: Image.Image):
-        return ImageWrap(image=new_image, caption=self.caption)
+        result = ImageWrap(image=new_image, caption=self.caption)
+        if hasattr(self, '_metadata'):
+            result._metadata = copy(self._metadata)
+        return result
 
     def _to_bytes(self) -> bytes:
         bio = io.BytesIO()
@@ -25,7 +29,16 @@ class ImageWrap(IDrawable):
         return base64.b64encode(self.to_bytes()).decode('utf-8')
 
     def to_html(self):
-        return f'<img src="data:image/png;base64, {self.to_base64()}" alt="{self.caption}">'
+        caption = self.caption or ''
+        return f'<img src="data:image/png;base64,{self.to_base64()}" alt="{caption}" style="display:block">'
 
     def to_widget(self) -> ipywidgets.Widget:
         return ipywidgets.Image(value=self.to_bytes())
+
+    def resize(self, width_or_bbox: int, height: int|None = None) -> 'ImageWrap':
+        if height is None:
+            new_image = self.image.copy()
+            new_image.thumbnail((width_or_bbox, width_or_bbox), Image.LANCZOS)
+        else:
+            new_image = self.image.resize((width_or_bbox, height), Image.LANCZOS)
+        return self.replace_image(new_image)

@@ -41,6 +41,30 @@ class TestFiles(unittest.TestCase):
         with self.assertRaises(ValueError):
             CallModel.Factory.test(func)(None).content
 
+    def test_optional_file_with_value(self):
+        @endpoint
+        def func(f: FileLike | None = None) -> None: ...
+        c = CallModel.Factory.test(func)(b'data').content
+        self.assertEqual({'f': b'data'}, c.raw_values)
+
+    def test_optional_file_with_none(self):
+        @endpoint
+        def func(f: FileLike | None = None) -> None: ...
+        c = CallModel.Factory.test(func)(None).content
+        self.assertEqual({'f': None}, c.raw_values)
+
+    def test_optional_file_not_provided(self):
+        @endpoint
+        def func(f: FileLike | None = None) -> None: ...
+        c = CallModel.Factory.test(func)().content
+        self.assertEqual({'f': None}, c.raw_values)
+
+    def test_two_optional_files_mixed(self):
+        @endpoint
+        def func(f1: FileLike | None = None, f2: FileLike | None = None) -> None: ...
+        c = CallModel.Factory.test(func)(b'data', None).content
+        self.assertEqual({'f1': b'data', 'f2': None}, c.raw_values)
+
 
 if __name__ == '__main__':
     unittest.main()

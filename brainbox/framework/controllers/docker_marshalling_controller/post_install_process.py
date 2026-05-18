@@ -26,7 +26,12 @@ class PostInstallProcess:
             all_models_list = list(all_models)
         except:
             raise TypeError(f"settings.models_to_install must be dict or convertible to list, but was {type(all_models)}")
-        return {k:k for k in all_models_list if not installer.is_model_installed(k)}
+        result = {}
+        for m in all_models_list:
+            key = m if isinstance(m, str) else m.get_name()
+            if not installer.is_model_installed(key):
+                result[key] = m
+        return result
 
     def __call__(self):
         try:

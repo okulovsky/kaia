@@ -6,6 +6,18 @@ import ipywidgets
 if TYPE_CHECKING:
     from .drawer import Drawer
 
+
+class Metadata:
+    def __init__(self):
+        self.__dict = {}
+
+    def __getitem__(self, item):
+        return self.__dict[item]
+
+    def __setitem__(self, key, value):
+        self.__dict[key] = value
+
+
 class IDrawable(ABC):
     @abstractmethod
     def to_html(self) -> str:
@@ -20,9 +32,9 @@ class IDrawable(ABC):
         return Drawer(self)
 
     @property
-    def metadata(self) -> dict:
+    def metadata(self) -> Metadata:
         if not hasattr(self, '_metadata'):
-            self._metadata = {}
+            self._metadata = Metadata()
         return self._metadata
 
     def assign_metakey(self, key: str, value: str) -> None:

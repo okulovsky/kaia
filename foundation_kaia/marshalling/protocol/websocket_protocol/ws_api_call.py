@@ -23,10 +23,12 @@ def ws_api_call(data: CallModel) -> Any:
         # Send JSON args
         ws.send(json.dumps({'type': 'args', 'json': data.content.json_values}))
 
-        # Send files
+        # Send files in chunks to avoid WebSocket max-message-size limits
         for param in params.file_params:
             ws.send(json.dumps({'type': 'file', 'name': param.name}))
-            ws.send_binary(FileLikeHandler.to_bytes(data.content.raw_values[param.name]))
+            for chunk in FileLikeHandler.to_bytes_iterable(data.content.raw_values[param.name]):
+                ws.send_binary(chunk)
+            ws.send(json.dumps({'type': 'file_end'}))
 
         # Send binary stream
         if params.binary_stream_param is not None:

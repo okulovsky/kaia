@@ -1,3 +1,15 @@
+5.0.2
+    Foundation
+        - small fixes
+    BrainBox
+        - Improved GUI
+        - ComfyUI and OneTrainer deciders
+    Chara
+        - LoRA training for the character
+    Avatar
+        - Race condition fixed
+
+
 5.0.1
     Chara
         Contains voice- and face identification pipelines
