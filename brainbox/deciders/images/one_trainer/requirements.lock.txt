@@ -1,0 +1,2 @@
+bitsandbytes==0.49.1
+onnxruntime-gpu==1.23.2
