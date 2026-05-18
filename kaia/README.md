@@ -53,7 +53,7 @@ Set the variable `NPM_PATH` to the output of `which npm` (`where npm` in Linux)
 environments. Create an environment for e.g. Python 3.12 (BrainBox is tested with 3.10-3.13 Python versions):
 
 ```commandline
-conda create --name kaia python==3.11
+conda create --name kaia python==3.12
 ```
 
 Then, activate the environment

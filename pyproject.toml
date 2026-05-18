@@ -3,7 +3,7 @@ name = "kaia"
 description = "Kitchen assistant with face, voice and personality of your favorite character"
 version = "0.0.0"
 requires-python = ">=3.11,<3.13"
-dependencies = [ "Jinja2", "cloudpickle", "dash", "docutils", "fastapi", "fastparquet", "flask", "german_nouns", "gradio", "huggingface_hub", "inflect", "ipywidgets", "jsonpickle", "kaleido", "lemminflect", "loguru", "matplotlib", "networkx", "nltk", "num2words", "numpy", "pandas", "pillow", "plotly", "pymorphy3", "python-Levenshtein", "python-dotenv", "python-multipart", "python-telegram-bot", "pyyaml", "regex", "requests", "selenium", "simplemma", "soundfile", "sqlalchemy", "toml", "uvicorn", "websocket-client", "websockets", "yo_fluq",]
+dependencies = [ "Jinja2", "cloudpickle", "dash", "docutils", "fastapi", "fastparquet", "flask", "german_nouns", "gradio", "huggingface_hub", "inflect", "ipywidgets", "jsonpickle", "kaleido", "lemminflect", "loguru", "matplotlib", "networkx", "nltk", "num2words", "numpy", "pandas", "pillow", "plotly", "pymorphy3", "python-Levenshtein", "python-dotenv", "python-multipart", "python-telegram-bot", "pyyaml", "regex", "requests", "selenium", "simplemma", "soundfile", "sqlalchemy", "toml", "uvicorn", "websocket-client", "websockets", "yo_fluq","PyQt5"]
 [[project.authors]]
 name = "Yuri Okulovsky"
 email = "yuri.okulovsky@gmail.com"
