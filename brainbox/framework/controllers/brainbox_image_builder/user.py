@@ -8,4 +8,5 @@ class User(IBuilderPart):
         result = []
         result.append(f'RUN useradd -ms /bin/bash app -u {user_id} && usermod -aG sudo app')
         result.append('USER app')
+        result.append('ENV PATH="/home/app/.local/bin:$PATH"')
         return result

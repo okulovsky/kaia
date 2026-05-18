@@ -10,6 +10,7 @@ from foundation_kaia.marshalling import StorageApi, IStorage, StorageApiWrap, Te
 from brainbox.framework.common.streaming import StreamingStorageApi, IStreamingStorage
 from brainbox.framework.common import BrainBoxLocations
 from typing import Any, Iterable, Union
+from uuid import uuid4
 from brainbox.framework.task import IJobRequestFactory
 from ..controllers import ControllerRegistry, ControllerLike
 import functools
@@ -110,6 +111,9 @@ class BrainBoxApi:
         all_jobs = []
         resulting_ids = []
         for stack in request_stack:
+            for job in stack.jobs:
+                if job.id is None:
+                    job.id = str(uuid4())
             for job in stack.jobs:
                 if job.batch is None:
                     job.batch = stack.main_id

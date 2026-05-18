@@ -23,6 +23,7 @@ class BrainboxImageBuilder(IImageBuilder):
     build_command: tuple[str,...] | None = None
     custom_apt_installation: tuple[str,...] | None = None
     dependencies: tuple[IDependency,...]|None = None
+    finishing_installation_steps: tuple[str,...] | None = None
     keep_dockerfile: bool = False
     copy_foundation_kaia: bool = True
 
@@ -67,6 +68,9 @@ class BrainboxImageBuilder(IImageBuilder):
         else:
             for dep in self.dependencies:
                 lines.extend(dep.to_commands(context))
+
+        if self.finishing_installation_steps is not None:
+            lines.extend(self.finishing_installation_steps)
 
         if self.install_requirements_as_root:
             lines.extend(User().to_commands(context))
