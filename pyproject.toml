@@ -43,6 +43,7 @@ dependencies = [
     "chromadb",
     "sentence-transformers",
     "cloudpickle>=3.1.2",
+    "jiwer>=4.0.0",
 ]
 
 [[project.authors]]

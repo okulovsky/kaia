@@ -149,3 +149,12 @@ externals/
 /brainbox/deciders/experimental/
 
 .Thrash-1000/research/lm/
+
+# Research data (large files, not tracked)
+research/lm/
+research/wav/
+research/wav16/
+research/to_zip/
+research/voice-dataset.zip
+research/score.txt
+research/text-dataset.json

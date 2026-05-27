@@ -1,0 +1,5 @@
+root  ::= token+
+token ::= " " word | " " number | punct
+word  ::= [a-zA-ZА-Яа-яÄÖÜäöüßàáâéèêëîïôùúûü]+
+number ::= [0-9]+
+punct ::= [.,!?]

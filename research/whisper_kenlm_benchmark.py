@@ -1,58 +1,29 @@
-"""
-Benchmark: plain Whisper vs Whisper + KenLM LogitsProcessor.
-WER comparison by accent.
-
-Usage:
-    uv run python research/whisper_kenlm_benchmark.py
-    uv run python research/whisper_kenlm_benchmark.py --samples 30 --weight 1.0
-    uv run python research/whisper_kenlm_benchmark.py --model openai/whisper-base --beams 5
-"""
-import sys, argparse, json, zipfile, os
+import sys, argparse, json, zipfile, os, time
 sys.path.insert(0, 'research')
 
+import kenlm
 import torch
 import numpy as np
-from collections import defaultdict
 from transformers import WhisperProcessor, WhisperForConditionalGeneration
 from jiwer import wer as compute_wer
 from audio_utils import decode_for_whisper, WHISPER_SR
-from kenlm_processor import KenLMLogitsProcessor
+from kenlm_processor import KenLMLogitsProcessor, VocabConstraintProcessor, rescore_nbest, _sequence_log_probs
 
 DATASET_ZIP = 'research/voice-dataset.zip'
 AUDIO_DIR   = 'research/to_zip'
 LM_BINARY   = 'research/lm/lm.binary'
 
 
-def pick_device() -> str:
+def pick_device():
     if torch.backends.mps.is_available(): return 'mps'
     if torch.cuda.is_available(): return 'cuda'
     return 'cpu'
 
 
-def load_samples(n_per_accent: int) -> list[dict]:
-    z = zipfile.ZipFile(DATASET_ZIP)
+def load_samples(n):
+    z    = zipfile.ZipFile(DATASET_ZIP)
     meta = json.loads(z.read('to_zip/samples.json'))
-    by_speaker = defaultdict(list)
-    for m in meta:
-        if os.path.exists(f"{AUDIO_DIR}/{m['filename']}"):
-            by_speaker[m['speaker']].append(m)
-    result = []
-    for items in by_speaker.values():
-        result.extend(items[:n_per_accent])
-    return result
-
-
-def transcribe(audio: np.ndarray, processor, model, device: str,
-               logits_processor=None, num_beams: int = 1) -> str:
-    inputs = processor(audio, sampling_rate=WHISPER_SR, return_tensors='pt',
-                       return_attention_mask=True)
-    inputs = {k: v.to(device) for k, v in inputs.items()}
-    kwargs = dict(task='transcribe', num_beams=num_beams)
-    if logits_processor:
-        kwargs['logits_processor'] = [logits_processor]
-    with torch.no_grad():
-        out = model.generate(**inputs, **kwargs)
-    return processor.batch_decode(out, skip_special_tokens=True)[0].strip().lower()
+    return [m for m in meta if os.path.exists(f"{AUDIO_DIR}/{m['filename']}")][:n]
 
 
 def main():
@@ -60,51 +31,87 @@ def main():
     parser.add_argument('--samples', type=int, default=20)
     parser.add_argument('--model',   default='openai/whisper-base')
     parser.add_argument('--weight',  type=float, default=0.5)
-    parser.add_argument('--beams',   type=int, default=1)
+    parser.add_argument('--beams',   type=int, default=5)
+    parser.add_argument('--hyps',    type=int, default=10)
     args = parser.parse_args()
 
-    device = pick_device()
-    print(f"model={args.model}  device={device}  beams={args.beams}  λ={args.weight}  n={args.samples}\n")
-
+    device    = pick_device()
     processor = WhisperProcessor.from_pretrained(args.model)
     model     = WhisperForConditionalGeneration.from_pretrained(args.model).to(device)
-    kenlm_lp  = KenLMLogitsProcessor(LM_BINARY, processor.tokenizer, weight=args.weight)
+    lm        = kenlm.Model(LM_BINARY)
+    lp        = KenLMLogitsProcessor(lm, processor.tokenizer, weight=args.weight)
+    vc        = VocabConstraintProcessor(processor.tokenizer, 'research/text-dataset.json')
 
-    samples    = load_samples(args.samples)
-    by_speaker = defaultdict(list)
-    for s in samples:
-        by_speaker[s['speaker']].append(s)
+    print(f"model={args.model}  device={device}  weight={args.weight}  beams={args.beams}  hyps={args.hyps}  samples={args.samples}\n")
 
-    all_refs, all_plain, all_kenlm = [], [], []
+    dummy = np.zeros(WHISPER_SR, dtype=np.float32)
+    inp   = processor(dummy, sampling_rate=WHISPER_SR, return_tensors='pt', return_attention_mask=True)
+    with torch.no_grad():
+        model.generate(**{k: v.to(device) for k, v in inp.items()}, task='transcribe')
 
-    print(f"{'Accent':<12} {'N':>4}  {'Plain WER':>10}  {'KenLM WER':>10}  {'Δ':>8}")
-    print('─' * 52)
+    samples = load_samples(args.samples)
+    refs, greedy_preds, injection_preds, vocab_preds, nbest_preds = [], [], [], [], []
 
-    for speaker, items in sorted(by_speaker.items()):
-        refs, plain_preds, kenlm_preds = [], [], []
-        for i, s in enumerate(items):
-            audio = decode_for_whisper(f"{AUDIO_DIR}/{s['filename']}")
-            refs.append(s['text'].strip().lower())
-            plain_preds.append(transcribe(audio, processor, model, device, num_beams=args.beams))
-            kenlm_preds.append(transcribe(audio, processor, model, device, kenlm_lp, args.beams))
-            if (i + 1) % 5 == 0:
-                print(f"  {speaker}: {i+1}/{len(items)}", flush=True)
+    print("Transcribing...")
+    t0 = time.perf_counter()
 
-        plain_wer = compute_wer(refs, plain_preds)
-        kenlm_wer = compute_wer(refs, kenlm_preds)
-        delta = kenlm_wer - plain_wer
-        sign  = '↓' if delta < 0 else '↑'
-        print(f"{speaker:<12} {len(refs):>4}  {plain_wer:>10.1%}  {kenlm_wer:>10.1%}  {sign}{abs(delta):>6.1%}")
+    for i, s in enumerate(samples):
+        audio  = decode_for_whisper(f"{AUDIO_DIR}/{s['filename']}")
+        inputs = processor(audio, sampling_rate=WHISPER_SR, return_tensors='pt',
+                           return_attention_mask=True)
+        inputs = {k: v.to(device) for k, v in inputs.items()}
 
-        all_refs.extend(refs)
-        all_plain.extend(plain_preds)
-        all_kenlm.extend(kenlm_preds)
+        with torch.no_grad():
+            g = model.generate(**inputs, task='transcribe')
+        greedy = processor.batch_decode(g, skip_special_tokens=True)[0].strip().lower()
 
-    print('─' * 52)
-    print(f"{'OVERALL':<12} {len(all_refs):>4}  {compute_wer(all_refs, all_plain):>10.1%}  "
-          f"{compute_wer(all_refs, all_kenlm):>10.1%}")
-    print()
-    print("↓ = KenLM улучшил WER. Если ↑ — попробуй меньший --weight")
+        with torch.no_grad():
+            inj = model.generate(
+                **inputs, task='transcribe',
+                num_beams=args.beams,
+                logits_processor=[lp],
+                no_repeat_ngram_size=3,
+                condition_on_prev_tokens=False,
+            )
+        injection = processor.batch_decode(inj, skip_special_tokens=True)[0].strip().lower()
+
+        with torch.no_grad():
+            vc_out = model.generate(
+                **inputs, task='transcribe',
+                num_beams=args.beams,
+                logits_processor=[vc],
+                condition_on_prev_tokens=False,
+            )
+        vocab_pred = processor.batch_decode(vc_out, skip_special_tokens=True)[0].strip().lower()
+
+        nbest, _ = rescore_nbest(audio, processor, model, device, lm,
+                                 weight=args.weight, num_hyps=args.hyps)
+
+        refs.append(s['text'].strip().lower())
+        greedy_preds.append(greedy)
+        injection_preds.append(injection)
+        vocab_preds.append(vocab_pred)
+        nbest_preds.append(nbest)
+
+        print(f"  [{i+1}/{len(samples)}] {(time.perf_counter()-t0)/(i+1):.1f}s/sample", flush=True)
+
+    greedy_wer    = compute_wer(refs, greedy_preds)
+    injection_wer = compute_wer(refs, injection_preds)
+    vocab_wer     = compute_wer(refs, vocab_preds)
+    nbest_wer     = compute_wer(refs, nbest_preds)
+
+    def row(label, wer):
+        d = wer - greedy_wer
+        mark = f"↓ -{abs(d):.1%}" if d < -0.001 else (f"→  0.0%" if abs(d) < 0.001 else f"↑ +{d:.1%}")
+        print(f"  {label:<38} {wer:>6.1%}  {mark}")
+
+    print(f"\nResults ({len(samples)} samples):\n")
+    print(f"  {'Method':<38} {'WER':>6}  {'vs greedy'}")
+    print(f"  {'─'*38} {'─'*6}  {'─'*10}")
+    row("Greedy (baseline)", greedy_wer)
+    row(f"Vocab constraint (beams={args.beams})", vocab_wer)
+    row(f"Logits injection (beams={args.beams}, λ={args.weight})", injection_wer)
+    row(f"N-best rescoring (hyps={args.hyps}, λ={args.weight})", nbest_wer)
 
 
 if __name__ == '__main__':
