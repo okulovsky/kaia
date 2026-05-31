@@ -80,9 +80,9 @@ def endpoint(func=None, method: str | HttpMethod = HttpMethod.POST, content_type
     return decorator
 
 
-def websocket(func=None, content_type: str | None = None, verify_abstract: bool = True):
+def websocket(func=None, content_type: str | None = None, verify_abstract: bool = True, force_json_params: bool = False):
     """Marks a method as a WebSocket endpoint."""
-    attrs = EndpointAttributes(content_type=content_type, verify_abstract=verify_abstract, is_websocket=True)
+    attrs = EndpointAttributes(content_type=content_type, verify_abstract=verify_abstract, is_websocket=True, force_json_params=force_json_params)
     decorator = build_decorator(attrs)
     if func is not None:
         return decorator(func)

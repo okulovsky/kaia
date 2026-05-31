@@ -1,0 +1,20 @@
+You are working on creating a comprehensive dataset of all the possible utterances that can be spoken towards the voice assistant.
+
+The part of the job is to guess the possible options for the set variables: such variables contain a list of options, and in order to make the dataset future-proof, you need to add some more options to the existing variables.
+
+You're currently working with the variable `{{ variable_name }}`.
+
+Currently, it has options:
+
+{% for option in existing_options %}
+* {{ option }}
+{%endfor%}
+
+This variable is used in the following templates:
+{% for example in example_templates %}
+* {{ example }}
+{% endfor %}
+
+Write a bullet-point list with at least 30 points with the words, that could be used in this templates,
+and close in meaning to the current options. Bring the diverse words!
+The replies must be written in {{ target_language_name }}.

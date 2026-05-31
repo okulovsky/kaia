@@ -1,37 +1,51 @@
-from .case_builder import ParaphraseCase
-from ...common import CharaApis
-from ..common import ParaphraseFingerprint
+from chara.common import Chara
+from .uterance_paraphrase_case import UtteranceParaphraseCase
 from avatar.daemon.paraphrase_service import ParaphraseRecord, ParaphraseService
 import json
 import pickle
 from dataclasses import dataclass
 
+@dataclass(frozen=True)
+class ParaphraseFingerprint:
+    template_name: str
+    variables_tag: str
+    language: str
+    character: str|None
+    record: str|None
+
+    @staticmethod
+    def from_record(record: ParaphraseRecord) -> 'ParaphraseFingerprint':
+        return ParaphraseFingerprint(
+            record.original_template_name,
+            record.used_variables_tag,
+            record.language,
+            record.character,
+            record.user
+        )
+
+    @staticmethod
+    def from_case(case: UtteranceParaphraseCase) -> 'ParaphraseFingerprint':
+        return ParaphraseFingerprint(
+            case.original_template.get_name(),
+            case.parsed_template.variables_tag,
+            case.target_language_code,
+            None if case.character is None else case.character.name,
+            None if case.user is None else case.user.name
+        )
+
+
 @dataclass
 class ParaphraseStats:
-    case: ParaphraseCase
     fingerprint: ParaphraseFingerprint
     existing: int = 0
     seen: int = 0
 
-    @property
-    def availability(self) -> int:
-        return self.existing - self.seen
-
-
-def record_to_fingerprint(record) -> ParaphraseFingerprint:
-    return ParaphraseFingerprint(
-        record.original_template_name,
-        record.used_variables_tag,
-        record.language,
-        record.character,
-        record.user
-    )
 
 
 
 def _read_existing() -> list[ParaphraseRecord]:
     existing = []
-    rs = CharaApis.avatar_api.resources(ParaphraseService)
+    rs = Chara.Apis.avatar_api.resources(ParaphraseService)
     files = rs.list(
         '/',
         prefix=ParaphraseService.PARAPHRASES_PREFIX,
@@ -45,31 +59,31 @@ def _read_existing() -> list[ParaphraseRecord]:
 
 
 def _read_feedback() -> dict[str, dict[str, int]]:
-    rs = CharaApis.avatar_api.resources(ParaphraseService)
+    rs = Chara.Apis.avatar_api.resources(ParaphraseService)
     if not rs.is_file(ParaphraseService.FEEDBACK_FILENAME):
         return {}
     return json.loads(rs.read('paraphrases-feedback.json'))
 
 
-def _create_statistics(tasks: list[ParaphraseCase]) -> dict[ParaphraseFingerprint, ParaphraseStats]:
-    fp_to_task = {}
-    for index, task in enumerate(tasks):
-        fp = task.get_fingerprint()
-        if fp in fp_to_task:
+def _create_statistics(cases: tuple[UtteranceParaphraseCase,...]) -> dict[ParaphraseFingerprint, ParaphraseStats]:
+    fp_to_stat = {}
+    for case in cases:
+        fp = ParaphraseFingerprint.from_case(case)
+        if fp in fp_to_stat:
             raise ValueError(
-                f"Paraphrase-to-fingrprint must describe only one paraphrase\n{fp}\n{index}, {fp_to_task[fp][0]}")
-        fp_to_task[fp] = (index, task)
+                f"Paraphrase-to-fingrprint must describe only one paraphrase\n{fp}")
+        case.stats = ParaphraseStats(fp)
+        fp_to_stat[fp] = case.stats
 
-    fp_to_stat = {key: ParaphraseStats(value[1], key) for key, value in fp_to_task.items()}
     return fp_to_stat
 
 
 def _fill_statistics(
-        fp_to_stat: dict[ParaphraseFingerprint, ParaphraseStats]) -> list[ParaphraseStats]:
+        fp_to_stat: dict[ParaphraseFingerprint, ParaphraseStats]):
     name_to_fp = {}
 
     for record in _read_existing():
-        fp = record_to_fingerprint(record)
+        fp = ParaphraseFingerprint.from_record(record)
         name_to_fp[record.filename] = fp
         if fp not in fp_to_stat:
             continue
@@ -85,23 +99,12 @@ def _fill_statistics(
             continue
         fp_to_stat[fp].seen += fb['seen']
 
-    stats = list(fp_to_stat.values())
-    return stats
 
-def build_statistics(tasks: list[ParaphraseCase]) -> list[ParaphraseStats]:
+def build_statistics(tasks: tuple[UtteranceParaphraseCase,...]):
     stats = _create_statistics(tasks)
-    stats = _fill_statistics(stats)
-    return stats
+    _fill_statistics(stats)
+    return tasks
 
-
-def add_prior_result(stats: list[ParaphraseStats],
-                     prior_result: list[ParaphraseRecord]) -> None:
-    fp_to_stat = {s.fingerprint:s for s in stats}
-    for record in prior_result:
-        fp = record_to_fingerprint(record)
-        if fp not in fp_to_stat:
-            continue
-        fp_to_stat[fp].existing += 1
 
 
 def sort_statistics(stats: list[ParaphraseStats], only_completely_missing: bool) -> list[ParaphraseStats]:

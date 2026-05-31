@@ -26,15 +26,13 @@ class WavWrap(IDrawable):
 
     def to_html(self):
         b64 = self.to_base64()
-        return f"""
-    <figure>
-      <figcaption>{self.name}</figcaption>
-      <audio controls>
-        <source src="data:audio/wav;base64,{b64}" type="audio/wav">
-        Your browser does not support the audio element.
-      </audio>
-    </figure>
-    """.strip()
+        name = self.name or ''
+        return (
+            f'<figure style="margin:0">'
+            f'<figcaption style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{name}">{name}</figcaption>'
+            f'<audio controls style="width:100%"><source src="data:audio/wav;base64,{b64}" type="audio/wav"></audio>'
+            f'</figure>'
+        )
 
     def to_bytes(self) -> bytes:
         if self.content is None:

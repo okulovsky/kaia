@@ -1,6 +1,7 @@
 import hashlib
 import subprocess
 from pathlib import Path
+import os
 
 HASH_FILE = '.src_hash'
 
@@ -12,6 +13,20 @@ def _compute_folder_hash(folder: Path) -> str:
             hasher.update(path.relative_to(folder).as_posix().encode())
             hasher.update(path.read_bytes())
     return hasher.hexdigest()
+
+
+def _find_node() -> str:
+    node = os.environ['NODE_JS_PATH']
+    if not Path(node).is_file():
+        raise Exception(f"NODE_JS_PATH {node} is not a file")
+    return node
+
+
+def _find_npm() -> str:
+    npm = os.environ['NPM_PATH']
+    if not Path(npm).is_file():
+        raise Exception(f"NPM {npm} is not a file")
+    return npm
 
 
 def compile(src_folder: Path, dst_folder: Path):
@@ -29,11 +44,19 @@ def compile(src_folder: Path, dst_folder: Path):
 
     web_root = src_folder.parent
 
+    node = _find_node()
+    # Prepend node's bin dir to PATH so npm's shebang resolves the same node,
+    # not whatever system node is first in the inherited PATH.
+    node_bin_dir = str(Path(node).parent)
+    env = os.environ.copy()
+    env['PATH'] = node_bin_dir + os.pathsep + env.get('PATH', '')
+
     npm_install = subprocess.run(
-        ['npm', 'install'],
+        [_find_npm(), 'install', '--include=optional'],
         cwd=str(web_root),
         capture_output=True,
         text=True,
+        env=env,
     )
     if npm_install.returncode != 0:
         raise RuntimeError(f"npm install failed:\n{npm_install.stdout}\n{npm_install.stderr}")
@@ -42,16 +65,14 @@ def compile(src_folder: Path, dst_folder: Path):
     if not vite_js.exists():
         raise RuntimeError(f"Vite not found at {vite_js} even after npm install")
 
-    node = subprocess.check_output(['bash', '-ic', 'which node'], text=True).strip()
     result = subprocess.run(
         [node, str(vite_js), 'build', '--outDir', str(dst_folder)],
         cwd=str(web_root),
         capture_output=True,
         text=True,
+        env=env,
     )
     if result.returncode != 0:
         raise RuntimeError(f"vite build failed:\n{result.stdout}\n{result.stderr}")
 
     hash_file.write_text(src_hash)
-
-

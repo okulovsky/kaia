@@ -65,11 +65,11 @@ class HelloBrainBoxController(DockerMarshallingController[HelloBrainBoxSettings]
 
         training_id = api.add(HelloBrainBox.new_task().training(b'abcd'))
         while True:
-            status = api.tasks.get_job_summary(training_id)
+            status = api.jobs.get_job_summary(training_id)
             if status.progress is not None and status.progress > 0:
                 break
             time.sleep(0.1)
-        log = api.tasks.get_log(training_id)
+        log = api.jobs.get_log(training_id)
         tc.assertIsNotNone(log)
         tc.assertGreater(len(log), 0)
         result_file = api.join(training_id)
@@ -88,12 +88,12 @@ class HelloBrainBoxController(DockerMarshallingController[HelloBrainBoxSettings]
 
         failing_id = api.add(HelloBrainBox.new_task().training(b'abcd', raise_exception=True))
         while True:
-            status = api.tasks.get_job_summary(failing_id)
+            status = api.jobs.get_job_summary(failing_id)
             if status.finished_timestamp is not None:
                 break
             time.sleep(0.1)
         tc.assertFalse(status.success)
-        tc.assertIsNotNone(api.tasks.get_error(failing_id))
+        tc.assertIsNotNone(api.jobs.get_error(failing_id))
         logger.last_call(api)
 
 

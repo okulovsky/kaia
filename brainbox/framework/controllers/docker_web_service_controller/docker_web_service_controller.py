@@ -36,11 +36,11 @@ class DockerWebServiceController(DockerController[TSettings], ABC):
         return api
 
     @property
-    def address(self) -> str:
-        return f'127.0.0.1:{self.connection_settings.port}'
+    def base_url(self) -> str:
+        return f'http://127.0.0.1:{self.connection_settings.port}'
 
     def endpoint(self, endpoint=''):
-        return 'http://'+self.address + endpoint
+        return self.base_url + endpoint
 
     def wait_for_boot(self):
         ApiUtils.wait_for_reply(

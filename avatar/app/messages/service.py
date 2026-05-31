@@ -6,16 +6,23 @@ from .queue import Queue
 from datetime import datetime
 from time import monotonic, sleep
 from foundation_kaia.marshalling import TypeTools
+from pathlib import Path
+from .stasher import Stasher
 
 class AvatarMessagingService(IAvatarMessagingService):
     def __init__(self,
                  aliases: dict[str, type]|None = None,
                  ttl_in_seconds: int|None = 60*60,
-                 starting_messages: dict[str,tuple[IMessage,...]]|None = None
+                 starting_messages: dict[str,tuple[IMessage,...]]|None = None,
+                 messages_log_folder: Path|None = None
                  ):
         self.ttl_in_seconds = ttl_in_seconds
         self.aliases = aliases
         self.queues: dict[str, Any] = {}
+        if messages_log_folder is not None:
+            self.stasher = Stasher(messages_log_folder)
+        else:
+            self.stasher = None
 
         from .message_repository import AvatarMessageRepository
         if starting_messages is not None:
@@ -29,7 +36,10 @@ class AvatarMessagingService(IAvatarMessagingService):
             return TypeTools.type_to_full_name(self.aliases[t])
         return t
 
+
     def put(self, message: AvatarMessage):
+        if self.stasher is not None:
+            self.stasher.stash(message)
         if message.session not in self.queues:
             self.queues[message.session] = Queue(self.ttl_in_seconds)
         message.content_type = self._ensure_full_type(message.content_type)
@@ -66,9 +76,8 @@ class AvatarMessagingService(IAvatarMessagingService):
 
         begin_time = monotonic()
         while True:
-            current_len = len(queue)
-            if current_len > start_index:
-                messages = [queue[i] for i in range(start_index, current_len)]
+            messages = queue.get_from(start_index)
+            if messages:
                 if allowed_types is not None:
                     messages = [m for m in messages if any(m.content_type.endswith(t) for t in allowed_types)]
                 if messages:
@@ -96,17 +105,16 @@ class AvatarMessagingService(IAvatarMessagingService):
 
         if from_timestamp is not None:
             start = queue.find_index_from_timestamp(from_timestamp)
-            messages = [queue[i] for i in range(start, len(queue))]
+            messages = queue.get_from(start)
         elif count is not None:
             if allowed_types is not None:
-                messages = [queue[i] for i in range(queue.first_index, len(queue))]
+                messages = queue.get_from(queue.first_index)
                 messages = [m for m in messages if any(m.content_type.endswith(t) for t in allowed_types)]
                 messages = messages[-count:]
             else:
-                start = max(queue.first_index, len(queue) - count)
-                messages = [queue[i] for i in range(start, len(queue))]
+                messages = queue.get_from(queue.first_index)[-count:]
         else:
-            messages = [queue[i] for i in range(queue.first_index, len(queue))]
+            messages = queue.get_from(queue.first_index)
 
         if allowed_types is not None and from_timestamp is not None:
             messages = [m for m in messages if any(m.content_type.endswith(t) for t in allowed_types)]

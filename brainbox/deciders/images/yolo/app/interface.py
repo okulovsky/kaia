@@ -6,4 +6,5 @@ from foundation_kaia.brainbox_utils import brainbox_endpoint
 class IYolo:
     @brainbox_endpoint
     def analyze(self, image: FileLike, model: str | None = None) -> JSON:
+        """Runs object detection on an image using the specified YOLO model."""
         ...

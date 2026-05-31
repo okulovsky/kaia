@@ -1,7 +1,7 @@
 import re
 from dataclasses import dataclass
 
-WORD_PATTERN = re.compile("""[a-zA-Zа-яА-ЯёЁ]+(?:['-][a-zA-Zа-яА-ЯёЁ]+)*""")
+WORD_PATTERN = re.compile("""[a-zA-Zа-яА-ЯёЁäöüÄÖÜß]+(?:['-][a-zA-Zа-яА-ЯёЁäöüÄÖÜß]+)*""")
 
 class WordProcessor:
     @dataclass

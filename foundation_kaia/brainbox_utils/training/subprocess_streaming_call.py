@@ -1,4 +1,7 @@
+import os
+import signal
 import subprocess
+import threading
 from typing import Iterable, List, Union
 
 
@@ -32,9 +35,22 @@ def subprocess_streaming_call(
         stderr=subprocess.STDOUT,
         text=True,
         bufsize=1,  # line buffered
+        start_new_session=True,  # new process group so we can kill spawned children
     )
 
     assert proc.stdout is not None  # for typing
+
+    # When the main process exits, kill its entire process group so that any
+    # child processes (e.g. tensorboard) release their end of the stdout pipe
+    # and the line-iteration loop below can reach EOF.
+    def _kill_group_on_exit():
+        proc.wait()
+        try:
+            os.killpg(proc.pid, signal.SIGTERM)
+        except (ProcessLookupError, OSError):
+            pass
+
+    threading.Thread(target=_kill_group_on_exit, daemon=True).start()
 
     try:
         for line in proc.stdout:

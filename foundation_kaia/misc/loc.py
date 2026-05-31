@@ -48,6 +48,7 @@ class Locator:
         self._root_path = root_path
         load_dotenv(self._root_path/'environment.env')
 
+
     def _make_and_return(self, path) -> Path:
         os.makedirs(path, exist_ok=True)
         return path
@@ -57,14 +58,6 @@ class Locator:
         return self._make_and_return(self._root_path/'data')
 
     @property
-    def resources_folder(self) -> Path:
-        return self._make_and_return(self._root_path/'data/resources')
-
-    @property
-    def cache_folder(self) -> Path:
-        return self._make_and_return(self._root_path/'temp/brainbox_cache')
-
-    @property
     def temp_folder(self) -> Path:
         return self._make_and_return(self._root_path/'temp')
 
@@ -72,18 +65,10 @@ class Locator:
     def test_folder(self) -> Path:
         return self._make_and_return(self._root_path/'temp/tests')
 
-    @property
-    def self_test_path(self) -> Path:
-        return self._make_and_return(self._root_path/'data/brainbox_self_test')
-
-    @property
-    def db_path(self) -> Path:
-        return self.data_folder/'brainbox.db'
 
     @property
     def root_folder(self) -> Path:
         return self._root_path
-
 
     def create_test_file(self, extension_without_leading_dot: str|None = None, subfolder: str|None = None, dont_delete: bool = False) -> TempFile:
         path = self.test_folder

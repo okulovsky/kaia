@@ -6,6 +6,7 @@ from foundation_kaia.brainbox_utils import brainbox_endpoint
 class IChatterbox:
     @brainbox_endpoint
     def train(self, speaker: str, file: FileLike) -> None:
+        """Registers a reference audio file as a speaker voice for cloning."""
         ...
 
     @brainbox_endpoint(content_type='audio/wav')
@@ -17,4 +18,5 @@ class IChatterbox:
         exaggeration: float = 0.5,
         cfg_weight: float = 0.5,
     ) -> FileLike:
+        """Synthesizes speech for the given text using a cloned speaker voice."""
         ...

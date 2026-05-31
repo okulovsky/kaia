@@ -17,24 +17,34 @@ def make_msg_ts(id: str, ts: datetime) -> AvatarMessage:
 
 class TestQueue(TestCase):
 
-    def test_empty_queue_has_zero_len(self):
+    def test_empty_queue_returns_empty_get_from(self):
         q = Queue(60)
-        self.assertEqual(0, len(q))
+        self.assertEqual([], q.get_from(0))
 
-    def test_add_increments_len(self):
+    def test_add_increments_get_from_count(self):
         q = Queue(60)
         q.add(make_msg('1'))
         q.add(make_msg('2'))
-        self.assertEqual(2, len(q))
+        self.assertEqual(2, len(q.get_from(0)))
 
-    def test_getitem_returns_correct_message(self):
+    def test_get_from_returns_correct_messages(self):
         q = Queue(60)
         m0 = make_msg('0')
         m1 = make_msg('1')
         q.add(m0)
         q.add(m1)
-        self.assertIs(m0, q[0])
-        self.assertIs(m1, q[1])
+        self.assertIs(m0, q.get_from(0)[0])
+        self.assertIs(m1, q.get_from(0)[1])
+
+    def test_get_from_partial_range(self):
+        q = Queue(60)
+        m0 = make_msg('0')
+        m1 = make_msg('1')
+        q.add(m0)
+        q.add(m1)
+        result = q.get_from(1)
+        self.assertEqual(1, len(result))
+        self.assertIs(m1, result[0])
 
     def test_get_index_returns_absolute_index(self):
         q = Queue(60)
@@ -60,8 +70,7 @@ class TestQueue(TestCase):
         q.add(make_msg('old'))
         sleep(0.1)
         q.add(make_msg('new'))   # triggers cleanup
-        # len() returns absolute upper bound; accessible count = len - first_index
-        self.assertEqual(1, len(q) - q.first_index)
+        self.assertEqual(1, len(q.get_from(q.first_index)))
         self.assertIsNone(q.get_index('old'))
 
     def test_first_index_advances_after_ttl(self):
@@ -73,15 +82,15 @@ class TestQueue(TestCase):
         q.add(make_msg('c'))     # removes 'a' and 'b'
         self.assertEqual(2, q.first_index)
 
-    def test_getitem_uses_absolute_index_after_ttl(self):
-        """After TTL removes 2 items, the new message is accessible at absolute index 2."""
+    def test_get_from_uses_absolute_index_after_ttl(self):
+        """After TTL removes 2 items, the new message is accessible via get_from at absolute index 2."""
         q = Queue(0.05)
         q.add(make_msg('a'))
         q.add(make_msg('b'))
         sleep(0.1)
         m = make_msg('c')
         q.add(m)
-        self.assertIs(m, q[2])
+        self.assertIs(m, q.get_from(2)[0])
 
     def test_get_index_stable_after_ttl(self):
         """get_index on a surviving message must equal first_index after earlier items expire."""
@@ -93,7 +102,7 @@ class TestQueue(TestCase):
         q.add(m)
         idx = q.get_index('c')
         self.assertEqual(q.first_index, idx)
-        self.assertIs(m, q[idx])
+        self.assertIs(m, q.get_from(idx)[0])
 
     def test_expired_id_not_found_after_ttl(self):
         q = Queue(0.05)
@@ -102,6 +111,19 @@ class TestQueue(TestCase):
         q.add(make_msg('new'))
         self.assertIsNone(q.get_index('old'))
         self.assertIsNotNone(q.get_index('new'))
+
+    def test_get_from_clamps_to_available_messages(self):
+        """get_from with a start before offset must not crash and return available messages."""
+        q = Queue(0.05)
+        q.add(make_msg('a'))
+        q.add(make_msg('b'))
+        sleep(0.1)
+        m = make_msg('c')
+        q.add(m)
+        # start=0 is before the new offset=2; should safely return only 'c'
+        result = q.get_from(0)
+        self.assertEqual(1, len(result))
+        self.assertIs(m, result[0])
 
     # --- find_index_from_timestamp ---
 
@@ -150,7 +172,7 @@ class TestQueue(TestCase):
         self.assertEqual(1, q.find_index_from_timestamp(t2))
         self.assertEqual(2, q.find_index_from_timestamp(t3))
 
-    def test_concurrent_adds_do_not_corrupt_length(self):
+    def test_concurrent_adds_do_not_corrupt_count(self):
         q = Queue(60)
         n = 200
         threads = [threading.Thread(target=lambda i=i: q.add(make_msg(str(i)))) for i in range(n)]
@@ -158,4 +180,4 @@ class TestQueue(TestCase):
             t.start()
         for t in threads:
             t.join()
-        self.assertEqual(n, len(q))
+        self.assertEqual(n, len(q.get_from(0)))

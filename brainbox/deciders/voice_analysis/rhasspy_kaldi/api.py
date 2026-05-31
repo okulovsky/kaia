@@ -11,27 +11,30 @@ from .model import RhasspyKaldiModel
 class IRhasspyKaldi:
     @brainbox_endpoint
     def train(self, model: str, language: str, sentences: str, custom_words: dict[str, str]|None = None) -> dict:
+        """Trains an intent-aware ASR model from a sentences grammar."""
         ...
 
     @brainbox_endpoint
     def transcribe(self, file: FileLike, model: str) -> dict:
+        """Transcribes audio using a previously trained model."""
         ...
 
     @brainbox_endpoint
     def phonemes(self, language: str) -> str:
+        """Returns the phoneme inventory for a language."""
         ...
 
 
 class RhasspyKaldiApi(DockerWebServiceApi[RhasspyKaldiSettings, RhasspyKaldiController], IRhasspyKaldi):
-    def __init__(self, address: str | None = None):
-        super().__init__(address)
+    def __init__(self, base_url: str | None = None):
+        super().__init__(base_url)
 
     def train(self, model: str, language: str, sentences: str, custom_words: dict[str, str]|None = None):
         if custom_words is not None:
             custom_words_str = '\n'.join(f'{k} {v}' for k, v in custom_words.items())
         else:
             custom_words_str = ''
-        reply = requests.post(f'http://{self.address}/train/{language}/{model}', json=dict(sentences=sentences, custom_words=custom_words_str))
+        reply = requests.post(f'{self.base_url}/train/{language}/{model}', json=dict(sentences=sentences, custom_words=custom_words_str))
         if reply.status_code != 200:
             raise ValueError(f"RhasspyKaldi couldn't train for {language}/{model}\n{reply.text}")
         return reply.json()
@@ -39,7 +42,7 @@ class RhasspyKaldiApi(DockerWebServiceApi[RhasspyKaldiSettings, RhasspyKaldiCont
     def transcribe(self, file: FileLike, model: str):
         file_iterable = b''.join(brainbox_file_like_to_bytes_iterable(file, self.cache_folder))
         reply = requests.post(
-            f'http://{self.address}/transcribe/{model}',
+            f'{self.base_url}/transcribe/{model}',
             files=(('file', file_iterable),)
         )
         if reply.status_code != 200:
@@ -47,7 +50,7 @@ class RhasspyKaldiApi(DockerWebServiceApi[RhasspyKaldiSettings, RhasspyKaldiCont
         return reply.json()
 
     def phonemes(self, language: str):
-        return requests.get(f'http://{self.address}/phonemes/{language}').text
+        return requests.get(f'{self.base_url}/phonemes/{language}').text
 
 
 class RhasspyKaldiTaskBuilder(TaskBuilder, IRhasspyKaldi):

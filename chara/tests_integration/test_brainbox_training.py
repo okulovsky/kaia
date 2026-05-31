@@ -1,6 +1,6 @@
 from brainbox import BrainBox
 from brainbox.deciders import HelloBrainBox
-from chara.common import CharaApis
+from chara.common import Chara.Apis
 from chara.common.pipelines.brainbox_training.brainbox_training_unit import BrainBoxTrainingCache
 from foundation_kaia.misc import Loc
 from unittest import TestCase
@@ -9,7 +9,7 @@ from unittest import TestCase
 class HelloBrainBoxTrainingTestCase(TestCase):
     def test_training_success(self):
         with BrainBox.Api.Test() as api:
-            CharaApis.brainbox_api = api
+            Chara.Apis.brainbox_api = api
             with Loc.create_test_folder() as folder:
                 cache = BrainBoxTrainingCache(folder / 'success')
                 cache.pipeline(BrainBox.Task.call(HelloBrainBox).training(b'abcd'))
@@ -21,7 +21,7 @@ class HelloBrainBoxTrainingTestCase(TestCase):
 
     def test_training_exception(self):
         with BrainBox.Api.Test() as api:
-            CharaApis.brainbox_api = api
+            Chara.Apis.brainbox_api = api
             with Loc.create_test_folder() as folder:
                 cache = BrainBoxTrainingCache(folder / 'exception')
                 cache.pipeline(BrainBox.Task.call(HelloBrainBox).training(b'abcd', raise_exception=True))

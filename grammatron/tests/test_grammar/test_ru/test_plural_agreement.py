@@ -1,5 +1,5 @@
 from grammatron import *
-from grammatron.grammars.ru import RuPluralAgreement, RuDeclension, RuGrammarRule
+from grammatron.grammars.ru import RuPluralAgreement, RuCase, RuGrammarRule
 from unittest import TestCase
 from enum import Enum
 
@@ -22,13 +22,13 @@ class RuPluralAgreementTestCase(TestCase):
         self.assertEqual('пятнадцать булочек', ag.to_str(dict(amount=15), PARAMETERS))
 
     def test_with_declension(self):
-        ag = RuPluralAgreement(CardinalDub().as_variable('amount'), "булочка").grammar.ru(declension=RuDeclension.INSTRUMENTAL)
+        ag = RuPluralAgreement(CardinalDub().as_variable('amount'), "булочка").grammar.ru(case=RuCase.INSTRUMENTAL)
         self.assertEqual('двадцатью одной булочкой', ag.to_str(dict(amount=21), PARAMETERS))
         self.assertEqual('двадцатью двумя булочками', ag.to_str(dict(amount=22), PARAMETERS))
         self.assertEqual('двадцатью пятью булочками', ag.to_str(dict(amount=25), PARAMETERS))
 
     def test_with_enum(self):
-        ag = RuPluralAgreement(CardinalDub().as_variable('amount'), OptionsDub(Things).as_variable('item')).grammar.ru(declension=RuDeclension.INSTRUMENTAL)
+        ag = RuPluralAgreement(CardinalDub().as_variable('amount'), OptionsDub(Things).as_variable('item')).grammar.ru(case=RuCase.INSTRUMENTAL)
         self.assertEqual('тремя столами', ag.to_str(dict(amount=3, item=Things.m), PARAMETERS))
         self.assertEqual('пятью кроватями', ag.to_str(dict(amount=5, item=Things.f), PARAMETERS))
         self.assertEqual('одним окном', ag.to_str(dict(amount=1, item=Things.n), PARAMETERS))

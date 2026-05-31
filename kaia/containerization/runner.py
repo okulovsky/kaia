@@ -46,6 +46,8 @@ class KaiaRunner(IContainerRunner):
             *self._get_user(executor),
             *restart,
             *env_variables,
+            '-v /etc/localtime:/etc/localtime:ro',
+            '-v /etc/timezone:/etc/timezone:ro',
             image_name,
             '--data-folder',
             str(self.folder),

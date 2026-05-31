@@ -1,27 +1,27 @@
-from .annotation_cache import AnnotationStatus
-from .annotator import TCache
+from .annotation_cache import IAnnotationCache
+from .annotator import TCase
 from typing import Generic, Any, TypeVar
 from abc import ABC, abstractmethod
 
 TTask = TypeVar('TTask')
 
-class ITaskPlanner(Generic[TCache, TTask], ABC):
+class ITaskPlanner(Generic[TCase], ABC):
     @abstractmethod
-    def setup(self, cache: TCache, tasks: dict[str, TTask]):
+    def setup(self, cache: IAnnotationCache, tasks: list[TCase]):
         ...
 
     @abstractmethod
-    def get_next(self):
+    def get_next(self) -> str|None:
         ...
 
 
-class SimpleTaskPlanner(Generic[TCache, TTask], ITaskPlanner[TCache, TTask]):
+class SimpleTaskPlanner(Generic[TCase], ITaskPlanner[TCase]):
     def __init__(self):
-        self.cache: TCache|None = None
+        self.cache: IAnnotationCache|None = None
 
-    def setup(self, cache: TCache, tasks: dict[str, Any]):
-        self.cache: TCache = cache
-        self.tasks = tasks
+    def setup(self, cache: IAnnotationCache, cases: list[TCase]):
+        self.cache: IAnnotationCache = cache
+        self.cases = {c.get_id(): c for c in cases}
 
     def get_next(self):
         statuses = self.cache.get_annotation_status()
@@ -32,7 +32,7 @@ class SimpleTaskPlanner(Generic[TCache, TTask], ITaskPlanner[TCache, TTask]):
                 annotated.add(id)
             id_to_skip[id] = s.skipped_times
 
-        free_ids = [id for id in self.tasks if id not in annotated]
+        free_ids = [id for id in self.cases if id not in annotated]
         if len(free_ids) == 0:
             return None
         free_id_to_skip = {id: id_to_skip.get(id, 0) for id in free_ids}

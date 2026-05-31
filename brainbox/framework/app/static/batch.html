@@ -17,8 +17,10 @@
   .status-in_work { color: #0066cc; font-weight: bold; }
   .status-success { color: #2e7d32; }
   .status-failure { color: #c62828; font-weight: bold; }
-  .error-row td { background: #fff3f3; color: #c62828; font-size: 0.85em; padding: 4px 12px; font-family: monospace; white-space: pre-wrap; }
   button { padding: 4px 10px; cursor: pointer; }
+  #controls { margin-bottom: 8px; display: flex; align-items: center; gap: 16px; }
+  #status { color: #555; font-size: 0.9em; }
+  label { font-size: 0.9em; color: #555; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -26,8 +28,12 @@
 <nav>
   <a href="/static/batches.html">All Batches</a>
   <a href="/static/operator_log.html">Operator Log</a>
+  <a href="/doc/html">API Documentation</a>
 </nav>
-<div id="status">Loading...</div>
+<div id="controls">
+  <span id="status">Loading...</span>
+  <label><input type="checkbox" id="freeze"> Freeze</label>
+</div>
 <table id="jobs-table">
   <thead>
     <tr>
@@ -59,9 +65,28 @@ function fmtNum(n) {
   return n.toFixed(2);
 }
 
+function jobStatus(j) {
+  if (j.finished_timestamp !== null && j.finished_timestamp !== undefined) return j.success ? 'success' : 'failure';
+  if (j.accepted_timestamp !== null && j.accepted_timestamp !== undefined) return 'in_work';
+  return 'waiting';
+}
+
+function inQueue(j) {
+  if (!j.accepted_timestamp) return null;
+  return (new Date(j.accepted_timestamp) - new Date(j.received_timestamp)) / 1000;
+}
+
+function inWork(j) {
+  if (!j.accepted_timestamp) return null;
+  const start = new Date(j.accepted_timestamp);
+  const end = j.finished_timestamp ? new Date(j.finished_timestamp) : new Date();
+  return (end - start) / 1000;
+}
+
 async function loadJobs() {
+  if (document.getElementById('freeze').checked) return;
   try {
-    const resp = await fetch('/jobs-service/get-jobs/' + encodeURIComponent(batchId));
+    const resp = await fetch('/batches-service/get-job-summaries-by-batch/' + encodeURIComponent(batchId));
     if (!resp.ok) { document.getElementById('status').textContent = 'Error: ' + resp.status; return; }
     const jobs = await resp.json();
     document.getElementById('status').textContent = 'Last update: ' + new Date().toLocaleTimeString() + ' (' + jobs.length + ' jobs)';
@@ -71,12 +96,15 @@ async function loadJobs() {
       const tr = document.createElement('tr');
 
       const tdId = document.createElement('td');
-      tdId.textContent = j.id.substring(0, 12) + '...';
-      tdId.title = j.id;
+      const link = document.createElement('a');
+      link.href = '/static/job.html?id=' + encodeURIComponent(j.id);
+      link.textContent = j.id.substring(0, 12) + '...';
+      link.title = j.id;
+      tdId.appendChild(link);
       tr.appendChild(tdId);
 
       const tdDec = document.createElement('td');
-      tdDec.textContent = j.decider;
+      tdDec.textContent = j.method ? j.decider + ':' + j.method : j.decider;
       tr.appendChild(tdDec);
 
       const tdRec = document.createElement('td');
@@ -84,16 +112,17 @@ async function loadJobs() {
       tr.appendChild(tdRec);
 
       const tdQ = document.createElement('td');
-      tdQ.textContent = fmtNum(j.in_queue);
+      tdQ.textContent = fmtNum(inQueue(j));
       tr.appendChild(tdQ);
 
       const tdW = document.createElement('td');
-      tdW.textContent = fmtNum(j.in_work);
+      tdW.textContent = fmtNum(inWork(j));
       tr.appendChild(tdW);
 
+      const status = jobStatus(j);
       const tdSt = document.createElement('td');
-      tdSt.textContent = j.status;
-      tdSt.className = 'status-' + j.status;
+      tdSt.textContent = status;
+      tdSt.className = 'status-' + status;
       tr.appendChild(tdSt);
 
       const tdProg = document.createElement('td');
@@ -106,7 +135,7 @@ async function loadJobs() {
       cancelBtn.onclick = async () => {
         cancelBtn.disabled = true;
         try {
-          await fetch('/jobs-service/cancel?job_id=' + encodeURIComponent(j.id), { method: 'POST' });
+          await fetch('/jobs-service/cancel-job?job_id=' + encodeURIComponent(j.id), { method: 'POST' });
         } finally {
           cancelBtn.disabled = false;
           loadJobs();
@@ -116,16 +145,6 @@ async function loadJobs() {
       tr.appendChild(tdAct);
 
       tbody.appendChild(tr);
-
-      if (j.error) {
-        const errTr = document.createElement('tr');
-        errTr.className = 'error-row';
-        const errTd = document.createElement('td');
-        errTd.colSpan = 8;
-        errTd.innerHTML = 'Error: ' + j.error.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
-        errTr.appendChild(errTd);
-        tbody.appendChild(errTr);
-      }
     }
   } catch (e) {
     document.getElementById('status').textContent = 'Error: ' + e.message;

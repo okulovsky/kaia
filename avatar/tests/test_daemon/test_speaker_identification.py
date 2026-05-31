@@ -1,10 +1,9 @@
 import os
 from unittest import TestCase
 from avatar.messaging import *
-from avatar.daemon import SpeakerIdentificationService, BrainBoxService, State, SoundEvent, InitializationEvent
+from avatar.daemon import SpeakerIdentificationService, State, SoundEvent, InitializationEvent
 from avatar.app import AvatarApi
 from avatar.daemon.common.vector_identificator import BestOfStrategy
-from yo_fluq import Query
 from foundation_kaia.misc import Loc
 from pathlib import Path
 from yo_fluq import FileIO
@@ -28,32 +27,34 @@ def prepare_folder(folder):
 
 class SpeakerIdentificationTestCase(TestCase):
     def test_speaker_identification(self):
-        with AvatarApi.test() as api:
-            with Loc.create_test_folder() as folder:
-                prepare_folder(folder)
-
-                service = SpeakerIdentificationService(api, BestOfStrategy(4))
-                service.set_resources_folder(folder)
-                service.sample_to_vector = make_sample_to_vector
-                client = api.create_client()
-                proc = AvatarDaemon(client.clone_client(), timeout_in_pull_in_seconds=0)
-                proc.rules.bind(service)
-                proc.debug_and_stop_by_count(1, InitializationEvent())
-                self.assertIsNotNone(service.vector_identificator.df)
-                df = service.vector_identificator.df.sort_index()
-                self.assertEqual(['A','A','A','B','B','B'], list(df.index))
-                self.assertEqual([1, 1, 1, 0, 0, 0], list(df[0]))
-                self.assertEqual([0, 0, 0, 1, 1, 1], list(df[1]))
-
-
-                result = proc.debug_and_stop_by_count(1, SpeakerIdentificationService.Command('1_10')).messages
-                self.assertEqual('B', result[-1].result)
-
-    def test_train(self):
         with Loc.create_test_folder() as avatar_cache_folder:
             with AvatarApi.test(avatar_cache_folder) as api:
                 with Loc.create_test_folder() as folder:
-                    prepare_folder(folder)
+                    prepare_folder(folder/'current')
+
+                    service = SpeakerIdentificationService(api, BestOfStrategy(4))
+                    service.set_resources_folder(folder)
+                    service.sample_to_vector = make_sample_to_vector
+                    client = api.create_client()
+                    proc = AvatarDaemon(client.clone_client(), timeout_in_pull_in_seconds=0)
+                    proc.rules.bind(service)
+                    proc.debug_and_stop_by_count(1, InitializationEvent())
+                    self.assertIsNotNone(service.vector_identificator.df)
+                    df = service.vector_identificator.df.sort_index()
+                    self.assertEqual(['A','A','A','B','B','B'], list(df.index))
+                    self.assertEqual([1, 1, 1, 0, 0, 0], list(df[0]))
+                    self.assertEqual([0, 0, 0, 1, 1, 1], list(df[1]))
+
+
+                    result = proc.debug_and_stop_by_count(1, SpeakerIdentificationService.Command('1_10')).messages
+                    self.assertEqual('B', result[-1].result)
+
+    def test_train(self):
+        with Loc.create_test_folder() as avatar_cache_folder:
+
+            with AvatarApi.test(avatar_cache_folder) as api:
+                with Loc.create_test_folder() as folder:
+                    prepare_folder(folder/'current')
 
                     service = SpeakerIdentificationService(api, BestOfStrategy(4))
                     service.sample_to_vector = make_sample_to_vector

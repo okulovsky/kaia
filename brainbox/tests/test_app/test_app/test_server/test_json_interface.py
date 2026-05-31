@@ -32,14 +32,14 @@ class JsonInterfaceTestCase(TestCase):
             }
 
             reply = requests.post(
-                f'http://127.0.0.1:{PORT}/tasks-service/base-add',
+                f'http://127.0.0.1:{PORT}/jobs-service/base-add',
                 json=body,
             )
             if reply.status_code != 200:
                 self.fail(f'base-add failed: {reply.text}')
 
             reply = requests.post(
-                f'http://127.0.0.1:{PORT}/tasks-service/base-join',
+                f'http://127.0.0.1:{PORT}/jobs-service/base-join',
                 json={"ids": ["test"]},
             )
             if reply.status_code != 200:

@@ -151,7 +151,8 @@ class CollectorWithMediaLibraryTestCase(TestCase):
                         BrainBox.TaskBuilder.call(FakeFile).run(dict(prefix=z["prefix"])),
                         z
             )))
-            api.execute(builder.to_collector_pack('to_media_library'))
-            summaries = api.tasks.get_summaries()
+            id = api.add(builder.to_collector_pack('to_media_library'))
+            api.join(id)
+            summaries = api.batches.get_job_summaries_by_batch(id)
             batches = set(s.batch for s in summaries)
             self.assertEqual(1, len(batches))

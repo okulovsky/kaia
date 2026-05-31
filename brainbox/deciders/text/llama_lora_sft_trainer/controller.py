@@ -85,7 +85,7 @@ class LlamaLoraSFTTrainerController(DockerMarshallingController[LlamaLoraSFTTrai
         except Exception:
             if id is not None:
                 from pprint import pprint
-                pprint(api.tasks.get_log(id))
+                pprint(api.jobs.get_log(id))
             raise
 
         training_run = None

@@ -37,11 +37,21 @@ def ws_endpoint(data: EndpointRegistrationData) -> Callable:
             await websocket.close()
             return
 
-        # Receive files (in declaration order)
+        # Receive files in chunks (client sends binary frames followed by a 'file_end' text frame)
         for file_arg in model.params.file_params:
             meta = json.loads(await websocket.receive_text())
             name = meta['name']
-            kwargs[name] = await websocket.receive_bytes()
+            chunks = []
+            while True:
+                msg = await websocket.receive()
+                if msg.get('bytes'):
+                    chunks.append(msg['bytes'])
+                elif msg.get('text'):
+                    parsed = json.loads(msg['text'])
+                    if parsed['type'] == 'file_end':
+                        break
+                    raise ValueError(f"Unexpected message while receiving file '{name}': {parsed}")
+            kwargs[name] = b''.join(chunks)
 
         # Set up input stream queue if an input stream is expected
         input_queue: QueueIterable | None = None

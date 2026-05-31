@@ -32,3 +32,8 @@ class HelloBrainBoxService(IHelloBrainBox):
     def training(self, dataset: FileLike, raise_exception: bool = False, pause: float = 0.1, steps: int = 10) -> Iterable[BrainboxReportItem[str]]:
         FileLikeHandler.write(dataset, "/resources/dataset")
         return HelloBrainBoxTrainingProcess(raise_exception, pause, steps).start_process('/resources/log.html')
+
+    def voice_clone(self, original: FileLike, model: str|None = None) -> FileLike:
+        text = FileLikeHandler.to_bytes(original).decode('utf-8')
+        m = self.storage.get_model(model)
+        return json.dumps(dict(text=text, model=str(m))).encode()

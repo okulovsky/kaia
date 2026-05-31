@@ -1,3 +1,49 @@
+5.0.2
+    Foundation
+        - small fixes
+    BrainBox
+        - Improved GUI
+        - ComfyUI and OneTrainer deciders
+    Chara
+        - LoRA training for the character
+    Avatar
+        - Race condition fixed
+
+
+5.0.1
+    Chara
+        Contains voice- and face identification pipelines
+        Cache invalidation can now be done manually, with cache consistency enforcing before running
+    Kaia
+        Deploys with a local Docker repository instead of a hacky rsync deployment
+        NODE_JS_PATH and NPM_PATH are now needed to be supplied in env variables, documentation is updated
+        Documentation contains the detailed instructions of how to use Kaia in multi-user environment
+
+5.0.0
+    EVERYTHING HAS CHANGED
+    foundation_kaia
+        Now contains a `marshalling` module that can:
+            analyze the classes and give the precise generic-aware descriptions of types and objects
+            serialize dataclasses, sqlalchemy entities, and some primitives (datetime, Path, enums) in JSON
+            declare interfaces and build API and flask-based web-servers that handle complex JSONs, files and streaming
+            build documentation for such APIs
+    brainbox
+        All the deciders are switched to the `marshalling` and thus greatly simplified
+        Installation, model loading, etc are standardized and now every decider is completely functional outside of BrainBox
+        BrainBox API and Server are switched to `marshalling` and documented
+        A decent GUI is designed
+    avatar
+        Switched to the new marhsalling too
+        Now contains web components interacting with common bus, including web-camera and microphone control
+    grammatron
+        Now supports German language
+    kaia
+        Running and deployment procedures are greatly simplified, documentation is now available
+    chara
+        Completely refactored, now uses the lightweight caching approach
+        Pipelines for voice cloning and paraphrasing are documented and tested
+
+
 4.0.9
     Brainbox
         CoquiTTS and Zonos are now working with the latest pytorch

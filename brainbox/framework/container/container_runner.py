@@ -1,0 +1,75 @@
+import os
+
+from brainbox.framework.deployment import IContainerRunner, DockerArgumentsHelper, Deployment, LocalImageSource, LocalExecutor
+from dataclasses import dataclass
+from brainbox.framework import IExecutor, Command
+from pathlib import Path
+from .container_builder import BrainBoxImageBuilder
+from enum import Enum
+
+class BrainBoxRunnerPlaner(Enum):
+    single = 'standard'
+    always_on_find_only = 'always_on_find_only'
+    always_on_start_only = 'always_on_start_only'
+    always_on_find_then_start = 'always_on_find_then_start'
+
+
+
+
+@dataclass
+class BrainBoxRunner(IContainerRunner):
+    folder: Path
+    port: int = 18090
+    auto_restart: bool = False
+    user_id: str|None = None
+    docker_group_id: str|None = None
+    debug: bool = False
+    planer: BrainBoxRunnerPlaner = BrainBoxRunnerPlaner.single
+
+    def _get_user(self, executor: IExecutor):
+        if self.user_id is not None:
+            user_id = self.user_id
+        else:
+            user_id = int(executor.execute(['id','-u'], Command.Options(return_output=True)).strip())
+        if self.docker_group_id is not None:
+            docker_group_id = self.docker_group_id
+        else:
+            docker = executor.execute(['getent', 'group', 'docker'], Command.Options(return_output=True)).strip()
+            docker_group_id = int(docker.split(':')[2])
+        return ['--user', f'{user_id}:{docker_group_id}']
+
+
+    def run(self, image_name: str, container_name: str, executor: IExecutor):
+        #os.makedirs(self.folder, exist_ok=True)
+        restart = ['--restart', 'unless-stopped'] if self.auto_restart and not self.debug else []
+
+
+        command = [
+            'docker',
+            'run',
+            '--name',
+            container_name,
+            '--mount',
+            DockerArgumentsHelper.arg_mount(self.folder, self.folder),
+            '--network',
+            'host',
+            *(['--detach'] if not self.debug else ['--rm']),
+            '-v',
+            '/var/run/docker.sock:/var/run/docker.sock',
+            *self._get_user(executor),
+            *restart,
+            image_name,
+            '--data-folder',
+            str(self.folder),
+            '--port',
+            str(self.port),
+            '--planer',
+            str(self.planer.value),
+        ]
+        #print(command)
+        executor.execute(command)
+
+
+
+
+

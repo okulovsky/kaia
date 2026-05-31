@@ -1,2 +1,2 @@
-from .settings import DistillationSettings, LanguageSettings
-from .cache import DistillationCache
+from .distillation import DistillationPipeline
+from .settings import LanguageSettings, DistillationSettings

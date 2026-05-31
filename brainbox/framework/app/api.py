@@ -3,13 +3,14 @@ from __future__ import annotations
 import os
 
 from .diagnostics import IDiagnosticsService, DiagnosticsApi
-from .tasks import TasksApi, ITasksService
+from .jobs import JobsApi, IJobsService
 from .controllers import ControllersApi
 from .batches import BatchesApi, IBatchesService
 from foundation_kaia.marshalling import StorageApi, IStorage, StorageApiWrap, TestApi, ApiUtils
 from brainbox.framework.common.streaming import StreamingStorageApi, IStreamingStorage
 from brainbox.framework.common import BrainBoxLocations
 from typing import Any, Iterable, Union
+from uuid import uuid4
 from brainbox.framework.task import IJobRequestFactory
 from ..controllers import ControllerRegistry, ControllerLike
 import functools
@@ -31,7 +32,7 @@ def _make_brainbox_api(url, locations, resources_folder):
 class BrainBoxApi:
     def __init__(self, base_url: str):
         self.base_url = base_url
-        self.tasks: ITasksService = TasksApi(base_url)
+        self.jobs: IJobsService = JobsApi(base_url)
         self.diagnostics: IDiagnosticsService = DiagnosticsApi(base_url)
         self.controllers = ControllersApi(base_url)
         self.batches: IBatchesService = BatchesApi(base_url)
@@ -111,12 +112,15 @@ class BrainBoxApi:
         resulting_ids = []
         for stack in request_stack:
             for job in stack.jobs:
+                if job.id is None:
+                    job.id = str(uuid4())
+            for job in stack.jobs:
                 if job.batch is None:
                     job.batch = stack.main_id
             resulting_ids.append(stack.main_id)
             all_jobs.extend(stack.jobs)
 
-        self.tasks.base_add(list(reversed(all_jobs)))
+        self.jobs.base_add(list(reversed(all_jobs)))
         if len(request_stack) == 1:
             return resulting_ids[0]
         else:
@@ -132,7 +136,7 @@ class BrainBoxApi:
             except:
                 raise ValueError(f"Task is expected to be str (job id), IBrainBoxTask or Iterable, but was {task}")
             not_list = False
-        result = self.tasks.base_join(ids)
+        result = self.jobs.base_join(ids)
         if not_list:
             return result[0]
         return result

@@ -32,5 +32,6 @@ class HelloBrainBoxEntryPoint(EntryPoint[HelloBrainBoxTaskBuilder]):
         self.Models = HelloBrainBoxModels
         self.Settings = HelloBrainBoxSettings
         self.Controller = HelloBrainBoxController
+        self.ModelSpec = HelloBrainBoxModelSpec
 
 HelloBrainBox = HelloBrainBoxEntryPoint()

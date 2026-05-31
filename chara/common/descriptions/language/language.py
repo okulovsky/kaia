@@ -16,6 +16,7 @@ _REPlACEMENTS = {
 
 @dataclass
 class Language:
+    code: str
     name: str
     words_symbols: set[str] = field(default_factory=set)
     sentence_symbols: set[str] = field(default_factory=lambda: set(',.-'))
@@ -35,23 +36,23 @@ class Language:
 
     @property
     def espeak_name(self) -> str:
-        return self.name
+        return self.code
 
     @property
     def chatterbox_name(self) -> str:
-        return self.name
+        return self.code
 
     @property
     def zonos_name(self) -> str:
-        return self.name
+        return self.code
 
     @property
     def xtts_name(self) -> str:
-        return self.name
+        return self.code
 
     @property
     def vosk_name(self) -> str:
-        return self.name
+        return self.code
 
     @staticmethod
     def English() -> 'Language':
@@ -64,3 +65,13 @@ class Language:
     @staticmethod
     def Russian() -> "Language":
         return russian()
+
+    @staticmethod
+    def from_code(code: str):
+        if code == 'ru':
+            return Language.Russian()
+        elif code == 'en':
+            return Language.English()
+        elif code == 'de':
+            return Language.German()
+        raise ValueError(f"Language {code} is not supported")

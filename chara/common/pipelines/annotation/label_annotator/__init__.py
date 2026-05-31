@@ -1,3 +1,5 @@
 from .annotation_cache import LabelAnnotationCache
 from .label_annotator import LabelAnnotator, LabelAnnotatorSettings
 from .text_label_annotator import TextLabelAnnotator
+from .image_label_annotator import ImageLabelAnnotator
+from .audio_label_annotator import AudioLabelAnnotator

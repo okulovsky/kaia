@@ -19,14 +19,15 @@ class RequestDocumentation:
     @staticmethod
     def parse(call: CallModel) -> 'RequestDocumentation':
         url = call.base_url + call.content.url
-        files = {
-            name: File(FileLikeHandler.guess_name(f), FileLikeHandler.to_bytes(f))
-            for name, f in call.content.files.items()
-        }
-        if call.content.binary_stream is not None:
-            name = call.content.binary_stream.name
-            files[name] = File(name, FileLikeHandler.to_bytes(call.content.binary_stream.iterable))
-        return RequestDocumentation(url=url, json=call.content.json, files=files)
+        params = call.endpoint_model.params
+        files = {}
+        for param in params.file_params:
+            raw = call.content.raw_values[param.name]
+            files[param.name] = File(FileLikeHandler.guess_name(raw), FileLikeHandler.to_bytes(raw))
+        if params.binary_stream_param is not None:
+            name = params.binary_stream_param.name
+            files[name] = File(name, FileLikeHandler.to_bytes(call.content.raw_values[name]))
+        return RequestDocumentation(url=url, json=call.content.json_values, files=files)
 
 
 @dataclass
