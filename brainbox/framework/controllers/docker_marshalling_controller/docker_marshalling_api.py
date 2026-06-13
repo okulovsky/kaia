@@ -7,7 +7,7 @@ from ..architecture import TSettings
 
 
 class DockerMarshallingApi(DockerWebServiceApi[TSettings, TController], Generic[TSettings, TController]):
-    def __init__(self, address: str|None):
+    def __init__(self, address: str|None = None):
         super().__init__(address)
         decider_model = DeciderModel.parse(type(self))
         for name, decider_method in decider_model.methods.items():

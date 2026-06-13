@@ -1,34 +1,38 @@
-from typing import Iterable
-from ....framework import (
-    RunConfiguration, SelfTestCase, SmallImageBuilder, IImageBuilder, DockerWebServiceController,
-    BrainBoxApi, BrainBoxTask, IModelDownloadingController, DownloadableModel
-)
-from .settings import OllamaSettings, OllamaModel
 from pathlib import Path
-from yo_fluq import FileIO
+from typing import Iterable
+
+from foundation_kaia.brainbox_utils import Installer
+from ....framework import (
+    BrainboxImageBuilder, IImageBuilder, RunConfiguration,
+    DockerMarshallingController, SelfTestCase,
+)
+from .settings import OllamaSettings
+from .image_builder import OllamaImageBuilder
+
+OLLAMA_PORT = 11434
+BRAINBOX_PORT = 8080
 
 
-class OllamaController(DockerWebServiceController[OllamaSettings], IModelDownloadingController):
-    def get_downloadable_model_type(self) -> type[DownloadableModel]:
-        return OllamaModel
-
-    def get_image_builder(self) -> IImageBuilder|None:
-        return SmallImageBuilder(
-            Path(__file__).parent/'container',
-            DOCKERFILE,
-            None
+class OllamaController(DockerMarshallingController[OllamaSettings]):
+    def get_image_builder(self) -> IImageBuilder:
+        return OllamaImageBuilder(
+            Path(__file__).parent,
+            install_requirements_as_root=True,
+            dependencies=(
+                BrainboxImageBuilder.KaiaFoundationDependencies(),
+            ),
         )
 
-    def get_service_run_configuration(self, parameter: str|None) -> RunConfiguration:
-        if parameter is None:
-            raise ValueError(f"`parameter` cannot be None for {self.get_name()}")
+    def get_installer(self) -> Installer:
+        from .app.model import OllamaInstaller
+        return OllamaInstaller(self.resource_folder())
+
+    def get_service_run_configuration(self, parameter: str | None) -> RunConfiguration:
         return RunConfiguration(
             parameter,
-            publish_ports={self.connection_settings.port: 11434},
-            mount_resource_folders={'main': "/root/.ollama"},
-            mount_top_resource_folder=False,
-            command_line_arguments=['run',parameter],
-            run_as_root=True,
+            publish_ports={self.connection_settings.port: BRAINBOX_PORT, OLLAMA_PORT: OLLAMA_PORT},
+            mount_resource_folders={'main': '/home/ubuntu/.ollama'},
+            command_line_arguments=[parameter] if parameter is not None else [],
         )
 
     def get_default_settings(self):
@@ -38,32 +42,18 @@ class OllamaController(DockerWebServiceController[OllamaSettings], IModelDownloa
         from .api import OllamaApi
         return OllamaApi()
 
-    def pre_install(self):
-        path = Path(__file__).parent/'container/run.sh'
-        sh = FileIO.read_text(path)
-        sh = sh.replace('\r','')
-        FileIO.write_bytes(sh.encode('ascii'), path)
-
-    def post_install(self):
-        self.download_models(self.settings.models_to_install)
-
     def self_test_cases(self) -> Iterable[SelfTestCase]:
         from .api import Ollama
         model = self.settings.models_to_install[0]
         prompt = "The recipe for the borsch is as follows:"
-        yield SelfTestCase(Ollama.new_task(parameter=model.name).completions_json(prompt=prompt), None)
-        yield SelfTestCase(Ollama.new_task(parameter=model.name).completions(prompt=prompt), None)
+        yield SelfTestCase(Ollama.new_task(parameter=model).completions_json(prompt=prompt), None)
+        yield SelfTestCase(Ollama.new_task(parameter=model).completions(prompt=prompt), None)
         prompt = "Give me the recipe of the borsch."
-        yield SelfTestCase(Ollama.new_task(parameter=model.name).question_json(prompt=prompt), None)
-        yield SelfTestCase(Ollama.new_task(parameter=model.name).question(prompt=prompt), None)
+        yield SelfTestCase(Ollama.new_task(parameter=model).question_json(prompt=prompt), None)
+        yield SelfTestCase(Ollama.new_task(parameter=model).question(prompt=prompt), None)
 
-
-
-DOCKERFILE = '''
-FROM ollama/ollama
-
-COPY run.sh /bin/run.sh
-
-ENTRYPOINT ["/bin/bash", "/bin/run.sh"]
-'''
+        prompt = "Describe the supplied image"
+        image = Path(__file__).parent/'image.png'
+        #yield SelfTestCase(Ollama.new_task(parameter=model).question_json(prompt=prompt, image=image), None)
+        #yield SelfTestCase(Ollama.new_task(parameter=model).question(prompt=prompt, image=image), None)
 

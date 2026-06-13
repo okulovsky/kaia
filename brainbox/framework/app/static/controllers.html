@@ -179,6 +179,12 @@ async function loadControllers() {
           div.appendChild(btnStop);
         }
 
+        const btnStart = document.createElement('button');
+        btnStart.textContent = 'Start';
+        btnStart.className = 'btn-primary';
+        btnStart.onclick = () => action(btnStart, () => post('/controllers-service/run/' + encodeURIComponent(c.name)));
+        div.appendChild(btnStart);
+
         const btnSelfTest = document.createElement('button');
         btnSelfTest.textContent = 'Self-test';
         btnSelfTest.onclick = () => startSideProcess('self-test', c.name);
