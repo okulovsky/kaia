@@ -221,7 +221,7 @@ class MainWindow(QWidget):
         auto_tags = set(case.auto_tags or {})
         stored_tags = set(existing['tags'].keys()) if existing else set()
         extra_tags = set(overrides.keys())
-        tag_names = auto_tags | stored_tags | extra_tags
+        tag_names = auto_tags | stored_tags | extra_tags | set(gt.accepted)
 
         tags = {}
         for tag in tag_names:
@@ -318,10 +318,6 @@ class MainWindow(QWidget):
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() == Qt.Key.Key_Space:
             self._save_current()
-            statuses = self.cache.get_annotation_status()
-            if all(s.annotated for s in statuses.values()):
-                self.close()
-                return
             self.case_index = (self.case_index + 1) % len(self.cases)
             self._load()
         else:

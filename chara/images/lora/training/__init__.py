@@ -1,2 +1,2 @@
 from .training import LoraTrainer, DownloadedCheckpoint
-from .evaluation import Scene, EvaluationCase, evaluate
+from .evaluation import SceneTags, EvaluationCase, CharacterTags
