@@ -1,8 +1,12 @@
+import os
 from typing import Optional, Callable, Union
-from .common import IMessage, State, ChatCommand, message_handler, ImageCommand, Confirmation, AvatarService, InitializationEvent
-from .common.content_manager import MediaLibrary, IContentStrategy, MediaLibraryManager
-from ..app import AvatarApi
+from ..common import IMessage, State, ChatCommand, message_handler, ImageCommand, Confirmation, AvatarService, InitializationEvent
+from ..common.content_manager import IContentStrategy
+from .media_library import MediaLibrary
+from .media_library_manager import MediaLibraryManager
+from ...app import AvatarApi
 from dataclasses import dataclass
+from pathlib import Path
 
 
 @dataclass
@@ -34,6 +38,9 @@ class ImageService(AvatarService):
     RestoreImageCommand = RestoreImageCommand
     ImageDescriptionCommand = ImageDescriptionCommand
 
+    MEDIA_LIBRARY_PREFIX = 'media_library'
+    MEDIA_LIBRARY_SUFFIX = '.zip'
+
     def __init__(self,
                  state: State,
                  api: AvatarApi|None,
@@ -48,10 +55,18 @@ class ImageService(AvatarService):
         self.empty_image_uploaded: bool = False
         self.media_library_manager: MediaLibraryManager|None = None
 
+    @staticmethod
+    def get_media_library(folder: Path):
+        files = [
+            folder / f for f in sorted(os.listdir(str(folder)))
+            if f.startswith(ImageService.MEDIA_LIBRARY_PREFIX) and f.endswith(ImageService.MEDIA_LIBRARY_SUFFIX)
+        ]
+        return MediaLibrary(*files)
+
+
     @message_handler
     def on_initialize(self, message: InitializationEvent) -> None:
-        path = self.resources_folder/'media_library.zip'
-        media_library = MediaLibrary.read(path)
+        media_library = ImageService.get_media_library(self.resources_folder)
         self.media_library_manager = MediaLibraryManager(
             media_library,
             self.resources_folder/'images-feedback.json',
@@ -63,9 +78,9 @@ class ImageService(AvatarService):
 
     def _get_image_command(self, message: IMessage):
         if self.api is not None:
-            self.api.cache.upload(self.last_image_record.filename, self.last_image_record.get_content())
+            self.api.cache.upload(self.last_image_record.path, self.last_image_record.get_content())
         return ImageCommand(
-            self.last_image_record.filename,
+            self.last_image_record.path,
             self.last_image_record.tags,
         ).as_propagation_confirmation_to(message)
 
@@ -81,7 +96,7 @@ class ImageService(AvatarService):
         if record is None:
             return self._get_empty_image(message)
         self.last_image_record = record
-        self.media_library_manager.feedback(record.filename, 'seen')
+        self.media_library_manager.feedback(record.path, 'seen')
         return self._get_image_command(message)
 
     @message_handler
@@ -98,7 +113,7 @@ class ImageService(AvatarService):
     def image_feedback(self, message: ImageFeedback) -> Confirmation:
         if self.last_image_record is None:
             return message.error_on_this("No image")
-        self.media_library_manager.feedback(self.last_image_record.filename, message.feedback)
+        self.media_library_manager.feedback(self.last_image_record.path, message.feedback)
         return message.confirm_this()
 
     @message_handler

@@ -1,5 +1,6 @@
 from typing import *
 from .common import IMessage, State, message_handler, TickEvent, InitializationEvent, AvatarService, TextCommand
+from .common.content_manager import ContentManager
 from dataclasses import dataclass
 import numpy as np
 from datetime import datetime
@@ -33,21 +34,21 @@ class NarrationService(AvatarService):
     def __init__(self,
                  state: State,
                  characters: tuple[str, ...] | None = None,
-                 activities: tuple[str, ...] | None = None,
-                 welcome_command: TextCommand  | None = None,
+                 activity_manager: ContentManager | None = None,
+                 welcome_command: TextCommand | None = None,
                  time_between_updates_in_seconds: int | None = None,
                  randomize: bool = True,
                  ):
         self.state = state
         self.characters = characters
-        self.activities = activities
+        self.activity_manager = activity_manager
         self.welcome_command = welcome_command
         self.time_between_images_in_seconds = time_between_updates_in_seconds
         self.randomize = randomize
         self.last_update_time: datetime = datetime.now()
         self.current_time: datetime = datetime.now()
 
-    def _random_change(self, current, collection:tuple|None) -> str|None:
+    def _random_change(self, current, collection: tuple | None) -> str | None:
         if collection is None:
             return None
         others = [c for c in collection if c != current]
@@ -55,20 +56,28 @@ class NarrationService(AvatarService):
             if len(others) == 0:
                 return None
             idx = np.random.randint(0, len(others))
-            if idx>=len(others):
+            if idx >= len(others):
                 idx = len(others) - 1
             return others[idx]
         else:
             return others[0]
+
+    def _pick_activity(self, character: str) -> str | None:
+        if self.activity_manager is None:
+            return None
+        record = self.activity_manager.match().strong({'character': character}).find_content()
+        if record is None:
+            return None
+        self.activity_manager.feedback(record['id'], 'seen')
+        return record['activity']
 
     @message_handler
     def change_language(self, message: LanguageRequest) -> State:
         self.state.language = message.language
         return self.state.with_new_envelop().as_confirmation_for(message)
 
-
     @message_handler
-    def change_character(self, message: ChangeCharacterCommand) -> Iterable[Union[NewImageCommand,State, TextCommand]]:
+    def change_character(self, message: ChangeCharacterCommand) -> Iterable[Union[NewImageCommand, State, TextCommand]]:
         if message.character is None:
             character = self._random_change(self.state.character, self.characters)
         else:
@@ -76,19 +85,17 @@ class NarrationService(AvatarService):
         if character is not None:
             self.last_update_time = self.current_time
             self.state.character = character
-            self.state.activity = self._random_change(self.state.activity, self.activities)
+            self.state.activity = self._pick_activity(character)
             yield NewImageCommand()
             if self.welcome_command is not None:
                 yield self.welcome_command.with_new_envelop()
             print(self.state)
             yield self.state.with_new_envelop().as_confirmation_for(message)
 
-
-
     @message_handler
     def change_activity(self, message: ChangeActivityCommand) -> Iterable[Union[NewImageCommand, State]]:
         if message.activity is None:
-            activity = self._random_change(self.state.activity, self.activities)
+            activity = self._pick_activity(self.state.character)
         else:
             activity = message.activity
         if activity is not None:
@@ -109,11 +116,8 @@ class NarrationService(AvatarService):
         return self.state.with_new_envelop().as_confirmation_for(message)
 
     @message_handler
-    def initialize(self, message: InitializationEvent) -> Iterable[Union[NewImageCommand,State, TextCommand]]:
+    def initialize(self, message: InitializationEvent) -> Iterable[Union[NewImageCommand, State, TextCommand]]:
         return self.change_character(ChangeCharacterCommand())
-
-
 
     def requires_brainbox(self):
         return False
-

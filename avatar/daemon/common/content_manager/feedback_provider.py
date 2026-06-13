@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
 from yo_fluq import FileIO
-from brainbox import MediaLibrary
 from abc import ABC, abstractmethod
 
 class IFeedbackProvider(ABC):
@@ -12,17 +11,6 @@ class IFeedbackProvider(ABC):
     @abstractmethod
     def save_feedback(self, feedback: dict):
         pass
-
-    def add_feedback_to_tags(self, ml: MediaLibrary) -> MediaLibrary:
-        ml = ml.clone()
-        feedback = self.load_feedback()
-        all_keys = set(key for fb in feedback.values() for key in fb)
-        for file_id, fb in feedback.items():
-            if file_id not in ml.mapping:
-                continue
-            for key in all_keys:
-                ml.mapping[file_id].tags['feedback_'+key] = fb.get(key, 0)
-        return ml
 
     def append_feedback(self, file_id: str, values: dict[str, int]):
         feedback = self.load_feedback()

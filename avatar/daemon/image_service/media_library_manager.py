@@ -1,7 +1,7 @@
-from .content_manager import ContentManager, IContentStrategy, ITagMatcher
+from ..common.content_manager import ContentManager, IContentStrategy
 from pathlib import Path
-from brainbox import MediaLibrary
-from .data_providers import MediaLibraryDataProvider
+from .media_library import MediaLibrary
+from .media_library_data_provider import MediaLibraryDataProvider
 
 
 class MediaLibraryManager(ContentManager[MediaLibrary.Record]):
