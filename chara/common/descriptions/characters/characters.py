@@ -1,45 +1,9 @@
 from typing import *
-from dataclasses import dataclass
 from enum import Enum
 from copy import copy
+from .appearance import Appearance
+from .pronouns import Gender, Pronouns
 
-class Pronouns:
-    @staticmethod
-    def get(gender: Optional['Character.Gender'], plural: bool, case: int):
-        if plural:
-            return ['they', 'them', 'their', 'themselves'][case]
-        if gender == Character.Gender.Feminine:
-            return ['she', 'her', 'her', 'herself'][case]
-        elif gender == Character.Gender.Masculine:
-            return ['he', 'him', 'his', 'himself'][case]
-        else:
-            return ['it', 'it', 'its', 'itself'][case]
-
-    def __init__(self, gender: Optional['Character.Gender'], plural: bool = False):
-        self.gender = gender
-        self.plural = plural
-
-    @property
-    def subjective(self):
-        return Pronouns.get(self.gender, self.plural, 0)
-
-    @property
-    def objective(self):
-        return Pronouns.get(self.gender, self.plural, 1)
-
-    @property
-    def possessive(self):
-        return Pronouns.get(self.gender, self.plural, 2)
-
-    @property
-    def reflexive(self):
-        return Pronouns.get(self.gender, self.plural, 3)
-
-
-class Gender(Enum):
-    Feminine = 0
-    Masculine = 1
-    Neutral = 2
 
 class Entity:
     def __init__(self, name: str, description: str|None = None):
@@ -65,10 +29,12 @@ class Entity:
 
 class Character(Entity):
     Gender = Gender
+    Appearance = Appearance
 
-    def __init__(self, name: str, gender: Gender, description: str|None):
+    def __init__(self, name: str, gender: Gender, description: str|None, appearance: Appearance|None = None):
         super().__init__(name, description)
         self.gender = gender
+        self.appearance = appearance
 
 
 class EntitySet:

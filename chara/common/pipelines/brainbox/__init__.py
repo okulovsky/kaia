@@ -1,3 +1,3 @@
 from .brainbox_pipeline import brainbox_pipeline
 from .brainbox_training import brainbox_training_pipeline
-from .brainbox_case_pipeline import BrainBoxCasePipeline
+from .brainbox_case_pipeline import BrainBoxCasePipeline, BrainBoxCaseResultApplicator

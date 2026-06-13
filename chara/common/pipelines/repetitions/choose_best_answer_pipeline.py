@@ -1,9 +1,9 @@
-import uuid
-from copy import deepcopy
 from abc import ABC, abstractmethod
 from typing import TypeVar, Generic
-from ..architecture import Chara
-from .cases import ICase, ICasePipeline, CaseCollection, CaseRepetition
+from ...architecture import Chara
+from ..cases import ICase, ICasePipeline, CaseCollection
+from .repetition import CaseRepetition
+
 
 class IVotingCase(ABC, ICase):
     @abstractmethod
@@ -11,6 +11,7 @@ class IVotingCase(ABC, ICase):
         pass
 
 TCase = TypeVar('TCase', bound=IVotingCase)
+
 
 class ChooseBestAnswerPipeline(Generic[TCase]):
     def __init__(self,
@@ -21,17 +22,14 @@ class ChooseBestAnswerPipeline(Generic[TCase]):
         self.poll_size = poll_size
 
     def __call__(self, cases: CaseCollection[TCase]) -> CaseCollection[TCase]:
-        field_id = Chara.call(CaseRepetition.create_field)('choose_best_answer_case_id')
-        active_cases = CaseRepetition.prepare(field_id, cases).successes
+        field_name = Chara.call(CaseRepetition.create_field)('choose_best_answer')
+        tracker = CaseRepetition.Tracker(self.inner_pipeline, field_name, CaseCollection(cases.successes))
 
-        results = []
         for i in range(self.poll_size):
-            results.append(Chara.call(self.inner_pipeline)(CaseCollection(active_cases).clone()))
-
-        summaries = CaseRepetition.parse(field_id, cases, results)
+            tracker.iteration([s.case for s in tracker.get_state()])
 
         result = []
-        for summary in summaries:
+        for summary in tracker.get_state():
             err = summary.create_error_case_if_no_successes(True)
             if err is not None:
                 result.append(err)
@@ -46,7 +44,3 @@ class ChooseBestAnswerPipeline(Generic[TCase]):
             result.append(fingerprint_to_candidates[best_fingerprint][0])
 
         return CaseCollection(cases.errors, result)
-
-
-
-

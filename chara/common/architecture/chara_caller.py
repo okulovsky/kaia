@@ -3,7 +3,7 @@ from .chara_stack import CharaStack
 from .logger_definition import logger
 from .function_to_name import function_to_name
 import pickle
-from .result_handling import write_result, find_result, read_result, ResultType
+from .result_handling import write_result, find_result, read_result
 
 TCharaCallReturn = TypeVar('TCharaCallReturn')
 
@@ -13,11 +13,9 @@ class CharaCaller(Generic[TCharaCallReturn]):
                  stack: CharaStack,
                  function: Callable[..., TCharaCallReturn],
                  name: str|None = None,
-                 result_type: ResultType = ResultType.Pickle
                  ):
         self.stack = stack
         self.function = function
-        self.result_type = result_type
 
         if name is None:
             self.name = function_to_name(function)
@@ -33,7 +31,7 @@ class CharaCaller(Generic[TCharaCallReturn]):
                 log = pickle.loads(log_file.read_bytes())
                 for item in log:
                     logger.log(item)
-                return read_result(result_file)
+                return read_result(current.folder)
 
             (current.folder / '.cache').unlink(missing_ok=True)
             log = []
@@ -42,7 +40,7 @@ class CharaCaller(Generic[TCharaCallReturn]):
                 with logger.section(section_name):
                     try:
                         result = self.function(*args, **kwargs)
-                        write_result(current.folder, self.result_type, result)
+                        write_result(current.folder, result)
                         return result
                     except Exception as e:
                         logger.error(e)

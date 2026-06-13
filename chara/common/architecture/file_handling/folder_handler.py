@@ -1,6 +1,8 @@
 from pathlib import Path
 from .types import ResultType
 
+
+
 class FolderHandler:
     def __init__(self, folder: Path, result_types: tuple[ResultType]|None = None):
         self.folder = folder
@@ -15,6 +17,11 @@ class FolderHandler:
                 return path, type
         return None
 
+    def get_file(self, name) -> Path|None:
+        r = self._find_file_and_type(name)
+        if r is not None:
+            return r[0]
+        return None
 
     def has_file(self, name) -> bool:
         return self._find_file_and_type(name) is not None

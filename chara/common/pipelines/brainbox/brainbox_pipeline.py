@@ -49,7 +49,7 @@ def brainbox_pipeline(
         result_to_file: ResultToFiles = None,
         remove_resulting_files_from_cache: bool = False,
     ) -> BrainBoxResult:
-    @Chara.phase(Chara.ResultType.Json)
+    @Chara.phase
     def sending_tasks():
         batch_id = str(uuid4())
         job_descriptions = []

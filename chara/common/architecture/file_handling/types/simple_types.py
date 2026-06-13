@@ -5,6 +5,7 @@ from foundation_kaia.marshalling import Serializer
 from typing import Any
 import pandas as pd
 from .result_type import ResultType
+import dataclasses
 
 class PickleType(ResultType):
     def get_extension(self) -> str:
@@ -36,25 +37,31 @@ class JsonType(ResultType):
     def get_extension(self) -> str:
         return ".json"
 
-    def accepts_data(self, data) -> bool:
-        import dataclasses
+    @staticmethod
+    def is_json_compatible(data) -> bool:
+        if isinstance(data, (str, int, bool)):
+            return True
         if dataclasses.is_dataclass(data) and not isinstance(data, type):
             return True
         if isinstance(data, list):
-            return all(self.accepts_data(item) for item in data)
+            return all(JsonType.is_json_compatible(item) for item in data)
         if isinstance(data, dict):
-            return all(isinstance(k, str) and self.accepts_data(v) for k, v in data.items())
+            return all(isinstance(k, str) and JsonType.is_json_compatible(v) for k, v in data.items())
         return False
 
+    def accepts_data(self, data) -> bool:
+        return JsonType.is_json_compatible(data)
+
+
     def write(self, data, path: Path):
-        path.write_text(json.dumps(Serializer.parse(Any).to_json(data)))
+        path.write_text(json.dumps(Serializer.parse(Any).to_json(data), indent=4))
 
     def read(self, path: Path):
         return Serializer.parse(Any).from_json(json.loads(path.read_text()))
 
 class PathType(ResultType):
     def get_extension(self) -> str:
-        return ".path"
+        return ".path.txt"
 
     def accepts_data(self, data) -> bool:
         return isinstance(data, Path)
@@ -63,7 +70,8 @@ class PathType(ResultType):
         path.write_text(str(data))
 
     def read(self, path: Path):
-        return str(path.read_text())
+        return Path(path.read_text())
+
 
 class ParquetType(ResultType):
     def get_extension(self) -> str:

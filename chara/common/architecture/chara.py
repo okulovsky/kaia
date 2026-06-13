@@ -6,7 +6,7 @@ from .chara_caller import CharaCaller
 
 T = TypeVar('T')
 from .validate import restore_consistency
-from .result_handling import find_result, read_result, FileResult, ResultType
+from .result_handling import find_result, read_result
 from .apis import CharaApis
 
 
@@ -23,7 +23,7 @@ class CharaFolder:
         result_file = find_result(self.item.folder)
         if result_file is None:
             raise ValueError(f"The folder {self.item.folder} does not have the result file")
-        return read_result(result_file)
+        return read_result(self.item.folder)
 
     @property
     def has_result(self) -> bool:
@@ -33,8 +33,6 @@ class CharaFolder:
 class CharaInstance:
     def __init__(self):
         self.thread_to_stack: dict[int, CharaStack] = dict()
-        self.FileResult = FileResult
-        self.ResultType = ResultType
         self.Apis = CharaApis.default()
 
     def _stack(self) -> CharaStack:
@@ -55,15 +53,14 @@ class CharaInstance:
         self._stack().check_exited()
         return CharaCaller(self._stack(), function, alternative_name)
 
-    def phase(self, func_or_result_type=None):
-        def decorator(func: Callable, result_type: ResultType = ResultType.Pickle):
-            return CharaCaller(self._stack(), func, name=func.__name__, result_type=result_type)()
+    def phase(self, func=None):
+        def decorator(f: Callable):
+            return CharaCaller(self._stack(), f, name=f.__name__)()
 
-        if callable(func_or_result_type):
-            return decorator(func_or_result_type)
+        if callable(func):
+            return decorator(func)
         else:
-            rt = func_or_result_type if func_or_result_type is not None else ResultType.Pickle
-            return lambda func: decorator(func, rt)
+            return decorator
 
     @property
     def current(self) -> CharaFolder:

@@ -1,7 +1,7 @@
-from .cases import ICase, ICasePipeline, CaseCollection, CaseRepetition
+from .cases import ICase, ICasePipeline, CaseCollection
 from .brainbox import *
-from .choose_best_answer_pipeline import ChooseBestAnswerPipeline, IVotingCase
-from .repeat_until_done_pipeline import RepeatUntilDonePipeline
-from .batching_pipeline import BatchingPipeline
+from .repetitions import *
+from .holdout_pipeline import HoldoutPipeline
 
 from .annotation import *
+from .upload_to_avatar import upload_to_avatar
