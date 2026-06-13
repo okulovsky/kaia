@@ -8,7 +8,7 @@ from typing import Any, Iterable
 from .verifier import Verifier
 import os
 import zipfile
-from chara.common.tools.sounds import Wav
+from chara.common.tools import Wav
 
 
 @dataclass

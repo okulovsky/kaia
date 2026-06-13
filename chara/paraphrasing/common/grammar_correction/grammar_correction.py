@@ -46,9 +46,7 @@ class GrammarCorrection:
     class Pipeline:
         def __init__(self, task_builder: PromptTaskBuilder):
             self.task_builder = task_builder
-            if task_builder.case_to_key is None:
-                task_builder.case_to_key = lambda case: case.grammar_model.target_language_code
-            task_builder.read_default_prompt(Path(__file__).parent/'prompt.jinja')
+            task_builder.set_prompt(Path(__file__).parent/'prompt.jinja')
 
 
         def _create_task(self, case: GrammarCorrectionCase):

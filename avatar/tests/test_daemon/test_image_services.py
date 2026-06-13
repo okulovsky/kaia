@@ -1,12 +1,16 @@
+import json
+import zipfile
 from avatar.messaging import *
 from avatar.daemon import ImageService, State
-from avatar.daemon.common.content_manager import MediaLibraryManager, MediaLibrary, NewContentStrategy
+from avatar.daemon.image_service.media_library import MediaLibrary
+from avatar.daemon.image_service.media_library_manager import MediaLibraryManager
+from avatar.daemon.common.content_manager import NewContentStrategy
 from avatar.daemon.common.known_messages import ChatCommand, InitializationEvent
 from unittest import TestCase
 from foundation_kaia.misc import Loc
 
 def record_to_description(r: MediaLibrary.Record):
-    return f'description {r.filename}'
+    return f'description {r.path}'
 
 characters = ('c0', 'c1')
 activities = ('a0', 'a1')
@@ -16,22 +20,14 @@ class ImageServiceTestCase(TestCase):
         self.folder_holder = Loc.create_test_folder()
         self.folder = self.folder_holder.__enter__()
         records = [
-            MediaLibrary.Record(
-                f'{character}/{activity}/{index}',
-                None,
-                tags=dict(
-                    character = character,
-                    activity = activity,
-                    index= index
-                ),
-                inline_content=f'{character}/{activity}/{index}'.encode('ascii')
-            )
+            {'path': f'{character}/{activity}/{index}',
+             'tags': dict(character=character, activity=activity, index=index)}
             for character in characters
             for activity in activities
-            for index in ['i0','i1', 'i2']
+            for index in ['i0', 'i1', 'i2']
         ]
-        ml = MediaLibrary(tuple(records))
-        ml.save(self.folder/'media_library.zip')
+        with zipfile.ZipFile(self.folder/'media_library.zip', 'w') as zp:
+            zp.writestr('records.json', json.dumps(records))
 
         self.state = State(character='c0', activity='a0')
         proc = AvatarDaemon(AvatarClient.default(), timeout_in_pull_in_seconds=0)
@@ -89,8 +85,3 @@ class ImageServiceTestCase(TestCase):
         m = self.proc.debug_and_stop_by_empty_queue(ImageService.ImageDescriptionCommand()).messages
         self.assertEqual('description c0/a0/i0', m[-1].text)
         self.assertEqual(ChatCommand.MessageType.system, m[-1].type)
-
-
-
-
-

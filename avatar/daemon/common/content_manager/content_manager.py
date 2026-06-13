@@ -5,7 +5,7 @@ from .strategies import IContentStrategy, NewContentStrategy
 from .feedback_provider import InMemoryFeedbackProvider, FileFeedbackProvider
 from pathlib import Path
 from .tag_matcher import ITagMatcher, TagMatcher
-from .data_providers import TRecord, IDataProvider, MediaLibraryDataProvider
+from .data_providers import TRecord, IDataProvider
 from yo_fluq import Query
 
 class Matcher(Generic[TRecord]):

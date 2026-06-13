@@ -1,0 +1,18 @@
+{% import "intro.jinja" as intro %}
+
+{{ intro.intro(case) }}
+
+List some activities that are natural to {{ case.character.name }} character and also fit to the theme.
+
+Each activity must be in Gerundium form and contain precise description of the activity, for example:
+
+* Cooking stew in the kitchen
+* Welding a robot in the laboratory
+* Playing volleyball at the beach
+
+Try to supply the details: not just activity, but also what objects it involves and where does it take place.
+At the same time, avoid giving too much details, 5-9 words should be enough.
+All the activities must be done by only one person, {{ case.character.name }}, no other people must be present in the image.
+
+Please list {{ settings.activities_per_case }} activities in the bullet-list format.
+Do not provide any comments or explanations.

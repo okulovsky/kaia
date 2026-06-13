@@ -11,11 +11,12 @@ class IMessageRepository(ABC):
 
     @abstractmethod
     def get(self,
-            session: str,
+            session: str | None,
             last_id: str | None = None,
             timeout_in_seconds: float | None = None,
             max_messages: int | None = None,
             allowed_types: list[str] | None = None,
+            client_name: str | None = None,
             ) -> AvatarMessageSet[IMessage]:
         pass
 

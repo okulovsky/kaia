@@ -65,6 +65,9 @@ class IDub(ABC):
                 return parameters.change_grammar(parameters.grammar_rule.merge_with_lower_priority(stored_rule))
             return parameters
 
+    def generate_random_values(self, n: int) -> list:
+        raise NotImplementedError(f"{type(self).__name__} does not support random value generation")
+
     def to_str(self, value, parameters: DubParameters|None = None):
         value = self._to_str_internal(value, self.adjust_parameters(parameters))
         if parameters is not None and parameters.debug_mode:

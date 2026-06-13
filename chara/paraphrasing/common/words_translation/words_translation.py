@@ -85,7 +85,7 @@ class WordTranslation:
     class Pipeline:
         def __init__(self, task_builder: PromptTaskBuilder, ):
             self.task_builder = task_builder
-            self.task_builder.read_default_prompt(Path(__file__).parent / 'prompt.jinja')
+            self.task_builder.set_prompt(Path(__file__).parent / 'prompt.jinja')
 
         def _merge(self, case: WordTranslationCase, option: str):
             case.translation = option

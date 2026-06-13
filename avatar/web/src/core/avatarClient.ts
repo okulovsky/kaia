@@ -4,6 +4,7 @@ interface IAvatarClientConfig {
   baseUrl: string
   session?: string
   allowedTypes?: string[] | null
+  name?: string
 }
 
 export class AvatarClient {
@@ -11,12 +12,14 @@ export class AvatarClient {
   private session: string
   allowedTypes: string[] | null
   lastId?: string
+  name?: string
 
   constructor (config: IAvatarClientConfig) {
     this.baseUrl = config.baseUrl.replace(/\/+$/, '')
     this.session = config.session ?? 'default'
     this.allowedTypes = config.allowedTypes ?? null
     this.lastId = undefined
+    this.name = config.name
   }
 
   async push (msg: Message): Promise<void> {
@@ -45,6 +48,9 @@ export class AvatarClient {
     if (this.lastId !== undefined) {
       url.searchParams.set('last_id', this.lastId)
     }
+    if (this.name !== undefined) {
+      url.searchParams.set('client_name', this.name)
+    }
     if (max_messages !== undefined && max_messages !== null) {
       url.searchParams.set('max_messages', String(max_messages))
     }
@@ -65,7 +71,7 @@ export class AvatarClient {
     const data = await resp.json()
     const messages = (data.messages as any[]).map(raw => {
       try {
-        return new Message(raw.content_type, Envelop.fromJson(raw.envelop), raw.content ?? {})
+        return new Message(raw.message.content_type, Envelop.fromJson(raw.message.envelop), raw.message.content ?? {})
       } catch (error) {
         console.error('Failed to parse message:', raw, '\nError:', error)
         throw error
@@ -91,7 +97,7 @@ export class AvatarClient {
     }
     const data = await resp.json()
     return (data.messages as any[]).map(raw =>
-      new Message(raw.content_type, Envelop.fromJson(raw.envelop), raw.content ?? {})
+      new Message(raw.message.content_type, Envelop.fromJson(raw.message.envelop), raw.message.content ?? {})
     )
   }
 

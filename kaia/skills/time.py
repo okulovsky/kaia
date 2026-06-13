@@ -9,8 +9,8 @@ class TimeIntents(TemplatesCollection):
         'What is the time?'
     )
 
-HOURS = VariableDub('hours')
-MINUTES = VariableDub('minutes')
+HOURS = VariableDub('hours', CardinalDub(25))
+MINUTES = VariableDub('minutes', CardinalDub(61))
 
 class TimeReplies(TemplatesCollection):
     answer = (

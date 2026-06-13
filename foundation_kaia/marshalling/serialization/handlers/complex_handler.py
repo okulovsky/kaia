@@ -19,6 +19,9 @@ class ComplexHandler(ITypeHandler):
     @abstractmethod
     def is_eligible(cls, value: Any) -> bool: ...
 
+    def allow_extra_fields(self) -> bool:
+        return False
+
     @property
     def python_type(self) -> type:
         return self.tp if self.tp is not None else object
@@ -38,6 +41,13 @@ class ComplexHandler(ITypeHandler):
         for field_name, field_serializer in self.fields.items():
             with context.subpath(field_name):
                 result[field_name] = field_serializer.to_json(getattr(value, field_name), context)
+        if self.allow_extra_fields():
+            from .unannotated_handler import UnannotatedHandler
+            unannotated = UnannotatedHandler()
+            for key, val in vars(value).items():
+                if key not in self.fields:
+                    with context.subpath(key):
+                        result[key] = unannotated.to_json(val, context)
         return result
 
     def from_json(self, json_value: Any, context: SerializationContext) -> Any:
@@ -60,12 +70,21 @@ class ComplexHandler(ITypeHandler):
 
     def _from_json_fields(self, json_value: dict, context: SerializationContext) -> Any:
         kwargs = {}
+        extra = {}
         for field_name, field_value in json_value.items():
-            if field_name not in self.fields:
+            if field_name in self.fields:
+                with context.subpath(field_name):
+                    kwargs[field_name] = self.fields[field_name].from_json(field_value, context)
+            elif self.allow_extra_fields():
+                from .unannotated_handler import UnannotatedHandler
+                with context.subpath(field_name):
+                    extra[field_name] = UnannotatedHandler().from_json(field_value, context)
+            else:
                 raise ValueError(f"Unexpected field '{field_name}' at {context.current_path}")
-            with context.subpath(field_name):
-                kwargs[field_name] = self.fields[field_name].from_json(field_value, context)
-        return self.tp(**kwargs)
+        obj = self.tp(**kwargs)
+        for k, v in extra.items():
+            setattr(obj, k, v)
+        return obj
 
     def to_json_schema(self, root: JsonSchema) -> dict:
         if self.tp is None:

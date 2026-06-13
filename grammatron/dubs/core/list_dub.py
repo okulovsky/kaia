@@ -1,4 +1,5 @@
 from typing import Any, Iterable
+import random
 from . import parser_intructions as PI
 from .dub import IDub, DubParameters
 from .template_dubs import DictTemplateDub
@@ -47,6 +48,10 @@ class ListDub(IDub):
         if len(strings) == 1:
             return strings[0]
         return separator.join(strings[:-1])+last_separator+strings[-1]
+
+    def generate_random_values(self, n: int) -> list:
+        pool = self.inner_dub.generate_random_values(n * 3)
+        return [self.type(random.sample(pool, random.randint(1, min(3, len(pool))))) for _ in range(n)]
 
     def _to_str_internal(self, value, parameters: DubParameters):
         vs = [self.inner_dub.to_str(v, parameters) for v in value]

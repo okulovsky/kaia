@@ -1,4 +1,6 @@
-from chara.common import BrainBoxCasePipeline, Chara, ICase, CaseCollection
+from copy import deepcopy
+
+from chara.common import BrainBoxCasePipeline, Chara, ICase, CaseCollection, BrainBoxCaseResultApplicator
 from chara.common.tools.llm import BulletPointDivider, PromptTaskBuilder
 import traceback
 from .parsed_template import ParsedTemplate
@@ -10,6 +12,7 @@ class ParaphraseCase(ICase):
         self.target_language_code: str|None = target_language_code
         self.target_language_name: str|None = None
         self.parsed_template: ParsedTemplate|None = None
+        self.llm_output: str|None = None
         self.resulting_template: Template|None = None
 
     def prepare(self):
@@ -31,9 +34,13 @@ class TemplateParaphrase:
                 case.error = f"Option `{option}` failed: {traceback.format_exc()}"
 
         def __call__(self, cases: CaseCollection[ParaphraseCase]) -> CaseCollection[ParaphraseCase]:
-            pipe = BrainBoxCasePipeline(self.builder, self._merge, BulletPointDivider())
-            result = Chara.call(pipe.__call__)(cases.successes_collection).raise_if_all_errors()
-            return CaseCollection(cases.errors, result)
+            pipe = BrainBoxCasePipeline(self.builder, 'llm_output')
+            llm_result = Chara.call(pipe.__call__, 'llm')(cases.successes_collection).raise_if_all_errors()
+
+            applicator = BrainBoxCaseResultApplicator(self._merge, BulletPointDivider())
+            merge_result = Chara.call(applicator.apply_cached_result, 'merge')(llm_result, 'llm_output')
+
+            return CaseCollection(cases.errors, merge_result)
 
 
 

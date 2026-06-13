@@ -1,4 +1,5 @@
 import traceback
+import random
 from typing import *
 from foundation_kaia.prompters import Prompter, ConstantTemplatePart, AddressTemplatePart
 from .subsequence_dub import ISubSequenceDub
@@ -49,6 +50,17 @@ class TemplateDub(IDub, ABC):
     @abstractmethod
     def variables_to_value(self, variables: dict[str, Any]) -> Any:
         pass
+
+    def generate_random_values(self, n: int) -> list:
+        per_sequence = max(1, n // len(self.sequences))
+        pool = []
+        for sequence in self.sequences:
+            variables = [v for v in sequence.get_leaves() if isinstance(v, VariableDub)]
+            var_values = {var.name: var.dub.generate_random_values(per_sequence) for var in variables}
+            for i in range(per_sequence):
+                ctx = {name: vals[i] for name, vals in var_values.items()}
+                pool.append(self.variables_to_value(ctx))
+        return random.choices(pool, k=n)
 
     def find_required_variables(self, value) -> tuple[str,...]:
         converted_value = self.value_to_variables(value)

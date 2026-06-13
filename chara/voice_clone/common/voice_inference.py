@@ -32,6 +32,6 @@ class VoiceInference(ABC):
 
     @staticmethod
     def pipeline(cases: CaseCollection[VoiceInferenceCase]) -> CaseCollection[VoiceInferenceCase]:
-        pipe = BrainBoxCasePipeline(VoiceInference._create_task, 'result')
+        pipe = BrainBoxCasePipeline(VoiceInference._create_task, 'result', result_to_file=True)
         result = Chara.call(pipe)(cases)
         return result

@@ -27,11 +27,11 @@ class CharaCallsTestCase(TestCase):
                  '.log',
                  '000-another_function',
                  '000-another_function/.log',
-                 '000-another_function/result',
+                 '000-another_function/result.json',
                  '001-another_function',
                  '001-another_function/.log',
-                 '001-another_function/result',
-                 'result',
+                 '001-another_function/result.json',
+                 'result.json',
                  ], files
             )
 

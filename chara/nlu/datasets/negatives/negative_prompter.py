@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from yo_fluq import FileIO
-from foundation_kaia.prompters import JinjaPrompter
+from chara.common.tools.llm.jinja_prompter import JinjaPrompter
 from .negative_case import NegativeCase
 
 _LANGUAGE_NAMES = {
@@ -24,8 +23,7 @@ class NegativePrompter:
         path = Path(__file__).parent / 'negative_template.jinja'
         if custom_template_path is not None:
             path = custom_template_path
-        template_text = FileIO.read_text(path)
-        self.template = JinjaPrompter(template_text)
+        self.template = JinjaPrompter(path)
 
     def __call__(self, case: NegativeCase) -> str:
         model = _NegativeJinjaModel(

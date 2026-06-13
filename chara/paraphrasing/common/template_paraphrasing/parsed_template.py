@@ -72,7 +72,7 @@ class ParsedTemplate:
         result: dict[tuple[str, str], list[ParsedTemplate]] = {}
         for language, template_dub in template.dub.dispatch.items():
             for sequence_index, sequence in enumerate(template_dub.sequences):
-                parsed_sequence = ParsedTemplate._construct(sequence, DubParameters(language=language))
+                parsed_sequence = ParsedTemplate._construct(sequence, DubParameters(language=language), template)
                 parsed_sequence.original_language = language
                 parsed_sequence.original_sequence_dub = sequence
                 parsed_sequence.original_template = template
@@ -96,14 +96,22 @@ class ParsedTemplate:
         return result[0]
 
     @staticmethod
-    def _construct(sequence: SequenceDub, parameters: DubParameters):
+    def _construct(sequence: SequenceDub, parameters: DubParameters, template: TemplateBase|None = None):
         variables = [v for v in sequence.get_leaves() if isinstance(v, VariableDub)]
         variables_tag = ParaphraseRecord.create_variables_tag(v.name for v in variables)
         linearizer = SequenceLinearizer()
         linearizer.linearize(sequence, parameters)
         fragments = {f.descriptor.get_representation() : f for f in linearizer.fragments if f.descriptor is not None}
 
-        example_values = generate_values_for_variables(variables, EXAMPLES_COUNT)
+        try:
+            example_values = generate_values_for_variables(variables, EXAMPLES_COUNT)
+        except Exception as e:
+            if template is not None:
+                template_name = template.get_name()
+            else:
+                template_name = "Unknown template"
+            raise Exception(f"Exception when parsing {template_name}") from e
+
         fragment_to_examples: dict[str, list[str]] = { f: [] for f in fragments }
         for example in example_values:
             debug_parameters = parameters.change_debug(True)

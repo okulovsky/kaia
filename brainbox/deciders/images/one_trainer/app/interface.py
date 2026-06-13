@@ -18,11 +18,11 @@ class CheckpointInfo:
 class OneTrainerParameters:
     name: str
     base_model: str
-    prompts: list[str]
-    negatives: str | None = None
     batch_size: int = 4
     target_steps: int = 1500
     save_every_n_steps: int | None = None
+    prompts: list[str] = field(default_factory=list)
+    negatives: str | None = None
 
 
 @service

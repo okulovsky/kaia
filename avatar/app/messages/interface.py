@@ -16,6 +16,7 @@ class IAvatarMessagingService:
                  timeout_in_seconds: float|None = None,
                  max_messages: int|None = None,
                  allowed_types: list[str]|None = None,
+                 client_name: str|None = None,
                  ) -> AvatarMessageSet[AvatarMessage]:
         pass
 

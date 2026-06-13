@@ -1,15 +1,8 @@
-import copy
-from typing import *
 from ....framework import ISelfManagingDecider, FailedJobArgument
-from .collector_to_media_library_convertor import CollectorToMediaLibraryConvertor
 from .task_builder import TaskBuilder
 
 
 class Collector(ISelfManagingDecider):
-
-    def to_media_library(self, tags: Dict[str, Dict], **kwargs):
-        return CollectorToMediaLibraryConvertor(self.current_job_id, self.cache_folder, tags, kwargs).convert()
-
 
     def to_array(self, tags: dict[str, dict], **kwargs):
         final_result = []

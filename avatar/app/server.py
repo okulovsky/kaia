@@ -19,7 +19,6 @@ class AvatarServerSettings:
     cache_folder: Path|None = None
     web_folder: Path|None = None
     frontend_folder: Path|None = None
-    messages_log_folder: Path|None = None
 
     resources_folder: Path|None = None
     extra_components: tuple[IComponent,...] = ()
@@ -27,6 +26,7 @@ class AvatarServerSettings:
     custom_aliases: dict[str, type]|None = None
     starting_messages: dict[str, tuple[IMessage,...]]|None = None
     additional_web_static_folders: dict[str, Path]|None = None
+    log_folder: Path|None = None
 
 
 
@@ -48,7 +48,7 @@ class AvatarServer(IServer):
             aliases or None,
             self.settings.messages_ttl_in_seconds,
             starting_messages=self.settings.starting_messages,
-            messages_log_folder = self.settings.messages_log_folder
+            log_folder=self.settings.log_folder,
         )
         service_components['messaging'] = messaging_service
 
@@ -83,7 +83,7 @@ class AvatarServer(IServer):
         for name, component in service_components.items():
             ServiceComponent(component, name).mount(app)
 
-        client = AvatarClient(AvatarMessageRepository(messaging_service), 'default')
+        client = AvatarClient(AvatarMessageRepository(messaging_service), 'default', name='audio_dashboard')
         AudioDashboardComponent(client, self.settings.cache_folder).mount(app)
 
         if self.settings.web_folder is not None:

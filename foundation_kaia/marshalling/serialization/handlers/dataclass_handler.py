@@ -33,6 +33,9 @@ class DataclassHandler(ComplexHandler):
         self._type_map = type_map
         self._fields: dict[str, 'Serializer'] | None = None
 
+    def allow_extra_fields(self) -> bool:
+        return True
+
     @property
     def fields(self) -> dict[str, 'Serializer']:
         if self._fields is None:

@@ -1,0 +1,34 @@
+{% import "intro.jinja" as intro %}
+
+{{ intro.intro(case) }}
+
+You task is to imagine the picture of {{ case.character.name }}, doing {{ case.activity }}.
+And then, describe the objects, environment and pose that you imagined.
+
+Here are some of the tags that may or may not be relevant to the activity:
+
+{% for tag in case.activity_tags %}
+* {{ tag }}
+{% endfor %}
+
+You need write the tags:
+
+* Character position. E.g. sitting, runnung, jumping, holding bottle, hands behind head
+* Environment. E.g. palm tree, ocean, foliage, dim lights, steam, etc.
+
+Favor supplied tags, because they are guaranteed to exist in the system. If you can't find a tag matching your idea, you may create your own.
+
+Provide the answer in JSON format:
+
+```
+{
+    "position": ["standing", "holding bottle"],
+    "environment": ["dim light", "champagne bottle"]
+}
+```
+
+Provide around 10 tags per key.
+Place more relevant tags first in the list.
+Do not duplicate tags, each tag must express something others don't.
+No ambiguity! If there are options (e.g. `holding pencil`, `holding pen`) -- pick only one of them! The tags should describe picture clearly, so the artist knows what exactly to draw.
+Do not describe facial expression or clothing.

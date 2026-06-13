@@ -45,20 +45,20 @@ class JsonTypeAcceptsDataTestCase(TestCase):
     def test_accepts_empty_dict(self):
         self.assertTrue(self.t.accepts_data({}))
 
-    def test_rejects_plain_string(self):
-        self.assertFalse(self.t.accepts_data("hello"))
+    def test_accepts_plain_string(self):
+        self.assertTrue(self.t.accepts_data("hello"))
 
-    def test_rejects_int(self):
-        self.assertFalse(self.t.accepts_data(42))
+    def test_accepts_int(self):
+        self.assertTrue(self.t.accepts_data(42))
 
-    def test_rejects_list_with_non_dataclass(self):
-        self.assertFalse(self.t.accepts_data([Point(1.0, 2.0), "oops"]))
+    def test_accepts_list_with_mixed_primitives_and_dataclasses(self):
+        self.assertTrue(self.t.accepts_data([Point(1.0, 2.0), "oops"]))
 
     def test_rejects_dict_with_non_str_key(self):
         self.assertFalse(self.t.accepts_data({1: Point(1.0, 2.0)}))
 
-    def test_rejects_dict_with_non_dataclass_value(self):
-        self.assertFalse(self.t.accepts_data({"x": 42}))
+    def test_accepts_dict_with_primitive_value(self):
+        self.assertTrue(self.t.accepts_data({"x": 42}))
 
 
 class FolderHandlerRoundtripTestCase(TestCase):
@@ -76,7 +76,7 @@ class FolderHandlerRoundtripTestCase(TestCase):
     def test_path_roundtrip(self):
         p = Path("/tmp/some/path")
         result = self._roundtrip(p)
-        self.assertEqual(str(p), result)
+        self.assertEqual(p, result)
 
     def test_parquet_roundtrip(self):
         df = pd.DataFrame({"a": [1, 2], "b": [3, 4]})

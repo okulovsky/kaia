@@ -4,11 +4,13 @@ from kaia import SingleLineKaiaSkill, World, ContextRequest, NarrationService
 
 CHARACTER_LIST = VariableDub(
     'character_list',
+    ToStrDub('Alice, Bob', 'Bob, Alice'),
     description="List of all the characters available"
 )
 
 CHARACTER = VariableDub(
     'character',
+    ToStrDub('Alice', 'Bob')
 )
 
 class ChangeCharacterIntents(TemplatesCollection):

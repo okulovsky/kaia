@@ -1,4 +1,5 @@
 from typing import *
+import random
 from ..core import DubParameters
 from .categorical_variable_dub import CategoricalVariableDub
 from enum import Enum
@@ -23,6 +24,9 @@ class OptionsDub(CategoricalVariableDub):
                     self.value_to_strs[enum_value] = [dub]
         else:
             self.value_to_strs = {v:[v] for v in options}
+
+    def generate_random_values(self, n: int) -> list:
+        return [random.choice(list(self.value_to_strs)) for _ in range(n)]
 
     def get_values(self):
         return self.value_to_strs

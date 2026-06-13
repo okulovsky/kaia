@@ -27,7 +27,7 @@ class AvatarServerAppSettings(IAppInitializer):
             port = self.port,
             hide_logs=self.hide_logs,
             aliases_discovery_namespaces = ("avatar.messaging", "avatar.daemon", "kaia"),
-            messages_ttl_in_seconds=60*60*2,
+            messages_ttl_in_seconds=60*10,
             cache_folder=app.brainbox_cache_folder,
             web_folder=Loc.root_folder/'kaia/web',
             frontend_folder=app.working_folder/'avatar/frontend' if self.custom_frontend_folder is None else self.custom_frontend_folder,
@@ -35,7 +35,7 @@ class AvatarServerAppSettings(IAppInitializer):
             custom_html=self.custom_html,
             starting_messages=dict(default=(start_message,)),
             additional_web_static_folders=self.additional_static_folders,
-            messages_log_folder=app.working_folder/'avatar/logs',
+            log_folder=app.working_folder/'avatar/logs',
         )
 
         app.avatar_api = AvatarApi(f'http://127.0.0.1:{self.port}')

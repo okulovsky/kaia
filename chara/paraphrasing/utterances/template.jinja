@@ -1,39 +1,37 @@
 You work on helping with the deep, artistic personalization of kitchen voice assistant.
 The core feature of this assistant is stylization for visual novels: assistant acts like a character, and interactions with the user need to follow the personaliries of the character and the user, as well as their current relationship.
 
-{% if character is not none %}
-The character's name is {{character}}. {{character.description}}
+{% if case.character is not none %}
+The character's name is {{case.character}}. {{case.character.description}}
 {% endif %}
 
-{% if user is not none %}
-The user's name is {{user}}. {{user.description}}
+{% if case.user is not none %}
+The user's name is {{case.user}}. {{case.user.description}}
 {% endif %}
 
-{% if relationship is not none %}
-{{relationship}}
+{% if case.relationship is not none %}
+{{case.relationship}}
 {% endif %}
 
 You're currently working on one of the assistant replies.
 
-{%if context is not none %}
+{%if case.context is not none %}
 
 # Context
 
-{% if context.context is not none %}
-The circumstances are following:
-{{context.context(_)}}
+{% if case.context.context is not none %}
+The circumstances are following: {{case.context.context(case)}}
 {% endif %}
 
-{% if reply_to_examples is not none %}
+{% if case.reply_to_examples is not none %}
 The reply is a response for the following utterances from user:
-{% for example in reply_to_examples %}
+{% for example in case.reply_to_examples %}
 * {{ example }}
 {% endfor %}
 {% endif %}
 
-{% if context.reply_details is not none %}
-The reply needs to express the following:
-{{ context.reply_details(_) }}
+{% if case.context.reply_details is not none %}
+The reply needs to express the following: {{case.context.reply_details(case)}}
 {% endif %}
 
 {% endif %}
@@ -42,13 +40,13 @@ The reply needs to express the following:
 
 The current, default answers are:
 
-{% for sample in samples %}
+{% for sample in case.samples %}
 * {{ sample }}
 {% endfor %}
 
-{% if parsed_template.fragments %}
+{% if case.parsed_template.fragments %}
 The command contains the following variables:
-{% for fragment in parsed_template.fragments %}
+{% for fragment in case.parsed_template.fragments %}
 * `{{fragment.name}}`: {{fragment.description}}
 {% endfor %}
 All of these variables must be included in the paraphrase in the meaningful places, exactly in the way they are: no capitalization, not a slightest change. Do not use new variables, only use these from the list.
@@ -60,4 +58,4 @@ You now need to paraphrase the default answers so that they match character's an
 
 You should not extend or shorten the lines too much.
 
-You should write {{ variations_per_template }} paraphrases as a bullet point list.
+You should write {{ case.variations_per_template }} paraphrases as a bullet point list.

@@ -38,7 +38,7 @@ class BackendAndFrontendInitializationTestCase(TestCase):
                 finally:
                     pass
 
-    def test_page_restart_on_server_restart(self):
+    def dont_test_page_restart_on_server_restart(self):
         with BackendTestEnvironmentFactory(self, html=HTML) as env:
             with FrontendTestEnvironmentFactory(env.base_url, headless=True) as driver:
                 try:

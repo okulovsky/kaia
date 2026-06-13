@@ -1,6 +1,5 @@
 from typing import *
 from pathlib import Path
-from brainbox import MediaLibrary
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
@@ -20,16 +19,6 @@ class IDataProvider(ABC):
 
 
 
-class MediaLibraryDataProvider(IDataProvider):
-    def __init__(self, media_library: Path|str|MediaLibrary):
-        if isinstance(media_library, MediaLibrary):
-            self.media_library = media_library
-        else:
-            self.media_library = MediaLibrary.read(media_library)
-
-    def get_records(self) -> list[MediaLibrary.Record]:
-        return [IDataProvider.Record(r.filename, r.tags, r) for r in self.media_library.records]
-
 class DataClassDataProvider(IDataProvider, Generic[TRecord]):
     def __init__(self, records: list[TRecord], filename_field: str = 'filename'):
         self.records = records
@@ -41,5 +30,21 @@ class DataClassDataProvider(IDataProvider, Generic[TRecord]):
             {k:v for k,v in r.__dict__.items() if k!=self.filename_field},
             r
         ) for r in self.records]
+
+
+class DictDataProvider(IDataProvider):
+    def __init__(self, records: list[dict], filename_key: str):
+        self.records = records
+        self.filename_key = filename_key
+
+    def get_records(self) -> list[IDataProvider.Record]:
+        return [
+            IDataProvider.Record(
+                r[self.filename_key],
+                {k: v for k, v in r.items() if k != self.filename_key and v is not None},
+                r,
+            )
+            for r in self.records
+        ]
 
 

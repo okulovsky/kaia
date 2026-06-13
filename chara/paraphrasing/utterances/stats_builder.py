@@ -107,12 +107,6 @@ def build_statistics(tasks: tuple[UtteranceParaphraseCase,...]):
 
 
 
-def sort_statistics(stats: list[ParaphraseStats], only_completely_missing: bool) -> list[ParaphraseStats]:
-    if only_completely_missing:
-        stats = [s for s in stats if s.existing == 0]
-    return list(sorted(stats, key=lambda z: z.availability))
-
-
 
 
 

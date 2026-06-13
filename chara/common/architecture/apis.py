@@ -11,8 +11,6 @@ class CharaApis:
     avatar_api: AvatarApi
     content_folder: Path
     cache_folder: Path
-    datasets_folder: Path
-    strict_brainbox_errors: bool
 
     @staticmethod
     def default() -> 'CharaApis':
@@ -20,12 +18,9 @@ class CharaApis:
         avatar_url = os.environ.get('CHARA_AVATAR_URL', 'http://127.0.0.1:13000')
         content_folder = Path(os.environ.get('CHARA_CONTENT_FOLDER', Loc.data_folder))
         cache_folder = Path(os.environ.get('CHARA_CACHE_FOLDER', Loc.temp_folder/'chara-pipelines'))
-        datasets_folder = Path(os.environ.get('CHARA_DATASETS_FOLDER', Loc.data_folder))
         return CharaApis(
             BrainBox.Api(brainbox_url),
             AvatarApi(avatar_url),
             content_folder,
             cache_folder,
-            datasets_folder,
-            False
         )
