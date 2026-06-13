@@ -1,15 +1,11 @@
-from typing import Iterable, Iterator
-
-from ..core import IDrawableCollection, IDrawable
 from .wav_wrap import WavWrap
 from dataclasses import dataclass, field
+from ..core import IDrawableCollection
+from collections.abc import Iterator
 
 @dataclass
-class WavList(IDrawableCollection):
+class WavList(IDrawableCollection[WavWrap]):
     wavs: list[WavWrap] = field(default_factory=list)
-
-    def get_drawables(self) -> Iterable[IDrawable]:
-        return self.wavs
 
     def __add__(self, other: 'WavList') -> 'WavList':
         return WavList(self.wavs + other.wavs)
@@ -23,5 +19,3 @@ class WavList(IDrawableCollection):
     def __iter__(self) -> Iterator[WavWrap]:
         return iter(self.wavs)
 
-    def clone_for_other_set(self, other_set: Iterable[IDrawable]) -> 'IDrawableCollection':
-        return WavList(list(other_set))
