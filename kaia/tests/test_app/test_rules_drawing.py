@@ -8,8 +8,7 @@ class RulesDrawingsTestCase(TestCase):
     def test_rules_drawings(self):
         settings = KaiaAppSettings()
         app = KaiaApp(Loc.data_folder/'demo')
-        app.brainbox_api = 'exists'
-        settings.avatar_processor.bind_app(app)
+        settings.bind_app(app)
         rules = app.avatar_processor.rules.rules
 
         builder = GraphBuilder(

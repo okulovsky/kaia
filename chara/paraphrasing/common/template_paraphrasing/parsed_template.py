@@ -1,5 +1,3 @@
-from uritemplate.template import template_re
-
 from grammatron import SequenceDub, VariableDub, DubParameters, IDub, TemplateBase, Template, TemplateDub, ConstantDub
 from avatar.daemon import ParaphraseRecord
 from .sequence_linearizer import SequenceLinearizer

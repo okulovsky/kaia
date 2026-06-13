@@ -1,6 +1,7 @@
 from brainbox import ISelfManagingDecider, BrainBox, File
 from chara.common import Chara, BrainBoxCasePipeline, ICase, CaseCollection
 from dataclasses import dataclass
+from pathlib import Path
 from unittest import TestCase
 from foundation_kaia.misc import Loc
 
@@ -20,7 +21,7 @@ class MyMock(ISelfManagingDecider):
 @dataclass
 class Case(ICase):
     prompt: str
-    result: str | None = None
+    result: str | Path | None = None
 
 
 def create_task(case: Case) -> BrainBox.Task:

@@ -4,9 +4,9 @@ from brainbox import BrainBox, ISelfManagingDecider
 from chara.common import Chara, CaseCollection
 from chara.common.descriptions.characters import Character
 from chara.common.descriptions.characters.appearance import Appearance
+from brainbox.deciders.images.comfyui.workflows import TextToImage
 from chara.images.generation.scenarios import PipelineFactory, ImageScenarioSettings
-from chara.images.generation.scenarios.case import ImageScenarioCase
-from chara.images.generation.scenarios.core import ImageContext, Theme
+from chara.images.generation.scenarios.case import ImageScenarioCase, ImageContext, Theme
 from foundation_kaia.misc import Loc
 
 
@@ -30,7 +30,7 @@ class OllamaMock(ISelfManagingDecider):
 
 
 def _make_case():
-    context = ImageContext(base_model='test_model')
+    context = ImageContext(template=TextToImage(prompt='', negative_prompt='', model='test_model'))
     character = Character(
         name='Miku',
         gender=Character.Gender.Feminine,
