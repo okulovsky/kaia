@@ -1,4 +1,5 @@
 from datetime import timedelta
+import random
 from .plural_agreement import PluralAgreement
 from ..dubs import CardinalDub, VariableDub, ListDub, FunctionalTemplateDub
 from .language_dispatch_dub import LanguageDispatchDub
@@ -75,6 +76,26 @@ class TimedeltaDub(LanguageDispatchDub):
             )
         super().__init__(**templates)
 
+
+    _TYPICAL_SECONDS = [5, 10, 15, 20, 30, 45]
+    _TYPICAL_MINUTES = [1, 2, 3, 5, 10, 15, 20, 30, 45]
+    _TYPICAL_HOURS = [1, 2, 3, 5, 8, 12, 24]
+
+    def generate_random_values(self, n: int) -> list[timedelta]:
+        add_seconds, add_minutes, add_hours = self.adds
+        values = []
+        for _ in range(n):
+            kwargs = {}
+            if add_hours:
+                kwargs['hours'] = random.choice(TimedeltaDub._TYPICAL_HOURS)
+            if add_minutes:
+                kwargs['minutes'] = random.choice(TimedeltaDub._TYPICAL_MINUTES)
+            if add_seconds:
+                kwargs['seconds'] = random.choice(TimedeltaDub._TYPICAL_SECONDS)
+            if not kwargs:
+                kwargs['minutes'] = random.choice(TimedeltaDub._TYPICAL_MINUTES)
+            values.append(timedelta(**kwargs))
+        return values
 
     def variables_to_value(self, variables: dict[str, Any]) -> Any:
         seconds = variables.get('seconds', 0)

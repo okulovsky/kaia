@@ -1,4 +1,5 @@
 from typing import Any
+import random
 from ..core import DubParameters
 from .categorical_variable_dub import CategoricalVariableDub
 import num2words
@@ -10,6 +11,11 @@ class _IntDub(CategoricalVariableDub):
         self.is_ordinal = is_ordinal
         self.min = min
         self.max = max
+
+    def generate_random_values(self, n: int) -> list[int]:
+        min_value = self.min if self.min is not None else (self.max - 10 if self.max is not None else 0)
+        max_value = self.max if self.max is not None else min_value + 10
+        return [random.randint(min_value, max_value) for _ in range(n)]
 
     def get_values(self):
         if self.min is None or self.max is None:

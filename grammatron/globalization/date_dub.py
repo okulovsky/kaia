@@ -1,4 +1,5 @@
-from datetime import date
+from datetime import date, timedelta
+import random
 from ..dubs import VariableDub, OrdinalDub, FunctionalTemplateDub
 from ..grammars.ru import RuCase
 from ..grammars.de import DeCasus
@@ -30,6 +31,9 @@ def to_date(variables: dict):
     return date(year, month, day)
 
 class DateDub(LanguageDispatchDub):
+    def generate_random_values(self, n: int) -> list[date]:
+        return [date(2025, 1, 1) + timedelta(days=random.randint(1, 3000)) for _ in range(n)]
+
     def __init__(self):
         sequences = {}
         sequences['en'] = [
