@@ -28,12 +28,14 @@ DURATION = VariableDub(
 
 WORKOUT_NAME = VariableDub(
     'workout_name',
-    description='Workout name, e.g. "boxing" or "stretching"'
+    ToStrDub("boxing", "stretching"),
+    description='Workout name'
 )
 
 EXERCISE = VariableDub(
     "exercise",
-    description="One of the exercises in the workout, e.g. 'burpies', 'squats' etc"
+    ToStrDub("burpies", "squats"),
+    description="One of the exercises in the workout",
 )
 
 class WorkoutIntents(TemplatesCollection):

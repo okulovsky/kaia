@@ -2,7 +2,11 @@ from typing import *
 from grammatron import *
 from kaia import KaiaContext, ContextRequest, World, NarrationService, State, SingleLineKaiaSkill
 
-ACTIVITY = VariableDub("activity", description=f"Activity {World.character} can be doing")
+ACTIVITY = VariableDub(
+    "activity",
+    ToStrDub('jogging in the park', 'cooking at the kitchen'),
+    description=f"Activity {World.character} can be doing"
+)
 
 class ActivityIntents(TemplatesCollection):
     change_activity = Template("Change activity", "Do something else")

@@ -6,7 +6,7 @@ from avatar.daemon import SpeakerIdentificationService, UserWalkInService
 from typing import Callable
 from datetime import datetime
 
-USER = VariableDub('user')
+USER = VariableDub('user', ToStrDub("Alice", "Bob"))
 
 class RecognitionFeedbackIntents(TemplatesCollection):
     misrecognition: ClassVar[Template] = Template(f"I'm actually {USER}")

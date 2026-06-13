@@ -36,7 +36,8 @@
     const imageDiv   = document.getElementById('main_image');
     const overlayDiv = document.getElementById('overlay');
 
-    const client     = new AvatarClient({ baseUrl: window.location.origin });
+    const session    = new URLSearchParams(window.location.search).get('session') ?? 'default';
+    const client     = new AvatarClient({ baseUrl: window.location.origin, name: 'web', session });
     const dispatcher = new Dispatcher(client);
     const debugViewController = new DebugViewController(debugSettingsBtn, debugDiv);
 

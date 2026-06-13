@@ -56,7 +56,7 @@ class WeatherIntents(TemplatesCollection):
 
 TEMPERATURE = VariableDub(
     'temperature',
-    ToStrDub(),
+    CardinalDub(-50, 50),
     "Temperature, from -50 to 50 Celsius"
 )
 
@@ -83,10 +83,14 @@ SUNNY = VariableDub(
 
 TIME_START = VariableDub(
     "start",
+    CardinalDub(0, 23),
+    "Hour of day, 0-23"
 )
 
 TIME_END = VariableDub(
-    "end"
+    "end",
+    CardinalDub(0, 23),
+    "Hour of day, 0-23"
 )
 
 

@@ -3,11 +3,13 @@ from kaia import World
 
 DISH = VariableDub(
     "dish",
+    ToStrDub('sandwich', 'soup', 'porrige', 'stew'),
     description="one of the dish in the cookbook"
 )
 
 MINUTES = VariableDub(
     "minutes",
+    CardinalDub(),
     description="the duration of the set timer, in minutes"
 )
 
