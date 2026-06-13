@@ -1,3 +1,27 @@
+5.1.0
+    Foundation
+        When de/serializing dataclasses, the extra fields that are assigned but are not in schema, are handled
+    Brainbox
+        Ollama turned to the new arch, providing image for multimodal models is supported
+        Small improvements in Chroma and OneTrainer
+        The controllers can now be started in GUI
+    Avatar
+        Now server supports many sessions, so several different non-interfering instances may run on several consoles
+        Logging improved
+        Media library is now in Avatar, ImageService and NarrationService are more flexible
+    Grammatron
+        Dubs now support generating random values
+    Chara
+        Debugging drawing of images and sounds is rewritten
+        The results stored by the Chara are now human-readable
+        Voice Clone is finalized
+        Paraphrazing works again
+        Small fixes in Lora training
+        Image generation pipeline implemented
+    Kaia & Talents
+        Skills' intents are now better defined and compatible with random values generation.
+
+
 5.0.2
     Foundation
         - small fixes
