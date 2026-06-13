@@ -3,10 +3,23 @@ import datetime
 from avatar.messaging import *
 from avatar.daemon import NarrationService, State, ImageService
 from avatar.daemon.common.known_messages import TextCommand
+from avatar.daemon.common.content_manager import ContentManager, DictDataProvider, NewContentStrategy
 from unittest import TestCase
 
 characters = ('c0', 'c1', 'c2')
 activities = ('a0', 'a1', 'a2')
+
+
+def make_activity_manager():
+    records = [
+        {'id': f'{c}_{a}', 'character': c, 'activity': a}
+        for c in characters for a in activities
+    ]
+    return ContentManager(
+        DictDataProvider(records, 'id'),
+        strategy=NewContentStrategy(randomize=False),
+    )
+
 
 class NarrationTestCase(TestCase):
     def setUp(self):
@@ -15,10 +28,10 @@ class NarrationTestCase(TestCase):
         self.proc.rules.bind(NarrationService(
             self.state,
             characters,
-            activities,
+            make_activity_manager(),
             TextCommand('hello'),
             60,
-            False
+            randomize=False,
         ))
 
     def test_random_character_change(self):
@@ -81,11 +94,3 @@ class NarrationTestCase(TestCase):
         m = self.proc.debug_and_stop_by_empty_queue(NarrationService.StateRequest()).messages
         for key, value in self.state.__dict__.items():
             self.assertEqual(value, m[-1].__dict__[key])
-
-
-
-
-
-
-
-
