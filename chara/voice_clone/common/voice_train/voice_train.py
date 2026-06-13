@@ -62,6 +62,10 @@ class VoiceTrain(ABC):
         return pipeline(cases)
 
 
+from . import small_classes as _small_classes
+_small_classes.VoiceTrain = VoiceTrain
+
+
 
 
 

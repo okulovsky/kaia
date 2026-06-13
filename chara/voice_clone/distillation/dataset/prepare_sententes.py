@@ -63,7 +63,7 @@ def prepare_sentences(raw_dataset: Iterable[str], corpus: Corpus, language: Lang
     result = Chara.call(brainbox_pipeline)(_iterate_tasks(path, language), result_to_file=True)
     data = list(_iterate_phonemizations(result))
 
-    @Chara.phase(Chara.ResultType.Parquet)
+    @Chara.phase
     def reference_table():
         samples_df = create_phonemization_samples(language, data)
         logger.log("Reference table:")

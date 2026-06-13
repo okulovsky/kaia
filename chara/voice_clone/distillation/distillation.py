@@ -1,13 +1,14 @@
 import random
 from chara import Chara, CaseCollection, CaseRepetition, BatchingPipeline, logger
-from chara.common.tools import Wav
+from chara.common.tools import Wav, Drawer
+from foundation_kaia.prompters import Referrer
 from .settings import DistillationSettings
 from .training.training_and_export import CheckpointCase
 from ..common import VoiceTrain, VoiceModel
 from .upsampling import Upsampling, Verifier
 from .training import piper_training, evaluate
 from pathlib import Path
-from foundation_kaia.logging import HtmlReport
+
 
 class DistillationPipeline:
     def __init__(self, settings: DistillationSettings):
@@ -33,19 +34,30 @@ class DistillationPipeline:
             w.metadata['epoch'] = case.checkpoint.epoch
             w.metadata['path'] = case.local_path
             wavs.append(w)
-        lst = Wav.many(wavs)
 
-        with HtmlReport(Chara.current.folder / 'report.html'):
-            with logger.section("Source samples"):
-                logger.info(Wav(trainer_case.leveled_samples).draw().blocks(5).html())
-            with logger.section("Intermediate samples"):
-                examples = []
-                for i in range(50):
-                    case: Upsampling.Case = random.choice(successes)
-                    examples.append(case.voiceover_path)
-                logger.info(Wav.many(examples).draw().blocks(5).html())
-            with logger.section("Distilled samples"):
-                logger.info(lst.draw().tables(order_by='epoch').html())
+        with open(Chara.current.folder/'report.html', 'w') as report:
+            report.write('<!DOCTYPE html>\n<html><body>')
+            report.write('<h1>Source samples</h1>')
+            report.write(
+                Drawer(trainer_case.leveled_samples, Wav).tiles(5).to_html()
+            )
+            report.write("<h1>Intermediate samples</h1>")
+
+            examples = []
+            for i in range(50):
+                case: Upsampling.Case = random.choice(successes)
+                examples.append(case.voiceover_path)
+            report.write(
+                Drawer(examples, Wav).tiles(5).to_html()
+            )
+
+            report.write("<h1>Distilled samples</h1>")
+            ref = Referrer[CheckpointCase]().ref
+            report.write(
+                Drawer(checkpoint_cases.successes, lambda z: Wav(z.path_to_voiceover_file))
+                .table(ref.checkpoint.epoch, ref.local_path)
+                .to_html()
+            )
 
         return checkpoint_cases
 

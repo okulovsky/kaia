@@ -3,6 +3,7 @@ from pathlib import Path
 from brainbox import BrainBox
 from .voice_train import VoiceTrain, VoiceTrainMetadata, VoiceModel
 from .voice_inference import VoiceInference
+from .revoice import Revoice
 from dataclasses import dataclass
 from hashlib import md5
 from brainbox.deciders import CosyVoice
@@ -63,8 +64,8 @@ class CosyVoiceInference(VoiceInference):
         else:
             return CosyVoice.new_task().voice_to_text(model.model_name, text)
 
-
-
-
-
+@dataclass
+class CosyRevoice(Revoice):
+    def create_task(self, model: CosyVoiceModel, file: Path) -> BrainBox.Task:
+        return CosyVoice.new_task().voice_to_file(model.model_name, file)
 
