@@ -24,7 +24,7 @@ class TextDatasetPipeline:
             for language in self.languages:
                 for template in self.templates:
                     cases.append(TextDatasetCase(template, language, mood))
-        builder = PromptTaskBuilder(self.model, prompt_file=Path(__file__).parent / "template_prompt.jinja")
+        builder = PromptTaskBuilder(self.model, Path(__file__).parent / "template_prompt.jinja")
         settings = Paraphrase.Settings(
             paraphrase_task_builder=builder,
             enable_words_translation=True,
