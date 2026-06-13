@@ -5,10 +5,6 @@ import threading
 from datetime import date
 from pathlib import Path
 
-from foundation_kaia.marshalling import Serializer
-
-from .avatar_message import AvatarMessage
-
 
 def _zip_and_delete(jsonlines_path: Path):
     zip_path = jsonlines_path.with_suffix('.zip')
@@ -24,7 +20,7 @@ class Stasher:
         self.current_file: Path | None = None
         self._fh = None
 
-    def stash(self, message: AvatarMessage):
+    def stash(self, record: dict):
         today = date.today()
         if self.current_date is None or self.current_date < today:
             os.makedirs(self.folder, exist_ok=True)
@@ -35,6 +31,6 @@ class Stasher:
             self.current_file = self.folder / f"log_{today:%Y_%m_%d}.jsonlines"
             self._fh = open(self.current_file, 'a')
 
-        line = json.dumps(Serializer.parse(AvatarMessage).to_json(message, Serializer.Context()))
-        self._fh.write(line + '\n')
+        self._fh.write(json.dumps(record) + '\n')
         self._fh.flush()
+

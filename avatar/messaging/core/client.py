@@ -21,17 +21,19 @@ class AvatarClient:
                  repo: IMessageRepository,
                  session: str,
                  allowed_types: list[str] | None = None,
-                 last_id: str|None = None
+                 last_id: str|None = None,
+                 name: str|None = None,
                  ):
         self.repo = repo
         self.session = session
         self.allowed_types = allowed_types
         self.last_id = last_id
+        self.name = name
 
     def base_pull(self, *, timeout_in_seconds: float|None = None, max_messages: int|None = None) -> AvatarMessageSet[IMessage]:
-        result = self.repo.get(self.session, self.last_id, timeout_in_seconds, max_messages, self.allowed_types)
-        if len(result.messages) > 0:
-            self.last_id = result.messages[-1].envelop.id
+        result = self.repo.get(self.session, self.last_id, timeout_in_seconds, max_messages, self.allowed_types, client_name=self.name)
+        if result.messages:
+            self.last_id = result.messages[-1].message.envelop.id
         return result
 
     def push(self, message: IMessage):
@@ -59,13 +61,13 @@ class AvatarClient:
             self.allowed_types = None
 
     def clone_client(self) -> 'AvatarClient':
-        return AvatarClient(self.repo, self.session, self.allowed_types, self.last_id)
+        return AvatarClient(self.repo, self.session, self.allowed_types, self.last_id, self.name)
 
     def pull(self, *, timeout_in_seconds: float|None = None, max_messages: int|None = None) -> list[IMessage]:
-        return self.base_pull(timeout_in_seconds=timeout_in_seconds, max_messages=max_messages).messages
+        return [e.message for e in self.base_pull(timeout_in_seconds=timeout_in_seconds, max_messages=max_messages).messages]
 
     def tail(self, count: int|None = None, *, from_timestamp=None) -> list[IMessage]:
-        return self.base_tail(count, from_timestamp=from_timestamp).messages
+        return [e.message for e in self.base_tail(count, from_timestamp=from_timestamp).messages]
 
     def _query(self, time_limit_in_seconds: float|None = None, no_exception: bool = False):
         begin = time.monotonic()

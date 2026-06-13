@@ -32,8 +32,10 @@ class AvatarMessageRepository(IMessageRepository):
 
     @staticmethod
     def _deserialize(result: AvatarMessageSet[AvatarMessage]) -> AvatarMessageSet[IMessage]:
-        messages = []
-        for m in result.messages:
+        from ...messaging.core import AvatarMessageSetElement
+        elements = []
+        for element in result.messages:
+            m = element.message
             try:
                 t = TypeTools.full_name_to_type(m.content_type)
             except Exception:
@@ -43,17 +45,18 @@ class AvatarMessageRepository(IMessageRepository):
             else:
                 new_message = Serializer.parse(t).from_json(m.content, Serializer.Context())
             new_message._envelop = m.envelop
-            messages.append(new_message)
-        return AvatarMessageSet(result.missing_id, result.missing_session, messages)
+            elements.append(AvatarMessageSetElement(element.session, new_message))
+        return AvatarMessageSet(result.missing_id, elements)
 
     def get(self,
-            session: str,
+            session: str | None,
             last_id: str | None = None,
             timeout_in_seconds: float | None = None,
             max_messages: int | None = None,
             allowed_types: list[str] | None = None,
+            client_name: str | None = None,
             ) -> AvatarMessageSet[IMessage]:
-        return self._deserialize(self.service.get(session, last_id, timeout_in_seconds, max_messages, allowed_types))
+        return self._deserialize(self.service.get(session, last_id, timeout_in_seconds, max_messages, allowed_types, client_name=client_name))
 
     def tail(self,
              session: str,

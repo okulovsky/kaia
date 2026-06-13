@@ -48,6 +48,11 @@ class Queue:
             lo = max(start - self._offset, 0)
             return list(self._messages[lo:])
 
+    @property
+    def size(self) -> int:
+        with self._lock:
+            return len(self._messages)
+
     def find_index_from_timestamp(self, timestamp: datetime) -> int:
         """Returns the absolute index of the first message with timestamp >= given value."""
         with self._lock:
