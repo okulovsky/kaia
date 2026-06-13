@@ -30,7 +30,6 @@ class AvatarDaemonAppSettings(IAppInitializer):
     timer_event_span_in_seconds: float = 1
     error_events: bool = True
     characters: tuple[str,...] = CHARACTERS
-    activity: tuple[str,...] = ('morning', 'day', 'night')  # doesn't affect anything, only needed for testing
     dub_task_factory: s.TTSService.TaskFactory = field(default_factory=DemoDubTaskFactory)
     speaker_to_image_url: Callable[[str], str] = _speaker_to_image_url
     greetings_command: Any = field(default_factory=_default_greetings)
@@ -135,8 +134,10 @@ class AvatarDaemonAppSettings(IAppInitializer):
         if self.report_to_session is not None:
             reporting_stream = app.avatar_api.create_messaging_stream(self.report_to_session).create_client().as_asyncronous()
 
+        daemon_client = app.create_avatar_client()
+        daemon_client.name = 'daemon'
         proc = AvatarDaemon(
-            app.create_avatar_client(),
+            daemon_client,
             self.timer_event_span_in_seconds,
             self.error_events,
             reporting_stream,
@@ -165,9 +166,9 @@ class AvatarDaemonAppSettings(IAppInitializer):
         return s.NarrationService(
             state,
             self.characters,
-            self.activity,
-            self.greetings_command,
-            30*60
+            activity_manager=None,
+            welcome_command=self.greetings_command,
+            time_between_updates_in_seconds=30*60,
         )
 
 
