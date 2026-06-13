@@ -1,0 +1,23 @@
+{% import "intro.jinja" as intro %}
+
+{{ intro.intro(case) }}
+
+{{ case.character.name }} is doing activity: {{ case.activity }}.
+
+Describe the facial expression of {{ case.character.name }} that matches the activity and the character's personality.
+
+For description, use tag format, for example: "parted lips", "blush", "closed eyes", "grin", "angry", "yelling", "embarrassed"
+
+Pick 1-2 tags, absolute maximum is 2. Write the result as the single line of text with the tags, for instance:
+
+```
+angry, yelling
+```
+
+Do not use non-descriptive tags like "concentrated", "focused" or "calm". Use the tags that are easy to picture and imagine, like "frown", "closed eyes", "light smile", etc.
+
+Do not provide any additional comments or explanations.
+
+
+
+

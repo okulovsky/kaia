@@ -1,0 +1,40 @@
+{% import "intro.jinja" as intro %}
+
+{{ intro.intro(case) }}
+
+{{ case.character.name }} is doing activity: {{ case.activity }}.
+
+{{ case.character.name }}'s preferred clothing is {{ case.character.appearance.clothing }}.
+The preferred colors are {{ case.character.appearance.colors }}.
+
+Design the clothing {{ case.character.name }} will be wearing for the scene, filling the slots:
+* top: e.g. shirts, polos, tank tops, etc.
+* bottom: e.g. skirts, jeans, shorts, underwear
+* costume: e.g. dresses, overalls, kimonos, robes, kitchen apron
+* outerwear: e.g. coats, sweaters, blazers
+* footwear: e.g. sneakers, slides, boots
+* headwear: e.g. baseball cap, straw hat, beanie, chef's hat
+* accessories: handbag, sunglasses, wristband, etc.
+
+Only assign item to the slot if it really makes sense and is necessary for the activity, especially outerwear, headwear and accessories.
+Otherwise, keep the slot empty.
+
+If there is "costume", covering top and bottom, then "top" and "bottom" slots should most probably stay empty.
+
+For each slot, indicate the item and the color and for 1-2 of them, add a special tag. Keep the colors and tags aligned with {{ case.character.name }} personality and taste, as well as the activity.
+
+Write the result in the JSON format, e.g.
+
+```
+{
+    "top": ["white tank top"],
+    "bottom": ["colorful shorts", "floral ornament"],
+    "costume": [],
+    "outerwear": [],
+    "footwear": ["read sneakers"],
+    "headwear": [],
+    "accessories": ["sunglasses"]
+}
+```
+
+Do not provide any comments or explanations.
