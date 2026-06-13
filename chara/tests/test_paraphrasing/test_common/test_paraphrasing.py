@@ -40,8 +40,7 @@ class Mock(ISelfManagingDecider):
 
 class ParaphraseTestCase(TestCase):
     def test_paraphrase(self):
-        builder = PromptTaskBuilder('test')
-        builder.read_prompt('TEST')
+        builder = PromptTaskBuilder('test', lambda case: 'TEST')
         settings = Paraphrase.Settings(
             paraphrase_task_builder=builder,
             enable_words_translation=True,

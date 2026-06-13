@@ -27,7 +27,7 @@ class CharaCallsTestCase(TestCase):
             for c in sorted(str(c.relative_to(folder)) for c in folder.glob('**/*')):
                 print(c)
 
-            (folder / 'result').unlink()
+            (folder / 'result.json').unlink()
             Chara.start(folder)
             result = Chara.call(function)(4)
             self.assertEqual(40, result)

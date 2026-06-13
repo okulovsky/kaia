@@ -1,6 +1,5 @@
 from unittest import TestCase
 from chara.common import Chara
-from chara.common.architecture.result_handling import ResultType
 from foundation_kaia.misc import Loc
 
 
@@ -13,8 +12,8 @@ def _run_phases(folder):
     def step_empty_brackets():
         return 2
 
-    @Chara.phase(ResultType.Json)
-    def step_with_result_type():
+    @Chara.phase()
+    def step_three():
         return 3
 
 
@@ -39,11 +38,11 @@ class PhaseTestCase(TestCase):
 
             self.assertEqual(30, Chara.previous.result)
 
-    def test_phase_with_result_type(self):
+    def test_phase_with_brackets(self):
         with Loc.create_test_folder() as folder:
             Chara.start(folder)
 
-            @Chara.phase(ResultType.Json)
+            @Chara.phase()
             def my_step():
                 return 30
 
@@ -56,4 +55,4 @@ class PhaseTestCase(TestCase):
             files = sorted(str(c.relative_to(folder)) for c in folder.glob('**/*') if not c.name.startswith('.'))
             self.assertIn('000-step_no_brackets', files)
             self.assertIn('001-step_empty_brackets', files)
-            self.assertIn('002-step_with_result_type', files)
+            self.assertIn('002-step_three', files)

@@ -32,7 +32,7 @@ class UtterancePipelineTestCase(TestCase):
             [Template("yes"), Template("no")],
             target_languages=('en',)
         )
-        pipe = UtteranceParaphrasePipeline(manager, settings, templates_in_batch=10, max_attempts=1)
+        pipe = UtteranceParaphrasePipeline(manager, settings, templates_in_batch=10, max_batch_iterations=1)
 
         with Loc.create_test_folder() as avatar_folder:
             with Loc.create_test_folder() as folder:
