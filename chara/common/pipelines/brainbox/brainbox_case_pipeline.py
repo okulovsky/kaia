@@ -43,16 +43,19 @@ class BrainBoxCaseResultApplicator:
                 self._apply(new_case, subresult)
                 output_cases.append(new_case)
 
-
-    def apply_brainbox_result(self, cases, results):
+    def apply_iterable_result(self, cases, results):
         output_cases = []
-        for case, result in zip(cases, results.read_all()):
+        for case, result in zip(cases, results):
             if result.error is not None:
                 case.error = result.error
                 output_cases.append(case)
                 continue
             self._full_apply_one_case(output_cases, case, result.result)
         return output_cases
+
+
+    def apply_brainbox_result(self, cases, results):
+        return self.apply_iterable_result(cases, results.read_all())
 
     def apply_cached_result(self, cases: CaseCollection, field: str):
         output_cases = []
@@ -62,7 +65,6 @@ class BrainBoxCaseResultApplicator:
             else:
                 output_cases.append(case)
         return output_cases
-
 
 
 

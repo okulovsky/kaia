@@ -1,4 +1,3 @@
-from typing import *
 from enum import Enum
 
 
@@ -10,7 +9,7 @@ class Gender(Enum):
 
 class Pronouns:
     @staticmethod
-    def get(gender: Optional['Gender'], plural: bool, case: int):
+    def get(gender: Gender|None, plural: bool, case: int) -> str:
         if plural:
             return ['they', 'them', 'their', 'themselves'][case]
         if gender == Gender.Feminine:
@@ -20,7 +19,7 @@ class Pronouns:
         else:
             return ['it', 'it', 'its', 'itself'][case]
 
-    def __init__(self, gender: Optional['Gender'], plural: bool = False):
+    def __init__(self, gender: Gender, plural: bool = False):
         self.gender = gender
         self.plural = plural
 
@@ -39,5 +38,8 @@ class Pronouns:
     @property
     def reflexive(self):
         return Pronouns.get(self.gender, self.plural, 3)
+
+    def __str__(self):
+        return self.subjective
 
 
