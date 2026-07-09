@@ -1,6 +1,7 @@
 from kaia.skills.cookbook_skill import CookBookSkill, Recipe, CookBookIntents, CookBookReplies
 from kaia.skills.notification_skill import NotificationRegister, NotificationInfo, NotificationSkill
 from kaia import KaiaAssistant
+from kaia.assistant.common_intents import CommonIntents
 from eaglesong import Scenario, Automaton
 from unittest import TestCase
 from avatar.utils import TestTimeFactory
@@ -46,7 +47,7 @@ class CookbookSkillTestCase(TestCase):
             .check()
             .act_and_send(lambda: tf.shift(1).event())
             .check(lambda z: z.text == 'alarm starts')
-            .send('Stop')
+            .send(CommonIntents.stop.utter())
             .check(lambda z: z.text == 'alarm stops', 'Enjoy your tea', CookBookReplies.all_done())
             .validate()
         )

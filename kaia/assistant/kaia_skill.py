@@ -40,9 +40,8 @@ class IKaiaSkill(ABC):
     Language = KaiaSkillLanguageSettings
 
 
-    @abstractmethod
     def get_name(self) -> str:
-        pass
+        return type(self).__name__
 
     @abstractmethod
     def get_runner(self):
@@ -73,24 +72,6 @@ class IKaiaSkill(ABC):
         return []
 
 
-def _class_to_intent_collection(c) -> tuple[Template,...]:
-    if c is None:
-        return ()
-    if isinstance(c, type):
-        if issubclass(c, TemplatesCollection):
-            return tuple(c.get_templates())
-        else:
-            raise ValueError(f"If type, must be TemplatesCollection, but was {c}")
-    try:
-        l = tuple(c)
-    except Exception as ex:
-        raise ValueError("If not type, expected to be iterable of Templates") from ex
-    for index, element in enumerate(l):
-        if not isinstance(element, Template):
-            raise ValueError(f"If iterable, expect to contain only Templates, but at index {index} was\n{element}")
-    return l
-
-
 class KaiaSkillBase(IKaiaSkill):
     def __init__(self,
                  intents_class: Union[Type[TemplatesCollection], Iterable[Template],None] = None,
@@ -98,9 +79,27 @@ class KaiaSkillBase(IKaiaSkill):
                  name: Optional[str] = None,
                  ):
         self._name = name if name is not None else type(self).__name__
-        self._intents = _class_to_intent_collection(intents_class)
-        self._dubs = _class_to_intent_collection(replies_class)
+        self._intents = KaiaSkillBase.class_to_intent_collection(intents_class)
+        self._dubs = KaiaSkillBase.class_to_intent_collection(replies_class)
         self._intents_names = set(i.get_name() for i in self._intents)
+
+    @staticmethod
+    def class_to_intent_collection(c) -> tuple[Template, ...]:
+        if c is None:
+            return ()
+        if isinstance(c, type):
+            if issubclass(c, TemplatesCollection):
+                return tuple(c.get_templates())
+            else:
+                raise ValueError(f"If type, must be TemplatesCollection, but was {c}")
+        try:
+            l = tuple(c)
+        except Exception as ex:
+            raise ValueError("If not type, expected to be iterable of Templates") from ex
+        for index, element in enumerate(l):
+            if not isinstance(element, Template):
+                raise ValueError(f"If iterable, expect to contain only Templates, but at index {index} was\n{element}")
+        return l
 
     @abstractmethod
     def run(self):

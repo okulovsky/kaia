@@ -13,7 +13,7 @@ def S():
         ]
     )
 
-    skill = WorkoutSkill([workout], None)
+    skill = WorkoutSkill([workout])
 
     return Scenario(lambda: Automaton(skill.run, None))
 

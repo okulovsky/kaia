@@ -16,7 +16,6 @@ def start_kaia(settings: KaiaAppSettings):
     data_folder = Path(args.data_folder)
 
     logger.info(f"Running kaia at the port {port} in the folder {data_folder}")
-    compile_frontend(data_folder / 'avatar' / 'frontend')
     settings.brainbox = None
     settings.avatar_server.port = port
 
@@ -24,9 +23,16 @@ def start_kaia(settings: KaiaAppSettings):
     app.brainbox_api = BrainBox.Api("http://127.0.0.1:8090")
     app.brainbox_cache_folder = data_folder / 'brainbox/cache'
     settings.bind_app(app)
-    app.get_fork_app(None).run()
+
+    if app.avatar_server is not None:
+        frontend_folder = app.avatar_server.settings.frontend_folder
+        if frontend_folder is not None:
+            compile_frontend(frontend_folder)
 
     settings.brainbox_setup.execute(app.brainbox_api)
+
+    app.get_fork_app(None).run()
+
     while True:
         time.sleep(1)
 

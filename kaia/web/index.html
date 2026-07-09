@@ -13,28 +13,33 @@
   <div id="content">
     <div id="image">
       <img id="main_image" src=" " alt="main image">
+      <div id="music-player"></div>
       <div id="overlay"></div>
       <div id="chat_separator">&nbsp;</div>
     </div>
     <div id="chat"></div>
   </div>
+  <div id="app-overlay"></div>
 
   <script type="module">
     const v = Math.random().toString(36).slice(2);
-    const { AvatarClient, Dispatcher, ChatCommandHandler, ImageCommandHandler, ButtonGridCommandHandler,
+    document.querySelector('link[rel="stylesheet"]').href = `/web/static/index.css?v=${v}`;
+    const { AvatarClient, Dispatcher, ChatCommandHandler, ImageCommandHandler, ButtonGridCommandHandler, MusicPlayerCommandHandler,
             Microphone, MicController, Recorder, StatefulRecorder, SilenceDetector, Automaton, AudioController,
             Message, Envelop, DebugViewController, MicDebugView, ReloadDebugView, LoadingScreen,
             SilenceControllingWakeWordDetector,
-            Webcam, WebcamProcessor } = await import(`/frontend/scripts/kaia-frontend.js?v=${v}`);
+            Webcam, WebcamProcessor, AppHandler } = await import(`/frontend/scripts/kaia-frontend.js?v=${v}`);
     //const { KaldiWakeWordDetector } = await import(`/frontend/scripts/kaldi-wake-word-detector.js?v=${v}`);
     const { BumblebeeWakeWordDetector } = await import(`/frontend/scripts/bumblebee-wake-word-detector.js?v=${v}`);
 
     const loadingDiv    = document.getElementById('loading');
     const debugSettingsBtn = document.getElementById('debug-settings-btn');
     const debugDiv      = document.getElementById('debug-div');
-    const chatDiv    = document.getElementById('chat');
-    const imageDiv   = document.getElementById('main_image');
-    const overlayDiv = document.getElementById('overlay');
+    const chatDiv        = document.getElementById('chat');
+    const imageDiv       = document.getElementById('main_image');
+    const overlayDiv     = document.getElementById('overlay');
+    const musicPlayerDiv = document.getElementById('music-player');
+    const appOverlayDiv  = document.getElementById('app-overlay');
 
     const session    = new URLSearchParams(window.location.search).get('session') ?? 'default';
     const client     = new AvatarClient({ baseUrl: window.location.origin, name: 'web', session });
@@ -47,8 +52,9 @@
     new ChatCommandHandler({ dispatcher, container: chatDiv, baseUrl: window.location.origin });
     new ImageCommandHandler({ dispatcher, imgEl: imageDiv });
     new ButtonGridCommandHandler({ dispatcher, overlay: overlayDiv, client });
+    new MusicPlayerCommandHandler({ dispatcher, div: musicPlayerDiv, client });
 
-    new AudioController({ dispatcher, baseUrl: window.location.origin });
+    const audioController = new AudioController({ dispatcher, baseUrl: window.location.origin });
 
     const input    = new Microphone();
     const recorder = new Recorder({ startBufferLength: 1.0, normalBufferLength: 0.3, dispatcher, baseUrl: window.location.origin });
@@ -64,6 +70,8 @@
     const webcamProcessor = new WebcamProcessor({ webcam, client, baseUrl: window.location.origin, rateMs: 2000 });
     debugViewController.register(webcamProcessor);
 
+
+    new AppHandler(appOverlayDiv, [dispatcher, controller, webcamProcessor, audioController], dispatcher);
 
     new LoadingScreen(loadingDiv, [wake, webcam], async () => {
       const initMsg = new Message('InitializationEvent', new Envelop(), {});

@@ -14,6 +14,7 @@ if __name__ == '__main__':
     print(f"Running with {base_url}, session {session}")
     while True:
         try:
+            set_volume(0.2)
             client = SimpleAvatarClient(base_url, session, ['VolumeCommand'])
             client.scroll_to_end()
             print("Client connected")

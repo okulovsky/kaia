@@ -2,7 +2,9 @@ import time
 import webbrowser
 from kaia.app import KaiaAppSettings
 from foundation_kaia.misc import Loc
+from foundation_kaia.fork import Fork
 from avatar.app import compile_frontend
+
 
 
 if __name__ == '__main__':
@@ -13,11 +15,13 @@ if __name__ == '__main__':
     settings.brainbox.deciders_files_in_kaia_working_folder = False
     settings.custom_avatar_resources_folder = Loc.root_folder/'kaia/app/files/avatar-resources'
     app = settings.create_app(working_folder)
-    app.get_fork_app(None).run()
-    app.avatar_api.wait_for_connection(5)
 
-    settings.brainbox_setup.execute(app.brainbox_api)
+    with Fork(app.brainbox_server):
+        app.brainbox_api.wait_for_connection(5)
+        settings.brainbox_setup.execute(app.brainbox_api)
+        app.get_fork_app(None).run()
+        app.avatar_api.wait_for_connection(5)
 
-    webbrowser.open('http://127.0.0.1:13002')
-    while True:
-        time.sleep(1)
+        webbrowser.open('http://127.0.0.1:13002')
+        while True:
+            time.sleep(1)

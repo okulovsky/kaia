@@ -60,7 +60,7 @@ class TestDate(TestCase):
             .check(lambda z: z.text=="Alarm")
             .act_and_send(lambda: dtf.shift(1).event())
             .check(lambda z: z.text=="Alarm")
-            .send("Stop")
+            .send(TimerIntents.cancel_the_timer.utter())
             .check()
             .act_and_send(lambda: dtf.event())
             .check()

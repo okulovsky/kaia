@@ -34,6 +34,9 @@ class AssistantFactory(IAssistantFactory):
         return timer_register
 
     def create_common_skills(self):
+        self.skills = []
+        self.notification_registers = []
+        self.timer_register = None
         self.skills.append(skills.EchoSkill())
         self.skills.append(skills.PingSkill())
 
