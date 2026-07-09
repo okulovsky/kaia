@@ -5,4 +5,5 @@ export * from './loadingScreen/index.js'
 export * from './mic/index.js'
 export * from './debugView/index.js'
 export * from './webcam/index.js'
+export * from './appHandler/index.js'
 

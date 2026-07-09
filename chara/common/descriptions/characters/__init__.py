@@ -1,2 +1,2 @@
-from .characters import Pronouns, Character, CharacterSet, EntitySet, Entity
+from .characters import Character
 from .world import World

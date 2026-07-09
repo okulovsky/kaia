@@ -28,3 +28,7 @@ class IAvatarMessagingService:
                   ) -> AvatarMessageSet[AvatarMessage]:
         pass
 
+    @endpoint
+    def get_active_clients(self) -> dict[str, datetime]:
+        ...
+

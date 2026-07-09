@@ -1,7 +1,10 @@
-from yo_fluq import FileIO
+import json
+from typing import Any
+
 import requests
 import base64
 from pathlib import Path
+from .music_player import IMusicPlayer, MusicStatus
 
 from dataclasses import dataclass
 import random
@@ -11,7 +14,7 @@ class Playlist:
     name: str
     uri: str
 
-class SpotifyHandler:
+class SpotifyMusicPlayer(IMusicPlayer):
     def __init__(self, client_id, client_secret, oauth_path, playback_device_name):
         self.oauth_path = Path(oauth_path)
         self.playback_device_name = playback_device_name
@@ -19,8 +22,56 @@ class SpotifyHandler:
         self.client_id = client_id
         self.client_secret = client_secret
 
+
+    def pause(self):
+        self._send_command_request("PUT", "pause")
+
+    def resume(self):
+        self._send_command_request("PUT", "play")
+
+    def next(self):
+        self._send_command_request("POST", "next")
+
+    def previous(self):
+        self._send_command_request("POST", "previous")
+
+    def start(self, music: Any):
+        if isinstance(music, Playlist):
+            self.play_playlist(music.uri)
+        elif isinstance(music, str):
+            self.play_track(music)
+        else:
+            raise ValueError("Expected str (track uri) or SpotifyPlaylist")
+
+    def stop(self):
+        self._send_command_request("PUT", "pause")
+
+    def status(self) -> MusicStatus:
+        url = "https://api.spotify.com/v1/me/player"
+        headers = {"Authorization": f"Bearer {self._get_access_token()}"}
+        response = requests.get(url, headers=headers)
+
+        if response.status_code == 204:
+            return MusicStatus(has_music=False, playing=False, current_track_summary=None)
+
+        response.raise_for_status()
+        data = response.json()
+
+        item = data.get("item")
+        if item is None:
+            return MusicStatus(has_music=False, playing=False, current_track_summary=None)
+
+        name = item.get("name", "")
+        artists = ", ".join(a["name"] for a in item.get("artists", []))
+        summary = f"{name} - {artists}" if artists else name
+
+        return MusicStatus(has_music=True, playing=data.get("is_playing", False), current_track_summary=summary)
+
+
+
     def _read_token(self):
-        return FileIO.read_json(self.oauth_path)['access_token']
+        return json.loads(self.oauth_path.read_text())['access_token']
+
 
     def _is_token_expired(self) -> bool:
         access_token = self._read_token()
@@ -34,7 +85,7 @@ class SpotifyHandler:
 
 
     def _refresh_token(self):
-        oauth_data = FileIO.read_json(self.oauth_path)
+        oauth_data = json.loads(self.oauth_path.read_text())
         refresh_token = oauth_data.get("refresh_token")
 
         token_url = "https://accounts.spotify.com/api/token"
@@ -57,7 +108,7 @@ class SpotifyHandler:
         token_data = response.json()
 
         oauth_data["access_token"] = token_data["access_token"]
-        FileIO.write_json(oauth_data, self.oauth_path)
+        self.oauth_path.write_text(json.dumps(oauth_data))
 
     def _get_access_token(self):
         if self._is_token_expired():
@@ -210,15 +261,4 @@ class SpotifyHandler:
         if response.status_code != expected_code:
             raise Exception(f"Spotify API error: {response.status_code} - {response.text}")
 
-    def pause(self):
-        self._send_command_request("PUT", "pause")
-
-    def resume(self):
-        self._send_command_request("PUT", "play")
-
-    def next(self):
-        self._send_command_request("POST", "next")
-
-    def previous(self):
-        self._send_command_request("POST", "previous")
 

@@ -1,5 +1,3 @@
-from markdown_it.rules_inline.strikethrough import postProcess
-
 from .stt import IRecognitionSetup, RecognitionContext, STTCommand, STTConfirmation, RhasspyRecognitionSetup
 from .rhasspy_training import IntentsPack, RhasspyHandler
 from ..common import IMessage, message_handler, AvatarService

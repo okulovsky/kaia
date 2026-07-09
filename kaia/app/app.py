@@ -43,7 +43,6 @@ class KaiaApp:
             custom_main_service = self.kaia_driver
 
         candidates = [
-            self.brainbox_server,
             self.avatar_server,
             self.avatar_processor,
             self.kaia_driver,

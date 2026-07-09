@@ -52,6 +52,17 @@ class OllamaController(DockerMarshallingController[OllamaSettings]):
         yield SelfTestCase(Ollama.new_task(parameter=model).question_json(prompt=prompt), None)
         yield SelfTestCase(Ollama.new_task(parameter=model).question(prompt=prompt), None)
 
+        format = {
+            'type': 'object',
+            'properties': {
+                'name': {'type': 'string'},
+                'ingredients': {'type': 'array', 'items': {'type': 'string'}},
+            },
+            'required': ['name', 'ingredients'],
+        }
+        yield SelfTestCase(Ollama.new_task(parameter=model).question_json(prompt=prompt, format=format), None)
+        yield SelfTestCase(Ollama.new_task(parameter=model).question(prompt=prompt, format=format), None)
+
         prompt = "Describe the supplied image"
         image = Path(__file__).parent/'image.png'
         #yield SelfTestCase(Ollama.new_task(parameter=model).question_json(prompt=prompt, image=image), None)

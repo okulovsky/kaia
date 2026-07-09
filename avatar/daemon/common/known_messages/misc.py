@@ -8,3 +8,7 @@ class ErrorAnnouncement(IMessage):
 @dataclass
 class ServerStartedEvent(IMessage):
     pass
+
+@dataclass
+class OpenApp(IMessage):
+    url: str|None = None

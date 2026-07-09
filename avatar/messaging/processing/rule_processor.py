@@ -28,18 +28,23 @@ class RuleProcessor:
             raw_result = self.rule.service(self.message)
 
             if isinstance(raw_result, IMessage):
-                parsed_result = (raw_result,)
+                raw_result = (raw_result,)
             elif raw_result is None:
-                parsed_result = ()
+                raw_result = ()
             else:
                 try:
-                    parsed_result = list(raw_result)
-                except:
-                    raise TypeError(f"Handler {self.rule.service.__name__} returned invalid type: {type(raw_result)}")
+                    raw_result = iter(raw_result)
+                except TypeError:
+                    raise TypeError(
+                        f"Handler {self.rule.service.__name__} returned invalid type: {type(raw_result).__name__}"
+                    )
 
-            for message in parsed_result:
+            parsed_result = []
+            for message in raw_result:
                 if not isinstance(message, IMessage):
-                    f"Handler {self.rule.service.__name__} returned invalid type: {type(message).__name__}, "
+                    raise TypeError(
+                        f"Handler {self.rule.service.__name__} returned invalid type: {type(message).__name__}"
+                    )
 
                 if self.rule.outputs is not None:
                     try:
@@ -57,6 +62,7 @@ class RuleProcessor:
                     message.as_reply_to(self.message)
                 message.as_from_publisher(self.rule.name)
                 self.client.push(message)
+                parsed_result.append(message)
 
         except:
             tb = traceback.format_exc()

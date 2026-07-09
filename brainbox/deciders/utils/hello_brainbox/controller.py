@@ -69,7 +69,7 @@ class HelloBrainBoxController(DockerMarshallingController[HelloBrainBoxSettings]
             if status.progress is not None and status.progress > 0:
                 break
             time.sleep(0.1)
-        log = api.jobs.get_log(training_id)
+        log = api.jobs.get_job(training_id).log
         tc.assertIsNotNone(log)
         tc.assertGreater(len(log), 0)
         result_file = api.join(training_id)
@@ -93,7 +93,7 @@ class HelloBrainBoxController(DockerMarshallingController[HelloBrainBoxSettings]
                 break
             time.sleep(0.1)
         tc.assertFalse(status.success)
-        tc.assertIsNotNone(api.jobs.get_error(failing_id))
+        tc.assertIsNotNone(api.jobs.get_job(failing_id).error)
         logger.last_call(api)
 
 

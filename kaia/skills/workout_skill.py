@@ -7,7 +7,7 @@ from eaglesong import Listen, Return
 from typing import cast
 from yo_fluq import Query
 from datetime import timedelta
-from .music_skill import IMusicPlayer
+from avatar.daemon.music_service import MusicStartCommand, MusicStopButtonEvent, Playlist
 
 @dataclass
 class Excercise:
@@ -19,6 +19,7 @@ class Excercise:
 class Workout:
     name: str
     items: list[Excercise]
+    music: Playlist|None = None
 
 DURATION = VariableDub(
     'duration',
@@ -52,9 +53,8 @@ class WorkoutReplies(TemplatesCollection):
     cancelled = Template("The workout is cancelled").context(f"{World.user} requested to stop the workout routing thet {World.character} was running")
 
 class WorkoutSkill(KaiaSkillBase):
-    def __init__(self, workouts: list[Workout], music: IMusicPlayer|None, last_announcement_skip: int = 10):
+    def __init__(self, workouts: list[Workout], last_announcement_skip: int = 10):
         self.workouts = workouts
-        self.music = music
         workout_names = [w.name for w in workouts]
         self.last_announcement_skip = last_announcement_skip
         super().__init__(
@@ -93,8 +93,8 @@ class WorkoutSkill(KaiaSkillBase):
         if len(workout) != 1:
             yield WorkoutReplies.workout_not_found()
             return
-        if self.music is not None:
-            self.music.play()
+        if workout[0].music is not None:
+            yield MusicStartCommand(workout[0].music)
         yield from self._wait(0)
         yield WorkoutReplies.starting(workout_name)
         rest_after_previous = None
@@ -113,8 +113,8 @@ class WorkoutSkill(KaiaSkillBase):
             rest_after_previous = item.rest_afterwards_in_seconds
 
         yield WorkoutReplies.done()
-        if self.music is not None:
-            self.music.stop()
+        if workout[0].music is not None:
+            yield MusicStopButtonEvent()
 
 
 

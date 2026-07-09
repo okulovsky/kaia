@@ -1,5 +1,6 @@
 from typing import *
 from kaia import IKaiaSkill, TickEvent, Pushback, VolumeCommand
+from grammatron import Utterance
 from avatar.daemon import VolumeControlService, IMessage
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -66,7 +67,7 @@ class NotificationSkill(IKaiaSkill):
         return self._find_notification(input.time) is not None
 
     def should_proceed(self, input) -> bool:
-        return True
+        return isinstance(input, (TickEvent, Utterance))
 
 
 

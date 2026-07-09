@@ -26,10 +26,11 @@ class Message:
 
     @staticmethod
     def from_dict(raw: dict) -> 'Message':
+        msg = raw['message']
         return Message(
-            message_type=raw['content_type'],
-            envelop=Envelop(**raw['envelop']),
-            payload=raw.get('content') or {},
+            message_type=msg['content_type'],
+            envelop=Envelop(**msg['envelop']),
+            payload=msg.get('content') or {},
         )
 
 

@@ -2,25 +2,28 @@ from unittest import TestCase
 from eaglesong.core import Automaton, Scenario
 from kaia.skills.ping import PingSkill, PingIntents, PingReplies
 from kaia.skills.recognition_feedback import RecognitionFeedbackSkill, RecognitionFeedbackIntents, RecognitionFeedbackReplies
-from kaia.skills.walk_in_skill import WalkInSkill, WalkInAnnouncement
+from kaia.skills.announcement_skill import AnnouncementSkill, Announcement, SimpleAnnouncementSkill, Username, Hours
 from kaia import KaiaAssistant, StateTranslator, KaiaContext
 from avatar.daemon import TextCommand, TextEvent, SpeakerIdentificationService, UserWalkInService
 from avatar.utils import TestTimeFactory
-from grammatron import Utterance
+from grammatron import Utterance, Template, TemplatesCollection
 from eaglesong import IAsserter
-from datetime import time, timedelta, datetime
-from foundation_kaia.misc import EveryDayRepetition
+from datetime import timedelta, datetime
 
 
+class AnnouncementTemplates(TemplatesCollection):
+    test_announcement = Template("Announcement")
 
 
 
 def _factory(dtf):
     ping = PingSkill()
     feedback = RecognitionFeedbackSkill(['A', 'B'], 10, dtf)
-    walkin = WalkInSkill([
-        WalkInAnnouncement('A', time(0), time(23), EveryDayRepetition(), timedelta(minutes=0), "Announcement"),
-    ])
+    walkin = AnnouncementSkill(
+        [Announcement('test_announcement', Username('A') & Hours(0, 23), SimpleAnnouncementSkill(AnnouncementTemplates.test_announcement))],
+        datetime_factory=dtf,
+        cooldown=timedelta(seconds=0),
+    )
     assistant = KaiaAssistant([ping, feedback, walkin])
     assistant = StateTranslator(assistant, dtf)
     context = KaiaContext(None)
@@ -77,7 +80,7 @@ class TestDate(TestCase):
         (
             S(dtf)
             .send(UserWalkInService.Event('A', 'file_1'))
-            .check(TCA("Announcement", "A"))
+            .check(TCA(AnnouncementTemplates.test_announcement(), "A"))
             .send(TextEvent(RecognitionFeedbackIntents.misrecognition('B'), 'A', 'file_2'))
             .check(TA(False, "B", "file_1"), TCA(RecognitionFeedbackReplies.fix_image(), 'A'))
             .validate()

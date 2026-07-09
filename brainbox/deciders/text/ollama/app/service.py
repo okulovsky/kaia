@@ -29,7 +29,8 @@ class OllamaService(IOllama):
                       system_prompt: str|None = None,
                       options: dict|None = None,
                       num_predict: int|None = None,
-                      image: FileLike|None = None
+                      image: FileLike|None = None,
+                      format: dict|str|None = None,
                       ) -> dict:
         messages = []
         if system_prompt is not None:
@@ -44,6 +45,8 @@ class OllamaService(IOllama):
             body['options'] = options
         if num_predict is not None:
             body['num_predict'] = num_predict
+        if format is not None:
+            body['format'] = format
         reply = requests.post(f'{OLLAMA_URL}/api/chat', json=body)
         if reply.status_code != 200:
             raise ValueError(f'Status code {reply.status_code}, value\n{reply.text}')
@@ -54,6 +57,7 @@ class OllamaService(IOllama):
                  system_prompt: str|None = None,
                  options: dict|None = None,
                  num_predict: int|None = None,
-                 image: FileLike|None = None
+                 image: FileLike|None = None,
+                 format: dict|str|None = None,
                  ) -> str:
-        return self.question_json(prompt, system_prompt, options, num_predict, image)['message']['content']
+        return self.question_json(prompt, system_prompt, options, num_predict, image, format)['message']['content']

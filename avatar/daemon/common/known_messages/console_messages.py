@@ -17,6 +17,9 @@ class ChatCommand(IMessage):
     type: ChatMessageType = ChatMessageType.from_user
     sender_name: str|None = None
     sender_avatar_file_id: str|None = None
+    message_id: str|None = None
+    details: str|None = None
+    hover_string: str|None = None
 
     MessageType = ChatMessageType
 

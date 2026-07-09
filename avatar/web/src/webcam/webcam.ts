@@ -48,6 +48,9 @@ export class Webcam implements IWebcam, ILoadingScreenComponent {
     }
 
     async start(): Promise<void> {
+        if (!this._stream || this._stream.getTracks().every(t => t.readyState === 'ended')) {
+            await this.initialize()
+        }
         this._running = true
     }
 

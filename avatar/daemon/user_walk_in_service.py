@@ -11,7 +11,7 @@ logger.disable(__name__)
 @dataclass
 class UserWalkInEvent(IMessage):
     user: str
-    file_id: str
+    file_id: str = ''
 
 @dataclass
 class UserWalkInTrain(IMessage):

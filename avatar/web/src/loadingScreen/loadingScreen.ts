@@ -34,6 +34,8 @@ export class LoadingScreen {
                     this._check()
                 })
         })
+
+        this._check()
     }
 
     private _check(): void {
