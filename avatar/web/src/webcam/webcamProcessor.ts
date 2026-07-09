@@ -2,8 +2,9 @@ import { IWebcam } from './iWebcam.js'
 import { IDebugView } from '../debugView/iDebugView.js'
 import { AvatarClient } from '../core/avatarClient.js'
 import { Message } from '../core/message.js'
+import { IPausable } from '../core/iPausable.js'
 
-export class WebcamProcessor implements IDebugView {
+export class WebcamProcessor implements IDebugView, IPausable {
     readonly name = 'WebcamProcessor'
     private _webcam: IWebcam
     private _rateMs: number
@@ -51,6 +52,9 @@ export class WebcamProcessor implements IDebugView {
         }
         this._webcam.stop()
     }
+
+    pause(): void { this.stop() }
+    async resume(): Promise<void> { await this.start() }
 
     private detectMovement(current: HTMLCanvasElement): { moved: boolean; diffCanvas: HTMLCanvasElement | null } {
         if (this._storedCanvas === null) {

@@ -7,6 +7,7 @@ from time import monotonic, sleep
 from foundation_kaia.marshalling import TypeTools, Serializer
 from pathlib import Path
 from .stasher import Stasher
+import threading
 
 class AvatarMessagingService(IAvatarMessagingService):
     def __init__(self,
@@ -19,6 +20,8 @@ class AvatarMessagingService(IAvatarMessagingService):
         self.aliases = aliases
         self.queue: Queue = Queue(self.ttl_in_seconds)
         self.stasher = Stasher(log_folder) if log_folder is not None else None
+        self._active_clients: dict[str, datetime] = {}
+        self._active_clients_lock = threading.Lock()
 
         from .message_repository import AvatarMessageRepository
         if starting_messages is not None:
@@ -45,6 +48,10 @@ class AvatarMessagingService(IAvatarMessagingService):
                 'operation_time': operation_time,
             })
 
+    def get_active_clients(self) -> dict[str, datetime]:
+        with self._active_clients_lock:
+            return dict(self._active_clients)
+
     def get(self,
             session: str | None,
             last_id: str|None = None,
@@ -53,6 +60,10 @@ class AvatarMessagingService(IAvatarMessagingService):
             allowed_types: list[str]|None = None,
             client_name: str|None = None,
             ) -> AvatarMessageSet[AvatarMessage]:
+        if client_name is not None:
+            with self._active_clients_lock:
+                self._active_clients[client_name] = datetime.now()
+
         if not allowed_types:
             allowed_types = None
 

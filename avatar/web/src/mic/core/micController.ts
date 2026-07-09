@@ -1,9 +1,10 @@
 import { IMicrophone } from '../input/iMicrophone.js'
 import { MicData } from '../input/micData.js'
+import { IPausable } from '../../core/iPausable.js'
 
 export type Processor<T = void> = (micData: MicData) => T
 
-export class MicController {
+export class MicController implements IPausable {
     private timeoutId?: ReturnType<typeof setTimeout>
     private running = false
 
@@ -44,4 +45,7 @@ export class MicController {
         }
         this.input.stop()
     }
+
+    pause(): void { this.stop() }
+    async resume(): Promise<void> { await this.start() }
 }

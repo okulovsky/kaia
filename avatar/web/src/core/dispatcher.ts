@@ -1,9 +1,10 @@
 import { AvatarClient } from './avatarClient.js'
 import { Message } from './message.js'
+import { IPausable } from './iPausable.js'
 
 export type Handler = (msg: Message, client: AvatarClient) => Promise<void>;
 
-export class Dispatcher {
+export class Dispatcher implements IPausable {
   private client: AvatarClient
   private handlers = new Map<string, Handler[]>()
   private running = false
@@ -51,10 +52,14 @@ export class Dispatcher {
     this.client.push(msg).catch(err => console.error('Dispatcher.push failed:', err))
   }
 
-  /** Stop the loop after the current pull completes */
+  /** Stop the loop; aborts any in-flight fetch immediately. */
   stop (): void {
     this.running = false
+    this.abortController?.abort()
   }
+
+  pause (): void { this.stop() }
+  resume (): void { this.start() }
 
   private async loop (): Promise<void> {
     while (this.running) {

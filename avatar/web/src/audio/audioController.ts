@@ -1,8 +1,9 @@
 import { Dispatcher } from '../core/dispatcher.js'
 import { Message, Envelop } from '../core/message.js'
 import { soundUrl, wavDurationSeconds } from './soundFetcher.js'
+import { IPausable } from '../core/iPausable.js'
 
-export class AudioController {
+export class AudioController implements IPausable {
     private dispatcher: Dispatcher
     private context: AudioContext | null = null
     private currentSource: AudioBufferSourceNode | null = null
@@ -58,6 +59,19 @@ export class AudioController {
                 error: error ?? null,
             }).asConfirmationFor(msg)
         )
+    }
+
+    pause(): Promise<void> {
+        this._interrupt()
+        const closing = this.context?.close() ?? Promise.resolve()
+        this.context = null
+        return closing
+    }
+
+    resume(): void {
+        if (!this.silent) {
+            this.context = new AudioContext()
+        }
     }
 
     private async _handle(msg: Message, url: string): Promise<void> {
