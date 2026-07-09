@@ -19,6 +19,7 @@ class IOllama:
                       options: dict|None = None,
                       num_predict: int|None = None,
                       image: FileLike|None = None,
+                      format: dict|str|None = None,
                       ) -> dict:
         ...
 
@@ -29,5 +30,6 @@ class IOllama:
                  options: dict|None = None,
                  num_predict: int|None = None,
                  image: FileLike|None = None,
+                 format: dict|str|None = None,
                  ) -> str:
         ...
