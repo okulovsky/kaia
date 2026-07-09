@@ -31,11 +31,20 @@ class RuleProcessor:
                 raw_result = (raw_result,)
             elif raw_result is None:
                 raw_result = ()
+            else:
+                try:
+                    raw_result = iter(raw_result)
+                except TypeError:
+                    raise TypeError(
+                        f"Handler {self.rule.service.__name__} returned invalid type: {type(raw_result).__name__}"
+                    )
 
             parsed_result = []
             for message in raw_result:
                 if not isinstance(message, IMessage):
-                    f"Handler {self.rule.service.__name__} returned invalid type: {type(message).__name__}, "
+                    raise TypeError(
+                        f"Handler {self.rule.service.__name__} returned invalid type: {type(message).__name__}"
+                    )
 
                 if self.rule.outputs is not None:
                     try:

@@ -1,3 +1,21 @@
+5.1.1
+    Avatar
+        Reports the clients that are currently connected to the server
+        Now handles music in a widget instead of Kaia doing it
+        Messages are now richer, also the ChatCommandHandler supports operations like swiping and context menu
+        TextInputHandler: a text field that produces TextEvents
+        OpenApp message: allowing Kaia to run a custom front-end applications
+            pauses the comms and all the heavy components
+            opens an iframe with a link
+    Brainbox
+        Small fixes, Ollama now accepts json schema
+    Chara
+        Small fixes
+        Characters are simplified
+        LLM abstraction is added
+
+
+
 5.1.0
     Foundation
         When de/serializing dataclasses, the extra fields that are assigned but are not in schema, are handled
