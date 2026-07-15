@@ -641,11 +641,18 @@ So it is possible for instance to build the container on your local machine,
 deliver it to your remote machine via `docker pull/push`, run there and communicate directly to it,
 avoiding BrainBox queuing and caching.
 
-We will run the container with api:
+We will run the container with api. Since containers are started on a dynamically
+allocated port, we discover the URL of the instance we just started via the
+controllers status endpoint, rather than assuming a fixed, known port:
 
 ```python
-api.controllers.run(HelloBrainBox)
-hello_api = HelloBrainBox.Api(f"http://127.0.0.1:{HelloBrainBox.Settings().connection.port}")
+instance_id = api.controllers.run(HelloBrainBox)
+status = api.controllers.status()
+controller_status = next(c for c in status.controllers if c.name == 'HelloBrainBox')
+instance = next(i for i in controller_status.instances if i.instance_id == instance_id)
+base_url = instance.base_url
+
+hello_api = HelloBrainBox.Api(base_url)
 hello_api.wait_for_connection()
 
 result = hello_api.sum(3,4)
@@ -681,15 +688,15 @@ for the BrainBoxApi and all of the deciders' API.
 
 ### HTTP direct access
 
-The direct access is straightforward. 
-First, you can go to the `http://127.0.0.1:20000/doc/html` and read the documentation to the decider's endpoints.
-You can also request this information in JSON format:
+The direct access is straightforward.
+First, you can go to `{base_url}/doc/html` (using the URL discovered above) and read
+the documentation to the decider's endpoints. You can also request this information in JSON format:
 
 ```python
 import requests
 from pprint import pprint
 
-response = requests.get("http://127.0.0.1:20000/doc/json")
+response = requests.get(f"{base_url}/doc/json")
 response.raise_for_status()
 pprint(response.json())
 ```
@@ -698,7 +705,7 @@ Then, call the decider:
 
 ```python
 response = requests.post(
-    "http://127.0.0.1:20000/hello-brain-box/sum",
+    f"{base_url}/hello-brain-box/sum",
     json={
         "a": 3,
         "b": 4

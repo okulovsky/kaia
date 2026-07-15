@@ -4,8 +4,8 @@ from chara.common import Chara, CaseCollection
 from chara.common.descriptions.characters import Character
 from chara.common.descriptions.characters.appearance import Appearance
 from brainbox.deciders.images.comfyui.workflows import TextToImage
-from chara.images.generation.scenarios import PipelineFactory, ImageScenarioSettings
-from chara.images.generation.scenarios.case import ImageScenarioCase, ImageContext, Theme
+from chara.images.generation.scenarios_pony import PipelineFactory, ImageScenarioSettings
+from chara.images.generation.scenarios_pony.case import ImageScenarioCase, ImageContext, Theme
 from foundation_kaia.misc import Loc
 
 
