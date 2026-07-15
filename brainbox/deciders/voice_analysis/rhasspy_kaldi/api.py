@@ -26,7 +26,7 @@ class IRhasspyKaldi:
 
 
 class RhasspyKaldiApi(DockerWebServiceApi[RhasspyKaldiSettings, RhasspyKaldiController], IRhasspyKaldi):
-    def __init__(self, base_url: str | None = None):
+    def __init__(self, base_url: str):
         super().__init__(base_url)
 
     def train(self, model: str, language: str, sentences: str, custom_words: dict[str, str]|None = None):

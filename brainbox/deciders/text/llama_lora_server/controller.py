@@ -42,7 +42,7 @@ class LlamaLoraServerController(
         file_stems = [name.stem for name in lora_path.iterdir() if name.is_file()]
         return sorted(file_stems)
 
-    def get_service_run_configuration(self, parameter: str | None) -> RunConfiguration:
+    def get_service_run_configuration(self, port: int, parameter: str | None) -> RunConfiguration:
         if parameter is None:
             raise ValueError(f"`parameter` cannot be None for {self.get_name()}")
         cmd_args = [
@@ -59,7 +59,7 @@ class LlamaLoraServerController(
             cmd_args.extend(["--lora", path])
 
         return RunConfiguration(
-            publish_ports={self.connection_settings.port: 8080},
+            publish_ports={port: 8080},
             mount_top_resource_folder=False,
             mount_resource_folders={
                 "models": "/app/models",
@@ -75,9 +75,12 @@ class LlamaLoraServerController(
             self.settings.self_test_lora_adapters + self.settings.gguf_models_to_download
         )
 
-    def create_api(self):
+    def get_loading_time_in_seconds(self) -> int:
+        return 300
+
+    def create_api(self, base_url: str):
         from .api import LlamaLoraServerApi
-        return LlamaLoraServerApi()
+        return LlamaLoraServerApi(base_url)
 
     def _is_cuda_available(self) -> bool:
         try:

@@ -32,14 +32,14 @@ class ComfyUIController(DockerMarshallingController[ComfyUISettings]):
             ),
         )
 
-    def get_service_run_configuration(self, parameter: str | None) -> RunConfiguration:
+    def get_service_run_configuration(self, port: int, parameter: str | None) -> RunConfiguration:
         if parameter is not None:
             raise ValueError(f'`parameter` must be None for {self.get_name()}')
+        publish_ports = {port: 8080}
+        if self.context.instance_registry.count_instances(self.get_name()) == 0:
+            publish_ports[8188] = 8188
         return RunConfiguration(
-            publish_ports={
-                self.connection_settings.port: 8080,
-                8188: 8188,
-            },
+            publish_ports=publish_ports,
             mount_custom_folders={
                 str(self.resource_folder('models')):       '/home/app/comfy/ComfyUI/models',
                 str(self.resource_folder('input')):        '/home/app/comfy/ComfyUI/input',
@@ -56,9 +56,12 @@ class ComfyUIController(DockerMarshallingController[ComfyUISettings]):
     def get_default_settings(self):
         return ComfyUISettings()
 
-    def create_api(self):
+    def get_loading_time_in_seconds(self) -> int:
+        return 120
+
+    def create_api(self, base_url: str):
         from .api import ComfyUIApi
-        return ComfyUIApi()
+        return ComfyUIApi(base_url)
 
     def self_test_cases(self) -> Iterable[SelfTestCase]:
         yield SelfTestCase(

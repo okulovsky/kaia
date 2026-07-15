@@ -21,22 +21,22 @@ class ResemblyzerController(DockerMarshallingController[ResemblyzerSettings]):
             keep_dockerfile=True,
         )
 
-    def get_service_run_configuration(self, parameter: str | None) -> RunConfiguration:
+    def get_service_run_configuration(self, port: int, parameter: str | None) -> RunConfiguration:
         if parameter is not None:
             raise ValueError(f"`parameter` must be None for {self.get_name()}")
         return RunConfiguration(
-            publish_ports={self.connection_settings.port: 8080},
+            publish_ports={port: 8080},
         )
 
     def get_notebook_configuration(self) -> RunConfiguration | None:
-        return self.get_service_run_configuration(None).as_notebook_service()
+        return self.get_service_run_configuration(0, None).as_notebook_service()
 
     def get_default_settings(self):
         return ResemblyzerSettings()
 
-    def create_api(self):
+    def create_api(self, base_url: str):
         from .api import ResemblyzerApi
-        return ResemblyzerApi()
+        return ResemblyzerApi(base_url)
 
     def self_test_cases(self) -> Iterable[SelfTestCase]:
         from .api import Resemblyzer

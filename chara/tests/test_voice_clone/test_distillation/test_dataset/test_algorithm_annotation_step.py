@@ -1,8 +1,9 @@
+import json
 import shutil
 from chara.voice_clone.distillation.dataset.algorithm_annotation_step import algorithm_annotation_step
-from chara.voice_clone.distillation.dataset.common import AnnotationCase
-from chara.voice_clone.distillation.dataset.prepare_sententes import prepare_sentences
-from chara.voice_clone.distillation.dataset import Corpus
+from chara.voice_clone.distillation.dataset.common import AnnotationCase, Phonemization
+from chara.voice_clone.distillation.dataset.algorithm import AlgorithmData
+from chara.voice_clone.distillation.dataset import Corpus, PreviewDatasetPipeline
 from unittest import TestCase
 from chara.common import Language, Chara
 from foundation_kaia.misc import Loc
@@ -14,8 +15,15 @@ def create_data_pkl():
     with Loc.create_test_folder() as folder:
         corpus = Corpus([], 1000)
         Chara.start(folder)
-        data = Chara.call(prepare_sentences)(Language.English().upsampling_dataset_reader()[:10], corpus,
-                                             Language.English())
+        pipeline = PreviewDatasetPipeline(corpus, Language.English())
+        dataset_path = Chara.call(pipeline)(Language.English().upsampling_dataset_reader()[:10])
+
+        phonemizations = []
+        with open(dataset_path, 'r') as file:
+            for line in file:
+                row = json.loads(line)
+                phonemizations.append(Phonemization(row['id'], row['text'], row['phonemization']))
+        data = AlgorithmData.from_phonemizations(phonemizations, Language.English())
         (Path(__file__).parent / 'data.pkl').write_bytes(pickle.dumps(data))
 
 

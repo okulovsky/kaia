@@ -11,6 +11,11 @@ class IHelloBrainBox:
         ...
 
     @brainbox_endpoint
+    def parameter(self) -> str|None:
+        """Returns the parameter this instance was started with (demo endpoint)."""
+        ...
+
+    @brainbox_endpoint
     def voiceover(self, text: str, model: str|None = None) -> FileLike:
         """Synthesizes speech for the given text (demo endpoint)."""
         ...

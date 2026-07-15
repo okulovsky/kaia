@@ -25,11 +25,11 @@ class YoloController(DockerMarshallingController[YoloSettings]):
             )
         )
 
-    def get_service_run_configuration(self, parameter: str | None) -> RunConfiguration:
+    def get_service_run_configuration(self, port: int, parameter: str | None) -> RunConfiguration:
         if parameter is not None:
             raise ValueError(f"`parameter` must be None for {self.get_name()}")
         return RunConfiguration(
-            publish_ports={self.connection_settings.port: 8080},
+            publish_ports={port: 8080},
         )
 
     def get_installer(self) -> Installer | None:
@@ -38,9 +38,9 @@ class YoloController(DockerMarshallingController[YoloSettings]):
     def get_default_settings(self):
         return YoloSettings()
 
-    def create_api(self):
+    def create_api(self, base_url: str):
         from .api import YoloApi
-        return YoloApi()
+        return YoloApi(base_url)
 
     def self_test_cases(self) -> Iterable[SelfTestCase]:
         from .api import Yolo

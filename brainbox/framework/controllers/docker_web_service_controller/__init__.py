@@ -1,3 +1,2 @@
 from .docker_web_service_api import DockerWebServiceApi, TController
-from .connection_settings import ConnectionSettings
 from .docker_web_service_controller import DockerWebServiceController

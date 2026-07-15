@@ -3,15 +3,18 @@ from pathlib import Path
 from .voice_train import VoiceModel
 from abc import ABC, abstractmethod
 from brainbox import BrainBox
-from chara.common import CaseCollection, BrainBoxCasePipeline, ICase, Chara
+from chara.common import CaseCollection, BrainBoxCasePipeline, IAnnotationCase, Chara
 
 
 @dataclass
-class RevoiceCase(ICase):
+class RevoiceCase(IAnnotationCase):
     file: Path
     revoice: 'Revoice'
     model: VoiceModel
     result: Path|None = None
+
+    def get_id(self) -> str:
+        return self.file.name
 
 
 class Revoice(ABC):

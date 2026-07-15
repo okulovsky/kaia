@@ -76,11 +76,15 @@ class IController(ABC, Generic[TSettings]):
     # endregion
 
     # region Convenience methods
-    def is_installed(self):
-        from .controller_registry import ControllerRegistry
-        registry = ControllerRegistry([self])
-        status = registry.get_installation_statuses()[self.get_name()]
-        return status.installed
+    def is_installed(self) -> bool:
+        from ...deployment import Command, LocalExecutor
+        import json
+        output = LocalExecutor().execute(
+            ['docker', 'images', '--format', '{"repository": "{{.Repository}}"}'],
+            Command.Options(return_output=True)
+        )
+        images = tuple(json.loads(s)['repository'] for s in output.split('\n') if s.strip())
+        return self.find_self_in_list(images) is not None
 
 
     def get_name(self):

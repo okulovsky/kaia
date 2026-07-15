@@ -1,3 +1,15 @@
+5.1.2
+    Brainbox
+        Ports are now assigned automatically
+        Multiple instances of deciders with different parameters are possible
+        Ollama options are collected in one dataclass, interface changed
+    Chara
+        Images scenarios are renamed to pony as this are the models they are designed for
+        Tests adopted to match the changed Ollama interface
+        Final stitches in the voice cloning
+        LLM single-query interface removed from Chara as it doesn't belong thee
+
+
 5.1.1
     Avatar
         Reports the clients that are currently connected to the server

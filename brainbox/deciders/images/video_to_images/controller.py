@@ -31,15 +31,18 @@ class VideoToImagesController(DockerMarshallingController[VideoToImagesSettings]
     def get_installer(self) -> Installer | None:
         return VideoToImagesInstaller(self.resource_folder())
 
-    def get_service_run_configuration(self, parameter: str | None) -> RunConfiguration:
+    def get_service_run_configuration(self, port: int, parameter: str | None) -> RunConfiguration:
         return RunConfiguration(
-            publish_ports={self.connection_settings.port: 8080},
+            publish_ports={port: 8080},
             mount_resource_folders={'cache': '/home/app/.cache'},
         )
 
-    def create_api(self):
+    def get_loading_time_in_seconds(self) -> int:
+        return 120
+
+    def create_api(self, base_url: str):
         from .api import VideoToImagesApi
-        return VideoToImagesApi()
+        return VideoToImagesApi(base_url)
 
     def custom_self_test(self, api: BrainBoxApi, tc: TestCase):
         from .api import VideoToImages

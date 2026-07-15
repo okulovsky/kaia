@@ -1,4 +1,5 @@
 import json
+import time
 from typing import Iterable
 
 from interface import IHelloBrainBox, FileLike
@@ -8,11 +9,19 @@ from foundation_kaia.marshalling import FileLikeHandler, JSON
 
 
 class HelloBrainBoxService(IHelloBrainBox):
-    def __init__(self, storage: SingleModelStorage):
+    def __init__(self, storage: SingleModelStorage, parameter: str|None = None):
         self.storage = storage
+        self._parameter = parameter
 
     def sum(self, a: int|float, b: int|float) -> float:
         return a+b
+
+    def parameter(self) -> str|None:
+        # A small delay so that concurrent calls against several instances
+        # (different parameters) measurably overlap in time, instead of the
+        # window shrinking to a near-instant, scheduling-dependent race.
+        time.sleep(0.05)
+        return self._parameter
 
     def voiceover(self, text: str, model: str|None = None) -> FileLike:
         m = self.storage.get_model(model)

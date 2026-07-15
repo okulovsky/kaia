@@ -27,10 +27,13 @@ class OllamaController(DockerMarshallingController[OllamaSettings]):
         from .app.model import OllamaInstaller
         return OllamaInstaller(self.resource_folder())
 
-    def get_service_run_configuration(self, parameter: str | None) -> RunConfiguration:
+    def get_service_run_configuration(self, port: int, parameter: str | None) -> RunConfiguration:
+        publish_ports = {port: BRAINBOX_PORT}
+        if self.context.instance_registry.count_instances(self.get_name()) == 0:
+            publish_ports[OLLAMA_PORT] = OLLAMA_PORT
         return RunConfiguration(
             parameter,
-            publish_ports={self.connection_settings.port: BRAINBOX_PORT, OLLAMA_PORT: OLLAMA_PORT},
+            publish_ports=publish_ports,
             mount_resource_folders={'main': '/home/ubuntu/.ollama'},
             command_line_arguments=[parameter] if parameter is not None else [],
         )
@@ -38,9 +41,9 @@ class OllamaController(DockerMarshallingController[OllamaSettings]):
     def get_default_settings(self):
         return OllamaSettings()
 
-    def create_api(self):
+    def create_api(self, base_url: str):
         from .api import OllamaApi
-        return OllamaApi()
+        return OllamaApi(base_url)
 
     def self_test_cases(self) -> Iterable[SelfTestCase]:
         from .api import Ollama
@@ -60,8 +63,8 @@ class OllamaController(DockerMarshallingController[OllamaSettings]):
             },
             'required': ['name', 'ingredients'],
         }
-        yield SelfTestCase(Ollama.new_task(parameter=model).question_json(prompt=prompt, format=format), None)
-        yield SelfTestCase(Ollama.new_task(parameter=model).question(prompt=prompt, format=format), None)
+        yield SelfTestCase(Ollama.new_task(parameter=model).question_json(prompt=prompt, options=Ollama.Options(format=format)), None)
+        yield SelfTestCase(Ollama.new_task(parameter=model).question(prompt=prompt, options=Ollama.Options(format=format)), None)
 
         prompt = "Describe the supplied image"
         image = Path(__file__).parent/'image.png'

@@ -17,8 +17,8 @@ class ILlamaLoraServer:
 
 
 class LlamaLoraServerApi(DockerWebServiceApi[LlamaLoraServerSettings, LlamaLoraServerController], ILlamaLoraServer):
-    def __init__(self, address: str | None = None):
-        super().__init__(address)
+    def __init__(self, base_url: str):
+        super().__init__(base_url)
         self.taskname2id = None
 
     def _check_endpoint_code(self, code: int, endpoint: str) -> None:

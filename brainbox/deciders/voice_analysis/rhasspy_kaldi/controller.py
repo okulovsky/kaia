@@ -23,24 +23,24 @@ class RhasspyKaldiController(
     def get_downloadable_model_type(self) -> type[DownloadableModel]:
         return RhasspyKaldiModel
 
-    def get_service_run_configuration(self, parameter: str|None) -> RunConfiguration:
+    def get_service_run_configuration(self, port: int, parameter: str | None) -> RunConfiguration:
         if parameter is not None:
             raise ValueError(f"`parameter` must be None for {self.get_name()}")
         return RunConfiguration(
             None,
             mount_resource_folders={'profiles': '/profiles', 'models': '/models'},
-            publish_ports={self.settings.connection.port: 8084}
+            publish_ports={port: 8084}
         )
 
     def get_notebook_configuration(self) -> RunConfiguration|None:
-        return self.get_service_run_configuration(None).as_notebook_service()
+        return self.get_service_run_configuration(0, None).as_notebook_service()
 
     def get_default_settings(self):
         return RhasspyKaldiSettings()
 
-    def create_api(self):
+    def create_api(self, base_url: str):
         from .api import RhasspyKaldiApi
-        return RhasspyKaldiApi()
+        return RhasspyKaldiApi(base_url)
 
     def post_install(self):
         self.download_models(self.settings.languages)

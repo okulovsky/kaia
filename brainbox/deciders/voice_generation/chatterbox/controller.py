@@ -32,11 +32,11 @@ class ChatterboxController(DockerMarshallingController[ChatterboxSettings]):
     def get_installer(self) -> Installer | None:
         return ChatterboxInstaller(self.resource_folder())
 
-    def get_service_run_configuration(self, parameter: str | None) -> RunConfiguration:
+    def get_service_run_configuration(self, port: int, parameter: str | None) -> RunConfiguration:
         if parameter is not None:
             raise ValueError(f"`parameter` must be None for {self.get_name()}")
         return RunConfiguration(
-            publish_ports={self.connection_settings.port: 8080},
+            publish_ports={port: 8080},
             mount_resource_folders={
                 'pretrained': '/home/app/.cache/huggingface',
                 'voices': '/voices',
@@ -48,9 +48,12 @@ class ChatterboxController(DockerMarshallingController[ChatterboxSettings]):
     def get_default_settings(self):
         return ChatterboxSettings()
 
-    def create_api(self):
+    def get_loading_time_in_seconds(self) -> int:
+        return 120
+
+    def create_api(self, base_url: str):
         from .api import ChatterboxApi
-        return ChatterboxApi()
+        return ChatterboxApi(base_url)
 
     def self_test_cases(self) -> Iterable[SelfTestCase]:
         from .api import Chatterbox

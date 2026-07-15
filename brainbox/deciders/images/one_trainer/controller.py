@@ -43,17 +43,17 @@ class OneTrainerController(DockerMarshallingController[OneTrainerSettings]):
     def get_default_settings(self):
         return OneTrainerSettings()
 
-    def get_service_run_configuration(self, parameter: str | None) -> RunConfiguration:
+    def get_service_run_configuration(self, port: int, parameter: str | None) -> RunConfiguration:
         return RunConfiguration(
-            publish_ports={self.connection_settings.port: 8080},
+            publish_ports={port: 8080},
             mount_custom_folders={
                 str(self.resource_folder().parent / 'ComfyUI' / 'models' / 'checkpoints'): '/base_models',
             },
         )
 
-    def create_api(self):
+    def create_api(self, base_url: str):
         from .api import OneTrainerApi
-        return OneTrainerApi()
+        return OneTrainerApi(base_url)
 
     def custom_self_test(self, api: BrainBoxApi, tc: TestCase):
         from .api import OneTrainer

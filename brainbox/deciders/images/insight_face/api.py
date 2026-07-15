@@ -13,8 +13,8 @@ class InsightFaceApi(
     IModelLoadingSupport,
     IModelInstallingSupport[InsightFaceModelSpec],
 ):
-    def __init__(self, address: str | None = None):
-        super().__init__(address)
+    def __init__(self, base_url: str):
+        super().__init__(base_url)
 
 
 class InsightFaceTaskBuilder(
