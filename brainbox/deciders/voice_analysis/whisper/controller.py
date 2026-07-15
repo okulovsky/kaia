@@ -28,20 +28,20 @@ class WhisperController(DockerMarshallingController[WhisperSettings]):
     def get_installer(self) -> Installer | None:
         return WhisperInstaller(self.resource_folder())
 
-    def get_service_run_configuration(self, parameter: str | None) -> RunConfiguration:
+    def get_service_run_configuration(self, port: int, parameter: str | None) -> RunConfiguration:
         if parameter is not None:
             raise ValueError(f"`parameter` must be None for {self.get_name()}")
         return RunConfiguration(
             None,
-            publish_ports={self.connection_settings.port: 8080},
+            publish_ports={port: 8080},
         )
 
     def get_default_settings(self):
         return WhisperSettings()
 
-    def create_api(self):
+    def create_api(self, base_url: str):
         from .api import WhisperApi
-        return WhisperApi()
+        return WhisperApi(base_url)
 
     def self_test_cases(self) -> Iterable[SelfTestCase]:
         from .api import Whisper

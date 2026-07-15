@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from enum import Enum
-from ....framework import ConnectionSettings
 
 
 class YoloModels(str, Enum):
@@ -10,5 +9,4 @@ class YoloModels(str, Enum):
 
 @dataclass
 class YoloSettings:
-    connection = ConnectionSettings(20302)
     models_to_install = [YoloModels.yolov8_face, YoloModels.yolov8_animeface]

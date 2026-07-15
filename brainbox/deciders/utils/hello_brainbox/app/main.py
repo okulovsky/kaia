@@ -1,3 +1,4 @@
+import sys
 from foundation_kaia.brainbox_utils import run_brainbox_app, ModelLoadingSupport, ModelInstallingSupport, SingleModelStorage
 from foundation_kaia.marshalling.amenities import Storage
 from model import HelloBrainBoxModelSpec, HelloBrainBoxInstaller
@@ -6,9 +7,13 @@ from pathlib import Path
 
 
 if __name__ == '__main__':
+    parameter = None
+    if len(sys.argv) > 1 and not sys.argv[1].startswith('-'):
+        parameter = sys.argv.pop(1)
+
     installer = HelloBrainBoxInstaller()
     storage = SingleModelStorage(installer, 'google')
-    service = HelloBrainBoxService(storage)
+    service = HelloBrainBoxService(storage, parameter)
     run_brainbox_app(
         [
             service,

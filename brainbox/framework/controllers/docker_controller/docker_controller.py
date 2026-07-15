@@ -1,4 +1,5 @@
-import json
+import hashlib
+import re
 from ..architecture import IController, TSettings
 from ...deployment import IImageSource, IImageBuilder, Deployment, LocalImageSource, IContainerRunner, Command
 import shutil
@@ -35,8 +36,17 @@ class DockerController(IController[TSettings]):
         else:
             return None
 
+    def get_container_name(self, parameter: str | None = None) -> str:
+        base = self.get_image_source().get_container_name()
+        if parameter is None:
+            return base
+        sanitized = re.sub(r'[^a-zA-Z0-9_.-]', '_', parameter)[:40]
+        digest = hashlib.sha1(parameter.encode('utf-8')).hexdigest()[:6]
+        return f'{base}-{sanitized}-{digest}'
 
     def install(self):
+        self.context.api_callback.log("Stopping running instances, if any")
+        self.stop_all()
         self.context.api_callback.log("Running pre-install")
         self.pre_install()
         self.context.api_callback.log("Stopping the current container, if exists")
@@ -56,6 +66,7 @@ class DockerController(IController[TSettings]):
         pass
 
     def uninstall(self, purge: bool = False):
+        self.stop_all()
         self.get_deployment().stop().remove()
         images = self.get_image_source().get_relevant_images(self.get_executor())
         for image in images:
@@ -69,9 +80,10 @@ class DockerController(IController[TSettings]):
                     shutil.rmtree(file_path)  # Remove directory and its contents
             shutil.rmtree(self.resource_folder())
 
-    def run_with_configuration(self, configuration: RunConfiguration, monitor_function = print) -> str:
+    def run_with_configuration(self, configuration: RunConfiguration, container_name: str | None = None, monitor_function = print) -> str:
+        container_name = container_name or self.get_image_source().get_container_name()
         command = configuration.generate_command(
-            self.get_image_source().get_container_name(),
+            container_name,
             self.get_image_source().get_image_name(),
             self.context
         )
@@ -83,38 +95,8 @@ class DockerController(IController[TSettings]):
         self.get_executor().execute(['docker','stop',instance_id], Command.Options(ignore_exit_code=True))
         self.get_executor().execute(['docker', 'rm', instance_id], Command.Options(ignore_exit_code=True))
 
-
-
-
-    def instance_id_to_parameter(self, instance_id):
-        parameter = self.get_executor().execute(
-            ['docker', 'exec', instance_id, 'printenv', 'BRAINBOX_PARAMETER'],
-            Command.Options(return_output=True)
-        )
-        parameter = parameter.strip()
-        if parameter.startswith('*'):
-            parameter = parameter[1:]
-        else:
-            parameter = None
-        return parameter
-
     def get_running_instances_id_to_parameter(self) -> dict[str, str|None]:
-        containers = self.get_executor().execute(
-            [
-                'docker', 'ps',
-                '--format', '{"id":"{{.ID}}","name":"{{.Names}}"}',
-                '--filter', f'ancestor={self.get_image_source().get_image_name()}'
-            ],
-            Command.Options(return_output=True)
-        )
-        result = {}
-        containers = containers.strip()
-        if containers == '':
-            return result
-        for container in containers.split('\n'):
-            data = json.loads(container)
-            result[data['id']] = self.instance_id_to_parameter(data['name'])
-        return result
+        return {i.instance_id: i.parameter for i in self.context.instance_registry.get_instances(self.get_name())}
 
     def run_auxiliary_configuration(self, cfg):
         runner = BrainBoxRunner(self.context, cfg, False)

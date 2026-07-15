@@ -68,7 +68,6 @@ class RunConfiguration:
         arguments += ['--restart', 'unless-stopped'] if self.restart_unless_stopped else []
         arguments += list(self.custom_flags)
         arguments += ['--name', container_name]
-        arguments += ['--env', f'BRAINBOX_PARAMETER='+('*'+self.parameter if self.parameter is not None else '')]
         if self.platform is not None:
             arguments+=['--platform', self.platform]
         arguments += [image_name]

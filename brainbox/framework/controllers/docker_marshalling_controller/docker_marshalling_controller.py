@@ -13,7 +13,7 @@ class DockerMarshallingController(DockerWebServiceController, Generic[TSettings]
         return None
 
     def get_notebook_configuration(self) -> dict:
-        return self.get_service_run_configuration(None).as_service_worker('--notebook')
+        return self.get_service_run_configuration(0, None).as_service_worker('--notebook')
 
     def post_install(self):
         from .post_install_process import PostInstallProcess

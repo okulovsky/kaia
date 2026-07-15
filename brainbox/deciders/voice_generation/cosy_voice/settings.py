@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from ....framework import ConnectionSettings
 from enum import Enum
 
 class CosyVoiceModels(str, Enum):
@@ -13,7 +12,6 @@ class CosyVoiceModels(str, Enum):
 
 @dataclass
 class CosyVoiceSettings:
-    connection = ConnectionSettings(20001, 120)
     models_to_install = [
         CosyVoiceModels.FunCosyVoice,
         CosyVoiceModels.CosyVoice2,

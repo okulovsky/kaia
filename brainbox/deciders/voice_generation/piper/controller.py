@@ -26,19 +26,19 @@ class PiperController(DockerMarshallingController[PiperSettings]):
     def get_installer(self) -> Installer | None:
         return PiperInstaller(self.resource_folder())
 
-    def get_service_run_configuration(self, parameter: str | None) -> RunConfiguration:
+    def get_service_run_configuration(self, port: int, parameter: str | None) -> RunConfiguration:
         if parameter is not None:
             raise ValueError(f"`parameter` must be None for {self.get_name()}")
         return RunConfiguration(
-            publish_ports={self.connection_settings.port: 8080},
+            publish_ports={port: 8080},
         )
 
     def get_default_settings(self):
         return PiperSettings
 
-    def create_api(self):
+    def create_api(self, base_url: str):
         from .api import PiperApi
-        return PiperApi()
+        return PiperApi(base_url)
 
     def self_test_cases(self) -> Iterable[SelfTestCase]:
         from .api import Piper

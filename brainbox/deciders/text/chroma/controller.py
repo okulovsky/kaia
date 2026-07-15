@@ -24,11 +24,11 @@ class ChromaController(DockerMarshallingController[ChromaSettings]):
     def get_installer(self):
         return ChromaInstaller(self.resource_folder())
 
-    def get_service_run_configuration(self, parameter: str | None) -> RunConfiguration:
+    def get_service_run_configuration(self, port: int, parameter: str | None) -> RunConfiguration:
         if parameter is not None:
             raise ValueError(f"`parameter` must be None for {self.get_name()}")
         return RunConfiguration(
-            publish_ports={self.connection_settings.port: 8080},
+            publish_ports={port: 8080},
             mount_resource_folders={
                 'chroma': '/chroma',
                 'models': '/home/app/fastembed_cache',
@@ -38,9 +38,9 @@ class ChromaController(DockerMarshallingController[ChromaSettings]):
     def get_default_settings(self):
         return ChromaSettings()
 
-    def create_api(self):
+    def create_api(self, base_url: str):
         from .api import ChromaApi
-        return ChromaApi()
+        return ChromaApi(base_url)
 
     def self_test_cases(self) -> Iterable[SelfTestCase]:
         from .api import Chroma

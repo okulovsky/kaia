@@ -3,6 +3,7 @@ from typing import Iterable, Union, Type
 from ...common import IDecider, IEntryPoint, ISelfManagingDecider, BrainBoxLocations
 from .controller import IController
 from .controller_over_decider import ControllerOverDecider
+from .instances_registry import InstancesRegistry
 from ...deployment import Command, LocalExecutor
 import json
 import importlib
@@ -30,6 +31,7 @@ class ControllerRegistry:
         self._controllers = tuple(updated_controllers)
         self._name_to_controller = {c.get_name(): c for c in self._controllers}
         self.resources_folder = resources_folder if resources_folder is not None else BrainBoxLocations.default_resources_folder()
+        self.instances = InstancesRegistry()
 
     @staticmethod
     def to_controller_name(obj: str|ControllerLike):
@@ -77,6 +79,7 @@ class ControllerRegistry:
             raise ValueError(f"The requested controller {name} is not in the list of controllers")
         controller = self._name_to_controller[name]
         controller.context._resource_folder_root = self.resources_folder
+        controller.context._instance_registry = self.instances
         return controller
 
     def get_api_class(self, name: str) -> type | None:
@@ -84,7 +87,7 @@ class ControllerRegistry:
         if isinstance(controller, ControllerOverDecider):
             return type(controller.decider)
         elif hasattr(controller, 'create_api'):
-            return type(controller.create_api())
+            return type(controller.create_api(''))
         return None
 
     def get_deciders_names(self) -> list[str]:

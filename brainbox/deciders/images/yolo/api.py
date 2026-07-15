@@ -12,8 +12,8 @@ class YoloApi(
     IModelLoadingSupport,
     IModelInstallingSupport[str],
 ):
-    def __init__(self, address: str | None = None):
-        super().__init__(address)
+    def __init__(self, base_url: str):
+        super().__init__(base_url)
 
 
 class YoloTaskBuilder(

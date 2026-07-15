@@ -23,12 +23,11 @@ class HelloBrainBoxController(DockerMarshallingController[HelloBrainBoxSettings]
             )
         )
 
-    def get_service_run_configuration(self, parameter: str|None) -> RunConfiguration:
-        if parameter is not None:
-            raise ValueError("`parameter` is outdated. They will not be supported in the next version")
+    def get_service_run_configuration(self, port: int, parameter: str | None) -> RunConfiguration:
         return RunConfiguration(
             parameter,
-            publish_ports={self.connection_settings.port:8080},
+            publish_ports={port:8080},
+            command_line_arguments=[parameter] if parameter is not None else [],
         )
 
     def get_installer(self) -> Installer|None:
@@ -37,9 +36,12 @@ class HelloBrainBoxController(DockerMarshallingController[HelloBrainBoxSettings]
     def get_default_settings(self):
         return HelloBrainBoxSettings()
 
-    def create_api(self):
+    def get_loading_time_in_seconds(self) -> int:
+        return 5
+
+    def create_api(self, base_url: str):
         from .api import HelloBrainBoxApi
-        return HelloBrainBoxApi()
+        return HelloBrainBoxApi(base_url)
 
     def self_test_cases(self) -> Iterable[SelfTestCase]:
         from .api import HelloBrainBox

@@ -16,6 +16,7 @@ class ControllerContext(Generic[TSettings]):
         self._api_callback: ApiCallback | None = None
         self._machine: Machine|None = None
         self._executor: IExecutor | None = None
+        self._instance_registry = None
 
     @property
     def resource_folder_root(self) -> Path:
@@ -45,5 +46,12 @@ class ControllerContext(Generic[TSettings]):
         if self._executor is None:
             return LocalExecutor()
         return self._executor
+
+    @property
+    def instance_registry(self) -> 'InstancesRegistry':
+        if self._instance_registry is None:
+            from .instances_registry import InstancesRegistry
+            self._instance_registry = InstancesRegistry()
+        return self._instance_registry
 
 

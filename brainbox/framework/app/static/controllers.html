@@ -25,6 +25,9 @@
   button.btn-danger { background: #c62828; color: #fff; border-color: #c62828; }
   button.btn-danger:hover:not(:disabled) { background: #a31f1f; }
   #status { color: #555; font-size: 0.9em; margin-bottom: 8px; }
+  table.instances-table { width: auto; box-shadow: none; }
+  table.instances-table td { padding: 2px 8px; border-bottom: 1px solid #eee; }
+  table.instances-table tr:last-child td { border-bottom: none; }
 </style>
 </head>
 <body>
@@ -42,9 +45,9 @@
       <th>Name</th>
       <th>Installed</th>
       <th>Size</th>
-      <th>Instances</th>
       <th>Self-test</th>
       <th>Actions</th>
+      <th>Instances</th>
     </tr>
   </thead>
   <tbody id="ctrl-body"></tbody>
@@ -68,6 +71,15 @@ async function startSideProcess(type, decider) {
   }
   const key = await resp.json();
   window.location.href = '/static/side_process_log.html?key=' + encodeURIComponent(key) + '&type=' + encodeURIComponent(type);
+}
+
+function portFromBaseUrl(baseUrl) {
+  if (!baseUrl) return null;
+  try {
+    return new URL(baseUrl).port;
+  } catch (e) {
+    return null;
+  }
 }
 
 async function action(btn, fn) {
@@ -125,21 +137,6 @@ async function loadControllers() {
       tdSize.textContent = c.size || '';
       tr.appendChild(tdSize);
 
-      // Instances
-      const tdRun = document.createElement('td');
-      if (c.instances.length === 0) {
-        tdRun.textContent = '—';
-      } else {
-        for (const inst of c.instances) {
-          const d = document.createElement('div');
-          const short = inst.instance_id.substring(0, 12) + '...';
-          d.textContent = inst.parameter ? short + ' (' + inst.parameter + ')' : short;
-          d.title = inst.instance_id;
-          tdRun.appendChild(d);
-        }
-      }
-      tr.appendChild(tdRun);
-
       // Self-test
       const tdSt = document.createElement('td');
       if (c.has_self_test_report) {
@@ -171,14 +168,6 @@ async function loadControllers() {
         btnUninstall.onclick = () => action(btnUninstall, () => post('/controllers-service/uninstall/' + encodeURIComponent(c.name)));
         div.appendChild(btnUninstall);
 
-        for (const inst of c.instances) {
-          const btnStop = document.createElement('button');
-          btnStop.textContent = c.instances.length > 1 ? 'Stop ' + inst.instance_id.substring(0, 6) + '…' : 'Stop';
-          btnStop.className = 'btn-danger';
-          btnStop.onclick = () => action(btnStop, () => post('/controllers-service/stop/' + encodeURIComponent(c.name) + '/' + encodeURIComponent(inst.instance_id)));
-          div.appendChild(btnStop);
-        }
-
         const btnStart = document.createElement('button');
         btnStart.textContent = 'Start';
         btnStart.className = 'btn-primary';
@@ -193,6 +182,50 @@ async function loadControllers() {
 
       tdAct.appendChild(div);
       tr.appendChild(tdAct);
+
+      // Instances
+      const tdRun = document.createElement('td');
+      if (c.instances.length === 0) {
+        tdRun.textContent = '—';
+      } else {
+        const instTable = document.createElement('table');
+        instTable.className = 'instances-table';
+        const instBody = document.createElement('tbody');
+        for (const inst of c.instances) {
+          const row = document.createElement('tr');
+
+          const tdPort = document.createElement('td');
+          const port = portFromBaseUrl(inst.base_url);
+          if (port) {
+            const a = document.createElement('a');
+            a.href = 'http://127.0.0.1:' + port;
+            a.target = '_blank';
+            a.textContent = port;
+            tdPort.appendChild(a);
+          } else {
+            tdPort.textContent = inst.instance_id.substring(0, 12) + '...';
+            tdPort.title = inst.instance_id;
+          }
+          row.appendChild(tdPort);
+
+          const tdStop = document.createElement('td');
+          const btnStop = document.createElement('button');
+          btnStop.textContent = 'Stop';
+          btnStop.className = 'btn-danger';
+          btnStop.onclick = () => action(btnStop, () => post('/controllers-service/stop/' + encodeURIComponent(c.name) + '/' + encodeURIComponent(inst.instance_id)));
+          tdStop.appendChild(btnStop);
+          row.appendChild(tdStop);
+
+          const tdParam = document.createElement('td');
+          tdParam.textContent = inst.parameter || '';
+          row.appendChild(tdParam);
+
+          instBody.appendChild(row);
+        }
+        instTable.appendChild(instBody);
+        tdRun.appendChild(instTable);
+      }
+      tr.appendChild(tdRun);
 
       tbody.appendChild(tr);
     }

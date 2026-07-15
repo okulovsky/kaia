@@ -4,5 +4,6 @@ from .resource_folder import ResourceFolder
 from .controller_registry import ControllerRegistry, InstallationStatus, ControllerLike
 from .controller_over_decider import ControllerOverDecider
 from .file_tools import brainbox_file_like_to_bytes_iterable
+from .instances_registry import InstancesRegistry, DeciderInstance
 
 

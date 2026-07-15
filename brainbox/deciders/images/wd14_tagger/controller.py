@@ -27,11 +27,11 @@ class WD14TaggerController(DockerMarshallingController[WD14TaggerSettings]):
             )
         )
 
-    def get_service_run_configuration(self, parameter: str | None) -> RunConfiguration:
+    def get_service_run_configuration(self, port: int, parameter: str | None) -> RunConfiguration:
         if parameter is not None:
             raise ValueError(f"`parameter` must be None for {self.get_name()}")
         config = RunConfiguration(
-            publish_ports={self.connection_settings.port: 8080},
+            publish_ports={port: 8080},
         )
         if self.settings.cpu_share is not None:
             config.custom_flags = [f'--cpus={self.settings.cpu_share * os.cpu_count()}']
@@ -43,9 +43,9 @@ class WD14TaggerController(DockerMarshallingController[WD14TaggerSettings]):
     def get_default_settings(self):
         return WD14TaggerSettings()
 
-    def create_api(self):
+    def create_api(self, base_url: str):
         from .api import WD14TaggerApi
-        return WD14TaggerApi()
+        return WD14TaggerApi(base_url)
 
     def self_test_cases(self) -> Iterable[SelfTestCase]:
         from .api import WD14Tagger

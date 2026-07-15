@@ -25,4 +25,6 @@ class OllamaModel(DownloadableModel):
         controller = cast(OllamaController, controller)
         for model in models:
             model = cast(OllamaModel, model)
-            controller.run_auxiliary_configuration(controller.get_service_run_configuration('').as_service_worker('pull', model.name))
+            controller.run_auxiliary_configuration(
+                controller.get_service_run_configuration(0, '').as_service_worker('pull', model.name)
+            )

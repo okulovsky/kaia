@@ -49,15 +49,18 @@ class PiperTrainingController(DockerMarshallingController[PiperTrainingSettings]
             keep_dockerfile=True
         )
 
-    def get_service_run_configuration(self, parameter: str|None) -> RunConfiguration:
+    def get_service_run_configuration(self, port: int, parameter: str | None) -> RunConfiguration:
         return RunConfiguration(
-            publish_ports={self.connection_settings.port:8080},
+            publish_ports={port:8080},
         )
 
 
-    def create_api(self):
+    def get_loading_time_in_seconds(self) -> int:
+        return 20
+
+    def create_api(self, base_url: str):
         from .api import PiperTrainingApi
-        return PiperTrainingApi()
+        return PiperTrainingApi(base_url)
 
     def custom_self_test(self, api: BrainBoxApi, tc: TestCase):
         from .api import PiperTraining

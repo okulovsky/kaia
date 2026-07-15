@@ -16,12 +16,11 @@ class HelloBrainBoxAloneTestCase(TestCase):
         self.assertDictEqual({}, running)
 
         instance_id = controller.run(None)
-        self.assertTrue(controller.is_reachable())
+        api = controller.find_api(instance_id)
+        self.assertTrue(api.is_reachable())
 
         running = controller.get_running_instances_id_to_parameter()
         self.assertDictEqual({instance_id: None}, running)
-
-        api = controller.find_api(instance_id)
 
         result = api.sum(2, 4)
         self.assertEqual(6, result)
@@ -36,5 +35,5 @@ class HelloBrainBoxAloneTestCase(TestCase):
         self.assertEqual([0,3,2,0,0,0,0,0,0,0], result)
 
         controller.stop_all()
-        self.assertFalse(controller.is_reachable())
+        self.assertFalse(api.is_reachable())
         self.assertEqual(0, len(controller.get_running_instances_id_to_parameter()))

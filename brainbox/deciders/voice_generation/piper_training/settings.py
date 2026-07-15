@@ -1,4 +1,3 @@
-from brainbox.framework import ConnectionSettings
 from .app.installer import PiperTrainingModel
 from dataclasses import dataclass
 
@@ -9,7 +8,6 @@ class PiperTrainingModels:
 
 @dataclass
 class PiperTrainingSettings:
-    connection = ConnectionSettings(20206, 20)
     models_to_install = {
         PiperTrainingModels.lessac: PiperTrainingModel(
             'https://huggingface.co/datasets/rhasspy/piper-checkpoints/resolve/main/en/en_US/lessac/medium/epoch%3D2164-step%3D1355540.ckpt?download=true',
