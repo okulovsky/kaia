@@ -5,6 +5,7 @@ from grammatron import Template, CardinalDub, OptionsDub, PluralAgreement
 from unittest import TestCase
 from brainbox.framework import ISelfManagingDecider
 from brainbox import BrainBox
+from brainbox.deciders import Ollama
 from foundation_kaia.misc import Loc
 import json
 
@@ -13,7 +14,7 @@ class OllamaMock(ISelfManagingDecider):
     def get_name(self):
         return "Ollama"
 
-    def question(self, prompt: str, system_prompt):
+    def question(self, prompt: str, system_prompt: str | None = None, options: Ollama.Options | None = None) -> str:
         reply = {
             "text": "...",
             "grammar": {

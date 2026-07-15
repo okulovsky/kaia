@@ -1,6 +1,7 @@
 import json
 from unittest import TestCase
 from brainbox import BrainBox, ISelfManagingDecider
+from brainbox.deciders import Ollama
 from chara.common import Chara, CaseCollection
 from chara.common.descriptions.characters import Character
 from chara.common.descriptions.characters.appearance import Appearance
@@ -20,7 +21,7 @@ class OllamaMock(ISelfManagingDecider):
     def get_name(self):
         return "Ollama"
 
-    def question(self, prompt: str, system_prompt: str | None = None, options: dict | None = None, num_predict: int | None = None) -> str:
+    def question(self, prompt: str, system_prompt: str | None = None, options: Ollama.Options | None = None) -> str:
         return SCENE_RESPONSE
 
 

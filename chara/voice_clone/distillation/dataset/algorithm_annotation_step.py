@@ -14,6 +14,8 @@ def algorithm_annotation_step(
         mock_annotation: Callable[[AnnotationCase], str]|None = None
 ) -> tuple[AnnotationCase,...]:
 
+    root_folder = Chara.current.folder
+
     @Chara.phase
     def running_algorithm():
         algorithm = Algorithm(data)
@@ -24,8 +26,6 @@ def algorithm_annotation_step(
             set(banned_words)
         )
         logger.log(f"{len(result)} is produced by an algorithm")
-
-        logger.log(build_statistics_plot(data, result))
         return result
 
     algorithm_result: list[AnnotationCase] = Chara.previous.result
@@ -36,7 +36,14 @@ def algorithm_annotation_step(
     annotator = TextLabelAnnotator(_get_text, settings, mock_annotation = mock_annotation)
     pipeline = AnnotationPipeline(annotator, lambda case, result: case.set_annotation(result[case.get_id()]))
     annotated = Chara.call(pipeline.__call__)(CaseCollection(algorithm_result))
-    return annotated.successes
+    successes = annotated.successes
+
+    accepted_so_far = [c for c in prior_annotations if c.accepted] + [c for c in successes if c.accepted]
+    plot = build_statistics_plot(data, accepted_so_far)
+    plot.figure.savefig(root_folder / 'statistics.png', bbox_inches='tight')
+    logger.log(plot)
+
+    return successes
 
 
 

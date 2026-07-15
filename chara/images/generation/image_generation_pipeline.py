@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from typing import Callable, Any
 
-from .scenarios import ImageScenarioPipeline, ImageScenarioCase
+from .scenarios_pony import ImageScenarioPipeline, ImageScenarioCase
 from .drawing import DrawingPipeline, DrawingCase
 from chara.common import Chara, CaseCollection
 from foundation_kaia.marshalling import Serializer, File

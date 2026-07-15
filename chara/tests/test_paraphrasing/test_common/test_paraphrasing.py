@@ -3,6 +3,7 @@ from chara.common import Chara, CaseCollection
 from chara.common.tools.llm import PromptTaskBuilder
 from unittest import TestCase
 from brainbox import BrainBox, ISelfManagingDecider
+from brainbox.deciders import Ollama
 from foundation_kaia.misc import Loc
 from grammatron import Template, OptionsDub
 import json
@@ -12,7 +13,7 @@ class Mock(ISelfManagingDecider):
     def get_name(self):
         return "Ollama"
 
-    def question(self, prompt: str, system_prompt: str | None = None, options: dict | None = None, num_predict: int | None = None):
+    def question(self, prompt: str, system_prompt: str | None = None, options: Ollama.Options | None = None) -> str:
         if prompt == 'TEST':
             return "* {item} не в списке покупок\n* {item} не найден"
         if "You now need to translate" in prompt:

@@ -23,5 +23,9 @@ class JinjaPrompter:
         data[self.main_field] = obj
         return self.template.render(data)
 
+    def __deepcopy__(self, memo):
+        # The compiled jinja2 Template can't be deepcopied (and doesn't need to be: it's immutable once built).
+        return self
+
 
 
