@@ -9,14 +9,6 @@ from .settings import ComfyUISettings
 from .workflows import Upscale, TextToImage
 
 
-def _is_image(result, api, test_case):
-    from PIL import Image
-    from io import BytesIO
-    bts = api.cache.read(result)
-    img = Image.open(BytesIO(bts))
-    test_case.assertGreater(img.width, 0)
-    test_case.assertGreater(img.height, 0)
-
 class ComfyUIController(DockerMarshallingController[ComfyUISettings]):
     def get_image_builder(self) -> IImageBuilder:
         return BrainboxImageBuilder(
@@ -66,8 +58,8 @@ class ComfyUIController(DockerMarshallingController[ComfyUISettings]):
     def self_test_cases(self) -> Iterable[SelfTestCase]:
         yield SelfTestCase(
             Upscale(Path(__file__).parent/"image.png"),
-            _is_image,
-            "Upscaling"
+            title="Upscaling",
+            file_type=SelfTestCase.FileType.Image,
         )
         checkpoint = next(
             inst.model.get_name()
@@ -80,6 +72,6 @@ class ComfyUIController(DockerMarshallingController[ComfyUISettings]):
                 negative_prompt='blurry, ugly, low quality',
                 model=checkpoint,
             ),
-            _is_image,
-            "Text to image",
+            title="Text to image",
+            file_type=SelfTestCase.FileType.Image,
         )

@@ -5,6 +5,10 @@ from foundation_kaia.brainbox_utils import brainbox_endpoint
 
 @service
 class IComfyUI:
+    @staticmethod
+    def input_placeholder(index: int) -> str:
+        return f"<brainbox_input_placeholder_{index}>"
+
     @brainbox_endpoint
     def workflow(self,
                  workflow: JSON,
