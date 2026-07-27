@@ -1,4 +1,7 @@
 from abc import ABC, abstractmethod
+from typing import Any, Callable
+
+AddressLike = Any
 
 class IAddressElement(ABC):
     @abstractmethod
@@ -13,7 +16,20 @@ class IAddressElement(ABC):
     def translate(element) -> 'IAddressElement':
         if isinstance(element, IAddressElement):
             return element
+        if callable(element):
+            return GetterOnlyElement(element)
         return DefaultElement(element)
+
+
+class GetterOnlyElement(IAddressElement):
+    def __init__(self, callable: Callable):
+        self.callable = callable
+
+    def get(self, obj):
+        return self.callable(obj)
+
+    def set(self, obj, value):
+        raise ValueError("This is a get-only address element")
 
 
 
@@ -94,7 +110,13 @@ class Address:
         return '.'.join(str(a) for a in self.address)
 
     @staticmethod
-    def parse(s: str):
-        parts = s.split('.')
-        parts = [DefaultElement(e) for e in parts]
-        return Address(*parts)
+    def parse(s: AddressLike):
+        if isinstance(s, str):
+            parts = s.split('.')
+            parts = [DefaultElement(e) for e in parts]
+            return Address(*parts)
+        try:
+            parts = list(s)
+            return Address(*parts)
+        except Exception:
+            return Address(s)

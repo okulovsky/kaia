@@ -68,7 +68,7 @@ class TestPrimitiveSchemas(unittest.TestCase):
     def test_enum(self):
         s = Serializer.parse(Color).to_json_schema()
         d = s.to_dict()
-        self.assertEqual(['red', 'blue'], d['enum'])
+        self.assertEqual(['RED', 'BLUE'], d['enum'])
 
 
 class TestUnionSchema(unittest.TestCase):

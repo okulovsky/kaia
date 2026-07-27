@@ -185,7 +185,7 @@ class EnumHandler(IPrimitiveTypeHandler):
             raise ValueError(f"Invalid value for {self.enum_type} at {context.current_path}: '{string}'") from e
 
     def to_json_schema(self, root: JsonSchema) -> dict:
-        return {'enum': [v.value for v in self.enum_type]}
+        return {'enum': [v.name for v in self.enum_type]}
 
 
 class DateTimeHandler(IPrimitiveTypeHandler):
