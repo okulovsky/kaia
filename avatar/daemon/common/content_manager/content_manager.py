@@ -1,5 +1,6 @@
 import copy
 from typing import *
+from collections import OrderedDict
 import pandas as pd
 from .strategies import IContentStrategy, NewContentStrategy
 from .feedback_provider import InMemoryFeedbackProvider, FileFeedbackProvider
@@ -13,6 +14,7 @@ class Matcher(Generic[TRecord]):
         self.data_provider = data_provider
         self.feedback_provider = feedback_provider
         self.matchers: list[ITagMatcher] = []
+        self.fuzzy_tags: 'OrderedDict[str, Any] | None' = None
         self.strategy = strategy
         self.debug = False
 
@@ -24,13 +26,17 @@ class Matcher(Generic[TRecord]):
         self.matchers.append(TagMatcher(True, tags))
         return self
 
-    def get_all_acceptable(self) -> list[TRecord]:
+    def fuzzy(self, tags: 'OrderedDict[str, Any]') -> 'Matcher[TRecord]':
+        self.fuzzy_tags = tags
+        return self
+
+    def _filter_records(self, matchers: list[ITagMatcher]) -> list[TRecord]:
         records = self.data_provider.get_records()
 
         filtered_records = []
         for index, record in enumerate(records):
             skip = False
-            for matcher in self.matchers:
+            for matcher in matchers:
                 comparison = matcher.match(record.tags)
                 if comparison is not None:
                     skip = True
@@ -42,9 +48,10 @@ class Matcher(Generic[TRecord]):
 
         return filtered_records
 
-    def find_content(self) -> TRecord|None:
-        records = self.get_all_acceptable()
+    def get_all_acceptable(self) -> list[TRecord]:
+        return self._filter_records(self.matchers)
 
+    def _choose(self, records: list[TRecord]) -> TRecord|None:
         feedback = self.feedback_provider.load_feedback()
         all_feedback_keys = set(key for fb in feedback.values() for key in fb)
 
@@ -62,6 +69,33 @@ class Matcher(Generic[TRecord]):
         if choosen_id is None:
             return None
         return id_to_original[choosen_id]
+
+    def _acceptable_pool(self) -> list[TRecord]:
+        if not self.fuzzy_tags:
+            return self.get_all_acceptable()
+
+        keys = list(self.fuzzy_tags.keys())
+        for cutoff in range(len(keys), -1, -1):
+            matchers = list(self.matchers)
+            if cutoff > 0:
+                subset = {k: self.fuzzy_tags[k] for k in keys[:cutoff]}
+                matchers.append(TagMatcher(False, subset))
+            records = self._filter_records(matchers)
+            if len(records) > 0:
+                return records
+
+        return []
+
+    def find_content_with_pool(self) -> tuple[TRecord|None, list[TRecord]]:
+        """Like find_content(), but also returns the pool of records the choice was
+        made from (i.e. matching the same strong tags and the same fuzzy cutoff) -
+        so callers can pick siblings by filtering that pool instead of re-querying
+        with weaker constraints."""
+        pool = self._acceptable_pool()
+        return self._choose(pool), pool
+
+    def find_content(self) -> TRecord|None:
+        return self.find_content_with_pool()[0]
 
     def get_content(self) -> TRecord:
         content = self.find_content()

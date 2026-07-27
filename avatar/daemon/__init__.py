@@ -1,7 +1,7 @@
 from .common import *
 from .brainbox_service import BrainBoxService
 from .tts_service import TTSService
-from .narration_service import NarrationService
+from .narration_service import *
 from .paraphrase_service import ParaphraseService, ParaphraseRecord
 from .image_service import ImageService
 from .stt_service import STTService, RhasspyRecognitionSetup, VoskRecognitionSetup, WhisperRecognitionSetup, IntentsPack
