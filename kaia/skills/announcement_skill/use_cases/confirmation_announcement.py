@@ -8,7 +8,7 @@ from grammatron import Template, TemplatesCollection, Utterance
 class AnnouncementConfirmation(TemplatesCollection):
     yes = Template("yes", "sure", "okay", "of course")
     no = Template("no", "later", "remind me later", "not now")
-    next_day = Template("not today", "next day", "back off")
+    next_day = Template("not today", "next day", "back off", 'tomorrow')
     already_done = Template("already done", "done", "won't do", "I've done it already")
 
 
@@ -32,7 +32,7 @@ class ConfirmationAnnouncementSkill(KaiaSkillBase):
     def get_extended_intents_packs(self) -> Iterable[IntentsPack]:
         return [IntentsPack(
             MODEL,
-            (AnnouncementConfirmation.yes, AnnouncementConfirmation.no),
+            (AnnouncementConfirmation.yes, AnnouncementConfirmation.no, AnnouncementConfirmation.next_day, AnnouncementConfirmation.already_done),
         )]
 
     def should_proceed(self, input) -> bool:

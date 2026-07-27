@@ -6,15 +6,23 @@ from copy import copy
 
 class JinjaPrompter:
     def __init__(self,
-                 file: Path,
+                 file: Path|str,
                  additional_folders: Iterable[Path] = (),
                  additional_objects: dict[str, Any]|None = None,
                  main_field: str = 'case'
                  ):
-        folders = [file.parent] + list(additional_folders)
+        file = Path(file)
+        if file.parent != Path('.'):
+            parent_folder = [file.parent]
+            filename = file.name
+        else:
+            parent_folder = []
+            filename = file.name
+
+        folders = parent_folder + list(additional_folders)
         loader = FileSystemLoader(folders)
         self.env = Environment(loader=loader, autoescape=False)
-        self.template = self.env.get_template(file.name)
+        self.template = self.env.get_template(filename)
         self.additional_objects = additional_objects if additional_objects is not None else {}
         self.main_field = main_field
 

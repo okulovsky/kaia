@@ -38,3 +38,24 @@ def make_substitution(js: dict, field_name: str, value: object, node_title: str|
         node = js[keys[0]]
 
     node['inputs'][field_name] = value
+
+
+def _is_link(value: object) -> bool:
+    return (
+        isinstance(value, list)
+        and len(value) == 2
+        and isinstance(value[0], str)
+        and isinstance(value[1], int)
+    )
+
+
+def trim_nodes(js: dict, predicate) -> None:
+    removed_ids = {key for key, node in js.items() if predicate(node)}
+
+    for key in removed_ids:
+        del js[key]
+
+    for node in js.values():
+        for field_name, value in list(node['inputs'].items()):
+            if _is_link(value) and value[0] in removed_ids:
+                del node['inputs'][field_name]

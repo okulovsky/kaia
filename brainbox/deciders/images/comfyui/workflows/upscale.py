@@ -13,7 +13,7 @@ class Upscale(IWorkflow):
 
     def create_workflow(self):
         js = json.loads((Path(__file__).parent/'upscale.json').read_text())
-        IWorkflow.make_substitution(js, 'image', 'input_0', 'Load Image')
+        IWorkflow.make_substitution(js, 'image', IWorkflow.input_placeholder(0), 'Load Image')
         IWorkflow.make_substitution(js, 'model_name', self.model_name)
         IWorkflow.make_substitution(js, 'width', self.width, "Upscale Image")
         IWorkflow.make_substitution(js, 'height', self.height, "Upscale Image")

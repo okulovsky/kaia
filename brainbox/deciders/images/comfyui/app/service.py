@@ -3,6 +3,8 @@ from foundation_kaia.marshalling import JSON, FileLike, FileLikeHandler
 import requests
 import time
 import tarfile
+import json
+import uuid
 from io import BytesIO
 from pathlib import Path
 
@@ -58,21 +60,35 @@ class ComfyUIService(IComfyUI):
                  input_3: FileLike|None = None,
                  input_4: FileLike|None = None,
                  ) -> FileLike:
-        for index, input in enumerate([input_0, input_1, input_2, input_3, input_4]):
-            if input is not None:
-                FileLikeHandler.write(input, INPUT_PATH/f"input_{index}")
+        # Inputs are written under a fresh unique filename each call, and that filename
+        # replaces the generic placeholder inside the workflow graph, so ComfyUI's own
+        # execution cache can't mistake a new image for a previously-seen one just because
+        # it landed at the same fixed path (see git history for the bug this fixes).
+        workflow_text = json.dumps(workflow)
+        written_paths = []
+        try:
+            for index, input in enumerate([input_0, input_1, input_2, input_3, input_4]):
+                if input is not None:
+                    unique_filename = f"input_{index}_{uuid.uuid4().hex}"
+                    path = INPUT_PATH/unique_filename
+                    FileLikeHandler.write(input, path)
+                    written_paths.append(path)
+                    workflow_text = workflow_text.replace(IComfyUI.input_placeholder(index), unique_filename)
 
-        contents = _run_workflow_and_return_contents(workflow)
-        if len(contents) == 1:
-            key = list(contents.keys())[0]
-            return contents[key]
+            contents = _run_workflow_and_return_contents(json.loads(workflow_text))
+            if len(contents) == 1:
+                key = list(contents.keys())[0]
+                return contents[key]
 
-        buffer = BytesIO()
-        with tarfile.open(fileobj=buffer, mode='w') as tar:
-            for filename, content in contents.items():
-                info = tarfile.TarInfo(name=filename)
-                info.size = len(content)
-                tar.addfile(info, BytesIO(content))
-        return buffer.getvalue()
+            buffer = BytesIO()
+            with tarfile.open(fileobj=buffer, mode='w') as tar:
+                for filename, content in contents.items():
+                    info = tarfile.TarInfo(name=filename)
+                    info.size = len(content)
+                    tar.addfile(info, BytesIO(content))
+            return buffer.getvalue()
+        finally:
+            for path in written_paths:
+                path.unlink(missing_ok=True)
 
 

@@ -1,6 +1,8 @@
 from brainbox.framework import IJobRequestFactory, JobRequest, JobDescription
 from abc import ABC, abstractmethod
-from .substitution import make_substitution
+from typing import Callable
+from ...app.interface import IComfyUI
+from .substitution import make_substitution, trim_nodes
 
 class IWorkflow(IJobRequestFactory, ABC):
     @abstractmethod
@@ -13,6 +15,10 @@ class IWorkflow(IJobRequestFactory, ABC):
 
     def get_ordering_token(self) -> str | None:
         return None
+
+    @staticmethod
+    def input_placeholder(index: int) -> str:
+        return IComfyUI.input_placeholder(index)
 
     def to_job_request(self) -> 'JobRequest':
         arguments = dict(
@@ -33,4 +39,8 @@ class IWorkflow(IJobRequestFactory, ABC):
     @staticmethod
     def make_substitution(js: dict, field_name: str, value: object, node_title: str | None = None):
         make_substitution(js, field_name, value, node_title)
+
+    @staticmethod
+    def trim_nodes(js: dict, predicate: Callable[[dict], bool]):
+        trim_nodes(js, predicate)
 

@@ -8,6 +8,7 @@ from .handlers.primitive_type_handler import (
     PathHandler
 )
 from .handlers.type_handler import ITypeHandler, SerializationContext
+from .handlers.python_type_handler import TypeHandler
 from .handlers.unannotated_handler import UnannotatedHandler
 from .handlers.unsupported_type_handler import UnsupportedHandler  # backwards-compat alias
 from .handlers.none_handler import NoneHandler

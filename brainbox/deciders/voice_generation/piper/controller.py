@@ -44,5 +44,5 @@ class PiperController(DockerMarshallingController[PiperSettings]):
         from .api import Piper
         yield SelfTestCase(
             Piper.new_task().voiceover(text=VOICEOVER_TEXT, model="en"),
-            SelfTestCase.assertFileIsSound()
+            file_type=SelfTestCase.FileType.Sound
         )

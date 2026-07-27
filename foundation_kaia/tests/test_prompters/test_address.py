@@ -28,6 +28,7 @@ class AddressBuilderTestCase(TestCase):
         obj = MyClass(45, "34", MyClass(12, "23"))
         self.assertEqual(45, Address.parse("a").get(obj))
         self.assertEqual("23", Address.parse("c.b").get(obj))
+        self.assertEqual("23", Address.parse(lambda q: q.c.b).get(obj))
 
 
 

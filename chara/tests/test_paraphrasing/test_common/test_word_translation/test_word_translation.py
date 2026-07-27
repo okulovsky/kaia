@@ -6,13 +6,14 @@ from grammatron import Template, OptionsDub, CardinalDub, PluralAgreement
 from foundation_kaia.misc import Loc
 from brainbox import BrainBox, ISelfManagingDecider
 from brainbox.deciders import Ollama
+from foundation_kaia.marshalling import FileLike
 
 
 class OllamaMock(ISelfManagingDecider):
     def get_name(self):
         return "Ollama"
 
-    def question(self, prompt: str, system_prompt: str | None = None, options: Ollama.Options | None = None) -> str:
+    def question(self, prompt: str, system_prompt: str | None = None, options: Ollama.Options | None = None, image: FileLike | None = None) -> str:
         word, language = prompt.split('/')
         if word == 'minute' and language == 'ru':
             return "минута"

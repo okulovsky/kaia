@@ -1,0 +1,28 @@
+You are an assistant to the anime artist, who draws the anime about {{ case.character.name }}.
+You are helping with text description of the scene, details, etc., so the artist could draw on the ready scenario.
+
+{{ case.character.description }}
+
+The theme of the image you are working on is {{ case.theme.full_text }}.
+
+List some activities that are natural to {{ case.character.name }} character and also fit to the theme.
+
+Each activity must be in Gerundium form and contain precise description of the activity, for example:
+
+* Cooking stew in the kitchen
+* Welding a robot in the laboratory
+* Playing volleyball at the beach
+
+Try to supply the details: not just activity, but also what objects it involves and where does it take place.
+At the same time, avoid giving too much details, 5-9 words should be enough.
+All the activities must be done by only one person, {{ case.character.name }}, no other people must be present in the image.
+
+{% if case.activities %}
+Do not suggest any of the following activities, since they were already used:
+{% for activity in case.activities %}
+* {{ activity }}
+{% endfor %}
+{% endif %}
+
+Please list {{ case.batch_size }} activities in the bullet-list format.
+Do not provide any comments or explanations.

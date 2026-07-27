@@ -23,6 +23,7 @@ def _build_handler(dt: 'DeclaredType') -> ITypeHandler:
     from .handlers.sqlalchemy_handler import SqlalchemyHandler
     from .handlers.unannotated_handler import UnannotatedHandler
     from .handlers.bytes_handler import BytesHandler
+    from .handlers.python_type_handler import TypeHandler
 
     if dt.kind == DeclaredTypeArgumentKind.generic_type:
         annotation = dt.mro[0].generic_type
@@ -36,7 +37,7 @@ def _build_handler(dt: 'DeclaredType') -> ITypeHandler:
     parsers = [
         ListHandler, DictHandler,
         NoneHandler, BoolHandler, IntHandler, FloatHandler, StringHandler,
-        DateTimeHandler, EnumHandler, PathHandler,
+        DateTimeHandler, EnumHandler, PathHandler, TypeHandler,
         BytesHandler, DataclassHandler, SqlalchemyHandler,
         UnannotatedHandler,
     ]

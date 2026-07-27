@@ -1,4 +1,5 @@
 from .state import State
+from .special_day import SpecialDay
 from .command_confirmation_queue import CommandConfirmationQueue
 from ...messaging import *
 from .known_messages import *

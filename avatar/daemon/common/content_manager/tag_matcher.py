@@ -15,11 +15,11 @@ class TagMatcher(ITagMatcher):
 
     def match(self, tags: dict[str, Any]) -> str|None:
         for key, value in self.tags.items():
-            if key not in tags:
-                if self.strong:
-                    return f'{key} missing'
+            actual = tags.get(key, None)
+            if actual is None and not self.strong:
+                # weak matching: the record is not opinionated about this tag, so it passes
                 continue
-            if value != tags[key]:
-                return f'{key}: exp {tags[key]}, act {value}'
+            if value != actual:
+                return f'{key}: exp {value}, act {actual}'
         return None
 

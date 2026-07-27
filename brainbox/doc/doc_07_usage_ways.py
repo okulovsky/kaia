@@ -109,7 +109,7 @@ if __name__ == '__main__':
     BrainBox internally (such as starting the containers). Therefore, it makes more sense to use BrainBox GUI for them.    
     So we will cover only the API to create the tasks in this section.
     
-    To add the task, you need to use `/tasks-service/base-add` with the list of tasks you want to create:
+    To add the task, you need to use `/jobs-service/base-add` with the list of tasks you want to create:
     
     """
     from uuid import uuid4

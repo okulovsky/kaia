@@ -20,3 +20,4 @@ def upload_to_avatar(service, prefix: str, suffix:str, index_length: int, data):
     logger.log("Uploading...")
     Chara.Apis.avatar_api.resources(service).upload(filename, data)
     logger.log("Uploaded")
+    return filename

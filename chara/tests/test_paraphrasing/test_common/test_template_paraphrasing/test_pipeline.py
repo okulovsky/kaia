@@ -7,13 +7,14 @@ from brainbox.framework import ISelfManagingDecider
 from brainbox import BrainBox
 from brainbox.deciders import Ollama
 from foundation_kaia.misc import Loc
+from foundation_kaia.marshalling import FileLike
 
 
 class OllamaMock(ISelfManagingDecider):
     def get_name(self):
         return "Ollama"
 
-    def question(self, prompt: str, system_prompt: str | None = None, options: Ollama.Options | None = None) -> str:
+    def question(self, prompt: str, system_prompt: str | None = None, options: Ollama.Options | None = None, image: FileLike | None = None) -> str:
         return "* I set the timer for {duration} minutes\n* Your timer will elapse in {duration} minutes"
 
 

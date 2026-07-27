@@ -5,6 +5,7 @@ import zipfile
 import json
 from foundation_kaia.marshalling import Serializer
 from foundation_kaia.marshalling.protocol.model.file_like import FileLike, FileLikeHandler
+import os
 
 
 @dataclass
@@ -46,5 +47,11 @@ class MediaLibrary:
                 zp.writestr(FileLikeHandler.guess_name(file), FileLikeHandler.to_bytes(file))
             zp.writestr('records.json', json.dumps(cls._serializer.to_json(records)))
 
-
+    @staticmethod
+    def from_folder(folder: Path, prefix: str, suffix: str):
+        files = [
+            folder / f for f in sorted(os.listdir(str(folder)))
+            if f.startswith(prefix) and f.endswith(suffix)
+        ]
+        return MediaLibrary(*files)
 

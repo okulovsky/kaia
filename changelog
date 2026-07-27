@@ -1,3 +1,28 @@
+5.1.3
+    Foundation
+        Types are now natively serialized
+    BrainBox
+        Fix in ComfyUI, the reference files are now copied on the new name each time, so the caches are properly reset
+        Fixes: erroneous API calls, optional FileLikeArgument
+        Self-tests are now better in case of images and sound files returned without extension
+    Avatar:
+        State now has season, time_of_day, weather and special_day
+        Narrator is doing all the job of matching, while ImageService just presents images from a received PhotoAlbum
+        SimpleNarrator works as the whole thing was working before. Advanced narrator supports the StateFieldSetters and handles special days differently
+    Chara
+        LLM tools are improved
+        Image generation is refactored
+            Common parts are now in common, containing pipelines for:
+            - designing the activities
+            - model-agnostic base for scenario pipeline
+            - drawing and self-evaluating the images
+            - full generation cycle (picking activities, writing scenarios, drawing, packaging and uploading to avatar server)
+            Krea workflow and pipelines are added
+            Pony pipelines are refactored, but they are effectively legacy now
+    Kaia
+        Fixes: bug in the announcement case, spotify auth is improved
+        Rewired to use the new approach to images skill
+
 5.1.2
     Brainbox
         Ports are now assigned automatically
