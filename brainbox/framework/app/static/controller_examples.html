@@ -157,7 +157,7 @@ async function executeJob(deciderName, methodName, args, resultIsFile, resultCel
 
   try {
     const jobId = uuid4();
-    const addResp = await fetch('/tasks-service/base-add', {
+    const addResp = await fetch('/jobs-service/base-add', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({jobs: [{
@@ -174,7 +174,7 @@ async function executeJob(deciderName, methodName, args, resultIsFile, resultCel
     });
     if (!addResp.ok) throw new Error('base-add ' + addResp.status + ': ' + await addResp.text());
 
-    const joinResp = await fetch('/tasks-service/base-join', {
+    const joinResp = await fetch('/jobs-service/base-join', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ids: [jobId]})

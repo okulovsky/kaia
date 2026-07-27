@@ -198,7 +198,7 @@ async function loadControllers() {
           const port = portFromBaseUrl(inst.base_url);
           if (port) {
             const a = document.createElement('a');
-            a.href = 'http://127.0.0.1:' + port;
+            a.href = 'http://127.0.0.1:' + port + '/doc/html';
             a.target = '_blank';
             a.textContent = port;
             tdPort.appendChild(a);
