@@ -4,8 +4,8 @@ from chara.common import Chara, CaseCollection
 from chara.common.descriptions.characters import Character
 from chara.common.descriptions.characters.appearance import Appearance
 from brainbox.deciders.images.comfyui.workflows import TextToImage
-from chara.images.generation.scenarios_pony import PipelineFactory, ImageScenarioSettings
-from chara.images.generation.scenarios_pony.case import ImageScenarioCase, ImageContext, Theme
+from chara.images.pony.scenarios import PonyCase, PonySettings, PonyPipelineFactory
+from chara.images.common import Theme
 from foundation_kaia.misc import Loc
 
 
@@ -22,22 +22,26 @@ class ChromaMock(ISelfManagingDecider):
 
 
 def _make_case():
-    context = ImageContext(template=TextToImage(prompt='', negative_prompt='', model='test_model'))
+    settings = PonySettings(template=TextToImage(prompt='', negative_prompt='', model='test_model'))
     character = Character(
         name='Miku',
         gender=Character.Gender.Feminine,
         description='A cheerful anime girl with teal hair.',
         appearance=Appearance(clothing='casual', colors='teal and white'),
     )
-    theme = Theme(name='Daily life')
-    case = ImageScenarioCase(context=context, character=character, theme=theme)
+    theme = Theme('Daily life')
+    case = PonyCase(character=character, settings=settings, theme=theme)
     case.activity = 'Cooking stew in the kitchen'
     return case
 
 
+def _make_factory():
+    return PonyPipelineFactory('mistral-small', ())
+
+
 class ActivityToTagsPipelineTestCase(TestCase):
     def test_pipeline_sets_activity_tags(self):
-        factory = PipelineFactory(ImageScenarioSettings())
+        factory = _make_factory()
         input_cases = CaseCollection([_make_case()])
 
         with Loc.create_test_folder() as folder:
@@ -51,7 +55,7 @@ class ActivityToTagsPipelineTestCase(TestCase):
         self.assertEqual(('cooking', 'kitchen', 'stew pot'), cases[0].activity_tags)
 
     def test_pipeline_processes_multiple_cases(self):
-        factory = PipelineFactory(ImageScenarioSettings())
+        factory = _make_factory()
         input_cases = CaseCollection([_make_case(), _make_case()])
 
         with Loc.create_test_folder() as folder:
