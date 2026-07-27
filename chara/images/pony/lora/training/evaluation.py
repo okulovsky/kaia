@@ -6,7 +6,7 @@ from .training import DownloadedCheckpoint
 from chara import BrainBoxCasePipeline, CaseCollection
 from pathlib import Path
 from chara import Chara
-from ...common import IImageScenario, assemble_tags
+from ....common import IImageScenario, assemble_tags
 
 
 @dataclass

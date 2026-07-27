@@ -3,19 +3,19 @@ from brainbox.deciders import Chroma
 
 class TagMatchingPipeline:
     def __init__(self,
-                 collection_name: str,
-                 text_field: str,
+                 case_to_collection_name,
+                 case_to_text,
+                 case_to_tag_count,
                  tags_field: str,
-                 tags_per_input: int = 30
                  ):
-        self.collection_name = collection_name
-        self.tags_per_input = tags_per_input
-        self.text_field = text_field
+        self.case_to_collection_name = case_to_collection_name
+        self.case_to_text = case_to_text
         self.tags_field = tags_field
+        self.case_to_tag_count = case_to_tag_count
 
 
     def _create_task(self, case):
-        return Chroma.new_task().find_neighbors(getattr(case, self.text_field), self.tags_per_input, self.collection_name)
+        return Chroma.new_task().find_neighbors(self.case_to_text(case), self.case_to_tag_count(case), self.case_to_collection_name(case))
 
     def _apply(self, case, result):
         tags = tuple(r['text'] for r in result)
