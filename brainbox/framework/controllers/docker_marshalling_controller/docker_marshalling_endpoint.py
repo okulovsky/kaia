@@ -97,7 +97,7 @@ class DockerMarshallingApiCall:
     def preprocess(self, *args, **kwargs) -> CallModel:
         values = self.endpoint.signature.assign_parameters_to_names(*args, **kwargs)
         for name, v in values.items():
-            if name in self.decider_method.file_argument_names:
+            if name in self.decider_method.file_argument_names and v is not None:
                 values[name] = brainbox_file_like_to_bytes_iterable(v, self.api.cache_folder)
         model = self.call.create_content_model(**values)
         return model
