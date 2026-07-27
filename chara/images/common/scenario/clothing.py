@@ -1,5 +1,6 @@
-from dataclasses import dataclass
-from ...common import assemble_tags
+from dataclasses import dataclass, fields
+from .image_scenario import assemble_tags, convert_to_lists
+
 
 @dataclass
 class Clothing:
@@ -10,6 +11,9 @@ class Clothing:
     footwear: list[str]|None = None
     headwear: list[str]|None = None
     accessories: list[str]|None = None
+
+    def __post_init__(self):
+        convert_to_lists(self)
 
     def to_prompt(self):
         return assemble_tags(

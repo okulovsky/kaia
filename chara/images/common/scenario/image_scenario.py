@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
-from brainbox.deciders.images.comfyui.workflows import TextToImage
+from brainbox.deciders.images.comfyui.workflows import IWorkflow
 from chara.common import ICase
+from dataclasses import fields
 
 class IImageScenario(ABC, ICase):
     @abstractmethod
-    def to_workflow(self) -> TextToImage:
+    def to_workflow(self) -> IWorkflow:
         pass
 
 
@@ -21,3 +22,10 @@ def assemble_tags(*parts) -> str|None:
     if len(result) == 0:
         return None
     return ', '.join(result)
+
+
+def convert_to_lists(dataclass_object):
+    for field in fields(dataclass_object):
+        value = getattr(dataclass_object, field.name)
+        if isinstance(value, str):
+            setattr(dataclass_object, field.name, [value])
