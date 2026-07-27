@@ -57,7 +57,7 @@ class AdvancedNarratorTestCase(TestCase):
         records = [
             {'path': 'A/summer_sunny', 'tags': dict(character='A', activity='swimming', season='summer', weather='sunny')},
             {'path': 'A/winter_snowy', 'tags': dict(character='A', activity='skiing', season='winter', weather='snowy')},
-            {'path': 'B/summer_sunny', 'tags': dict(character='B', activity='reading', season='summer', weather='sunny')},
+            {'path': 'B/summer_sunny', 'tags': dict(character='B', activity='reading', season='summer', weather='sunny', special_day='Halloween')},
         ]
         with zipfile.ZipFile(self.folder/'media_library.zip', 'w') as zp:
             zp.writestr('records.json', json.dumps(records))
