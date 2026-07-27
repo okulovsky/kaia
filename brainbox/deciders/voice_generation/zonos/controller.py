@@ -57,7 +57,7 @@ class ZonosController(
         from .api import Zonos
         speaker_sample = File.read(Path(__file__).parent / 'app/lina.mp3')
         yield SelfTestCase(Zonos.new_task().train('test_speaker', speaker_sample), None)
-        yield SelfTestCase(Zonos.new_task().voiceover(VOICEOVER_TEXT, 'test_speaker'), SelfTestCase.assertFileIsSound())
-        yield SelfTestCase(Zonos.new_task().voiceover(VOICEOVER_TEXT, 'test_speaker', speaking_rate=10), SelfTestCase.assertFileIsSound())
-        yield SelfTestCase(Zonos.new_task().voiceover(VOICEOVER_TEXT, 'test_speaker', speaking_rate=20), SelfTestCase.assertFileIsSound())
-        yield SelfTestCase(Zonos.new_task().voiceover(VOICEOVER_TEXT, 'test_speaker', emotion=Zonos.Emotions.Happiness), SelfTestCase.assertFileIsSound())
+        yield SelfTestCase(Zonos.new_task().voiceover(VOICEOVER_TEXT, 'test_speaker'), file_type=SelfTestCase.FileType.Sound)
+        yield SelfTestCase(Zonos.new_task().voiceover(VOICEOVER_TEXT, 'test_speaker', speaking_rate=10), file_type=SelfTestCase.FileType.Sound)
+        yield SelfTestCase(Zonos.new_task().voiceover(VOICEOVER_TEXT, 'test_speaker', speaking_rate=20), file_type=SelfTestCase.FileType.Sound)
+        yield SelfTestCase(Zonos.new_task().voiceover(VOICEOVER_TEXT, 'test_speaker', emotion=Zonos.Emotions.Happiness), file_type=SelfTestCase.FileType.Sound)

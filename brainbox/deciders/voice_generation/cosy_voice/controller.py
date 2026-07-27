@@ -69,14 +69,14 @@ class CosyVoiceController(DockerMarshallingController[CosyVoiceSettings]):
         )
         yield SelfTestCase(
             CosyVoice.new_task().voice_to_text('lina', VOICEOVER_TEXT),
-            SelfTestCase.assertFileIsSound()
+            file_type=SelfTestCase.FileType.Sound
         )
 
         yield SelfTestCase(
             CosyVoice.new_task().voice_to_text_translingual('lina', "Ein einziger Funke, und unmerklich gerät die Welt in Brand."),
-            SelfTestCase.assertFileIsSound()
+            file_type=SelfTestCase.FileType.Sound
         )
         yield SelfTestCase(
             CosyVoice.new_task().voice_to_file('lina', File.read(Path(__file__).parent / 'lina_ru.wav')),
-            SelfTestCase.assertFileIsSound()
+            file_type=SelfTestCase.FileType.Sound
         )

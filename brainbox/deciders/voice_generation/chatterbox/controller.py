@@ -61,5 +61,5 @@ class ChatterboxController(DockerMarshallingController[ChatterboxSettings]):
         yield SelfTestCase(Chatterbox.new_task().train('test_speaker', speaker_sample), None)
         yield SelfTestCase(
             Chatterbox.new_task().voiceover(VOICEOVER_TEXT, 'test_speaker'),
-            SelfTestCase.assertFileIsSound()
+            file_type=SelfTestCase.FileType.Sound
         )
