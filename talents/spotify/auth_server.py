@@ -28,6 +28,10 @@ class AuthServer:
         return 'OK'
 
     def spotify(self):
+        error = request.args.get("error")
+        if error:
+            return f"Spotify authorization failed: {error}. Try the authorize link again.", 400
+
         code = request.args.get("code")
         token_url = "https://accounts.spotify.com/api/token"
         response = requests.post(token_url, data={
@@ -38,13 +42,16 @@ class AuthServer:
             "client_secret": self.client_server
         })
         data = response.json()
+        if response.status_code != 200 or "error" in data:
+            return f"Token exchange failed: {data}. Try the authorize link again.", 400
+
         FileIO.write_json(data, self.file_location)
 
-        return "OK"
+        return "Authorization succeeded, credentials stored."
 
 
     @staticmethod
-    def run_authorization(client_id, client_secret, oauth_path, port=9097, open_browser: bool = True):
+    def run_authorization(client_id, client_secret, oauth_path, port=8097, open_browser: bool = True):
         if Path(oauth_path).is_file():
             os.unlink(oauth_path)
 

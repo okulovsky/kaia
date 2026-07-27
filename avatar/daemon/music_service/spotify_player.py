@@ -108,6 +108,8 @@ class SpotifyMusicPlayer(IMusicPlayer):
         token_data = response.json()
 
         oauth_data["access_token"] = token_data["access_token"]
+        if "refresh_token" in token_data:
+            oauth_data["refresh_token"] = token_data["refresh_token"]
         self.oauth_path.write_text(json.dumps(oauth_data))
 
     def _get_access_token(self):
