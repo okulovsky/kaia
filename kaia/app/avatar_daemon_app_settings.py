@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from loguru import logger
 
 from avatar.daemon import TextCommand, MockSoundService
+from avatar.daemon.image_service import MediaLibrary, MediaLibraryManager
 from brainbox import BrainBox
 from .app import KaiaApp, IAppInitializer
 from avatar.messaging import AvatarDaemon
@@ -47,7 +48,14 @@ class AvatarDaemonAppSettings(IAppInitializer):
 
 
     def create_image_service(self, app:KaiaApp, state: s.State):
-        image_strategy = cm.SequentialStrategy(
+        return s.ImageService(
+            state,
+            app.avatar_api,
+        )
+
+    def _create_narrator_content_manager(self, app: KaiaApp) -> MediaLibraryManager:
+        media_library_path = app.avatar_resources_folder / 'ImageService'
+        strategy = cm.SequentialStrategy(
             cm.WeightedStrategy(
                 cm.WeightedStrategy.Item(cm.GoodContentStrategy(), 0.3),
                 cm.WeightedStrategy.Item(cm.NewContentStrategy(), 0.7),
@@ -55,10 +63,10 @@ class AvatarDaemonAppSettings(IAppInitializer):
             cm.NewContentStrategy(),
             cm.AnyContentStrategy(),
         )
-        return s.ImageService(
-            state,
-            app.avatar_api,
-            image_strategy
+        return MediaLibraryManager(
+            MediaLibrary.from_folder(media_library_path, s.ImageService.MEDIA_LIBRARY_PREFIX, s.ImageService.MEDIA_LIBRARY_SUFFIX),
+            media_library_path / 'images-feedback.json',
+            strategy,
         )
 
     def create_stt_service(self, app: KaiaApp, state: s.State):
@@ -165,8 +173,7 @@ class AvatarDaemonAppSettings(IAppInitializer):
     def create_narration_service(self, app: KaiaApp, state: s.State):
         return s.NarrationService(
             state,
-            self.characters,
-            activity_manager=None,
+            s.SimpleNarrator(self._create_narrator_content_manager(app)),
             welcome_command=self.greetings_command,
             time_between_updates_in_seconds=30*60,
         )
