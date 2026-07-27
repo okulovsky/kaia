@@ -1,0 +1,16 @@
+{% import "intro.jinja" as intro %}
+
+{{ intro.intro(case) }}
+
+You task is to imagine the picture of {{ case.character.name }}, doing {{ case.activity }}.
+And then, describe the pose that you imagined, and also environment: objects around, atmosphere and ambient effects
+
+```
+{
+    "position": ["standing on a balcony, holding a glass of champange in one hand and a bottle in another"],
+    "environment": ["night, starry sky, fireworks, celebration ornaments on a balcony"]
+}
+```
+
+Provide around 10 words per key.
+Do not describe facial expression or clothing.

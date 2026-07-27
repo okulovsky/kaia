@@ -1,0 +1,358 @@
+{
+  "1": {
+    "inputs": {
+      "unet_name": "krea-2-turbo-bf16.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "2": {
+    "inputs": {
+      "clip_name": "qwen3vl_4b_fp8_scaled.safetensors",
+      "type": "krea2",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP"
+    }
+  },
+  "3": {
+    "inputs": {
+      "vae_name": "qwen_image_vae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "6": {
+    "inputs": {
+      "seed": 209119064644680,
+      "steps": 8,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": [
+        "68",
+        0
+      ],
+      "positive": [
+        "59",
+        0
+      ],
+      "negative": [
+        "60",
+        0
+      ],
+      "latent_image": [
+        "7",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "7": {
+    "inputs": {
+      "width": 1024,
+      "height": 1024,
+      "batch_size": 1
+    },
+    "class_type": "EmptyLatentImage",
+    "_meta": {
+      "title": "Empty Latent Image"
+    }
+  },
+  "8": {
+    "inputs": {
+      "samples": [
+        "6",
+        0
+      ],
+      "vae": [
+        "3",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "9": {
+    "inputs": {
+      "filename_prefix": "ComfyUI",
+      "images": [
+        "8",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image"
+    }
+  },
+  "16": {
+    "inputs": {
+      "shift": 4,
+      "model": [
+        "82",
+        0
+      ]
+    },
+    "class_type": "ModelSamplingAuraFlow",
+    "_meta": {
+      "title": "ModelSamplingAuraFlow"
+    }
+  },
+  "22": {
+    "inputs": {
+      "enabled": true,
+      "strength": 1,
+      "debug": false,
+      "model": [
+        "16",
+        0
+      ]
+    },
+    "class_type": "ComfyUI-Krea2T-Enhancer",
+    "_meta": {
+      "title": "ComfyUI-Krea2T-Enhancer"
+    }
+  },
+  "59": {
+    "inputs": {
+      "prompt": "",
+      "grounding_px": 768,
+      "clip": [
+        "82",
+        1
+      ],
+      "image": [
+        "64",
+        0
+      ],
+      "image_b": [
+        "73",
+        0
+      ]
+    },
+    "class_type": "Krea2EditGroundedEncode",
+    "_meta": {
+      "title": "Krea2 Edit (grounded encode) Positive Prompt"
+    }
+  },
+  "60": {
+    "inputs": {
+      "prompt": "",
+      "grounding_px": 768,
+      "clip": [
+        "82",
+        1
+      ],
+      "image": [
+        "64",
+        0
+      ],
+      "image_b": [
+        "73",
+        0
+      ]
+    },
+    "class_type": "Krea2EditGroundedEncode",
+    "_meta": {
+      "title": "Krea2 Edit (grounded encode) Negative Prompt"
+    }
+  },
+  "61": {
+    "inputs": {
+      "image": ""
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image 1"
+    }
+  },
+  "62": {
+    "inputs": {
+      "image": ""
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image 2"
+    }
+  },
+  "64": {
+    "inputs": {
+      "resize_type": "scale to multiple",
+      "resize_type.multiple": 8,
+      "scale_method": "lanczos",
+      "input": [
+        "67",
+        0
+      ]
+    },
+    "class_type": "ResizeImageMaskNode",
+    "_meta": {
+      "title": "Second Resize Image 1"
+    }
+  },
+  "67": {
+    "inputs": {
+      "resize_type": "scale total pixels",
+      "resize_type.megapixels": 1,
+      "scale_method": "lanczos",
+      "input": [
+        "61",
+        0
+      ]
+    },
+    "class_type": "ResizeImageMaskNode",
+    "_meta": {
+      "title": "Resize Image 1"
+    }
+  },
+  "68": {
+    "inputs": {
+      "model": [
+        "22",
+        0
+      ],
+      "source_latent": [
+        "69",
+        0
+      ],
+      "source_latent_b": [
+        "74",
+        0
+      ]
+    },
+    "class_type": "Krea2EditModelPatch",
+    "_meta": {
+      "title": "Krea2 Edit (source patch)"
+    }
+  },
+  "69": {
+    "inputs": {
+      "pixels": [
+        "64",
+        0
+      ],
+      "vae": [
+        "3",
+        0
+      ]
+    },
+    "class_type": "VAEEncode",
+    "_meta": {
+      "title": "VAE Encode Image 1"
+    }
+  },
+  "71": {
+    "inputs": {
+      "rgthree_comparer": {
+        "images": [
+          {
+            "name": "A",
+            "selected": true,
+            "url": "/api/view?filename=rgthree.compare._temp_jifnv_00019_.png&type=temp&subfolder=&rand=0.7687599972830169"
+          },
+          {
+            "name": "B",
+            "selected": true,
+            "url": "/api/view?filename=rgthree.compare._temp_jifnv_00020_.png&type=temp&subfolder=&rand=0.23622429472458684"
+          }
+        ]
+      },
+      "image_a": [
+        "8",
+        0
+      ],
+      "image_b": [
+        "64",
+        0
+      ]
+    },
+    "class_type": "Image Comparer (rgthree)",
+    "_meta": {
+      "title": "Image Comparer (rgthree)"
+    }
+  },
+  "72": {
+    "inputs": {
+      "resize_type": "scale total pixels",
+      "resize_type.megapixels": 1,
+      "scale_method": "lanczos",
+      "input": [
+        "62",
+        0
+      ]
+    },
+    "class_type": "ResizeImageMaskNode",
+    "_meta": {
+      "title": "Resize Image 2"
+    }
+  },
+  "73": {
+    "inputs": {
+      "resize_type": "scale to multiple",
+      "resize_type.multiple": 8,
+      "scale_method": "lanczos",
+      "input": [
+        "72",
+        0
+      ]
+    },
+    "class_type": "ResizeImageMaskNode",
+    "_meta": {
+      "title": "Second Resize Image 2"
+    }
+  },
+  "74": {
+    "inputs": {
+      "pixels": [
+        "73",
+        0
+      ],
+      "vae": [
+        "3",
+        0
+      ]
+    },
+    "class_type": "VAEEncode",
+    "_meta": {
+      "title": "VAE Encode Image 2"
+    }
+  },
+  "82": {
+    "inputs": {
+      "lora_01": "krea2_identity_edit_v1.safetensors",
+      "strength_01": 1,
+      "lora_02": "None",
+      "strength_02": 1,
+      "lora_03": "None",
+      "strength_03": 1,
+      "lora_04": "None",
+      "strength_04": 1,
+      "model": [
+        "1",
+        0
+      ],
+      "clip": [
+        "2",
+        0
+      ]
+    },
+    "class_type": "Lora Loader Stack (rgthree)",
+    "_meta": {
+      "title": "Lora Loader Stack (rgthree)"
+    }
+  }
+}
