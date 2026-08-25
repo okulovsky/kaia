@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "kaia-creative-articulator"
 description = "AI-generated creative writing"
-version = "5.1.4"
+version = "5.2.0"
 readme = 'README.md'
 requires-python = ">=3.10, <4.0"
 license = "LGPL-3.0-or-later"
