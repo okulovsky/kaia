@@ -3,7 +3,7 @@ import unittest
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional
-from chara.common.tools.llm.question import Question, QuestionList
+from chara.common.llm import Question, QuestionList
 
 
 class Mood(Enum):

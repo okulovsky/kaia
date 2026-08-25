@@ -1,5 +1,5 @@
 from chara.paraphrasing.common import GrammarCorrection
-from chara.common.tools.llm import PromptTaskBuilder
+from chara.common.llm import BrainBoxLLMEngine, LLMSetup
 from grammatron import Template, CardinalDub, OptionsDub, PluralAgreement
 from unittest import TestCase
 
@@ -9,9 +9,8 @@ class GrammarCorrectionPromptTestCase(TestCase):
         return GrammarCorrection([template]).prepare().cases[0]
 
     def _get_prompt(self, case):
-        builder = PromptTaskBuilder('test')
-        GrammarCorrection.Pipeline(builder)
-        return builder._get_prompt(case)
+        pipeline = GrammarCorrection.Pipeline(LLMSetup(BrainBoxLLMEngine(), 'test'))
+        return pipeline.request.build_prompt(case)
 
     def test_russian_template_uses_russian_prompt(self):
         options = OptionsDub(['банан', 'яблоко']).as_variable('fruit')

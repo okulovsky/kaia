@@ -1,5 +1,5 @@
 from chara.common import Chara
-from chara.common.tools.llm import PromptTaskBuilder
+from chara.common.llm import BrainBoxLLMEngine, LLMSetup
 from chara.paraphrasing.common import OptionExpanding
 from unittest import TestCase
 from grammatron import Template, OptionsDub
@@ -41,7 +41,7 @@ class TestOptionExpandingPipeline(TestCase):
 
         with Loc.create_test_folder() as folder:
             Chara.start(folder)
-            pipe = OptionExpanding.Pipeline(PromptTaskBuilder("test", f))
+            pipe = OptionExpanding.Pipeline(LLMSetup(BrainBoxLLMEngine(), "test").default().custom_prompt(f).to_request())
             with BrainBox.Api.serverless_test([OllamaMock()]) as api:
                 Chara.Apis.brainbox_api = api
                 result = Chara.call(pipe)(manager.prepare())

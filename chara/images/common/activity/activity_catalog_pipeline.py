@@ -3,7 +3,7 @@ from datetime import date
 from pathlib import Path
 from brainbox.deciders import Ollama
 from chara import Chara, CaseCollection, BrainBoxCasePipeline
-from chara.common.tools.llm import BulletPointDivider, JinjaPrompter, PromptTaskBuilder
+from chara.common.llm import BrainBoxLLMEngine, BulletPointDivider, LLMSetup
 from .case import ActivityCase
 from .activity_catalog_item import ActivityCatalogItem
 from .lookahead import is_theme_within_lookahead
@@ -42,15 +42,20 @@ class ActivityCatalogPipeline:
         to_generate = [c for c in relevant if len(c.activities) < self.settings.desired_activity_count]
         already_enough = [c for c in relevant if len(c.activities) >= self.settings.desired_activity_count]
 
-        def applicator(case: ActivityCase, result: str) -> None:
+        def merge(case: ActivityCase, result: str) -> None:
             for activity in BulletPointDivider()(result):
                 if activity not in case.activities:
                     case.activities.append(activity)
 
         if len(to_generate) > 0:
-            prompter = JinjaPrompter('activity.jinja', (Path(__file__).parent,))
-            task_builder = PromptTaskBuilder(self.settings.llm_model, prompter, options=self.settings.options)
-            generation_pipeline = BrainBoxCasePipeline(task_builder, applicator)
+            setup = LLMSetup(BrainBoxLLMEngine(), self.settings.llm_model)
+            request = (setup
+                       .default()
+                       .template('activity.jinja', (Path(__file__).parent,))
+                       .options(self.settings.options)
+                       .parse(merge)
+                       .to_request())
+            generation_pipeline = request.create_brainbox_pipeline()
             generated = Chara.call(generation_pipeline, 'generate')(CaseCollection(to_generate))
         else:
             generated = CaseCollection(to_generate)

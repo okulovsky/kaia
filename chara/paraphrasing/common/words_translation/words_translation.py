@@ -1,4 +1,4 @@
-from chara.common import Chara, ICase, CaseCollection, Language, BrainBoxCasePipeline
+from chara.common import Chara, ICase, CaseCollection, Language
 from grammatron import Template, OptionsDub
 from ..template_paraphrasing import ParsedTemplate
 from .word_location import GrammarAdoptableLocation, OptionLocation, OptionHeaderLocation, IWordLocation
@@ -6,7 +6,7 @@ from ..template_paraphrasing.fragment_descriptors import PluralAgreementWithCons
 from dataclasses import dataclass
 from typing import Callable, Iterable
 from pathlib import Path
-from chara.common.tools.llm import PromptTaskBuilder
+from chara.common.llm import ILLM
 
 
 @dataclass
@@ -83,14 +83,11 @@ class WordTranslation:
         return self.templates
 
     class Pipeline:
-        def __init__(self, task_builder: PromptTaskBuilder, ):
-            self.task_builder = task_builder
-            self.task_builder.set_prompt(Path(__file__).parent / 'prompt.jinja')
-
-        def _merge(self, case: WordTranslationCase, option: str):
-            case.translation = option
+        def __init__(self, source: ILLM[WordTranslationCase, str]):
+            request = source.default().template(Path(__file__).parent / 'prompt.jinja').to_request()
+            self.request = request.edit().assign('translation').to_request()
 
         def __call__(self, cases: CaseCollection[WordTranslationCase]) -> CaseCollection[WordTranslationCase]:
-            pipe = BrainBoxCasePipeline(self.task_builder, self._merge)
+            pipe = self.request.create_brainbox_pipeline()
             result = Chara.call(pipe.__call__)(cases.successes_collection).raise_if_all_errors()
             return CaseCollection(cases.errors, result)

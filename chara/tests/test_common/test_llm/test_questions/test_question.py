@@ -1,7 +1,7 @@
 import unittest
 from enum import Enum
 from typing import Optional
-from chara.common.tools.llm.question import Question
+from chara.common.llm import Question
 
 
 class Mood(Enum):

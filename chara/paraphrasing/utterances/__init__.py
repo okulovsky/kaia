@@ -1,3 +1,6 @@
 from .uterance_paraphrase_case import UtteranceParaphraseCase
 from .utterance_paraphrase_case_manager import UtteranceParaphraseCaseManager
+from .selection import ICaseSelection, NewEntitiesSelection, DeficitSelection
+from .reporting import ParaphraseRunReport, ParaphraseRunRow
 from .utterances_paraphrases_pipeline import UtteranceParaphrasePipeline
+from .prompter import create_default_utterance_request

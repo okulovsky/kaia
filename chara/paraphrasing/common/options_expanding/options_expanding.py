@@ -1,11 +1,10 @@
-from chara.common import BrainBoxCasePipeline, Chara, ICase, CaseCollection
+from chara.common import Chara, ICase, CaseCollection
 from chara.common.descriptions import Language
-from chara.common.tools.llm import PromptTaskBuilder, BulletPointDivider
+from chara.common.llm import BulletPointDivider, ILLM
 from dataclasses import dataclass, field
 from grammatron import Template, OptionsDub
 from ..template_paraphrasing import ParsedTemplate
 from pathlib import Path
-import traceback
 from typing import Any, Iterable
 
 
@@ -68,20 +67,15 @@ class OptionExpanding:
 
 
     class Pipeline:
-        def __init__(self, task_builder: PromptTaskBuilder):
-            self.task_builder = task_builder
-            self.task_builder.set_prompt(Path(__file__).parent/'prompt.jinja')
+        def __init__(self, source: ILLM[OptionExpandingCase, Any]):
+            request = source.default().template(Path(__file__).parent/'prompt.jinja').to_request()
+            self.request = request.edit().parse(self._merge).assign('added_options').to_request()
 
-        def _merge(self, case: OptionExpandingCase, options: Any) -> None:
-            try:
-                divider = BulletPointDivider()
-                case.added_options = tuple(divider(options))
-            except Exception:
-                case.error = traceback.format_exc()
-
+        def _merge(self, case: OptionExpandingCase, options: Any) -> tuple[str,...]:
+            return tuple(BulletPointDivider()(options))
 
         def __call__(self, cases: CaseCollection[OptionExpandingCase]) -> CaseCollection[OptionExpandingCase]:
-            pipe = BrainBoxCasePipeline(self.task_builder, self._merge)
+            pipe = self.request.create_brainbox_pipeline()
             inner_result = Chara.call(pipe.__call__)(cases.successes_collection).raise_if_all_errors()
             return CaseCollection(cases.errors, inner_result)
 

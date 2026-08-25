@@ -2,8 +2,8 @@ from chara.paraphrasing.utterances import UtteranceParaphraseCase
 from grammatron import *
 from chara.common.descriptions import Character, World
 from chara.paraphrasing.common import Paraphrase
-from chara.paraphrasing.utterances.prompter import setup_default_prompter
-from chara.common.tools.llm import PromptTaskBuilder
+from chara.paraphrasing.utterances.prompter import create_default_utterance_request
+from chara.common.llm import BrainBoxLLMEngine, LLMSetup
 from unittest import TestCase
 
 char_1 = Character('Alice', Character.Gender.Feminine, 'Alice is Alice.')
@@ -17,9 +17,8 @@ class TemplateToParaphraseTestCase(TestCase):
         parsed_cases = Paraphrase([case]).prepare().cases
         self.assertEqual(1, len(parsed_cases))
         self.assertIsInstance(parsed_cases[0], UtteranceParaphraseCase)
-        task_builder = PromptTaskBuilder('')
-        setup_default_prompter(task_builder)
-        prompt = task_builder._get_prompt(parsed_cases[0])
+        request = create_default_utterance_request(LLMSetup(BrainBoxLLMEngine(), ''))
+        prompt = request.build_prompt(parsed_cases[0])
         print(prompt)
         return prompt
 
