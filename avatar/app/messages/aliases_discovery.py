@@ -4,10 +4,10 @@ import pkgutil
 import inspect
 
 
-def create_aliases(namespaces: tuple[str,...]) -> dict[str, type]:
+def create_aliases(namespaces: tuple[str,...], base_class: type = IMessage) -> dict[str, type]:
     all_subclasses = []
     for pkg in namespaces:
-        all_subclasses.extend(_find_subclasses_in_package(IMessage, pkg))
+        all_subclasses.extend(_find_subclasses_in_package(base_class, pkg))
     return {c.__name__: c for c in all_subclasses}
 
 

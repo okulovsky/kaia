@@ -1,13 +1,13 @@
 from pathlib import Path
 from unittest import TestCase
 
-from avatar.daemon.common.known_messages import SoundInjectionCommand, WakeWordEvent, SoundStreamingStartEvent, InitializationEvent
+from avatar.daemon.common.known_messages import SoundInjectionCommand, WakeWordEvent, InitializationEvent
 from avatar.utils import WebTestEnvironmentFactory, Sine
 
 
 
 FOLDER = Path(__file__).parent / 'files'
-ENABLE_DEBUG = 'false'
+ENABLE_DEBUG = False
 
 
 class WakeWordTestCase(TestCase):
@@ -20,10 +20,6 @@ class WakeWordTestCase(TestCase):
 
             # Wait until WakeWordDetector has loaded the model
             env.client.query(120).where(lambda z: isinstance(z, InitializationEvent)).first()
-
-            FILE = None
-            if ENABLE_DEBUG != 'false':
-                FILE = reader.query(5).where(lambda z: isinstance(z, SoundStreamingStartEvent)).first().file_id
 
             # Feed noise — no wake word expected
             env.client.run_synchronously(SoundInjectionCommand('noise'), time_limit_in_seconds=30)
@@ -39,8 +35,10 @@ class WakeWordTestCase(TestCase):
                     found = msg
                     break
 
-            if FILE is not None:
-                env.api.cache.download(FILE, Path(__file__).parent)
+            if ENABLE_DEBUG:
+                # The recordings carry no events, so they are found by name
+                for name in env.api.cache.list('', prefix='wakeword_', suffix='.wav'):
+                    env.api.cache.download(name, Path(__file__).parent)
 
             self.assertIsNotNone(found)
             self.assertEqual('computer', found.word)
@@ -63,33 +61,40 @@ def create_html(model: str) -> str:
     if model == 'kaldi':
         detector_import = "import { KaldiWakeWordDetector } from '/frontend/scripts/kaldi-wake-word-detector.js';"
         detector_init = (
-            "const wake = new KaldiWakeWordDetector({ sampleRateOfTheModel: 16000, words: ['computer'], "
-            "modelUrl: '/frontend/models/vosk-model-small-en-us-0.15.zip', dispatcher, "
-            f"uploadDebugSound: {ENABLE_DEBUG} }});"
+            "const base = new KaldiWakeWordDetector({ sampleRateOfTheModel: 16000, words: ['computer'], "
+            "modelUrl: '/frontend/models/vosk-model-small-en-us-0.15.zip', dispatcher });"
         )
     elif model == 'bumblebee':
         detector_import = "import { BumblebeeWakeWordDetector } from '/frontend/scripts/bumblebee-wake-word-detector.js';"
-        detector_init = "const wake = new BumblebeeWakeWordDetector({ words: ['computer'], dispatcher });"
+        detector_init = "const base = new BumblebeeWakeWordDetector({ words: ['computer'], dispatcher });"
     elif model == 'kaldi_silence':
         detector_import = "import { KaldiWakeWordDetector } from '/frontend/scripts/kaldi-wake-word-detector.js';"
         detector_init = (
             "const inner = new KaldiWakeWordDetector({ sampleRateOfTheModel: 16000, words: ['computer'], "
             "modelUrl: '/frontend/models/vosk-model-small-en-us-0.15.zip', dispatcher });\n"
-            "  const wake = new SilenceControllingWakeWordDetector({ detector: inner, dispatcher, deactivationWindowSeconds: 2.0 });"
+            "  const base = new SilenceControllingWakeWordDetector({ detector: inner, dispatcher, deactivationWindowSeconds: 2.0 });"
         )
     elif model == 'bumblebee_silence':
         detector_import = "import { BumblebeeWakeWordDetector } from '/frontend/scripts/bumblebee-wake-word-detector.js';"
         detector_init = (
             "const inner = new BumblebeeWakeWordDetector({ words: ['computer'], dispatcher });\n"
-            "  const wake = new SilenceControllingWakeWordDetector({ detector: inner, dispatcher });"
+            "  const base = new SilenceControllingWakeWordDetector({ detector: inner, dispatcher });"
         )
     else:
         raise ValueError(f'Unknown model: {model}')
 
+    if ENABLE_DEBUG:
+        detector_init += (
+            "\n  const wake = new SoundUploadingWakeWordDetector("
+            "{ detector: base, dispatcher, baseUrl: window.location.origin });"
+        )
+    else:
+        detector_init += "\n  const wake = base;"
+
     return '''<!DOCTYPE html>
 <html><head><meta charset="UTF-8"></head><body>
 <script type="module">
-  import { AvatarClient, Dispatcher, FakeMicrophone, MicController, Message, Envelop, LoadingScreen, SilenceControllingWakeWordDetector } from '/frontend/scripts/kaia-frontend.js';
+  import { AvatarClient, Dispatcher, FakeMicrophone, MicController, Message, Envelop, LoadingScreen, SilenceControllingWakeWordDetector, SoundUploadingWakeWordDetector } from '/frontend/scripts/kaia-frontend.js';
 
 ''' + detector_import + '''
 

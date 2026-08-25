@@ -39,22 +39,34 @@ export class Recorder {
     private pendingWrites: Promise<void>[] = []
     private dispatcher: Dispatcher
     private baseUrl: string
+    private filenamePrefix: string
+    private emitEvents: boolean
 
     constructor({
         startBufferLength,
         normalBufferLength = 0.3,
         dispatcher,
         baseUrl,
+        filenamePrefix = 'recording-',
+        emitEvents = true,
     }: {
         startBufferLength: number,
         normalBufferLength?: number,
         dispatcher: Dispatcher,
         baseUrl: string,
+        filenamePrefix?: string,
+        emitEvents?: boolean,
     }) {
         this.dispatcher = dispatcher
         this.baseUrl = baseUrl.replace(/\/+$/, '')
+        this.filenamePrefix = filenamePrefix
+        this.emitEvents = emitEvents
         this.startBuffer = new SoundBuffer({ maxTimeSeconds: startBufferLength })
         this.normalBuffer = new SoundBuffer({ maxTimeSeconds: normalBufferLength, allowOverfill: true })
+    }
+
+    get currentFilename(): string | null {
+        return this.filename
     }
 
     observe(micData: MicData): void {
@@ -84,7 +96,7 @@ export class Recorder {
     }
 
     private async _firstWrite(sampleRate: number): Promise<void> {
-        const filename = `recording-${crypto.randomUUID()}.wav`
+        const filename = `${this.filenamePrefix}${crypto.randomUUID()}.wav`
         this.filename = filename
 
         const beginResp = await fetch(
@@ -104,7 +116,9 @@ export class Recorder {
             this.startBuffer.clear()
         }
 
-        this.dispatcher.push(new Message('SoundStreamingStartEvent', new Envelop(), { file_id: filename }))
+        if (this.emitEvents) {
+            this.dispatcher.push(new Message('SoundStreamingStartEvent', new Envelop(), { file_id: filename }))
+        }
     }
 
     private _write(micData: MicData): void {
@@ -134,7 +148,9 @@ export class Recorder {
             { method: 'POST' }
         )
         if (!commitResp.ok) throw new Error(`[Recorder] commit failed: ${commitResp.status}`)
-        this.dispatcher.push(new Message('SoundStreamingEndEvent', new Envelop(), { file_id: filename, success: true }))
+        if (this.emitEvents) {
+            this.dispatcher.push(new Message('SoundStreamingEndEvent', new Envelop(), { file_id: filename, success: true }))
+        }
         this._cleanup()
     }
 
@@ -146,7 +162,9 @@ export class Recorder {
             `${this.baseUrl}/streaming/delete/${encodeURIComponent(filename)}`,
             { method: 'POST' }
         ).catch(err => console.error('[Recorder] cancel failed:', err))
-        this.dispatcher.push(new Message('SoundStreamingEndEvent', new Envelop(), { file_id: filename, success: false }))
+        if (this.emitEvents) {
+            this.dispatcher.push(new Message('SoundStreamingEndEvent', new Envelop(), { file_id: filename, success: false }))
+        }
     }
 
     private _cleanup(): void {

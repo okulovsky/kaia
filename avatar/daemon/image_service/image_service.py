@@ -1,5 +1,5 @@
 import random
-from typing import Optional, Callable, Union
+from typing import Union
 from ..common import IMessage, State, TickEvent, ChatCommand, message_handler, ImageCommand, Confirmation, AvatarService, InitializationEvent
 from ..common.content_manager import IFeedbackProvider, FileFeedbackProvider
 from .media_library import MediaLibrary
@@ -56,11 +56,9 @@ class ImageService(AvatarService):
     def __init__(self,
                  state: State,
                  api: AvatarApi|None,
-                 record_to_description: Optional[Callable[[MediaLibrary.Record], str]] = None
                  ):
         self.state = state
         self.api = api
-        self.record_to_description = record_to_description
         self.last_base_image_record: MediaLibrary.Record|None = None
         self.last_shown_image_record: MediaLibrary.Record|None = None
         self.empty_image_uploaded: bool = False
@@ -141,6 +139,13 @@ class ImageService(AvatarService):
             key = '_'.join(['variant', self.last_shown_image_record.tags['variant_type'], message.feedback])
             self.feedback_provider.append_feedback(self.last_base_image_record.path, {key: 1})
         return message.confirm_this()
+
+    @message_handler
+    def get_current_image_description(self, message: ImageDescriptionCommand) -> Union[Confirmation, ChatCommand]:
+        if self.last_base_image_record is None:
+            return message.error_on_this("No description")
+        tags = ", ".join([v for v in self.last_base_image_record.tags.values() if v is not None])
+        return ChatCommand(str(tags), ChatCommand.MessageType.system)
 
     @message_handler
     def on_variant_request(self, cmd: ImageVariantRequest):

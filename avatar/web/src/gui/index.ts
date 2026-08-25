@@ -1,5 +1,6 @@
 export { ChatCommandHandler } from './chatCommandHandler.js'
 export { ImageCommandHandler } from './imageCommandHandler.js'
+export { VideoCommandHandler } from './videoCommandHandler.js'
 export { ButtonGridCommandHandler } from './buttonGridCommandHandler.js'
 export { MusicPlayerCommandHandler } from './musicPlayerCommandHandler.js'
 export { TextInputHandler } from './textInputHandler.js'

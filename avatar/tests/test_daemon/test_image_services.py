@@ -1,14 +1,11 @@
 import json
 import zipfile
 from avatar.messaging import *
-from avatar.daemon import ImageService, State
+from avatar.daemon import ImageService, State, ChatCommand
 from avatar.daemon.image_service.media_library import MediaLibrary
 from avatar.daemon.common.known_messages import InitializationEvent
 from unittest import TestCase
 from foundation_kaia.misc import Loc
-
-def record_to_description(r: MediaLibrary.Record):
-    return f'description {r.path}'
 
 class _FakeCache:
     def upload(self, path, content):
@@ -37,7 +34,7 @@ class ImageServiceTestCase(TestCase):
 
         self.state = State(character='c0', activity='a0')
         proc = AvatarDaemon(AvatarClient.default(), timeout_in_pull_in_seconds=0)
-        self.service = ImageService(self.state, None, record_to_description)
+        self.service = ImageService(self.state, None)
         self.service.set_resources_folder(self.folder)
         self.service.on_initialize(InitializationEvent())
         proc.rules.bind(self.service)
@@ -131,6 +128,20 @@ class ImageServiceTestCase(TestCase):
         feedback = self.service.feedback_provider.load_feedback()
         self.assertEqual(1, feedback[variant_path]['good'])
         self.assertEqual(1, feedback[base_path]['variant_goth_good'])
+
+    def test_description_without_shown_image_errors(self):
+        m = self.proc.debug_and_stop_by_empty_queue(ImageService.ImageDescriptionCommand()).messages
+        self.assertIsInstance(m[-1], Confirmation)
+        self.assertIsNotNone(m[-1].error)
+
+    def test_description_shows_non_none_tags(self):
+        record = self._records_for('c0', 'a0')[0]
+        record.tags['index'] = None
+        self.proc.debug_and_stop_by_empty_queue(ImageService.PhotoAlbumCommand([record]))
+
+        m = self.proc.debug_and_stop_by_empty_queue(ImageService.ImageDescriptionCommand()).messages
+        self.assertIsInstance(m[-1], ChatCommand)
+        self.assertEqual('c0, a0', m[-1].text)
 
     def test_variant_feedback_does_not_pollute_base_when_base_is_shown(self):
         base_records = self._records_for('c0', 'a0')[:1]
