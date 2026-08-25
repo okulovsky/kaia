@@ -54,10 +54,13 @@ class JsonType(ResultType):
 
 
     def write(self, data, path: Path):
-        path.write_text(json.dumps(Serializer.parse(Any).to_json(data), indent=4))
+        path.write_text(
+            json.dumps(Serializer.parse(Any).to_json(data), indent=4, ensure_ascii=False),
+            encoding='utf-8',
+        )
 
     def read(self, path: Path):
-        return Serializer.parse(Any).from_json(json.loads(path.read_text()))
+        return Serializer.parse(Any).from_json(json.loads(path.read_text(encoding='utf-8')))
 
 class PathType(ResultType):
     def get_extension(self) -> str:

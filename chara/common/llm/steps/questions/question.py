@@ -1,10 +1,8 @@
 import json
 from dataclasses import dataclass, fields
-from typing import Any, Callable, get_type_hints
-from brainbox.deciders import Ollama
+from typing import Any, get_type_hints
 from foundation_kaia.marshalling import Serializer, BoolHandler, EnumHandler, NoneHandler, IntHandler, FloatHandler
-from .json_parser import parse_json
-from .prompt_task_builder import PromptTaskBuilder
+from .json_parser import Json
 
 
 @dataclass
@@ -73,19 +71,8 @@ class QuestionList:
             "required": [q.field_name for q in self.questions],
         }
 
-    def create_task_builder(self, model: str, intro: Callable[[Any], str]) -> PromptTaskBuilder:
-        def prompt(case) -> str:
-            return (
-                f"{intro(case)}\n\n"
-                f"{self.get_description()}\n\n"
-                f"Answer these questions in JSON format, e.g.\n\n"
-                f"```\n{self.get_example()}\n```\n\n"
-                f"Do not provide any comments or explanations."
-            )
-        return PromptTaskBuilder(model, prompt, options=Ollama.Options(format=self.get_format()))
-
     def parse(self, s: str) -> dict|Any:
-        raw = parse_json(s)
+        raw = Json.parse_object(s)
         if self.dataclass_type is not None:
             return Serializer.parse(self.dataclass_type).from_json(raw)
         return {q.field_name: Serializer.parse(q.type).from_json(raw[q.field_name]) for q in self.questions}
