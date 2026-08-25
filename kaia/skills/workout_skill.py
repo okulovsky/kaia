@@ -4,7 +4,7 @@ from kaia.assistant import KaiaSkillBase, CommonIntents
 from grammatron import *
 from kaia import  TickEvent, World
 from eaglesong import Listen, Return
-from typing import cast
+from typing import cast, ClassVar
 from yo_fluq import Query
 from datetime import timedelta
 from avatar.daemon.music_service import MusicStartCommand, MusicStopButtonEvent, Playlist
@@ -20,6 +20,7 @@ class Workout:
     name: str
     items: list[Excercise]
     music: Playlist|None = None
+
 
 DURATION = VariableDub(
     'duration',
@@ -43,14 +44,14 @@ class WorkoutIntents(TemplatesCollection):
     start = Template(f"Let's do {WORKOUT_NAME} workout!")
 
 class WorkoutReplies(TemplatesCollection):
-    starting = Template(f"Okay, starting training {WORKOUT_NAME}")
-    exercise = Template(f"Now doing {EXERCISE} for {DURATION}")
-    workout_not_found = Template("Workout not found").context(f"{World.user} asks for a workout that is not in the list")
-    keep_going = Template("Keep going!", "You're going great!").context(f"{World.character} runs a workout for {World.user}, and encourages {World.user.pronoun.objective} during the exercise")
-    almost_there = Template("Almost there!", "Almost done").context(f"{World.character} runs a workout for {World.user}, and tells {World.user.pronoun.objective} that the exercise is almost completed")
-    rest = Template(f"Now rest for {DURATION}").context(f"{World.character} runs a workout for {World.user}, and tells {World.user.pronoun.objective} that it is time to rest")
-    done = Template("The workout is done! Good job!").context(f"{World.user} completed the workout routine that {World.character} was running")
-    cancelled = Template("The workout is cancelled").context(f"{World.user} requested to stop the workout routing thet {World.character} was running")
+    starting: ClassVar[Template] = Template(f"Okay, starting training {WORKOUT_NAME}")
+    exercise: ClassVar[Template] = Template(f"Now doing {EXERCISE} for {DURATION}")
+    workout_not_found: ClassVar[Template] = Template("Workout not found").context(f"{World.user} asks for a workout that is not in the list")
+    keep_going: ClassVar[Template] = Template("Keep going!", "You're going great!").context(f"{World.character} runs a workout for {World.user}, and encourages {World.user.pronoun.objective} during the exercise")
+    almost_there: ClassVar[Template] = Template("Almost there!", "Almost done").context(f"{World.character} runs a workout for {World.user}, and tells {World.user.pronoun.objective} that the exercise is almost completed")
+    rest: ClassVar[Template] = Template(f"Now rest for {DURATION}").context(f"{World.character} runs a workout for {World.user}, and tells {World.user.pronoun.objective} that it is time to rest")
+    done: ClassVar[Template] = Template("The workout is done! Good job!").context(f"{World.user} completed the workout routine that {World.character} was running")
+    cancelled: ClassVar[Template] = Template("The workout is cancelled").context(f"{World.user} requested to stop the workout routing thet {World.character} was running")
 
 class WorkoutSkill(KaiaSkillBase):
     def __init__(self, workouts: list[Workout], last_announcement_skip: int = 10):

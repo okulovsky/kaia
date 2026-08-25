@@ -1,18 +1,23 @@
 from pathlib import Path
-from chara.common import BrainBoxCasePipeline, Chara
-from chara.common.tools.llm import PromptTaskBuilder, BulletPointDivider
+from chara.common import Chara
+from chara.common.llm import BulletPointDivider, LLMRequest
 from .negative_case import NegativeCase
 
 
 class NegativePipeline:
-    def __init__(self, builder: PromptTaskBuilder):
-        self.builder = builder
+    def __init__(self, request: LLMRequest[NegativeCase, str]):
+        self.request = request
 
-    def _merge(self, case: NegativeCase, text: str):
-        case.phrase = text.strip()
+    def _strip(self, case: NegativeCase, text: str) -> str:
+        return text.strip()
 
     def __call__(self, cases: list[NegativeCase], output_path: Path | None = None) -> list[str]:
-        pipe = BrainBoxCasePipeline(self.builder, self._merge, BulletPointDivider())
+        request = (self.request
+                   .edit()
+                   .parse(self._strip, BulletPointDivider())
+                   .assign('phrase')
+                   .to_request())
+        pipe = request.create_brainbox_pipeline()
         result = Chara.call(pipe)(cases)
 
         seen = set()

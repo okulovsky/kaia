@@ -89,7 +89,7 @@ class PiperTrainingController(DockerMarshallingController[PiperTrainingSettings]
             log_file = api.join(id)
         except Exception:
             if id is not None:
-                pprint(api.jobs.get_log(id))
+                pprint(api.jobs.get_job(id).log)
             raise
 
         lines = api.cache.read_file(log_file).string_content.split('\n')

@@ -2,7 +2,7 @@ import { createModel } from 'vosk-browser'
 import type { KaldiRecognizer, Model } from 'vosk-browser'
 import { Message, Envelop, Dispatcher } from '../core/index.js'
 import { MicData } from './input/index.js'
-import { Recorder, type IWakeWordDetector } from './wakeWordAutomaton/index.js'
+import type { IWakeWordDetector } from './wakeWordAutomaton/index.js'
 import type { ILoadingScreenComponent } from '../../loadingScreen/index.js'
 
 
@@ -17,23 +17,17 @@ export class KaldiWakeWordDetector implements ILoadingScreenComponent, IWakeWord
     private initialized = false
     private _detected = false
     private dispatcher: Dispatcher
-    private debugRecorder: Recorder | null = null
 
-    constructor({ sampleRateOfTheModel, words, modelUrl, dispatcher, uploadDebugSound = false, baseUrl = '' }: {
+    constructor({ sampleRateOfTheModel, words, modelUrl, dispatcher }: {
         sampleRateOfTheModel: number,
         words: string[],
         modelUrl: string,
         dispatcher: Dispatcher,
-        uploadDebugSound?: boolean,
-        baseUrl?: string,
     }) {
         this.sampleRateOfTheModel = sampleRateOfTheModel
         this.words = words.map(w => w.toLowerCase())
         this.modelUrl = modelUrl
         this.dispatcher = dispatcher
-        if (uploadDebugSound) {
-            this.debugRecorder = new Recorder({ startBufferLength: 0, dispatcher, baseUrl })
-        }
     }
 
     isInitialized(): boolean {
@@ -63,10 +57,6 @@ export class KaldiWakeWordDetector implements ILoadingScreenComponent, IWakeWord
 
     detect(micData: MicData): boolean {
         if (!this.initialized) return false
-
-        if (this.debugRecorder) {
-            this.debugRecorder.write({ sampleRate: micData.sampleRate, buffer: micData.buffer.slice() }).catch(console.error)
-        }
 
         // Vosk expects PCM amplitude range (~±32768), not normalized [-1, 1]
         const scaled = new Float32Array(micData.buffer.length)

@@ -1,6 +1,9 @@
 from pathlib import Path
-from chara.common.tools.llm import PromptTaskBuilder
+from chara.common.llm import ILLM, LLMRequest
+from .uterance_paraphrase_case import UtteranceParaphraseCase
 
-def setup_default_prompter(prompter: PromptTaskBuilder):
-    prompter.set_prompt(Path(__file__).parent/'template.jinja')
 
+def create_default_utterance_request(
+        source: ILLM[UtteranceParaphraseCase, str],
+) -> LLMRequest[UtteranceParaphraseCase, str]:
+    return source.default().template(Path(__file__).parent/'template.jinja').to_request()

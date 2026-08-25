@@ -1,5 +1,5 @@
 from chara.common import Chara
-from chara.common.tools.llm import PromptTaskBuilder
+from chara.common.llm import BrainBoxLLMEngine, LLMSetup
 from chara.paraphrasing.common import WordTranslation
 from unittest import TestCase
 from grammatron import Template, OptionsDub, CardinalDub, PluralAgreement
@@ -38,7 +38,7 @@ class TestWordTranslationPipeline(TestCase):
         translation_cases = manager.prepare()
         with Loc.create_test_folder() as folder:
             Chara.start(folder)
-            pipe = WordTranslation.Pipeline(PromptTaskBuilder("test", f))
+            pipe = WordTranslation.Pipeline(LLMSetup(BrainBoxLLMEngine(), "test").default().custom_prompt(f).to_request())
             with BrainBox.Api.serverless_test([OllamaMock()]) as api:
                 Chara.Apis.brainbox_api = api
                 result = Chara.call(pipe)(translation_cases)

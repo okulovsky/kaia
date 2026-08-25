@@ -1,12 +1,11 @@
 import random
 from typing import Callable, Any
 from brainbox.deciders.images.comfyui.workflows import IWorkflow
-from chara.common.tools.llm import QuestionList, PromptTaskBuilder, JinjaPrompter, parse_and_assign_json
+from chara.common.llm import BrainBoxLLMEngine, LLMSetup, QuestionList
 from chara import BrainBoxCasePipeline, logger
 from ..scenario import IImageScenario
 from chara import Chara, CaseCollection, ICase
 from dataclasses import dataclass
-from brainbox.deciders import Ollama
 from pathlib import Path
 
 @dataclass
@@ -38,8 +37,6 @@ class DrawingPipeline:
         self.review_setup = review_setup
         self.variant_pipelines = variant_pipelines if variant_pipelines is not None else {}
 
-        self._inner_review_task_builder = None
-
     def _create_task(self, case: DrawingCase):
         return case.workflow
 
@@ -50,15 +47,15 @@ class DrawingPipeline:
         for case in drawing_cases.cases:
             case.review_questions = self.review_setup.questions
 
-        review_pipeline = BrainBoxCasePipeline(
-            PromptTaskBuilder(
-                self.review_setup.model,
-                JinjaPrompter(Path(__file__).parent / 'review.jinja'),
-                options=Ollama.Options(format=self.review_setup.questions.get_format()),
-                image_field='image'
-            ),
-            parse_and_assign_json('review_answers'),
-        )
+        review_pipeline = (LLMSetup(BrainBoxLLMEngine(), self.review_setup.model)
+                           .default()
+                           .image('image')
+                           .questionnaire(
+                               'review_questions',
+                               'Please review the image provided and answer the following questions:')
+                           .assign('review_answers')
+                           .to_request()
+                           .create_brainbox_pipeline())
 
         cases = Chara.call(review_pipeline, 'review')(drawing_cases)
 

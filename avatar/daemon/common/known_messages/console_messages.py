@@ -31,6 +31,12 @@ class ImageCommand(IMessage):
 
 
 @dataclass
+class VideoCommand(IMessage):
+    videos: list[str]
+    final_image: str|None = None
+
+
+@dataclass
 class ImageEvent(IMessage):
     file_id: str
 

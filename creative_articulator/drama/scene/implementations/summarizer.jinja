@@ -1,0 +1,10 @@
+You need to write {{ case.root.fields.scene_settings.max_sentences_in_summary }} sentences that describe what happened in the scene.
+Priorities are:
+* Something that will affect the future of the story: promises, conditions, plans.
+* Some revelations about character's personalities and their relationship.
+
+Do not assume things about the scene when summarizing. Write exactly what happened without any interpretations of what it could be.
+
+{% for message in case.fields.scene_state.messages[-case.root.fields.scene_settings.max_messages_in_continuation:] %}
+{{ message }}
+{% endfor %}

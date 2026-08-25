@@ -46,3 +46,13 @@ class PiperController(DockerMarshallingController[PiperSettings]):
             Piper.new_task().voiceover(text=VOICEOVER_TEXT, model="en"),
             file_type=SelfTestCase.FileType.Sound
         )
+
+        yield SelfTestCase(
+            Piper.new_task().voiceover(text="Съешь же ещё этих мягких французских булок, да выпей чаю", model="ru"),
+            file_type=SelfTestCase.FileType.Sound
+        )
+
+        yield SelfTestCase(
+            Piper.new_task().voiceover(text='Victor jagt zwölf Boxkämpfer quer über den großen Sylter Deich', model='de'),
+            file_type=SelfTestCase.FileType.Sound
+        )

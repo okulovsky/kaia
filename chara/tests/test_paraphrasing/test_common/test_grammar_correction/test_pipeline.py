@@ -1,6 +1,6 @@
 from chara.paraphrasing.common import GrammarCorrection
 from chara.common import Chara
-from chara.common.tools.llm import PromptTaskBuilder
+from chara.common.llm import BrainBoxLLMEngine, LLMSetup
 from grammatron import Template, CardinalDub, OptionsDub, PluralAgreement
 from unittest import TestCase
 from brainbox.framework import ISelfManagingDecider
@@ -35,7 +35,7 @@ class GrammarCorrectionPipelineTestCase(TestCase):
 
         with Loc.create_test_folder() as folder:
             Chara.start(folder)
-            pipe = GrammarCorrection.Pipeline(PromptTaskBuilder('mistral'))
+            pipe = GrammarCorrection.Pipeline(LLMSetup(BrainBoxLLMEngine(), 'mistral'))
             with BrainBox.Api.serverless_test([OllamaMock()]) as api:
                 Chara.Apis.brainbox_api = api
                 result = Chara.call(pipe)(manager.prepare())

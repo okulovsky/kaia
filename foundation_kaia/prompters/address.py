@@ -50,7 +50,7 @@ class DefaultElement(IAddressElement):
         if hasattr(obj, '__setitem__'):
             setitem = getattr(obj, '__setitem__')
             if callable(setitem):
-                setitem(obj, self.element, value)
+                setitem(self.element, value)
                 return
         if isinstance(self.element, str):
             setattr(obj, self.element, value)

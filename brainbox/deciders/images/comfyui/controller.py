@@ -20,7 +20,7 @@ class ComfyUIController(DockerMarshallingController[ComfyUISettings]):
                 BrainboxImageBuilder.KaiaFoundationDependencies(),
             ),
             finishing_installation_steps=(
-                "RUN printf 'N\\nY' | comfy install --nvidia --cuda-version 13.0",
+                "RUN printf 'N\\nY' | comfy install --nvidia --cuda-version 13.0 --version 0.31.0",
             ),
         )
 

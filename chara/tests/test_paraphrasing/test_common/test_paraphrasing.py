@@ -1,6 +1,6 @@
 from chara.paraphrasing.common import Paraphrase
 from chara.common import Chara, CaseCollection
-from chara.common.tools.llm import PromptTaskBuilder
+from chara.common.llm import BrainBoxLLMEngine, LLMSetup
 from unittest import TestCase
 from brainbox import BrainBox, ISelfManagingDecider
 from brainbox.deciders import Ollama
@@ -42,9 +42,9 @@ class Mock(ISelfManagingDecider):
 
 class ParaphraseTestCase(TestCase):
     def test_paraphrase(self):
-        builder = PromptTaskBuilder('test', lambda case: 'TEST')
+        setup = LLMSetup(BrainBoxLLMEngine(), 'test')
         settings = Paraphrase.Settings(
-            paraphrase_task_builder=builder,
+            paraphrase_request=setup.default().custom_prompt(lambda case: 'TEST').to_request(),
             enable_words_translation=True,
             grammar_correction_attempts=2,
             words_translation_attempts=2,

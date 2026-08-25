@@ -1,6 +1,6 @@
 from chara import CaseCollection, Chara
 from pathlib import Path
-from chara.common.tools.llm import parse_json
+from chara.common.llm import Json
 from chara.common import BrainBoxCasePipeline
 from .case import PonyCase
 from ...common import PipelineFactory, Scene
@@ -30,18 +30,20 @@ class PonyPipelineFactory(PipelineFactory):
         cases = Chara.call(pipe)(cases.successes_collection)
         return cases.successes_collection
 
-    def _set_scene(self, case: PonyCase, result: str):
-        js = parse_json(result)
+    def _parse_scene(self, case: PonyCase, result: str) -> Scene:
+        js = Json.parse_object(result)
         fixed_js = {}
         for key, value in js.items():
             fixed_js[key] = value[:case.settings.tags_per_scene_attribute]
-        case.scene = Scene(**fixed_js)
+        return Scene(**fixed_js)
 
-    def get_scene_pipeline(self):
-        return BrainBoxCasePipeline(
-            self.create_task_builder('scene.jinja'),
-            self._set_scene,
-        )
+    def get_scene_pipeline(self) -> BrainBoxCasePipeline:
+        return (self
+                .create_request_builder('scene.jinja')
+                .parse(self._parse_scene)
+                .assign('scene')
+                .to_request()
+                .create_brainbox_pipeline())
 
 
 

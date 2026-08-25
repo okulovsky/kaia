@@ -1,8 +1,5 @@
-from copy import deepcopy
-
-from chara.common import BrainBoxCasePipeline, Chara, ICase, CaseCollection, BrainBoxCaseResultApplicator
-from chara.common.tools.llm import BulletPointDivider, PromptTaskBuilder
-import traceback
+from chara.common import Chara, ICase, CaseCollection
+from chara.common.llm import BulletPointDivider, LLMRequest
 from .parsed_template import ParsedTemplate
 from grammatron import Template
 
@@ -12,7 +9,6 @@ class ParaphraseCase(ICase):
         self.target_language_code: str|None = target_language_code
         self.target_language_name: str|None = None
         self.parsed_template: ParsedTemplate|None = None
-        self.llm_output: str|None = None
         self.resulting_template: Template|None = None
 
     def prepare(self):
@@ -22,28 +18,26 @@ class TemplateParaphrase:
     Case = ParaphraseCase
 
     class Pipeline:
-        def __init__(self, builder: PromptTaskBuilder[ParaphraseCase]):
-            self.builder = builder
+        def __init__(self, request: LLMRequest[ParaphraseCase, Template]):
+            # The caller owns the template here, the pipeline only owns the parsing,
+            # so there is no default to pre-empt and no reason to go through default().
+            if not isinstance(request, LLMRequest):
+                raise ValueError(
+                    f"TemplateParaphrase.Pipeline has no prompt of its own and needs a "
+                    f"fully configured LLMRequest, but got {type(request)}"
+                )
+            self.request = (request
+                            .edit()
+                            .parse(self._merge, BulletPointDivider())
+                            .assign('resulting_template')
+                            .to_request())
 
-        def _merge(self, case: ParaphraseCase, option: str):
-            try:
-                parsed_template = case.parsed_template
-                template = parsed_template.restore_template(option, case.target_language_code)
-                case.resulting_template = template
-            except Exception:
-                case.error = f"Option `{option}` failed: {traceback.format_exc()}"
+        def _merge(self, case: ParaphraseCase, option: str) -> Template:
+            return case.parsed_template.restore_template(option, case.target_language_code)
 
         def __call__(self, cases: CaseCollection[ParaphraseCase]) -> CaseCollection[ParaphraseCase]:
-            pipe = BrainBoxCasePipeline(self.builder, 'llm_output')
-            llm_result = Chara.call(pipe.__call__, 'llm')(cases.successes_collection).raise_if_all_errors()
-
-            applicator = BrainBoxCaseResultApplicator(self._merge, BulletPointDivider())
-            merge_result = Chara.call(applicator.apply_cached_result, 'merge')(llm_result, 'llm_output')
-
-            return CaseCollection(cases.errors, merge_result)
-
-
-
-
-
-
+            # One phase, not two: Chara.call caches the raw answers inside the pipeline,
+            # so re-running the merge does not re-call the LLM.
+            pipe = self.request.create_brainbox_pipeline()
+            result = Chara.call(pipe.__call__, 'llm')(cases.successes_collection).raise_if_all_errors()
+            return CaseCollection(cases.errors, result)

@@ -29,6 +29,63 @@ def _make_brainbox_api(url, locations, resources_folder):
     return api
 
 
+# TODO: move FileLike uploading into `add`.
+#
+# Today, a FileLike argument (e.g. `Ollama.question(image=...)`) is put into the task as-is and
+# resolved *server-side* by `brainbox_file_like_to_bytes_iterable`: a `str` without `/` is read from
+# the BrainBox cache, anything else is opened as a literal file. That only works when the client and
+# the server share a filesystem. Callers that need it to work remotely have to upload to the cache
+# themselves and pass the bare name (see `BrainBoxCasePipelineUploader` in chara). Passing `bytes` is
+# worse still: the blob is serialized into the job arguments and lands in the database.
+#
+# The api already has everything needed to do this itself:
+#
+# 1. Which arguments are files is known by reflection. `DeciderMethodModel.file_argument_names`
+#    (framework/common/decider_model.py) already computes it from the declared `FileLike` annotations,
+#    and the server uses it in docker_marshalling_endpoint.preprocess. Client-side, the same
+#    information is available where the task is built: `TaskBuilderEndpoint.__call__` holds the parsed
+#    `Signature`.
+# 2. Carry it through the conversion by adding a defaulted field to `JobDescription` listing the
+#    argument names to upload. `JobDescription` is `@dataclass(kw_only=True)`, so this breaks no
+#    existing construction, and `to_job()` enumerates its fields explicitly, so the new field never
+#    reaches `Job` or the database — it stays a client-side detail between `to_job_request()` and
+#    `add`.
+# 3. In `add`, after the ids are assigned and before `self.jobs.base_add(...)`: for every job, for
+#    every declared file argument that is not None, upload it to the cache and replace the argument
+#    with the resulting name.
+#
+# Naming: upload as `upload.<job_id>.<filename>` (and `upload.<job_id>.<uuid>` for nameless input such
+# as `bytes`/`BytesIO`, which keeps blobs out of the job arguments). The prefix makes cleanup a
+# prefix-scan rather than bookkeeping: everything belonging to a job is `upload.<job_id>.*`, so a
+# boolean flag is enough to decide whether to delete it once the job is done. Note it also means files
+# are uploaded per job rather than deduplicated across jobs, which trades some traffic for a lifetime
+# that is trivially correct.
+#
+# `remote` flag: `BrainBoxApi` should gain a `remote` flag. When it is not set — the local case, where
+# client and server share a filesystem — no upload happens at all and paths are passed through exactly
+# as they are today. Uploading is then strictly the remote path, and the local path keeps its current
+# cost.
+#
+# Still to decide before implementing:
+# * What triggers the deletion, and how it interacts with retries: a file removed on completion must
+#   not be needed by a re-run of the same job.
+# * Whether `add` should return the uploaded names alongside the ids, or whether cleanup is entirely
+#   server-side (TTL / on-completion sweep of the `upload.<job_id>.` prefix).
+#
+# Effect on chara:
+# * `brainbox_pipeline` currently bypasses `add` — it calls `to_job_request()` itself and then
+#   `jobs.base_add(...)` — so it would have to switch to `api.add(tasks)` to benefit. That works:
+#   `add` only assigns `batch` when it is None, so the batch id can be pre-set on the task optionals,
+#   and `add` returns the main ids, which is what the pipeline already collects. One behavioural
+#   difference: `add` reverses the jobs so dependencies are submitted first, which the pipeline does
+#   not currently do.
+# * `BrainBoxCasePipelineUploader` and the `uploader=` parameter of `BrainBoxCasePipeline` become
+#   redundant for FileLike arguments and can be retired. The `ResourceUpload` path must stay — it
+#   targets brainbox *resources*, not the cache.
+# * `chara/common/llm`'s `Image` step could then accept any FileLike instead of being restricted to
+#   `Path`, and would work against a remote BrainBox.
+
+
 class BrainBoxApi:
     def __init__(self, base_url: str):
         self.base_url = base_url

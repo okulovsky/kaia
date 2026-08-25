@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Prostokvashino</title>
+</head>
+
+<body>
+  <div id="loading">Loading…</div>
+  <div id="chat"></div>
+  <div id="input-area">
+    <textarea id="text-input" placeholder="Type a message…" autocomplete="off" rows="1"></textarea>
+    <button id="send-btn">Send</button>
+  </div>
+
+  <script type="module">
+    const v = Math.random().toString(36).slice(2);
+
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = `/web/static/index.css?v=${v}`;
+    document.head.appendChild(link);
+
+    const { AvatarClient, Dispatcher, ChatCommandHandler, TextInputHandler,
+            Message, Envelop, LoadingScreen } = await import(`/frontend/scripts/kaia-frontend.js?v=${v}`);
+
+    const chatDiv    = document.getElementById('chat');
+    const textInput  = document.getElementById('text-input');
+    const sendBtn    = document.getElementById('send-btn');
+    const loadingDiv = document.getElementById('loading');
+
+    const session    = new URLSearchParams(window.location.search).get('session') ?? 'default';
+    const client     = new AvatarClient({ baseUrl: window.location.origin, name: 'web', session });
+    const dispatcher = new Dispatcher(client);
+
+    new ChatCommandHandler({
+      dispatcher,
+      container: chatDiv,
+      baseUrl: window.location.origin,
+      client,
+      enableSwiping: true,
+      enableDeletion: true,
+    });
+
+    new TextInputHandler({ input: textInput, button: sendBtn, client });
+
+    const scrollToBottom = () => { chatDiv.scrollTop = chatDiv.scrollHeight }
+    window.visualViewport?.addEventListener('resize', scrollToBottom)
+    textInput.addEventListener('focus', () => setTimeout(scrollToBottom, 100))
+
+    new LoadingScreen(loadingDiv, [], async () => {
+      const initMsg = new Message('InitializationEvent', new Envelop(), {});
+      await client.push(initMsg);
+      client.setLastId(initMsg.envelop.id);
+      dispatcher.start();
+    });
+  </script>
+</body>
+</html>

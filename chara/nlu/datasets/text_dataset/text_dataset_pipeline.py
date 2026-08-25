@@ -2,7 +2,7 @@ from chara.paraphrasing.common import Paraphrase, ParsedTemplate, generate_value
 from pathlib import Path
 from grammatron import Template
 from chara.common import Chara
-from chara.common.tools.llm import PromptTaskBuilder
+from chara.common.llm import BrainBoxLLMEngine, LLMSetup
 
 
 class TextDatasetCase(Paraphrase.Case):
@@ -24,9 +24,9 @@ class TextDatasetPipeline:
             for language in self.languages:
                 for template in self.templates:
                     cases.append(TextDatasetCase(template, language, mood))
-        builder = PromptTaskBuilder(self.model, Path(__file__).parent / "template_prompt.jinja")
+        setup = LLMSetup(BrainBoxLLMEngine(), self.model)
         settings = Paraphrase.Settings(
-            paraphrase_task_builder=builder,
+            paraphrase_request=setup.default().template(Path(__file__).parent / "template_prompt.jinja").to_request(),
             enable_words_translation=True,
             grammar_correction_attempts=3,
             words_translation_attempts=3,

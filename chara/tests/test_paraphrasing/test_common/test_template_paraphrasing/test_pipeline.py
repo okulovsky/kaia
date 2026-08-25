@@ -1,6 +1,6 @@
 from chara.paraphrasing.common import TemplateParaphrase, ParsedTemplate, Paraphrase
 from chara.common import Chara, CaseCollection
-from chara.common.tools.llm import PromptTaskBuilder
+from chara.common.llm import BrainBoxLLMEngine, LLMSetup
 from grammatron import Template, CardinalDub
 from unittest import TestCase
 from brainbox.framework import ISelfManagingDecider
@@ -32,7 +32,7 @@ class PipelineTestCase(TestCase):
 
         with Loc.create_test_folder() as folder:
             Chara.start(folder)
-            pipe = TemplateParaphrase.Pipeline(PromptTaskBuilder('mistral', f))
+            pipe = TemplateParaphrase.Pipeline(LLMSetup(BrainBoxLLMEngine(), 'mistral').default().custom_prompt(f).to_request())
             with BrainBox.Api.serverless_test([OllamaMock()]) as api:
                 Chara.Apis.brainbox_api = api
                 result = Chara.call(pipe)(CaseCollection([case])).cases

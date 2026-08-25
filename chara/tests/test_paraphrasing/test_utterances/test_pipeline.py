@@ -1,11 +1,13 @@
 from avatar.app import AvatarApi
 from unittest import TestCase
 from grammatron import Template
-from chara.paraphrasing.utterances import UtteranceParaphraseCaseManager, UtteranceParaphrasePipeline
+from chara.paraphrasing.utterances import (
+    NewEntitiesSelection, UtteranceParaphraseCaseManager, UtteranceParaphrasePipeline)
+from chara.paraphrasing.utterances.reporting import REPORT_FILENAME
 from chara.paraphrasing.common import Paraphrase
-from chara.paraphrasing.utterances.prompter import setup_default_prompter
+from chara.paraphrasing.utterances.prompter import create_default_utterance_request
 from chara.common import Chara
-from chara.common.tools.llm import PromptTaskBuilder
+from chara.common.llm import BrainBoxLLMEngine, LLMSetup
 from foundation_kaia.misc import Loc
 from brainbox import BrainBox, ISelfManagingDecider
 from brainbox.deciders import Ollama
@@ -22,10 +24,9 @@ class Mock(ISelfManagingDecider):
 
 class UtterancePipelineTestCase(TestCase):
     def test_pipeline(self):
-        builder = PromptTaskBuilder('test')
-        setup_default_prompter(builder)
+        setup = LLMSetup(BrainBoxLLMEngine(), 'test')
         settings = Paraphrase.Settings(
-            paraphrase_task_builder=builder,
+            paraphrase_request=create_default_utterance_request(setup),
             enable_words_translation=False,
             grammar_correction_attempts=None,
             enable_options_expanding=False,
@@ -34,7 +35,7 @@ class UtterancePipelineTestCase(TestCase):
             [Template("yes"), Template("no")],
             target_languages=('en',)
         )
-        pipe = UtteranceParaphrasePipeline(manager, settings, templates_in_batch=10, max_batch_iterations=1)
+        pipe = UtteranceParaphrasePipeline(manager, settings, NewEntitiesSelection(batch_size=10))
 
         with Loc.create_test_folder() as avatar_folder:
             with Loc.create_test_folder() as folder:
@@ -44,9 +45,16 @@ class UtterancePipelineTestCase(TestCase):
                     with BrainBox.Api.serverless_test([Mock()]) as api:
                         Chara.Apis.brainbox_api = api
                         result = Chara.call(pipe)()
+                reports = list(folder.rglob(REPORT_FILENAME))
+                self.assertEqual(1, len(reports))
+                report = reports[0].read_text(encoding='utf-8')
 
         self.assertEqual(4, len(result))
         self.assertIsInstance(result[0].template, Template)
         names = {r.original_template_name for r in result}
         self.assertIn(Template("yes").get_name(), names)
         self.assertIn(Template("no").get_name(), names)
+
+        self.assertIn('4 new paraphrase(s)', report)
+        for name in names:
+            self.assertIn(name, report)

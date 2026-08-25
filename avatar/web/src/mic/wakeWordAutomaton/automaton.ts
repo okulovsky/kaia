@@ -57,12 +57,22 @@ export class Automaton {
     async process(micData: MicData): Promise<void> {
         this.currentMicTime = micData.micTimestamp
         const presence = this.silenceDetector.detect(micData)
-        const wakeWord = this.wakeWordDetector?.detect(micData) ?? false
+        const wakeWord = this._isListeningForWakeWord()
+            ? (this.wakeWordDetector?.detect(micData) ?? false)
+            : false
         const nextState = this._getNextState(presence, wakeWord)
         if (nextState !== null) {
             this.statefulRecorder.setState(nextState)
         }
         await this.statefulRecorder.process(micData)
+    }
+
+    // The wake word is only consulted in Standby/WaitingForWakeWord, so feeding the detector
+    // outside that phase burns work on a result that is discarded — and hands the command
+    // itself to anything recording what the detector hears.
+    private _isListeningForWakeWord(): boolean {
+        return this.statefulRecorder.state === RecorderState.Standby
+            && this.standbyPhase === StandbyPhase.WaitingForWakeWord
     }
 
     private _getNextState(presence: VoicePresence, wakeWord: boolean): RecorderState | null {

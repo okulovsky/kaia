@@ -1,12 +1,11 @@
 from typing import Any, Iterable
 from pathlib import Path
-from chara.common import BrainBoxCasePipeline, Chara, CaseCollection, IVotingCase
-from chara.common.tools.llm import PromptTaskBuilder, parse_json
+from chara.common import Chara, CaseCollection, IVotingCase
+from chara.common.llm import ILLM, Json
 from .grammar_model import GrammarModel
 from grammatron import Template
 from dataclasses import dataclass
 
-import traceback
 from copy import deepcopy
 
 
@@ -44,22 +43,14 @@ class GrammarCorrection:
         return [case.template for case in cases]
 
     class Pipeline:
-        def __init__(self, task_builder: PromptTaskBuilder):
-            self.task_builder = task_builder
-            task_builder.set_prompt(Path(__file__).parent/'prompt.jinja')
+        def __init__(self, source: ILLM[GrammarCorrectionCase, Any]):
+            request = source.default().template(Path(__file__).parent/'prompt.jinja').to_request()
+            self.request = request.edit().parse(self._merge).assign('grammar_reply').to_request()
 
-
-        def _create_task(self, case: GrammarCorrectionCase):
-            return self.task_builder(case)
-
-        def _merge(self, case: GrammarCorrectionCase, option: str):
-            try:
-                js = parse_json(option)
-                case.grammar_reply = js
-                case.grammar_model.apply(js)
-            except Exception:
-                case.error = f"Can't apply reply {option} to template {case.template}: {traceback.format_exc()}"
-
+        def _merge(self, case: GrammarCorrectionCase, option: str) -> Any:
+            js = Json.parse_object(option)
+            case.grammar_model.apply(js)
+            return js
 
         def __call__(self, cases: CaseCollection[GrammarCorrectionCase]) -> CaseCollection[GrammarCorrectionCase]:
             active_cases = []
@@ -70,7 +61,7 @@ class GrammarCorrection:
                 else:
                     active_cases.append(case)
 
-            pipe = BrainBoxCasePipeline(self.task_builder, self._merge)
+            pipe = self.request.create_brainbox_pipeline()
             inner_result = Chara.call(pipe.__call__)(CaseCollection(active_cases)).raise_if_all_errors()
 
             return CaseCollection(side_cases, inner_result)

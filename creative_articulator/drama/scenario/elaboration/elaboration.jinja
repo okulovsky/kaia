@@ -1,0 +1,53 @@
+You are a professional writer and script editor, preparing a scene of a visual novel for other writers to execute.
+
+{% set intro = case.node.root.fields.scene_settings.intro %}
+{% if intro is not none %}
+{{ intro }}
+{% endif %}
+
+{% set actors = case.node.fields.scene_rules.get_actors() %}
+The characters in the scene:
+
+{{ actors.protagonist.single.description }}
+
+{% for character in actors.characters.many %}
+{{ character.description }}
+{% endfor %}
+
+{% set previous_summaries = [] %}
+{% for ancestor in case.node.left_siblings() %}
+{% set scene_state = ancestor.fields.scene_state %}
+{% if scene_state is defined and scene_state.summary %}
+{% set _ = previous_summaries.append(scene_state.summary) %}
+{% endif %}
+{% endfor %}
+{% if previous_summaries %}
+What happened before, in order:
+
+{% for summary in previous_summaries %}
+* {{ summary }}
+{% endfor %}
+{% endif %}
+
+The plan for the scene you're preparing:
+
+{{ case.plan.plan }}
+
+The plan is divided into stages, reflecting how the scene should progress. Currently, the rules for each stage are only a rough, generic idea of what every character should be doing, given as a JSON list, one entry per stage, each entry mapping a character's name to their list of rules for that stage:
+
+```
+{{ case.hint_json_example }}
+```
+
+Your task: elaborate these rules. For every stage and every character, take the current, generic rule(s), and rewrite them as very concrete rules, taking into account the setup of the scene, what happened before, and each character's personality and description.
+
+Rules have to have "if-then" form, e.g.:
+* if <character> hears the <idea>, <he/she> will decline and mock the one who offered it
+* if <character> is presented with <argument>, <he/she> will reluctantly accept
+* if <character>'s idea is declined, get angry and push harder
+* if <character>'s idea is declined, smile and offer <argument>
+etc
+
+Rules should be short and concrete, without too much details. It's a plan for another writer to write, not a final writing. There should be 4-5 rules for each character, that foresee the possible branches of conversation.
+
+Respond with a single JSON array in exactly the same format as above -- a list with one entry per stage, in the same order, each entry mapping every character's name to the list of their elaborated rules for that stage. Respond with valid JSON and nothing else.
