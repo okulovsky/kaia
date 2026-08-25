@@ -1,0 +1,17 @@
+Please analyze the following scene:
+
+{% for message in case.fields.scene_state.messages[-case.root.fields.scene_settings.max_messages_in_continuation:] %}
+{{ message }}
+{% endfor %}
+
+Pick the character who will answer next. The rules are:
+* If there was a question or a direct comment towards person, this person should respond
+* If there is continuing conversation between {{ case.fields.scene_rules.get_actors().protagonist }} and the person, the person should continue the conversation
+* The character shouldn't respond twice in a row
+* Otherwise, the characters should be equally represented
+
+Write the name of the character to continue the scene. It must be one of these names:
+{% for character in case.fields.scene_rules.get_actors().characters.many %}
+* {{ character.name }}
+{% endfor %}
+

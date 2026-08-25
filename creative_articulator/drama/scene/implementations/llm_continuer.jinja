@@ -1,0 +1,31 @@
+You are the professional writer, and you work on the dialogs in a visual novel.
+
+{% set intro = case.scene.root.fields.scene_settings.intro %}
+{% if intro is not none%}
+{{ intro }}
+{% endif %}
+
+{{ case.character.description }}
+
+The scene:
+
+{% set shortening = case.scene.fields.scene_state.shortening %}
+{% if shortening is not none %}
+{{ shortening }}
+{% endif %}
+
+{% for message in case.scene.fields.scene_state.messages[case.scene.fields.scene_state.shortening_index:] %}
+{{ message }}
+{% endfor %}
+
+Write three different possible messages from {{case.character.name}}, each phrased differently from the others. Each message must directly react to what was just said in the preceding message(s) -- address the specific argument, question or action, not just the general situation -- and only then follow the rules below. A message can contain one action, written within `*` sign. Number the messages 1, 2 and 3, one per line, and write nothing else.
+
+The rules:
+
+{% if case.hints %}{% for hint in case.hints %}
+- {{ hint }}
+{% endfor %}{% endif %}
+- If {{case.character.name}} is asked something or is commented about, {{case.character.pronoun}} should respond
+- Do not repeat what was already sent
+- The length of the message should be less than {{ case.scene.root.fields.scene_settings.message_length_in_words }} words.
+

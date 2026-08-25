@@ -1,0 +1,7 @@
+Please analyze the following scene:
+
+{% for message in case.scene.fields.scene_state.messages[-case.scene.root.fields.scene_settings.max_messages_in_continuation:] %}
+{{ message }}
+{% endfor %}
+
+Answer the following questions about the scene:
