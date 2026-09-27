@@ -4,7 +4,7 @@ from .tts_service import TTSService
 from .narration_service import *
 from .paraphrase_service import ParaphraseService, ParaphraseRecord
 from .image_service import ImageService
-from .stt_service import STTService, RhasspyRecognitionSetup, VoskRecognitionSetup, WhisperRecognitionSetup, IntentsPack
+from .stt_service import STTService, RhasspyRecognitionSetup, VoskRecognitionSetup, WhisperRecognitionSetup, NluRecognitionSetup, IntentsPack
 from .speaker_identification_service import SpeakerIdentificationService
 from .mock_sound_service import MockSoundService
 from .state_to_utterances_application_service import StateToUtterancesApplicationService

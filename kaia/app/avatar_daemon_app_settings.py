@@ -24,6 +24,9 @@ def _speaker_to_image_url(speaker):
 def _default_greetings():
     return s.TextCommand("Hello! Nice to see you!")
 
+def _default_stt_setup():
+    return s.RhasspyRecognitionSetup(KaiaAssistant.RHASSPY_MAIN_MODEL_NAME)
+
 CHARACTERS = ('Ocean', 'Mountain', 'Meadow', 'Forest')
 
 @dataclass
@@ -34,6 +37,7 @@ class AvatarDaemonAppSettings(IAppInitializer):
     dub_task_factory: s.TTSService.TaskFactory = field(default_factory=DemoDubTaskFactory)
     speaker_to_image_url: Callable[[str], str] = _speaker_to_image_url
     greetings_command: Any = field(default_factory=_default_greetings)
+    stt_setup: Any = field(default_factory=_default_stt_setup)
     initialize_volume: bool = False
     report_to_session: str|None = None
     default_volume: float = 0.1
@@ -70,9 +74,7 @@ class AvatarDaemonAppSettings(IAppInitializer):
         )
 
     def create_stt_service(self, app: KaiaApp, state: s.State):
-        return s.STTService(
-            s.RhasspyRecognitionSetup(KaiaAssistant.RHASSPY_MAIN_MODEL_NAME),
-        )
+        return s.STTService(self.stt_setup)
 
     def create_state_to_utterances_application(self, app: KaiaApp, state: s.State):
         service = s.StateToUtterancesApplicationService(state)
