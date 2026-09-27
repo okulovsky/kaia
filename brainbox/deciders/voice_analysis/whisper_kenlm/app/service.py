@@ -33,7 +33,7 @@ class WhisperKenLMService(IWhisperKenLM):
         if self.storage.model is not None:
             self.storage.model.model.lm = new_lm
 
-    def transcribe(self, file: FileLike, weight: float = 0.5, beams: int = 5) -> str:
+    def transcribe(self, file: FileLike, weight: float = 0.5, beams: int = 5, languages: list[str] | None = None) -> str:
         import torch
         from kenlm_processor import KenLMLogitsProcessor
         state  = self._state()
@@ -48,8 +48,29 @@ class WhisperKenLMService(IWhisperKenLM):
         if state.lm is not None:
             kwargs['logits_processor'] = [KenLMLogitsProcessor(state.lm, state.processor.tokenizer, weight=weight)]
         with torch.no_grad():
-            out = state.model.generate(**inputs, **kwargs)
+            if languages:
+                encoder_outputs = state.model.get_encoder()(inputs.input_features)
+                kwargs['language'] = _detect_language(state.model, encoder_outputs, languages)
+                out = state.model.generate(encoder_outputs=encoder_outputs, **kwargs)
+            else:
+                out = state.model.generate(**inputs, **kwargs)
         return state.processor.batch_decode(out, skip_special_tokens=True)[0].strip()
+
+
+def _detect_language(model, encoder_outputs, languages: list[str]) -> str:
+    # Same as WhisperGenerationMixin.detect_language, but the choice is limited to `languages`:
+    # on short clips unrestricted detection often lands on an unrelated language.
+    import torch
+    config = model.generation_config
+    token_ids = []
+    for language in languages:
+        token = f'<|{language}|>'
+        if token not in config.lang_to_id:
+            raise ValueError(f"Unknown language code `{language}`")
+        token_ids.append(config.lang_to_id[token])
+    decoder_input_ids = torch.tensor([[config.decoder_start_token_id]])
+    logits = model(encoder_outputs=encoder_outputs, decoder_input_ids=decoder_input_ids, use_cache=False).logits[0, -1]
+    return languages[int(torch.argmax(logits[token_ids]))]
 
 
 def _find_bin(name: str) -> str:
