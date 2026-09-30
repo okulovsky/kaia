@@ -1,7 +1,49 @@
 import collections.abc
 from pathlib import Path
 import json
+import os
 
+
+def _open_stream_reader(path: Path, mode: str):
+    if os.name != 'nt':
+        return open(path, mode)
+
+    # Commit/abort removes files while readers still have them open. Windows
+    # requires every reader to explicitly allow deletion of its open files.
+    import ctypes
+    from ctypes import wintypes
+    import msvcrt
+
+    kernel32 = ctypes.WinDLL('kernel32', use_last_error=True)
+    create_file = kernel32.CreateFileW
+    create_file.argtypes = (
+        wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD, ctypes.c_void_p,
+        wintypes.DWORD, wintypes.DWORD, wintypes.HANDLE,
+    )
+    create_file.restype = wintypes.HANDLE
+    close_handle = kernel32.CloseHandle
+    close_handle.argtypes = (wintypes.HANDLE,)
+    close_handle.restype = wintypes.BOOL
+
+    def opener(filename, flags):
+        handle = create_file(
+            filename,
+            0x80000000,  # GENERIC_READ
+            0x00000001 | 0x00000002 | 0x00000004,  # SHARE_READ | WRITE | DELETE
+            None,
+            3,  # OPEN_EXISTING
+            0x00000080,  # FILE_ATTRIBUTE_NORMAL
+            None,
+        )
+        if handle == wintypes.HANDLE(-1).value:
+            raise ctypes.WinError(ctypes.get_last_error())
+        try:
+            return msvcrt.open_osfhandle(handle, flags)
+        except BaseException:
+            close_handle(handle)
+            raise
+
+    return open(path, mode, opener=opener)
 
 
 class StreamingFolderStorageReader(collections.abc.Iterable[bytes]):

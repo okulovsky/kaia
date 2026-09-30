@@ -5,6 +5,7 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch",
+    "test:wakeword": "vite build && node --test tests/openWakeWordDetector.test.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
@@ -28,7 +29,9 @@
     "vite": "^6.0.0"
   },
   "dependencies": {
-    "vosk-browser": "^0.0.8",
-    "bumblebee-hotword": "^0.2.1"
+    "bumblebee-hotword": "^0.2.1",
+    "onnxruntime-web": "1.23.2",
+    "openwakeword-wasm-browser": "0.1.1",
+    "vosk-browser": "^0.0.8"
   }
 }
