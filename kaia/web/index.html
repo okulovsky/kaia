@@ -24,10 +24,9 @@
   <script type="module">
     // Debugging: upload everything the wake word detector hears as cache/wakeword_<id>.wav
     const UPLOAD_WAKEWORD_SOUND = true;
-    // Choose the detector and wake word independently so both can use Alexa.
-    const WAKE_WORD_DETECTOR = 'openwakeword';//'bumblebee';
+    // Wake word model: 'alexa' (OpenWakeWord) or 'computer' (Porcupine).
     const WAKE_WORD_MODEL = 'alexa';
-    const useOpenWakeWord = WAKE_WORD_DETECTOR === 'openwakeword';
+    const useOpenWakeWord = WAKE_WORD_MODEL === 'alexa';
 
     const v = Math.random().toString(36).slice(2);
     document.querySelector('link[rel="stylesheet"]').href = `/web/static/index.css?v=${v}`;
@@ -82,7 +81,7 @@
     const controller  = new MicController(input, m => automaton.process(m));
 
     const webcam = new Webcam();
-    const webcamProcessor = new WebcamProcessor({ webcam, client, baseUrl: window.location.origin, rateMs: 2000, cooldownSeconds: 15 });
+    const webcamProcessor = new WebcamProcessor({ webcam, client, baseUrl: window.location.origin, rateMs: 2000 });
     debugViewController.register(webcamProcessor);
 
 
