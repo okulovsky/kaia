@@ -101,6 +101,32 @@ class TestStreamingStorageLiveStream(unittest.TestCase):
         self.tmpdir = tempfile.mkdtemp()
         self.storage = StreamingStorage(Path(self.tmpdir))
 
+    def test_commit_while_reader_is_paused(self):
+        self.storage.begin_writing('paused.bin')
+        self.storage.append('paused.bin', b'first')
+        reader = iter(self.storage.read('paused.bin', timeout=1))
+        try:
+            self.assertEqual(b'first', next(reader))
+            self.storage.append('paused.bin', b'second')
+            self.storage.commit('paused.bin')
+            self.assertFalse(self.storage._get_tempfile_path('paused.bin').exists())
+            self.assertEqual(b'second', b''.join(reader))
+        finally:
+            reader.close()
+
+    def test_delete_while_reader_is_paused(self):
+        self.storage.begin_writing('aborted.bin')
+        self.storage.append('aborted.bin', b'first')
+        reader = iter(self.storage.read('aborted.bin', timeout=1))
+        try:
+            self.assertEqual(b'first', next(reader))
+            self.storage.delete('aborted.bin')
+            with self.assertRaisesRegex(IOError, 'Upstream job aborted'):
+                list(reader)
+        finally:
+            reader.close()
+
+
     def test_live_stream_basic(self):
         chunks_written = [b'chunk1', b'chunk2', b'chunk3']
         received = []

@@ -24,6 +24,9 @@
   <script type="module">
     // Debugging: upload everything the wake word detector hears as cache/wakeword_<id>.wav
     const UPLOAD_WAKEWORD_SOUND = true;
+    // Wake word model: 'alexa' (OpenWakeWord) or 'computer' (Porcupine).
+    const WAKE_WORD_MODEL = 'alexa';
+    const useOpenWakeWord = WAKE_WORD_MODEL === 'alexa';
 
     const v = Math.random().toString(36).slice(2);
     document.querySelector('link[rel="stylesheet"]').href = `/web/static/index.css?v=${v}`;
@@ -33,7 +36,9 @@
             SilenceControllingWakeWordDetector, SoundUploadingWakeWordDetector,
             Webcam, WebcamProcessor, AppHandler } = await import(`/frontend/scripts/kaia-frontend.js?v=${v}`);
     //const { KaldiWakeWordDetector } = await import(`/frontend/scripts/kaldi-wake-word-detector.js?v=${v}`);
-    const { BumblebeeWakeWordDetector } = await import(`/frontend/scripts/bumblebee-wake-word-detector.js?v=${v}`);
+    const { OpenWakeWordDetector, BumblebeeWakeWordDetector } = await import(useOpenWakeWord
+      ? `/frontend/scripts/open-wake-word-detector.js?v=${v}`
+      : `/frontend/scripts/bumblebee-wake-word-detector.js?v=${v}`);
 
     const loadingDiv    = document.getElementById('loading');
     const debugSettingsBtn = document.getElementById('debug-settings-btn');
@@ -64,11 +69,14 @@
     const stateful = new StatefulRecorder({ recorder, dispatcher });
     const silence  = new SilenceDetector({ timeBetweenReportsInSeconds: 0.5, decisionWindowSeconds: 1.0, reportingWindowSeconds: 0.1, silenceLevel: 0.01, dispatcher });
     //const inner     = new KaldiWakeWordDetector({ sampleRateOfTheModel: 16000, words: ['computer'], modelUrl: `/frontend/models/vosk-model-small-en-us-0.15.zip?v=${v}`, dispatcher });
-    const inner    = new BumblebeeWakeWordDetector({ words: ['computer'], dispatcher });
-    const heard    = UPLOAD_WAKEWORD_SOUND
+    const inner    = useOpenWakeWord
+      ? new OpenWakeWordDetector({ dispatcher })
+      : new BumblebeeWakeWordDetector({ words: [WAKE_WORD_MODEL], dispatcher });
+    const heard    = UPLOAD_WAKEWORD_SOUND && !useOpenWakeWord
       ? new SoundUploadingWakeWordDetector({ detector: inner, dispatcher, baseUrl: window.location.origin })
       : inner;
-    const wake     = new SilenceControllingWakeWordDetector({ detector: heard, dispatcher });
+    // OpenWakeWord needs continuous audio (including silence) and has its own VAD.
+    const wake     = useOpenWakeWord ? heard : new SilenceControllingWakeWordDetector({ detector: heard, dispatcher });
     const automaton   = new Automaton({ silenceDetector: silence, wakeWordDetector: wake, statefulRecorder: stateful, dispatcher });
     const controller  = new MicController(input, m => automaton.process(m));
 
