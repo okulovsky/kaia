@@ -1,4 +1,4 @@
-import { Dispatcher, Message } from '../core/index.js'
+import { Dispatcher, Envelop, Message } from '../core/index.js'
 import { ImageCommandHandler } from './imageCommandHandler.js'
 
 /** Thrown into a pending playback when a newer VideoCommand arrives. */
@@ -17,6 +17,10 @@ class PlaybackAborted extends Error {}
  * inside the container. Only one of them is visible at a time: the next video is
  * loaded into the hidden layer and is only brought to the front once its first
  * frame can be painted, so nothing blank is ever shown in between.
+ *
+ * The same holds for the end of the playback: the last video keeps its final
+ * frame on the screen until the final_image is loaded and painted underneath,
+ * and only then the layers are hidden.
  */
 export class VideoCommandHandler {
   private suffix = '.VideoCommand'
@@ -26,8 +30,10 @@ export class VideoCommandHandler {
   private visible = -1
   private imageHandler: ImageCommandHandler | null
   private base: string
+  private dispatcher: Dispatcher
   private generation = 0
   private abort: (() => void) | null = null
+  private frameTimeoutInMilliseconds = 250
 
   /**
    * @param dispatcher   dispatches incoming Messages
@@ -46,6 +52,7 @@ export class VideoCommandHandler {
     }
   ) {
     this.layers = [this.createLayer(container, className), this.createLayer(container, className)]
+    this.dispatcher = dispatcher
     this.imageHandler = imageHandler ?? null
     this.base = baseUrl.replace(/\/+$/, '')
     dispatcher.subscribe(this.suffix, this.handle.bind(this))
@@ -92,7 +99,7 @@ export class VideoCommandHandler {
       }
       const onLoaded = (): void => {
         cleanup()
-        requestAnimationFrame(() => resolve())
+        void this.nextFrame().then(resolve)
       }
       const onError = (): void => {
         cleanup()
@@ -164,15 +171,47 @@ export class VideoCommandHandler {
     return this.visible === 0 ? 1 : 0
   }
 
+  /**
+   * Resolves when the browser is about to paint the next frame.
+   *
+   * A page that is not rendered at all - a background tab, a minimized or a
+   * fully covered window - never runs requestAnimationFrame, so the waiting is
+   * bounded by a timeout: there is nothing to see there anyway, and the
+   * playback must not stall.
+   */
+  private nextFrame (): Promise<void> {
+    return new Promise<void>(resolve => {
+      let timer = 0
+      let done = false
+      const finish = (): void => {
+        if (done) return
+        done = true
+        window.clearTimeout(timer)
+        resolve()
+      }
+      timer = window.setTimeout(finish, this.frameTimeoutInMilliseconds)
+      requestAnimationFrame(finish)
+    })
+  }
+
   private async handle (msg: Message): Promise<void> {
     const videos: string[] = msg.payload.videos ?? []
     const finalImage: string | null = msg.payload.final_image ?? null
     const gen = ++this.generation
     this.abort?.()
-    void this.run(videos, finalImage, gen)
+    void this.run(videos, finalImage, gen, msg)
   }
 
-  private async run (videos: string[], finalImage: string | null, gen: number): Promise<void> {
+  /** Tells whoever posted the command that the playback is over. */
+  private confirm (command: Message, error: string | null): void {
+    this.dispatcher.push(
+      new Message('Confirmation', new Envelop(), { error })
+        .asConfirmationFor(command)
+        .asReplyTo(command)
+    )
+  }
+
+  private async run (videos: string[], finalImage: string | null, gen: number, command: Message): Promise<void> {
     let abortReject: (reason: unknown) => void = () => {}
     const aborted = new Promise<never>((_, reject) => { abortReject = reject })
     aborted.catch(() => {})
@@ -181,6 +220,7 @@ export class VideoCommandHandler {
     const race = <T>(promise: Promise<T>): Promise<T> => Promise.race([promise, aborted])
 
     let pending: Promise<string> | null = null
+    let failure: string | null = null
     try {
       let target = -1
       if (videos.length > 0) {
@@ -207,17 +247,22 @@ export class VideoCommandHandler {
       if (gen !== this.generation) return
       if (finalImage !== null && this.imageHandler !== null) {
         await race(this.imageHandler.show(finalImage))
+        await race(this.nextFrame())
       }
       if (gen !== this.generation) return
       this.hideAll()
     } catch (e) {
-      if (!(e instanceof PlaybackAborted)) {
+      if (e instanceof PlaybackAborted) {
+        failure = 'the playback was interrupted by a newer VideoCommand'
+      } else {
         console.error('[VideoCommandHandler]', e)
         if (gen === this.generation) this.hideAll()
+        failure = String(e)
       }
     } finally {
       if (pending !== null) void pending.then(url => URL.revokeObjectURL(url), () => {})
       if (this.abort === myAbort) this.abort = null
+      this.confirm(command, failure)
     }
   }
 }

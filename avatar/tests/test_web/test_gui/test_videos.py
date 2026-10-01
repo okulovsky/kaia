@@ -10,7 +10,15 @@ from avatar.utils.web_test_environment import WebTestEnvironmentFactory
 
 class VideoHandlerTestCase(TestCase):
     def test_video_handler(self):
-        with WebTestEnvironmentFactory(HTML) as env:
+        self._run_playback(HTML)
+
+    def test_video_handler_without_animation_frames(self):
+        """A page that is not rendered gets no animation frames, and still must finish the playback."""
+        self.assertNotEqual(HTML, HTML_WITHOUT_ANIMATION_FRAMES)
+        self._run_playback(HTML_WITHOUT_ANIMATION_FRAMES)
+
+    def _run_playback(self, html: str):
+        with WebTestEnvironmentFactory(html) as env:
             env.api.cache.upload('v1.webm', base64.b64decode(V1_B64))
             env.api.cache.upload('v2.webm', base64.b64decode(V2_B64))
             env.api.cache.upload('final.png', _PNG)
@@ -46,12 +54,12 @@ class VideoHandlerTestCase(TestCase):
                 events.index(['ended', 1]),
             )
 
-            # the memory of both videos is released
-            self.assertEqual(2, env.driver.execute_script("return window.__revoked"))
-
             # exactly one layer covers the image while a video plays, none afterwards
             self.assertEqual([1, 1], [e[1] for e in events if e[0] == 'visible'])
             WebDriverWait(env.driver, 10).until(lambda d: visible_layers(d) == 0)
+
+            # the memory of both videos is released, which happens when the layers go down
+            self.assertEqual(2, env.driver.execute_script("return window.__revoked"))
 
 
 V1_B64 = (
@@ -140,3 +148,8 @@ HTML = '''<!DOCTYPE html>
 </body>
 </html>
 '''
+
+HTML_WITHOUT_ANIMATION_FRAMES = HTML.replace(
+    '    window.__events = [];\n',
+    '    window.__events = [];\n    window.requestAnimationFrame = () => 0;\n',
+)
