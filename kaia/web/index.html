@@ -73,7 +73,7 @@
     const controller  = new MicController(input, m => automaton.process(m));
 
     const webcam = new Webcam();
-    const webcamProcessor = new WebcamProcessor({ webcam, client, baseUrl: window.location.origin, rateMs: 2000 });
+    const webcamProcessor = new WebcamProcessor({ webcam, client, baseUrl: window.location.origin, rateMs: 2000, cooldownSeconds: 15 });
     debugViewController.register(webcamProcessor);
 
 
