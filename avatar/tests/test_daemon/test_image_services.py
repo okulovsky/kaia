@@ -1,11 +1,11 @@
-import json
 import zipfile
 from avatar.messaging import *
 from avatar.daemon import ImageService, State, ChatCommand
-from avatar.daemon.image_service.media_library import MediaLibrary
+from avatar.daemon.image_service import VariantRecord
 from avatar.daemon.common.known_messages import InitializationEvent
 from unittest import TestCase
 from foundation_kaia.misc import Loc
+from .media_library_fixture import write_media_library
 
 class _FakeCache:
     def upload(self, path, content):
@@ -22,15 +22,14 @@ class ImageServiceTestCase(TestCase):
     def setUp(self):
         self.folder_holder = Loc.create_test_folder()
         self.folder = self.folder_holder.__enter__()
-        records = [
-            {'path': f'{character}/{activity}/{index}',
+        entries = [
+            {'file_id': f'{character}/{activity}/{index}',
              'tags': dict(character=character, activity=activity, index=index)}
             for character in characters
             for activity in activities
             for index in ['i0', 'i1', 'i2']
         ]
-        with zipfile.ZipFile(self.folder/'media_library.zip', 'w') as zp:
-            zp.writestr('records.json', json.dumps(records))
+        write_media_library(self.folder, entries)
 
         self.state = State(character='c0', activity='a0')
         proc = AvatarDaemon(AvatarClient.default(), timeout_in_pull_in_seconds=0)
@@ -45,7 +44,7 @@ class ImageServiceTestCase(TestCase):
 
     def _records_for(self, character, activity):
         return [
-            r for r in self.service.media_library.records
+            r for r in self.service.loader.get_records()
             if r.tags['character'] == character and r.tags['activity'] == activity
         ]
 
@@ -79,7 +78,7 @@ class ImageServiceTestCase(TestCase):
     def test_bad_feedback_excludes_the_record_going_forward(self):
         two_records = self._records_for('c0', 'a0')[:2]
         self.proc.debug_and_stop_by_empty_queue(ImageService.PhotoAlbumCommand(two_records))
-        banned_path = self.service.last_base_image_record.path
+        banned_path = self.service.last_base_image_record.file_id
 
         self.proc.debug_and_stop_by_empty_queue(ImageService.ImageFeedback('bad'))
         for _ in range(5):
@@ -103,31 +102,32 @@ class ImageServiceTestCase(TestCase):
         m = self.proc.debug_and_stop_by_empty_queue(ImageService.ImageFeedback('good')).messages
         self.assertIsInstance(m[-1], Confirmation)
 
-        feedback = self.service.feedback_provider.load_feedback()
-        self.assertEqual({'seen': 1, 'good': 1}, feedback[shown_path])
+        feedback = self.service.loader.feedback_storage.load()
+        self.assertEqual({'seen': 1, 'good': 1}, dict(feedback[shown_path]))
 
     def test_variant_feedback_is_recorded_on_variant_and_rolled_up_to_base(self):
         base_records = self._records_for('c0', 'a0')[:1]
         self.proc.debug_and_stop_by_empty_queue(ImageService.PhotoAlbumCommand(base_records))
-        base_path = self.service.last_base_image_record.path
+        base_path = self.service.last_base_image_record.file_id
 
         variant_path = f'{base_path}__goth'
         variant_zip = self.folder / 'variants.zip'
         with zipfile.ZipFile(variant_zip, 'w') as zp:
             zp.writestr(variant_path, b'goth-variant-bytes')
-        variant_record = MediaLibrary.Record(variant_path, {'original': base_path, 'variant_type': 'goth'}, variant_zip)
-        self.service.media_library.records.append(variant_record)
+        self.service.loader.get_record(base_path).variants.append(
+            VariantRecord(variant_path, 'goth', variant_zip)
+        )
         self.service.api = _FakeApi()
 
         self.proc.debug_and_stop_by_empty_queue(ImageService.VariantRequest('goth'))
-        self.assertEqual(variant_path, self.service.last_shown_image_record.path)
-        self.assertEqual(base_path, self.service.last_base_image_record.path)
+        self.assertEqual(variant_path, self.service.last_shown_image_record.file_id)
+        self.assertEqual(base_path, self.service.last_base_image_record.file_id)
 
         self.proc.debug_and_stop_by_empty_queue(ImageService.ImageFeedback('good'))
 
-        feedback = self.service.feedback_provider.load_feedback()
-        self.assertEqual(1, feedback[variant_path]['good'])
-        self.assertEqual(1, feedback[base_path]['variant_goth_good'])
+        feedback = self.service.loader.feedback_storage.load()
+        self.assertEqual(1, feedback.get(variant_path, 'good'))
+        self.assertEqual(1, feedback.get(base_path, 'variant_goth_good'))
 
     def test_description_without_shown_image_errors(self):
         m = self.proc.debug_and_stop_by_empty_queue(ImageService.ImageDescriptionCommand()).messages
@@ -146,10 +146,10 @@ class ImageServiceTestCase(TestCase):
     def test_variant_feedback_does_not_pollute_base_when_base_is_shown(self):
         base_records = self._records_for('c0', 'a0')[:1]
         self.proc.debug_and_stop_by_empty_queue(ImageService.PhotoAlbumCommand(base_records))
-        base_path = self.service.last_base_image_record.path
+        base_path = self.service.last_base_image_record.file_id
 
         self.proc.debug_and_stop_by_empty_queue(ImageService.ImageFeedback('good'))
 
-        feedback = self.service.feedback_provider.load_feedback()
-        self.assertEqual(1, feedback[base_path]['good'])
+        feedback = self.service.loader.feedback_storage.load()
+        self.assertEqual(1, feedback.get(base_path, 'good'))
         self.assertFalse(any(key.startswith('variant_') for key in feedback[base_path]))

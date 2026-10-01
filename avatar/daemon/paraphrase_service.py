@@ -5,13 +5,13 @@ from grammatron import Utterance, UtterancesSequence, TemplateDub, Template, Lan
 from dataclasses import dataclass
 
 from . import InternalTextCommand
-from .common.content_manager import IContentStrategy, ContentManager, DataClassDataProvider
+from .common.content import ContentFinder, IRecord, FileFeedbackStorage, IFeedbackStorage
 from .common import State, AvatarService, message_handler, InitializationEvent, TextCommand
 from copy import copy
 from yo_fluq import FileIO
 
 @dataclass
-class ParaphraseRecord:
+class ParaphraseRecord(IRecord):
     filename: str
     template: Template
     original_template_name: str
@@ -19,6 +19,12 @@ class ParaphraseRecord:
     language: str
     character: str|None = None
     user: str|None = None
+
+    def get_id(self) -> str:
+        return self.filename
+
+    def get_tags(self) -> dict[str, Any]:
+        return {key: value for key, value in self.__dict__.items() if key != 'filename'}
 
     @staticmethod
     def create_variables_tag(variables: Iterable[str]):
@@ -34,10 +40,11 @@ class ParaphraseService(AvatarService):
     PARAPHRASES_PREFIX='paraphrase'
     PARAPHRASES_SUFFIX='.pkl'
 
-    def __init__(self, state: State, content_strategy: IContentStrategy|None = None):
+    def __init__(self, state: State, finder: ContentFinder|None = None):
         self.state = state
-        self.content_strategy = content_strategy
-        self.paraphrases_content_manager: ContentManager|None = None
+        self.finder = finder if finder is not None else ContentFinder()
+        self.records: list[ParaphraseRecord]|None = None
+        self.feedback_storage: IFeedbackStorage|None = None
 
 
     @message_handler
@@ -52,16 +59,11 @@ class ParaphraseService(AvatarService):
 
         for file in sorted(files):
             records+=FileIO.read_pickle(self.resources_folder/file)
-        feedback_file = self.resources_folder/ParaphraseService.FEEDBACK_FILENAME
-
-        self.paraphrases_content_manager = ContentManager(
-            DataClassDataProvider(records),
-            feedback_file,
-            self.content_strategy
-        )
+        self.records = records
+        self.feedback_storage = FileFeedbackStorage(self.resources_folder/ParaphraseService.FEEDBACK_FILENAME)
 
     def _paraphrase_utterance(self, u: Utterance, command: InternalTextCommand) -> Utterance:
-        if self.paraphrases_content_manager is None:
+        if self.records is None:
             return u
         if not isinstance(u, Utterance):
             return u
@@ -92,12 +94,15 @@ class ParaphraseService(AvatarService):
             'character': command.character,
         }
 
-        matcher = self.paraphrases_content_manager.match().strong(template_tag).weak(state_tag)
-        #matcher.debug = True
-        template_record = matcher.find_content()
+        template_record = self.finder.find(
+            self.records,
+            self.feedback_storage.load(),
+            strong=template_tag,
+            weak=state_tag,
+        )
         if template_record is None:
             return u
-        self.paraphrases_content_manager.feedback(template_record.filename, 'seen')
+        self.feedback_storage.append(template_record.filename, {'seen': 1})
         self.last_content_id = template_record.filename
         return template_record.template(u.value)
 

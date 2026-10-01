@@ -4,7 +4,7 @@ from avatar.messaging import *
 from avatar.daemon import ParaphraseService, ParaphraseRecord, State, StateToUtterancesApplicationService, InternalTextCommand
 from unittest import TestCase
 from grammatron import Template, Utterance
-from avatar.daemon.common.content_manager import NewContentStrategy
+from avatar.daemon.common.content import ContentFinder, NewContentStrategy
 from avatar.daemon.common import TextCommand, InitializationEvent
 from foundation_kaia.misc import Loc
 from avatar.app import AvatarApi
@@ -46,7 +46,7 @@ class ParaphraseTestCase(TestCase):
                 proc.rules.bind(
                     StateToUtterancesApplicationService(state),
                 )
-                service = ParaphraseService(state, NewContentStrategy(False))
+                service = ParaphraseService(state, ContentFinder(NewContentStrategy(False)))
                 proc.rules.bind(
                     service,
                     BindingSettings().bind_type(InternalTextCommand).to(StateToUtterancesApplicationService)
