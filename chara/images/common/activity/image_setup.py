@@ -14,7 +14,7 @@ class ImageSetup:
             name = self.theme.name,
             location=self.theme.location,
             season=self.theme.season,
-            weather=self.theme.weather,
+            good_weather=self.theme.good_weather,
             time_of_day=self.theme.time_of_day,
             special_day=self.theme.special_day.name if self.theme.special_day is not None else None,
         )
