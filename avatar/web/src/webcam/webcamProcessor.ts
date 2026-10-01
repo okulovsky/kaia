@@ -10,11 +10,13 @@ export class WebcamProcessor implements IDebugView, IPausable {
     private _rateMs: number
     private _threshold: number
     private _pixelThreshold: number
+    private _cooldownSeconds: number | null
     private _client: AvatarClient
     private _baseUrl: string
 
     private _pixelSamplingStep: number
     private _storedCanvas: HTMLCanvasElement | null = null
+    private _cooldownUntil: number | null = null
     private _intervalId: ReturnType<typeof setInterval> | null = null
 
     private _debugDiv: HTMLDivElement | null = null
@@ -22,12 +24,13 @@ export class WebcamProcessor implements IDebugView, IPausable {
     private _imgStored: HTMLImageElement | null = null
     private _imgDiff: HTMLImageElement | null = null
 
-    constructor({ webcam, rateMs = 1000, threshold = 0.1, pixelThreshold = 30, pixelSamplingStep = 2, client, baseUrl }: {
+    constructor({ webcam, rateMs = 1000, threshold = 0.1, pixelThreshold = 30, pixelSamplingStep = 2, cooldownSeconds = null, client, baseUrl }: {
         webcam: IWebcam
         rateMs?: number
         threshold?: number
         pixelThreshold?: number
         pixelSamplingStep?: number
+        cooldownSeconds?: number | null
         client: AvatarClient
         baseUrl: string
     }) {
@@ -36,12 +39,14 @@ export class WebcamProcessor implements IDebugView, IPausable {
         this._threshold = threshold
         this._pixelThreshold = pixelThreshold
         this._pixelSamplingStep = pixelSamplingStep
+        this._cooldownSeconds = cooldownSeconds
         this._client = client
         this._baseUrl = baseUrl.replace(/\/+$/, '')
     }
 
     async start(): Promise<void> {
         await this._webcam.start()
+        this._cooldownUntil = null
         this._intervalId = setInterval(() => { void this._tick() }, this._rateMs)
     }
 
@@ -111,8 +116,14 @@ export class WebcamProcessor implements IDebugView, IPausable {
         return { moved, diffCanvas }
     }
 
+    private timestamp(): string {
+        const now = new Date()
+        const pad = (value: number): string => String(value).padStart(2, '0')
+        return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}-${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`
+    }
+
     private imageChanged(current: HTMLCanvasElement): void {
-        const fileName = `webcam_${crypto.randomUUID()}.jpg`
+        const fileName = `webcam-${this.timestamp()}-${crypto.randomUUID()}.jpg`
         const url = `${this._baseUrl}/cache/upload/${encodeURIComponent(fileName)}`
 
         current.toBlob(async (blob) => {
@@ -133,14 +144,23 @@ export class WebcamProcessor implements IDebugView, IPausable {
             }
         }, 'image/jpeg', 0.8)
 
-        const w = current.width
-        const h = current.height
+        this.storeCanvas(current)
+
+        if (this._cooldownSeconds !== null) {
+            this._cooldownUntil = Date.now() + this._cooldownSeconds * 1000
+        }
+    }
+
+    private storeCanvas(current: HTMLCanvasElement): void {
         if (this._storedCanvas === null) {
             this._storedCanvas = document.createElement('canvas')
-            this._storedCanvas.width = w
-            this._storedCanvas.height = h
+        }
+        if (this._storedCanvas.width !== current.width || this._storedCanvas.height !== current.height) {
+            this._storedCanvas.width = current.width
+            this._storedCanvas.height = current.height
         }
         const storedCtx = this._storedCanvas.getContext('2d')!
+        storedCtx.clearRect(0, 0, current.width, current.height)
         storedCtx.drawImage(current, 0, 0)
     }
 
@@ -148,17 +168,29 @@ export class WebcamProcessor implements IDebugView, IPausable {
         const current = this._webcam.read()
         if (!current) return
 
+        if (this._cooldownUntil !== null) {
+            if (Date.now() < this._cooldownUntil) {
+                this.storeCanvas(current)
+                this.updateDebugView(current, null)
+                return
+            }
+            this._cooldownUntil = null
+        }
+
         const { moved, diffCanvas } = this.detectMovement(current)
 
         if (moved) {
             this.imageChanged(current)
         }
 
-        if (this._debugDiv !== null) {
-            if (this._imgCurrent) this._imgCurrent.src = current.toDataURL('image/png')
-            if (this._imgStored && this._storedCanvas) this._imgStored.src = this._storedCanvas.toDataURL('image/png')
-            if (this._imgDiff && diffCanvas) this._imgDiff.src = diffCanvas.toDataURL('image/png')
-        }
+        this.updateDebugView(current, diffCanvas)
+    }
+
+    private updateDebugView(current: HTMLCanvasElement, diffCanvas: HTMLCanvasElement | null): void {
+        if (this._debugDiv === null) return
+        if (this._imgCurrent) this._imgCurrent.src = current.toDataURL('image/png')
+        if (this._imgStored && this._storedCanvas) this._imgStored.src = this._storedCanvas.toDataURL('image/png')
+        if (this._imgDiff && diffCanvas) this._imgDiff.src = diffCanvas.toDataURL('image/png')
     }
 
     acceptDiv(div: HTMLDivElement): void {

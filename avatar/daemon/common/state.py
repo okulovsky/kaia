@@ -9,5 +9,5 @@ class State(IMessage):
     language: str|None = None
     time_of_day: str|None = None
     season: str|None = None
-    weather: str|None = None
+    good_weather: bool|None = None
     special_day: str|None = None

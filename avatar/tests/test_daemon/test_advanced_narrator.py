@@ -1,13 +1,13 @@
-import json
-import zipfile
 from datetime import date, datetime
 from unittest import TestCase
 
 from avatar.daemon.common import State, SpecialDay
-from avatar.daemon.common.content_manager import NewContentStrategy
-from avatar.daemon.image_service import MediaLibrary, MediaLibraryManager
+from avatar.daemon.common.content import ContentFinder, InMemoryFeedbackStorage, NewContentStrategy
+from avatar.daemon.image_service import ImageLibraryLoader
 from avatar.daemon.narration_service import AdvancedNarrator, IStateFieldSetter, SpecialDayStateFieldSetter
 from foundation_kaia.misc import Loc
+from foundation_kaia.marshalling import Storage
+from .media_library_fixture import write_media_library
 
 
 class FixedFieldSetter(IStateFieldSetter):
@@ -55,32 +55,35 @@ class AdvancedNarratorTestCase(TestCase):
         self.folder_holder = Loc.create_test_folder()
         self.folder = self.folder_holder.__enter__()
         records = [
-            {'path': 'A/summer_sunny', 'tags': dict(character='A', activity='swimming', season='summer', weather='sunny')},
-            {'path': 'A/winter_snowy', 'tags': dict(character='A', activity='skiing', season='winter', weather='snowy')},
-            {'path': 'B/summer_sunny', 'tags': dict(character='B', activity='reading', season='summer', weather='sunny', special_day='Halloween')},
+            {'file_id': 'A/summer_good', 'tags': dict(character='A', activity='swimming', season='summer', good_weather=True)},
+            {'file_id': 'A/winter_bad', 'tags': dict(character='A', activity='skiing', season='winter', good_weather=False)},
+            {'file_id': 'B/summer_good', 'tags': dict(character='B', activity='reading', season='summer', good_weather=True, special_day='Halloween')},
         ]
-        with zipfile.ZipFile(self.folder/'media_library.zip', 'w') as zp:
-            zp.writestr('records.json', json.dumps(records))
-        media_library = MediaLibrary.from_folder(self.folder, 'media_library', '.zip')
-        self.content_manager = MediaLibraryManager(media_library, strategy=NewContentStrategy(randomize=False))
+        write_media_library(self.folder, records)
+        loader = ImageLibraryLoader(Storage(self.folder), self.folder)
+        self.records = loader.get_records()
+        self.feedback_storage = InMemoryFeedbackStorage()
+        self.finder = ContentFinder(NewContentStrategy(randomize=False))
 
     def tearDown(self):
         self.folder_holder.__exit__(None, None, None)
 
     def test_fuzzy_activity_degrades_when_exact_match_is_missing(self):
         narrator = AdvancedNarrator(
-            self.content_manager,
-            [FixedFieldSetter('special_day', None), FixedFieldSetter('season', 'summer'), FixedFieldSetter('weather', 'rainy')],
+            self.records,
+            self.feedback_storage,
+            [FixedFieldSetter('special_day', None), FixedFieldSetter('season', 'summer'), FixedFieldSetter('good_weather', False)],
         )
         state = State(character='A')
         records = narrator.regular_update(state)
         self.assertEqual('swimming', state.activity)
-        self.assertEqual(['A/summer_sunny'], [r.path for r in records])
+        self.assertEqual(['A/summer_good'], [r.get_id() for r in records])
 
     def test_character_does_not_rotate_without_a_special_day(self):
         narrator = AdvancedNarrator(
-            self.content_manager,
-            [FixedFieldSetter('special_day', None), FixedFieldSetter('season', 'summer'), FixedFieldSetter('weather', 'sunny')],
+            self.records,
+            self.feedback_storage,
+            [FixedFieldSetter('special_day', None), FixedFieldSetter('season', 'summer'), FixedFieldSetter('good_weather', True)],
         )
         state = State(character='A')
         narrator.regular_update(state)
@@ -88,8 +91,9 @@ class AdvancedNarratorTestCase(TestCase):
 
     def test_character_rotates_on_a_special_day(self):
         narrator = AdvancedNarrator(
-            self.content_manager,
-            [FixedFieldSetter('special_day', 'Halloween'), FixedFieldSetter('season', 'summer'), FixedFieldSetter('weather', 'sunny')],
+            self.records,
+            self.feedback_storage,
+            [FixedFieldSetter('special_day', 'Halloween'), FixedFieldSetter('season', 'summer'), FixedFieldSetter('good_weather', True)],
         )
         state = State(character='A')
         narrator.regular_update(state)

@@ -7,3 +7,4 @@ class WhisperOpenMicListen(Listen):
             WhisperRecognitionSetup(whisper_prompt, whisper_language),
             OpenMicCommand()
         )
+

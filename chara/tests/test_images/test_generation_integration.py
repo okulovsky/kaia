@@ -5,7 +5,8 @@ from uuid import uuid4
 
 from avatar.app import AvatarApi
 from avatar.daemon import ImageService
-from avatar.daemon.image_service.media_library import MediaLibrary
+from avatar.daemon.image_service import ImageLibraryLoader, ImageRecord
+from foundation_kaia.marshalling import Storage
 from foundation_kaia.misc import Loc
 
 from chara import Chara, CaseCollection
@@ -53,11 +54,11 @@ class _FakeDrawingPipeline:
 
 
 class GenerationIntegrationTestCase(TestCase):
-    def _run_two_generations(self, catalog: dict) -> MediaLibrary:
+    def _run_two_generations(self, catalog: dict) -> list[ImageRecord]:
         """Seeds the activity catalog, then runs the generation pipeline (statistics ->
         balancing -> scenarios -> drawing -> packaging) twice against a real (test)
         avatar server, so the second run's statistics reflect what the first run
-        actually uploaded. Returns the resulting MediaLibrary (merged across both runs'
+        actually uploaded. Returns the resulting records (merged across both runs'
         uploads) for the caller to inspect."""
 
         with Loc.create_test_folder() as catalog_folder:
@@ -81,11 +82,8 @@ class GenerationIntegrationTestCase(TestCase):
                                 Chara.start(run_folder)
                                 Chara.call(generation_pipeline)(SETUPS_LIST)
 
-                return MediaLibrary.from_folder(
-                    avatar_folder / 'resources' / 'ImageService',
-                    ImageService.MEDIA_LIBRARY_PREFIX,
-                    ImageService.MEDIA_LIBRARY_SUFFIX,
-                )
+                resources_folder = avatar_folder / 'resources' / 'ImageService'
+                return ImageLibraryLoader(Storage(resources_folder), resources_folder).get_records()
 
     def test_skewed_catalog_concentrates_on_the_richest_setup(self):
         catalog = {
@@ -95,10 +93,10 @@ class GenerationIntegrationTestCase(TestCase):
             # D, E, F intentionally have no catalog entries at all - zero activities available.
         }
 
-        media_library = self._run_two_generations(catalog)
+        records = self._run_two_generations(catalog)
 
-        counts = Counter(r.tags['character'] for r in media_library.records)
-        self.assertEqual(8, len(media_library.records))
+        counts = Counter(r.tags['character'] for r in records)
+        self.assertEqual(8, len(records))
         self.assertEqual(Counter({'A': 2, 'B': 2, 'C': 4}), counts)
 
     def test_uniform_catalog_spreads_budget_evenly(self):
@@ -107,10 +105,10 @@ class GenerationIntegrationTestCase(TestCase):
             for name in 'ABCDEF'
         }
 
-        media_library = self._run_two_generations(catalog)
+        records = self._run_two_generations(catalog)
 
-        counts = Counter(r.tags['character'] for r in media_library.records)
-        self.assertEqual(8, len(media_library.records))
+        counts = Counter(r.tags['character'] for r in records)
+        self.assertEqual(8, len(records))
         # Every setup has the same capacity (2 activities), so which two end up with an
         # extra pick is down to the balancing's randomized tie-breaking - only the shape
         # of the distribution (two setups get 2, the rest get 1) is guaranteed.

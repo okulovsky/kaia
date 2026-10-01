@@ -89,19 +89,28 @@ class Address:
         obj = self.pop().get(obj)
         self.address[-1].set(obj, value)
 
-    def append(self, value: str|IAddressElement):
-        if isinstance(value, str):
-            value= IAddressElement.translate(value)
+    def append(self, value: 'str|IAddressElement|Address|AddressBuilder') -> 'Address':
+        from .address_builder import AddressBuilder
+        # AddressBuilder must be checked first: it answers every attribute, `__class__` included,
+        # so isinstance against any other type raises on it.
+        if isinstance(value, AddressBuilder):
+            elements = value._address_builder_stored_address.address
+        elif isinstance(value, str):
+            elements = Address.parse(value).address
         elif isinstance(value, IAddressElement):
-            pass
+            elements = (value,)
+        elif isinstance(value, Address):
+            elements = value.address
         else:
-            raise ValueError("Expected string or IAddressElement")
-        return Address(*(self.address+(value,)))
+            raise ValueError("Expected string, IAddressElement, Address or AddressBuilder")
+        return Address(*(self.address + elements))
 
-    def pop(self) -> 'Address':
-        if len(self.address) == 0:
-            raise ValueError("Can't pop from empty address")
-        return Address(*self.address[:-1])
+    def pop(self, count: int = 1) -> 'Address':
+        if count < 0:
+            raise ValueError("Can't pop a negative number of elements")
+        if count > len(self.address):
+            raise ValueError(f"Can't pop {count} elements from address of length {len(self.address)}")
+        return Address(*self.address[:len(self.address) - count])
 
     def is_empty(self):
         return len(self.address) == 0

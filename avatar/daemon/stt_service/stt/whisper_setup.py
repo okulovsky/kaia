@@ -13,10 +13,9 @@ class WhisperRecognitionSetup(IRecognitionSetup):
     model: str = 'base'
 
     def create_task_and_postprocessor(self, context: RecognitionContext) -> tuple[BrainBox.Task, IPostprocessor]:
-        language_argument = None
-        language = context.command.language
-        if language is not None:
-            language_argument = dict(language=language)
+        # The setup pins the language for good; the command carries the one from the current state.
+        language = self.language if self.language is not None else context.command.language
+        language_argument = None if language is None else dict(language=language)
         task = (
             Whisper
             .new_task(id=context.command.file.split('.')[0] + '.whisper')

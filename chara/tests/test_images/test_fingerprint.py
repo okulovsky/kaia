@@ -8,7 +8,7 @@ class ImageFingerprintTagsTestCase(TestCase):
             ImageSetupFingerprint('Miku', ThemeFingerprint(
                 location='forest',
                 season='summer',
-                weather='sunny',
+                good_weather=True,
                 time_of_day='dusk',
                 special_day='halloween',
             )),
@@ -20,10 +20,20 @@ class ImageFingerprintTagsTestCase(TestCase):
                 activity='cooking',
                 location='forest',
                 season='summer',
-                weather='sunny',
+                good_weather=True,
                 time_of_day='dusk',
                 special_day='halloween',
             ),
+            fingerprint.to_tags(),
+        )
+
+    def test_keeps_false_good_weather(self):
+        fingerprint = ImageFingerprint(
+            ImageSetupFingerprint('Miku', ThemeFingerprint(location='forest', good_weather=False)),
+            'cooking',
+        )
+        self.assertEqual(
+            dict(character='Miku', activity='cooking', location='forest', good_weather=False),
             fingerprint.to_tags(),
         )
 

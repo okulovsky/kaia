@@ -3,7 +3,7 @@ from avatar.daemon import ParaphraseService, ParaphraseRecord, State, StateToUtt
     InternalTextCommand
 from unittest import TestCase
 from grammatron import Template, Utterance
-from avatar.daemon.common.content_manager import NewContentStrategy
+from avatar.daemon.common.content import ContentFinder, NewContentStrategy
 from avatar.daemon.common import TextCommand, InitializationEvent
 from foundation_kaia.misc import Loc
 from yo_fluq import FileIO
@@ -45,7 +45,7 @@ class ParaphraseTestCase(TestCase):
             proc.rules.bind(
                 StateToUtterancesApplicationService(state),
             )
-            service = ParaphraseService(state, NewContentStrategy(False))
+            service = ParaphraseService(state, ContentFinder(NewContentStrategy(False)))
             service.set_resources_folder(folder)
             proc.rules.bind(service, BindingSettings().bind_type(InternalTextCommand).to(StateToUtterancesApplicationService))
             proc.client.push(InitializationEvent())
