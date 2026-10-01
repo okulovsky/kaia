@@ -34,14 +34,19 @@ class ChromaService(IChroma):
         return [v.tolist() for v in self._embed_model.embed(texts)]
 
     def train(self, utterances: list[dict], collection_name: str|None = None) -> None:
+        name = self._get_collection_name(collection_name)
         try:
-            self.client.delete_collection(self._get_collection_name(collection_name))
+            self.client.delete_collection(name)
         except Exception:
             pass
         collection = self.client.create_collection(
-            self._get_collection_name(collection_name),
+            name,
             metadata={'hnsw:space': 'cosine'},
         )
+        # The cached handle points at the collection that has just been deleted, so retraining
+        # the same collection would break every later query until the service is restarted.
+        self._loaded_collection_name = name
+        self._loaded_collection = collection
         if not utterances:
             return
         texts = [u['text'] for u in utterances]
