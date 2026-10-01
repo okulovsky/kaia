@@ -77,7 +77,10 @@ class BatchingPipelineTest(TestCase):
             result = Chara.call(pipe.__call__)(cases)
 
         self.assertEqual(3, inner.attempt)
-        self.assertEqual(0, len(result.cases))
+        # The cases were attempted and failed, so they come back carrying their errors
+        self.assertEqual(2, len(result.cases))
+        self.assertEqual(0, len(result.successes))
+        self.assertTrue(all('fail' in c.error for c in result.errors))
 
     def test_dropped_case_counted_as_error(self):
         # Pipeline drops 'fragile' (doesn't return it at all)
@@ -111,5 +114,71 @@ class BatchingPipelineTest(TestCase):
         # 'fragile' was dropped on iteration 1 → gets error "Dropped" → excluded from further batches
         # So the pipeline is called only once (not up to 5 times for 'fragile')
         self.assertEqual(1, inner.attempt)
-        self.assertEqual(1, len(result.cases))
-        self.assertEqual('ok', result.cases[0].name)
+        # And it comes back as an error rather than vanishing, which is what lets the caller
+        # tell a dropped case from one the selector simply never handed out
+        self.assertEqual(2, len(result.cases))
+        self.assertEqual(['ok'], [c.name for c in result.successes])
+        self.assertEqual(['fragile'], [c.name for c in result.errors])
+        self.assertEqual('Dropped', result.errors[0].error)
+
+    def test_errors_are_returned(self):
+        # 'bad' always fails, 'good' succeeds: both must come back
+        class InnerPipeline:
+            def __call__(self, cases: CaseCollection[BatchCase]) -> CaseCollection[BatchCase]:
+                for case in cases.cases:
+                    if case.name == 'bad':
+                        case.error = 'nope'
+                    else:
+                        case.result = 1
+                return cases
+
+        def selector_untried(summaries):
+            return [s.case for s in summaries if not s.successes and not s.errors]
+
+        cases = CaseCollection([BatchCase('good'), BatchCase('bad')])
+        with Loc.create_test_folder() as folder:
+            Chara.start(folder)
+            pipe = BatchingPipeline(InnerPipeline(), selector_untried)
+            result = Chara.call(pipe.__call__)(cases)
+
+        self.assertEqual(2, len(result.cases))
+        self.assertEqual(['good'], [c.name for c in result.successes])
+        self.assertEqual(['bad'], [c.name for c in result.errors])
+        self.assertEqual('nope', result.errors[0].error)
+
+    def test_incoming_errors_are_carried_through(self):
+        class InnerPipeline:
+            def __call__(self, cases: CaseCollection[BatchCase]) -> CaseCollection[BatchCase]:
+                for case in cases.cases:
+                    case.result = 1
+                return cases
+
+        already = BatchCase('already')
+        already.error = 'came in broken'
+        cases = CaseCollection([BatchCase('fresh'), already])
+        with Loc.create_test_folder() as folder:
+            Chara.start(folder)
+            pipe = BatchingPipeline(InnerPipeline(), selector_pending)
+            result = Chara.call(pipe.__call__)(cases)
+
+        self.assertEqual(['already'], [c.name for c in result.errors])
+
+    def test_unattempted_cases_are_not_errors(self):
+        # The selector stops after one batch; the case it never handed out is not a failure
+        class InnerPipeline:
+            def __call__(self, cases: CaseCollection[BatchCase]) -> CaseCollection[BatchCase]:
+                for case in cases.cases:
+                    case.result = 1
+                return cases
+
+        def selector_one_batch(summaries):
+            return [s.case for s in summaries if not s.successes and not s.errors][:1]
+
+        cases = CaseCollection([BatchCase('a'), BatchCase('b')])
+        with Loc.create_test_folder() as folder:
+            Chara.start(folder)
+            pipe = BatchingPipeline(InnerPipeline(), selector_one_batch, max_batch_iterations=1)
+            result = Chara.call(pipe.__call__)(cases)
+
+        self.assertEqual(['a'], [c.name for c in result.successes])
+        self.assertEqual(0, len(result.errors))

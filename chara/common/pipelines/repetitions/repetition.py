@@ -23,7 +23,8 @@ class CaseRepetitionSummary(Generic[TCase]):
                 return case
         if len(self.errors) == 0:
             case.error = 'No attempts made'
-        case.error = '\n\n'.join(e.error for e in self.errors)
+        else:
+            case.error = '\n\n'.join(e.error for e in self.errors)
         return case
 
 
