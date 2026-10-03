@@ -76,8 +76,8 @@
     const heard    = UPLOAD_WAKEWORD_SOUND && !useOpenWakeWord
       ? new SoundUploadingWakeWordDetector({ detector: inner, dispatcher, baseUrl: window.location.origin })
       : inner;
-    // OpenWakeWord needs continuous audio (including silence) and has its own VAD.
-    const wake     = useOpenWakeWord ? heard : new SilenceControllingWakeWordDetector({ detector: heard, dispatcher });
+    // Gate quiet audio for both engines; OpenWakeWord resets its history after a gap.
+    const wake     = new SilenceControllingWakeWordDetector({ detector: heard, dispatcher });
     const automaton   = new Automaton({ silenceDetector: silence, wakeWordDetector: wake, statefulRecorder: stateful, dispatcher });
     const controller  = new MicController(input, m => automaton.process(m));
 
