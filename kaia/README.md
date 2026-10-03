@@ -105,7 +105,16 @@ The picture shows the correct placement of the line.
 
 Close the panel by clicking the cog button again.
 
-Say "computer". You should hear a beep, that means, the assistant is ready for input.
+The default wake word is "Alexa", detected by OpenWakeWord in the browser.
+Both OpenWakeWord and Bumblebee use an external audio-level silence filter.
+The filter buffers approximately 0.3 seconds before activation and continues passing
+audio for a quiet tail of approximately 0.5 seconds after the buffered level falls
+below the threshold. During longer quiet periods it stops feeding the wake word
+engine. OpenWakeWord resets its audio history when input resumes after a gap;
+its internal Silero VAD remains enabled. Adjust the filter threshold through
+"MicDebugView" as described above.
+
+Say "Alexa". You should hear a beep, that means, the assistant is ready for input.
 If you don't hear it, try say it louder and/or clearer, avoiding heavy accent.
 After the beep, say "What can you do?". You should hear another beep, and then the computer should respond
 with the voice confirmation and the chat message that shows the available commands.

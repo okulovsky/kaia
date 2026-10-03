@@ -20,7 +20,7 @@ if __name__ == '__main__':
         app.brainbox_api.wait_for_connection(5)
         settings.brainbox_setup.execute(app.brainbox_api)
         app.get_fork_app(None).run()
-        app.avatar_api.wait_for_connection(5)
+        app.avatar_api.wait_for_connection(60)
 
         webbrowser.open('http://127.0.0.1:13002')
         while True:

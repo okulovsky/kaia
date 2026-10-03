@@ -8,7 +8,7 @@ class HtmlReport:
 
 
     def __enter__(self):
-        self._file_handle = open(self._file, 'w')
+        self._file_handle = open(self._file, 'w', encoding='utf-8')
         self._file_handle.write(
             "<!DOCTYPE html>"
             "<html>"
