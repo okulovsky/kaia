@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { OpenWakeWordDetector } from '../frontend/scripts/open-wake-word-detector.js'
+import { SilenceControllingWakeWordDetector } from '../frontend/scripts/kaia-frontend.js'
 
 class FakeWorker {
     static latest
@@ -86,6 +87,48 @@ test('slow inference has a bounded backlog and resets stale history', async () =
 test('rejects unsupported sample rates', async () => {
     const { detector } = await setup()
     assert.throws(() => detector.detect({ ...frame(0), sampleRate: 48000 }), /16000/)
+})
+
+test('silence gate stops OWW processing and resumes with a new audio generation', async () => {
+    const { detector, worker, events } = await setup()
+    const gate = new SilenceControllingWakeWordDetector({ detector, dispatcher: { subscribe () {} } })
+    await gate.initialize()
+    const processed = []
+    let responseIndex = 1
+    let detectOnNextResult = false
+    let detections = 0
+    const feed = (index, amplitude) => {
+        const buffer = new Float32Array(512).fill(amplitude)
+        if (gate.detect({ sampleRate: 16000, micTimestamp: index * 32,
+            buffer, levelSum: 512 * Math.abs(amplitude) })) detections++
+        while (responseIndex < worker.messages.length) {
+            const request = worker.messages[responseIndex++]
+            assert.equal(request.type, 'process')
+            processed.push(request)
+            worker.respond({ type: 'result', generation: request.generation,
+                keyword: detectOnNextResult ? 'alexa' : null })
+            detectOnNextResult = false
+        }
+    }
+
+    for (let i = 0; i < 40; i++) feed(i, 0)
+    assert.equal(processed.length, 0, 'quiet input must not reach the OWW worker')
+    for (let i = 40; i < 60; i++) feed(i, 0.5)
+    assert.ok(processed.length > 0, 'sound must activate OWW processing')
+    const oldGeneration = processed.at(-1).generation
+    for (let i = 60; i < 110; i++) feed(i, 0)
+    const countAfterTail = processed.length
+    for (let i = 110; i < 130; i++) feed(i, 0)
+    assert.equal(processed.length, countAfterTail, 'processing must stop after the quiet tail')
+
+    detectOnNextResult = true
+    for (let i = 130; i < 150; i++) feed(i, 0.5)
+    assert.ok(processed.length > countAfterTail)
+    assert.ok(processed[countAfterTail].generation > oldGeneration,
+        'resuming after filtered silence must reset the previous audio history')
+    assert.equal(detections, 1)
+    assert.equal(events.length, 1)
+    assert.equal(events[0].payload.word, 'alexa')
 })
 
 test('model loading failures reject initialization and terminate the worker', async () => {
