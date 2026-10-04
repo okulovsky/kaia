@@ -4,3 +4,4 @@ from .resemblyzer import Resemblyzer
 from .vosk import Vosk
 from .whisperx import WhisperX
 from .whisper_kenlm import WhisperKenLM
+from .nemotron import Nemotron

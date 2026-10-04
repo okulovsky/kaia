@@ -16,7 +16,11 @@ class BatchingPipeline(Generic[TCase]):
 
     def __call__(self, cases: CaseCollection[TCase]) -> CaseCollection[TCase]:
         field_name = Chara.call(CaseRepetition.create_field)('batch')
-        tracker = CaseRepetition.Tracker(self.inner_pipeline, field_name, cases)
+        # Successes only, as in RepeatUntilDone and ChooseBestAnswer: a case that arrived
+        # already broken should not be handed to the inner pipeline, and it must not be
+        # counted twice when cases.errors is added back at the end.
+        tracker = CaseRepetition.Tracker(
+            self.inner_pipeline, field_name, CaseCollection(cases.successes))
 
         index = 0
         while True:
@@ -32,5 +36,13 @@ class BatchingPipeline(Generic[TCase]):
 
         final_result = []
         for summary in tracker.get_state():
-            final_result.extend(summary.successes)
-        return CaseCollection(final_result)
+            # A case the inner pipeline failed comes back carrying its error, as it does from
+            # RepeatUntilDone and ChooseBestAnswer. `error_on_empty` stays False because
+            # stopping early is what this pipeline is for: a case the selector never handed
+            # out was not attempted, and an unattempted case is not a failed one.
+            error = summary.create_error_case_if_no_successes(False)
+            if error is not None:
+                final_result.append(error)
+            else:
+                final_result.extend(summary.successes)
+        return CaseCollection(final_result, cases.errors)

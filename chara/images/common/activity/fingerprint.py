@@ -6,7 +6,7 @@ class ThemeFingerprint:
     name: str|None = None
     location: str | None = None
     season: str | None = None
-    weather: str | None = None
+    good_weather: bool | None = None
     time_of_day: str | None = None
     special_day: str | None = None
 
@@ -31,12 +31,12 @@ class ImageFingerprint:
     setup_fingerprint: ImageSetupFingerprint
     activity: str
 
-    def to_tags(self) -> dict[str, str]:
+    def to_tags(self) -> dict[str, str|bool]:
         tags = dict(character=self.setup_fingerprint.character_name, activity=self.activity)
         theme = self.setup_fingerprint.theme_fingerprint
         if theme.name is not None:
             tags['theme'] = theme.name
-        for field_name in ('location', 'season', 'weather', 'time_of_day', 'special_day'):
+        for field_name in ('location', 'season', 'good_weather', 'time_of_day', 'special_day'):
             value = getattr(theme, field_name)
             if value is not None:
                 tags[field_name] = value

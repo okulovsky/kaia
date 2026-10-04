@@ -60,6 +60,9 @@ registerProcessor('mic-processor', MicProcessor)
 export class Microphone implements IMicrophone {
     private frameSize: number
     private sampleRate = 0
+    private echoCancellation: boolean
+    private noiseSuppression: boolean
+    private autoGainControl: boolean
     private queue: Float32Array[] = []
     private audioContext?: AudioContext
     private workletNode?: AudioWorkletNode
@@ -68,14 +71,25 @@ export class Microphone implements IMicrophone {
     private startTimeMs: number | null = null
     private samplesProduced = 0
 
-    constructor({ frameSize = 512, sampleRate = 16000 }: { frameSize?: number, sampleRate?: number } = {}) {
+    constructor(
+        { frameSize = 512, sampleRate = 16000, echoCancellation = true, noiseSuppression = true, autoGainControl = true }:
+        { frameSize?: number, sampleRate?: number, echoCancellation?: boolean, noiseSuppression?: boolean, autoGainControl?: boolean } = {}
+    ) {
         this.frameSize = frameSize
         this.sampleRate = sampleRate
+        this.echoCancellation = echoCancellation
+        this.noiseSuppression = noiseSuppression
+        this.autoGainControl = autoGainControl
     }
 
     async start(): Promise<void> {
         this.stream = await navigator.mediaDevices.getUserMedia({
-            audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 }
+            audio: {
+                echoCancellation: this.echoCancellation,
+                noiseSuppression: this.noiseSuppression,
+                autoGainControl: this.autoGainControl,
+                channelCount: 1,
+            }
         })
 
         // @ts-expect-error webkit prefix fallback

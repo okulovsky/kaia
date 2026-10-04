@@ -1,10 +1,10 @@
 import json
+import zipfile
 from pathlib import Path
 from unittest import TestCase
 
 from avatar.app import AvatarApi
 from avatar.daemon import ImageService
-from avatar.daemon.image_service.media_library import MediaLibrary
 from foundation_kaia.marshalling import Serializer
 from foundation_kaia.misc import Loc
 
@@ -59,24 +59,29 @@ class PackagePipelineTestCase(TestCase):
 
                     with Loc.create_test_folder() as download_folder:
                         local_zip = resources.download(media_zip, download_folder)
-                        media_library = MediaLibrary(local_zip)
+                        with zipfile.ZipFile(local_zip, 'r') as zp:
+                            zip_members = sorted(zp.namelist())
 
-                    self.assertEqual(2, len(media_library.records))
-                    main_record = next(r for r in media_library.records if 'variant_type' not in r.tags)
-                    variant_record = next(r for r in media_library.records if 'variant_type' in r.tags)
+                    self.assertEqual(['main.png', 'variant.png'], zip_members)
 
+                    entries = json.loads(resources.read(description_files[0]))
+                    self.assertEqual(2, len(entries))
+                    main_entry = next(e for e in entries if 'variant' not in e)
+                    variant_entry = next(e for e in entries if 'variant' in e)
+
+                    self.assertEqual('main.png', main_entry['file_id'])
                     self.assertEqual(
                         dict(character='Miku', activity='cooking', location='forest', season='summer'),
-                        main_record.tags,
+                        main_entry['tags'],
                     )
                     self.assertEqual(
-                        dict(original=main_record.path, variant_type='variant_0'),
-                        variant_record.tags,
+                        dict(original='main.png', variant_type='variant_0'),
+                        variant_entry['variant'],
                     )
+                    self.assertEqual('variant.png', variant_entry['file_id'])
 
-                    desc_bytes = resources.read(description_files[0])
-                    descriptions = _DESCRIPTION_SERIALIZER.from_json(json.loads(desc_bytes))
+                    descriptions = _DESCRIPTION_SERIALIZER.from_json([main_entry])
                     self.assertEqual(1, len(descriptions))
-                    self.assertEqual(main_record.path, descriptions[0].file_id)
+                    self.assertEqual('main.png', descriptions[0].file_id)
                     self.assertEqual('cooking', descriptions[0].image_fingerprint.activity)
                     self.assertEqual('Miku', descriptions[0].image_fingerprint.setup_fingerprint.character_name)

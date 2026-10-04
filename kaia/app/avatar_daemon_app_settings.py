@@ -3,12 +3,13 @@ from dataclasses import dataclass, field
 from loguru import logger
 
 from avatar.daemon import TextCommand, MockSoundService
-from avatar.daemon.image_service import MediaLibrary, MediaLibraryManager
+from avatar.daemon.image_service import ImageLibraryLoader
+from foundation_kaia.marshalling import Storage
 from brainbox import BrainBox
 from .app import KaiaApp, IAppInitializer
 from avatar.messaging import AvatarDaemon
 from avatar import daemon as s
-from avatar.daemon.common import content_manager as cm, AvatarService
+from avatar.daemon.common import content as cm, AvatarService
 import inspect
 from brainbox.deciders import Piper, RhasspyKaldi, Whisper, Resemblyzer, InsightFace
 from kaia.assistant import KaiaAssistant
@@ -57,21 +58,22 @@ class AvatarDaemonAppSettings(IAppInitializer):
             app.avatar_api,
         )
 
-    def _create_narrator_content_manager(self, app: KaiaApp) -> MediaLibraryManager:
+    def _create_narrator_content(self, app: KaiaApp):
         media_library_path = app.avatar_resources_folder / 'ImageService'
-        strategy = cm.SequentialStrategy(
+        finder = cm.ContentFinder(cm.SequentialStrategy(
             cm.WeightedStrategy(
                 cm.WeightedStrategy.Item(cm.GoodContentStrategy(), 0.3),
                 cm.WeightedStrategy.Item(cm.NewContentStrategy(), 0.7),
             ),
             cm.NewContentStrategy(),
             cm.AnyContentStrategy(),
+        ))
+        loader = ImageLibraryLoader(
+            Storage(media_library_path),
+            media_library_path,
+            s.ImageService.DESCRIPTION_SUFFIX,
         )
-        return MediaLibraryManager(
-            MediaLibrary.from_folder(media_library_path, s.ImageService.MEDIA_LIBRARY_PREFIX, s.ImageService.MEDIA_LIBRARY_SUFFIX),
-            media_library_path / 'images-feedback.json',
-            strategy,
-        )
+        return loader.get_records(), loader.feedback_storage, finder
 
     def create_stt_service(self, app: KaiaApp, state: s.State):
         return s.STTService(self.stt_setup)
@@ -93,11 +95,11 @@ class AvatarDaemonAppSettings(IAppInitializer):
         )
 
     def create_paraphrase_service(self, app: KaiaApp, state: s.State):
-        strategy = cm.SequentialStrategy(
+        finder = cm.ContentFinder(cm.SequentialStrategy(
             cm.NewContentStrategy(),
             cm.AnyContentStrategy()
-        )
-        service = s.ParaphraseService(state, strategy)
+        ))
+        service = s.ParaphraseService(state, finder)
         service.binding_settings.bind_type(s.InternalTextCommand).to(s.StateToUtterancesApplicationService)
         return service
 
@@ -175,7 +177,7 @@ class AvatarDaemonAppSettings(IAppInitializer):
     def create_narration_service(self, app: KaiaApp, state: s.State):
         return s.NarrationService(
             state,
-            s.SimpleNarrator(self._create_narrator_content_manager(app)),
+            s.SimpleNarrator(*self._create_narrator_content(app)),
             welcome_command=self.greetings_command,
             time_between_updates_in_seconds=30*60,
         )

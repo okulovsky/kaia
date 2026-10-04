@@ -38,10 +38,8 @@ class WeatherStateFieldSetter(IStateFieldSetter):
                 return {name: reply['hourly'][name][i] for name in ('temperature_2m', 'weathercode')}
         return None
 
-    def _code_to_tag(self, code: int, season: str | None) -> str:
-        if code in self.PRECIPITATION_CODES:
-            return 'snowy' if season == 'winter' else 'rainy'
-        return 'sunny'
+    def _code_to_good_weather(self, code: int) -> bool:
+        return code not in self.PRECIPITATION_CODES
 
     def update(self, state: State, now: datetime) -> None:
         if self.last_fetch_time is not None and (now - self.last_fetch_time).total_seconds() < self.cooldown_in_seconds:
@@ -50,7 +48,7 @@ class WeatherStateFieldSetter(IStateFieldSetter):
             reply = self._get_open_meteo()
             info = self._parse_open_meteo(now, reply)
             if info is not None:
-                state.weather = self._code_to_tag(info['weathercode'], state.season)
+                state.good_weather = self._code_to_good_weather(info['weathercode'])
         except Exception:
             logger.exception('WeatherStateFieldSetter failed to fetch weather')
         finally:

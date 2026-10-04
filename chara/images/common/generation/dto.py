@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import Any
 from ..activity import ImageFingerprint, ImageSetup
 from ..drawing import DrawingCase
 
@@ -7,6 +8,7 @@ class MediaLibraryDescriptionItem:
     file_id: str
     image_fingerprint: ImageFingerprint
     case: DrawingCase|None = None
+    tags: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass

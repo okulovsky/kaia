@@ -1,9 +1,9 @@
-import json
 from pathlib import Path
 from foundation_kaia.marshalling import Serializer
-from avatar.daemon.image_service import ImageService
+from avatar.daemon.common.content import Feedback, StorageFeedbackStorage
+from avatar.daemon.image_service import ImageService, ImageLibraryLoader, ImageRecord
 from chara import Chara
-from .dto import MediaLibraryDescriptionItem, ActivityStatistics, ImageSetupStatistics
+from .dto import ActivityStatistics, ImageSetupStatistics
 from ..activity import ImageSetup, ImageSetupFingerprint, ImageFingerprint, ActivityCatalogItem
 
 _Stats = dict[ImageSetupFingerprint, ImageSetupStatistics]
@@ -17,36 +17,26 @@ class ImageStatisticsPipeline:
 
     def __call__(self, setups: list[ImageSetup]) -> list[ImageSetupStatistics]:
         stats = Chara.call(self._seed_from_catalog, 'seed_from_catalog')(setups)
-        descriptions = Chara.call(self._load_descriptions, 'loading_descriptions')()
+        records = Chara.call(self._load_records, 'loading_descriptions')()
+        feedback = Feedback(Chara.call(self._load_feedback)())
 
-        fp_to_stats = {s.setup.to_fingerprint():s for s in stats}
-        file_to_fp = {}
-        for desc in descriptions:
-            file_to_fp[desc.file_id] = desc.image_fingerprint
-            setup_stats = fp_to_stats.get(desc.image_fingerprint.setup_fingerprint)
-            if setup_stats is not None:
-                if desc.image_fingerprint.activity not in setup_stats.activity_status:
-                    setup_stats.activity_status[desc.image_fingerprint.activity] = ActivityStatistics()
-                setup_stats.activity_status[desc.image_fingerprint.activity].generated += 1
+        fp_to_stats = {s.setup.to_fingerprint(): s for s in stats}
+        serializer = Serializer.parse(ImageFingerprint)
 
-        feedback = Chara.call(self._load_feedback)()
-
-        for file_id, tags in feedback.items():
-            fingerprint = file_to_fp.get(file_id)
-            if fingerprint is None:
-                continue
-
+        for record in records:
+            fingerprint = serializer.from_json(record.description['image_fingerprint'])
             setup_stats = fp_to_stats.get(fingerprint.setup_fingerprint)
             if setup_stats is None:
                 continue
 
-            activity_stats = setup_stats.activity_status.get(fingerprint.activity)
-            if activity_stats is None:
-                continue
+            if fingerprint.activity not in setup_stats.activity_status:
+                setup_stats.activity_status[fingerprint.activity] = ActivityStatistics()
+            activity_stats = setup_stats.activity_status[fingerprint.activity]
 
-            activity_stats.seen += tags.get('seen', 0)
-            activity_stats.good += tags.get('good', 0)
-            activity_stats.bad += tags.get('bad', 0)
+            activity_stats.generated += 1
+            activity_stats.seen += feedback.get(record.file_id, 'seen')
+            activity_stats.good += feedback.get(record.file_id, 'good')
+            activity_stats.bad += feedback.get(record.file_id, 'bad')
 
         return stats
 
@@ -63,26 +53,20 @@ class ImageStatisticsPipeline:
             ))
         return result
 
-    def _load_descriptions(self) -> list[MediaLibraryDescriptionItem]:
-        resources = Chara.Apis.avatar_api.resources(self.service_to_read)
-        result = []
-        serializer = Serializer.parse(list[MediaLibraryDescriptionItem])
+    def _load_records(self) -> list[ImageRecord]:
+        # local_folder is None: the zips stay on the avatar machine, only the descriptions
+        # are read. Neither the loader nor a Feedback may be returned from a Chara.call -
+        # both hold an HTTP client, and the result gets pickled into the cache folder.
+        loader = ImageLibraryLoader(
+            Chara.Apis.avatar_api.resources(self.service_to_read),
+            None,
+            self.service_to_read.DESCRIPTION_SUFFIX,
+        )
+        return loader.get_records()
 
-        for filename in resources.list('/', suffix=self.service_to_read.DESCRIPTION_SUFFIX):
-            data = json.loads(resources.read(filename))
-            for item in data:
-                # Only file_id/image_fingerprint are used below - `case` is dropped
-                # before deserializing so old entries don't break as the scenario
-                # schema (deep inside `case`) evolves.
-                item.pop('case', None)
-            result.extend(serializer.from_json(data))
-        return result
-
-    def _load_feedback(self):
-        resources = Chara.Apis.avatar_api.resources(self.service_to_read)
-        if not resources.is_file('images-feedback.json'):
-            return {}
-
-        feedback = json.loads(resources.read('images-feedback.json'))
-        return feedback
-
+    def _load_feedback(self) -> dict:
+        storage = StorageFeedbackStorage(
+            Chara.Apis.avatar_api.resources(self.service_to_read),
+            ImageLibraryLoader.FEEDBACK_FILENAME,
+        )
+        return storage.load().to_dict()

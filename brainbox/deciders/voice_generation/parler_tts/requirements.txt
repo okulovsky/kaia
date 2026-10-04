@@ -1,0 +1,7 @@
+transformers==4.46.1
+sentencepiece
+descript-audio-codec
+descript-audiotools @ git+https://github.com/descriptinc/audiotools
+protobuf>=4.0.0
+numpy<2
+soundfile

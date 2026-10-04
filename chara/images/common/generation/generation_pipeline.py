@@ -11,7 +11,7 @@ from .balancing_requests import balancing_requests
 from pathlib import Path
 
 
-DEFAULT_STRATIFICATION_FIELDS = ('character_name', 'season', 'weather', 'time_of_day', 'special_day')
+DEFAULT_STRATIFICATION_FIELDS = ('character_name', 'season', 'good_weather', 'time_of_day', 'special_day')
 
 
 class GenerationPipeline:
