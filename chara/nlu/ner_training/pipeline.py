@@ -2,29 +2,29 @@ import json
 import random
 from collections import defaultdict
 from dataclasses import dataclass, field
-from brainbox.deciders import LlamaLoraSFTTrainer, LlamaLoraServer
-from brainbox.deciders.text.llama_lora_sft_trainer.app.interface import TrainingSettings, TrainingRun
-from foundation_kaia.marshalling import TypeTools
+from brainbox.deciders.text.llama_lora_sft_trainer.app.interface import TrainingSettings
 from chara.common import Chara
+from ..slm_training.pipeline import LlamaLoraPipeline, upload_checkpoint
+from ..slm_training.stats import TrainingRunStats, CheckpointValStats
 from .dataset import record_to_sample
 
 
 def default_training_settings() -> TrainingSettings:
     settings = TrainingSettings()
-    # One checkpoint per epoch, and only the last one is kept: it is the one deployed.
+    # One checkpoint per epoch, each is validated and the best one is deployed.
     # fp16 is off, so the training also runs on CPU (e.g. BrainBox on a Mac)
-    settings.training_args.update(save_strategy='epoch', save_total_limit=1, fp16=False)
+    settings.training_args.update(save_strategy='epoch', save_total_limit=None, fp16=False)
     return settings
 
 
 @dataclass
 class NerTrainingReport:
-    training_run: TrainingRun
+    stats: TrainingRunStats
+    deployed_checkpoint: int
     accuracy: dict[str, float] = field(default_factory=dict)
-    errors: list[dict] = field(default_factory=list)
 
     def __str__(self):
-        lines = [f'Slots exact match on held-out texts, adapter {self.training_run.adapter_name}:']
+        lines = [f'Slots exact match on held-out texts, checkpoint {self.deployed_checkpoint} deployed:']
         for key, value in self.accuracy.items():
             lines.append(f'  {key:20} {value:.1%}')
         return '\n'.join(lines)
@@ -33,10 +33,11 @@ class NerTrainingReport:
 class NerTrainingPipeline:
     """
     Trains the slots model of NluRecognitionSetup: a LoRA adapter for LlamaLoraServer that receives
-    the recognized text and outputs the values of the template's variables (see avatar ... nlu_slots.py).
+    the recognized text and outputs the values of the template's variables
+    (the format is in avatar/daemon/stt_service/stt/nlu_slots.py).
 
-    Only the intents that have variables are used. The adapter is trained on `samples_per_intent` records,
-    deployed to LlamaLoraServer and then evaluated on the records with held-out texts.
+    Only the intents with variables are used. Every checkpoint is validated on the records with held-out texts,
+    and the best one is deployed to LlamaLoraServer as the adapter ADAPTER.
     """
     ADAPTER = 'nlu-slots'
 
@@ -46,7 +47,6 @@ class NerTrainingPipeline:
                  validation_per_intent: int = 50,
                  test_share: float = 0.15,
                  settings: TrainingSettings | None = None,
-                 validation_batch_size: int = 32,
                  seed: int = 0,
                  ):
         self.model_id = model_id
@@ -54,34 +54,32 @@ class NerTrainingPipeline:
         self.validation_per_intent = validation_per_intent
         self.test_share = test_share
         self.settings = settings if settings is not None else default_training_settings()
-        self.validation_batch_size = validation_batch_size
         self.seed = seed
 
     def __call__(self, text_dataset: list[dict]) -> NerTrainingReport:
         @Chara.phase
         def samples():
-            return self._samples(text_dataset)
+            train, validation = self._samples(text_dataset)
+            for name, data in (('train', train), ('validation', validation)):
+                (Chara.current.folder / f'{name}.jsonl').write_text(
+                    ''.join(json.dumps(dict(INPUT=s['INPUT'], OUTPUT=s['OUTPUT']), ensure_ascii=False) + '\n' for s in data)
+                )
+            return Chara.current.folder, validation
 
-        train, validation = samples
-
-        @Chara.phase
-        def training():
-            dataset = Chara.current.folder / 'train.jsonl'
-            dataset.write_text(''.join(json.dumps(s, ensure_ascii=False) + '\n' for s in train))
-            return self._train(dataset)
+        folder, validation = samples
+        pipeline = LlamaLoraPipeline(self.model_id, self.settings, max_tokens=24)
+        stats = Chara.call(pipeline)(self.ADAPTER, folder / 'train.jsonl', folder / 'validation.jsonl')
+        best = stats.get_best_checkpoint()
 
         @Chara.phase
         def deployment():
-            self._deploy(training)
+            upload_checkpoint(stats.training_run, best.number, self.ADAPTER)
 
-        @Chara.phase
-        def outputs():
-            return self._complete([s['INPUT'] for s in validation])
-
-        return self._report(training, validation, outputs)
+        return NerTrainingReport(stats, best.number, self._accuracy(best, validation))
 
     def _samples(self, text_dataset: list[dict]):
-        records = [r for r in text_dataset if r['intent'] in {r['intent'] for r in text_dataset if r['values']}]
+        intents_with_values = {r['intent'] for r in text_dataset if r['values']}
+        records = [r for r in text_dataset if r['intent'] in intents_with_values]
         rnd = random.Random(self.seed)
         texts = sorted({r['text'] for r in records})
         test_texts = set(rnd.sample(texts, int(len(texts) * self.test_share)))
@@ -102,56 +100,10 @@ class NerTrainingPipeline:
         rnd.shuffle(train)
         return train, validation
 
-    def _train(self, dataset) -> TrainingRun:
-        api = Chara.Apis.brainbox_api
-        task = LlamaLoraSFTTrainer.new_task().train(self.model_id, self.ADAPTER, self.settings, dataset)
-        log_file = api.join(api.add(task))
-        # The training streams report lines; the last one carries the TrainingRun
-        for line in api.cache.read(log_file).decode('utf-8').split('\n'):
-            if line.strip():
-                item = json.loads(line)
-                if item['result'] is not None:
-                    return TypeTools.deserialize(item['result'], TrainingRun)
-        raise ValueError(f"The training of {self.ADAPTER} did not return the training run")
-
-    def _deploy(self, run: TrainingRun):
-        api = Chara.Apis.brainbox_api
-        folder = f'experiments/{run.model_id}/{run.adapter_name}/{run.guid}/gguf_checkpoints'
-        checkpoints = api.resources(LlamaLoraSFTTrainer).list(folder, suffix='.gguf')
-        if len(checkpoints) == 0:
-            raise ValueError(f"No GGUF checkpoints in {folder}")
-        last = max(checkpoints, key=lambda name: int(name.split('/')[-1].split('.')[0].split('-')[1]))
-        api.resources(LlamaLoraServer).upload(
-            f'models/{self.model_id}/lora_adapters/{self.ADAPTER}.gguf',
-            api.resources(LlamaLoraSFTTrainer).open(f'{folder}/{last.split("/")[-1]}'),
-        )
-        # LlamaLoraServer loads the adapters at the start, so the running instances must be restarted
-        for controller in api.controllers.status().controllers:
-            if controller.name == 'LlamaLoraServer':
-                for instance in controller.instances:
-                    api.controllers.stop(controller.name, instance.instance_id)
-
-    def _complete(self, prompts: list[str]) -> list[str]:
-        outputs = []
-        for start in range(0, len(prompts), self.validation_batch_size):
-            batch = prompts[start:start + self.validation_batch_size]
-            result = Chara.Apis.brainbox_api.execute(
-                LlamaLoraServer.new_task(parameter=self.model_id).completion(
-                    task_name=self.ADAPTER, prompts=batch, max_tokens=24,
-                )
-            )
-            outputs.extend(result)
-        return outputs
-
-    def _report(self, run: TrainingRun, validation: list[dict], outputs: list[str]) -> NerTrainingReport:
-        report = NerTrainingReport(run)
+    def _accuracy(self, checkpoint: CheckpointValStats, validation: list[dict]) -> dict[str, float]:
         counts = defaultdict(lambda: [0, 0])
-        for sample, output in zip(validation, outputs):
-            hit = output.strip() == sample['OUTPUT'].strip()
+        for sample, result in zip(validation, checkpoint.generation_results):
             for key in ('all', sample['language'], sample['intent'].split('.')[-1]):
-                counts[key][0] += hit
+                counts[key][0] += result.is_correct()
                 counts[key][1] += 1
-            if not hit:
-                report.errors.append(dict(input=sample['INPUT'], expected=sample['OUTPUT'].strip(), output=output.strip()))
-        report.accuracy = {key: hit / n for key, (hit, n) in counts.items()}
-        return report
+        return {key: correct / total for key, (correct, total) in counts.items()}

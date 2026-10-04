@@ -42,7 +42,7 @@ class ServerlessTest:
         api.batches = self._services.batches
         api.cache = self._services.cache
         api.streaming_cache = self._services.streaming_cache
-        api.resources = self._services.resources
+        api._resources_storage = self._services.resources
         api.debug_locations = settings.locations
         api.debug_resources_folder = settings.registry.resources_folder
         api.diagnostics = self._services.diagnostics

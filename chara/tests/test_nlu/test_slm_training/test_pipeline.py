@@ -1,147 +1,89 @@
-if False:
-    from chara.common import Chara
-    from unittest import TestCase
-    from brainbox.deciders import Collector
-    from brainbox.framework import ISelfManagingDecider
-    from brainbox import BrainBox
-    from foundation_kaia.marshalling import FileLike
-    from foundation_kaia.misc import Loc
-    from typing import Optional
-    from chara.nlu.slm_training.pipeline import (
-        LlamaLoraPipeline,
-        TrainingSettings,
-        LlamaLoraCache,
-        TrainingRun,
-    )
-    from chara.nlu.slm_training.stats import TrainStats, GenerationResult
-    from pathlib import Path
-    import shutil
+import json
+from pathlib import Path
+from typing import Optional
+from unittest import TestCase
+from unittest.mock import patch
+from brainbox import BrainBox, File, ISelfManagingDecider
+from brainbox.deciders import Collector, LlamaLoraSFTTrainer
+from foundation_kaia.marshalling import FileLike, TypeTools
+from foundation_kaia.misc import Loc
+from chara.common import Chara
+from chara.nlu.slm_training.pipeline import LlamaLoraPipeline, TrainingRun
+from chara.nlu.slm_training.stats import TrainStats, GenerationResult
+
+FOLDER = Path(__file__).parent
+CHECKPOINTS = (5, 10, 13)
 
 
-    class LlamaLoraSFTTrainerMock(ISelfManagingDecider):
-        def __init__(self, training_run_folder: Path):
-            self.training_run_folder = training_run_folder
+class LlamaLoraSFTTrainerMock(ISelfManagingDecider):
+    def __init__(self):
+        self.trainings = 0
 
-        def get_name(self):
-            return "LlamaLoraSFTTrainer"
+    def get_name(self):
+        return "LlamaLoraSFTTrainer"
+
+    def train(self, model_id: str, adapter_name: str, settings=None, dataset: FileLike = None) -> File:
+        # The real service streams report items, which BrainBox stores as a jsonl file in the cache
+        self.trainings += 1
+        run = TrainingRun(model_id=model_id, adapter_name=adapter_name, guid="mock_guid")
+        lines = [dict(log='training', progress=None, result=None), dict(log=None, progress=1, result=TypeTools.serialize(run, TrainingRun))]
+        return File('training-report.jsonl', '\n'.join(json.dumps(line) for line in lines))
 
 
-        def train(
-            self,
-            model_id: str,
-            adapter_name: str,
-            dataset: FileLike,
-            settings: TrainingSettings | dict | None = None,
-        ) -> TrainingRun:
-            gguf_dir = self.training_run_folder / "gguf_checkpoints"
-            gguf_dir.mkdir()
-            checkpoint_numbers = [5, 10, 13]
-            for checkpoint_number in checkpoint_numbers:
-                (self.training_run_folder / "hf_checkpoints" / f"checkpoint-{checkpoint_number}").mkdir(
-                    parents=True
-                )
-                gguf_path = gguf_dir / f"checkpoint-{checkpoint_number}.gguf"
-                gguf_path.touch()
+class LlamaLoraServerMock(ISelfManagingDecider):
+    def __init__(self):
+        self.task_names = []
 
-            trainer_state = Path(__file__).parent / "mock_trainer_state.json"
-            shutil.copy(
-                trainer_state,
-                self.training_run_folder
-                / "hf_checkpoints"
-                / f"checkpoint-{checkpoint_numbers[-1]}"
-                / "trainer_state.json",
+    def get_name(self):
+        return "LlamaLoraServer"
+
+    def completion(self, *, task_name: str, prompt: Optional[str] = None, prompts: Optional[list[str]] = None, max_tokens: int = 500) -> str | list[str]:
+        self.task_names.append(task_name)
+        return [f"\noutput{p[-1]}\n" for p in prompts]
+
+
+def _upload_run_files(api, model_id: str, adapter_name: str):
+    run = f'experiments/{model_id}/{adapter_name}/mock_guid'
+    storage = api.resources(LlamaLoraSFTTrainer)
+    for number in CHECKPOINTS:
+        storage.upload(f'{run}/gguf_checkpoints/checkpoint-{number}.gguf', b'gguf')
+    storage.upload(f'{run}/hf_checkpoints/checkpoint-{CHECKPOINTS[-1]}/trainer_state.json', (FOLDER / 'mock_trainer_state.json').read_bytes())
+
+
+class LlamaLoraPipelineTestCase(TestCase):
+    def test_mocked_pipeline(self):
+        model_id = "mock_pipeline_model"
+        adapter_name = "mock_skill"
+        trainer, server = LlamaLoraSFTTrainerMock(), LlamaLoraServerMock()
+
+        # Restarting the server needs the controllers' status, which asks Docker
+        with Loc.create_test_folder() as folder, patch('chara.nlu.slm_training.pipeline.restart_llama_lora_server') as restart:
+            with BrainBox.Api.serverless_test([server, trainer, Collector()]) as api:
+                Chara.Apis.brainbox_api = api
+                _upload_run_files(api, model_id, adapter_name)
+                pipeline = LlamaLoraPipeline(model_id=model_id, val_batch_size=2)
+                for _ in range(2):  # the second run is restored from the cache
+                    Chara.start(folder)
+                    stats = Chara.call(pipeline)(adapter_name, FOLDER / "mock_train_example.jsonl", FOLDER / "mock_val_example.jsonl")
+                temporary_adapters = api.resources('LlamaLoraServer').list(f'models/{model_id}/lora_adapters')
+
+        self.assertEqual(1, trainer.trainings)
+        self.assertEqual(len(CHECKPOINTS), restart.call_count)
+        self.assertEqual({f'mock_guid_{n}' for n in CHECKPOINTS}, set(server.task_names))
+        self.assertEqual([], temporary_adapters)
+
+        self.assertEqual(TrainingRun(model_id, adapter_name, "mock_guid"), stats.training_run)
+        self.assertEqual(
+            [TrainStats(step=5, loss=2.5, learning_rate=0.0002, grad_norm=8.1),
+             TrainStats(step=10, loss=1.5, learning_rate=0.0001, grad_norm=3.1)],
+            stats.train_stats,
+        )
+        self.assertEqual(list(CHECKPOINTS), [c.number for c in stats.checkpoints_val_stats])
+        for checkpoint in stats.checkpoints_val_stats:
+            self.assertEqual(5, len(checkpoint.generation_results))
+            self.assertEqual(0.8, checkpoint.get_accuracy())
+            self.assertEqual(
+                [GenerationResult(input="bad_input3", expected_output="bad_output3", output="\noutput3\n")],
+                checkpoint.get_wrong_predictions(),
             )
-
-            return TrainingRun(
-                model_id=model_id,
-                adapter_name=adapter_name,
-                guid="mock_guid",
-                path=self.training_run_folder,
-            )
-
-
-    class LlamaLoraServerMock(ISelfManagingDecider):
-        def get_name(self):
-            return "LlamaLoraServer"
-
-
-        def completion(
-            self,
-            *,
-            task_name: str,
-            prompts: Optional[list[str]] = None,
-            max_tokens: int = 500,
-        ) -> str | list[str]:
-            return [f"output{prompt[-1]}" for prompt in prompts]
-
-
-    class LlamaLoraPipelineTestCase(TestCase):
-        def test_mocked_pipeline(self):
-            model_id = "mock_pipeline_model"
-            adapter_name = "mock_skill"
-            val_batch_size = 2
-            train_dataset = Path(__file__).parent / "mock_train_example.jsonl"
-            val_dataset = Path(__file__).parent / "mock_val_example.jsonl"
-            Chara.Apis.strict_brainbox_errors = True
-
-            with (
-                Loc.create_test_folder(dont_delete=True) as working_folder,
-                Loc.create_test_folder(dont_delete=True) as training_run_folder,
-            ):
-                with BrainBox.Api.test(
-                    [LlamaLoraServerMock(), LlamaLoraSFTTrainerMock(training_run_folder), Collector()]
-                ) as api:
-                    Chara.Apis.brainbox_api = api
-                    cache = LlamaLoraCache(working_folder)
-                    pipeline = LlamaLoraPipeline(
-                        model_id=model_id,
-                        val_batch_size=val_batch_size,
-                    )
-                    pipeline(
-                        cache=cache,
-                        adapter_name=adapter_name,
-                        train_dataset=train_dataset,
-                        val_dataset=val_dataset,
-                    )
-
-                stats = cache.read_result()
-
-                self.assertEqual(stats.training_run.model_id, model_id)
-                self.assertEqual(stats.training_run.adapter_name, adapter_name)
-                self.assertEqual(stats.training_run.guid, "mock_guid")
-                self.assertEqual(stats.training_run.path, training_run_folder)
-
-                self.assertEqual(
-                    stats.train_stats,
-                    [
-                        TrainStats(step=5, loss=2.5, learning_rate=0.0002, grad_norm=8.1),
-                        TrainStats(step=10, loss=1.5, learning_rate=0.0001, grad_norm=3.1),
-                    ],
-                )
-
-                self.assertEqual(len(stats.checkpoints_val_stats), 3)
-                for number, checkpoint_val_stats in zip([5, 10, 13], stats.checkpoints_val_stats):
-                    self.assertEqual(checkpoint_val_stats.number, number)
-                    self.assertEqual(len(checkpoint_val_stats.generation_results), 5)
-                    for i, generation_result in enumerate(
-                        checkpoint_val_stats.generation_results, start=1
-                    ):
-                        if i != 3:
-                            self.assertEqual(generation_result.input, f"input{i}")
-                            self.assertEqual(generation_result.expected_output, f"output{i}")
-                            self.assertEqual(generation_result.output, f"output{i}")
-                        else:
-                            self.assertEqual(generation_result.input, f"bad_input{i}")
-                            self.assertEqual(generation_result.expected_output, f"bad_output{i}")
-                            self.assertEqual(generation_result.output, f"output{i}")
-                    self.assertEqual(checkpoint_val_stats.get_accuracy(), 0.8)
-                    wrong_predictions = checkpoint_val_stats.get_wrong_predictions()
-                    self.assertEqual(len(wrong_predictions), 1)
-                    self.assertEqual(
-                        wrong_predictions[0],
-                        GenerationResult(
-                            input="bad_input3",
-                            expected_output="bad_output3",
-                            output="output3",
-                        ),
-                    )
+        self.assertEqual(CHECKPOINTS[-1], stats.get_best_checkpoint().number)

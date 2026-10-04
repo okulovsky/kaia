@@ -1,6 +1,13 @@
 from unittest import TestCase
-from brainbox.deciders.text.llama_lora_sft_trainer.app.interface import TrainingRun
+from unittest.mock import patch
+from brainbox import BrainBox
+from brainbox.deciders import Collector
+from foundation_kaia.misc import Loc
+from chara.common import Chara
 from chara.nlu.ner_training import NerTrainingPipeline
+from chara.tests.test_nlu.test_slm_training.test_pipeline import (
+    LlamaLoraSFTTrainerMock, LlamaLoraServerMock, _upload_run_files, CHECKPOINTS,
+)
 
 
 def _timer(i: int, language: str = 'en') -> dict:
@@ -20,6 +27,15 @@ TEXT_DATASET = (
 )
 
 
+class SlotsServerMock(LlamaLoraServerMock):
+    """The middle checkpoint knows the answers, the others answer nothing"""
+    def completion(self, *, task_name: str, prompt=None, prompts=None, max_tokens: int = 500):
+        self.task_names.append(task_name)
+        if task_name.endswith(f'_{CHECKPOINTS[1]}'):
+            return ['\nduration: 0:05:00\n' if 'set the timer' in p else '\n-\n' for p in prompts]
+        return ['\n-\n' for _ in prompts]
+
+
 class NerTrainingPipelineTestCase(TestCase):
     def test_samples(self):
         pipeline = NerTrainingPipeline(samples_per_intent=10, validation_per_intent=100, test_share=0.25)
@@ -33,14 +49,18 @@ class NerTrainingPipelineTestCase(TestCase):
         self.assertEqual('\n-', samples['cancel the timer'])
         self.assertEqual('\nindex: 2', samples['cancel the second timer'])
 
-    def test_report(self):
-        validation = [
-            dict(INPUT='a', OUTPUT='\nindex: 2', intent='x.cancel', language='en'),
-            dict(INPUT='b', OUTPUT='\n-', intent='x.cancel', language='ru'),
-        ]
-        run = TrainingRun('model', NerTrainingPipeline.ADAPTER, 'guid', None)
-        report = NerTrainingPipeline()._report(run, validation, ['\nindex: 2', 'index: 3'])
-        self.assertEqual(0.5, report.accuracy['all'])
-        self.assertEqual(1, report.accuracy['en'])
-        self.assertEqual(0, report.accuracy['ru'])
-        self.assertEqual(1, len(report.errors))
+    def test_best_checkpoint_is_deployed(self):
+        model_id = 'mock_model'
+        trainer, server = LlamaLoraSFTTrainerMock(), SlotsServerMock()
+        with Loc.create_test_folder() as folder, patch('chara.nlu.slm_training.pipeline.restart_llama_lora_server'):
+            with BrainBox.Api.serverless_test([server, trainer, Collector()]) as api:
+                Chara.Apis.brainbox_api = api
+                _upload_run_files(api, model_id, NerTrainingPipeline.ADAPTER)
+                Chara.start(folder)
+                report = Chara.call(NerTrainingPipeline(model_id=model_id, test_share=0.25))(TEXT_DATASET)
+                adapters = api.resources('LlamaLoraServer').list(f'models/{model_id}/lora_adapters')
+
+        self.assertEqual(CHECKPOINTS[1], report.deployed_checkpoint)
+        self.assertEqual([f'{NerTrainingPipeline.ADAPTER}.gguf'], adapters)
+        self.assertGreater(report.accuracy['all'], 0.5)
+        self.assertEqual(1, report.accuracy['timer'])
