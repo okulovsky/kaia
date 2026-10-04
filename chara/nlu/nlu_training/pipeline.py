@@ -78,7 +78,7 @@ class NluTrainingPipeline:
 
         @Chara.phase
         def split():
-            return self._split(text_to_record, voice_samples or [])
+            return self._split(text_dataset, text_to_record, voice_samples or [])
 
         train, test, voices = split
 
@@ -114,13 +114,12 @@ class NluTrainingPipeline:
 
         @Chara.phase
         def deployment():
-            records = list(text_to_record.values())
-            Chara.call(KenLMTrainingPipeline())([r['text'] for r in records])
-            Chara.Apis.brainbox_api.execute(Chroma.new_task().train(_utterances(records)))
+            Chara.call(KenLMTrainingPipeline())([r['text'] for r in text_dataset])
+            Chara.Apis.brainbox_api.execute(Chroma.new_task().train(_utterances(text_dataset)))
 
         return report
 
-    def _split(self, text_to_record: dict[str, dict], voice_samples: list[dict]):
+    def _split(self, text_dataset: list[dict], text_to_record: dict[str, dict], voice_samples: list[dict]):
         rnd = random.Random(self.seed)
         by_language = defaultdict(list)
         for sample in voice_samples:
@@ -139,7 +138,8 @@ class NluTrainingPipeline:
         test_texts = {v['text'] for v in voices}
         rest = sorted(t for t in text_to_record if t not in test_texts)
         test_texts.update(rnd.sample(rest, int(len(rest) * self.test_share)))
-        train = [r for t, r in text_to_record.items() if t not in test_texts]
+        # Repeated texts stay in train as they are: they weight the n-grams of the language model.
+        train = [r for r in text_dataset if r['text'] not in test_texts]
         test = [r for t, r in text_to_record.items() if t in test_texts]
         return train, test, voices
 

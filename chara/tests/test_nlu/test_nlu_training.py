@@ -10,7 +10,9 @@ from chara.nlu.nlu_training import NluTrainingPipeline
 TEXT_DATASET = (
     [dict(text=f'what time is it {i}', intent='time', language='en') for i in range(10)]
     + [dict(text=f'stell den timer {i}', intent='timer', language='de') for i in range(10)]
+    + [dict(text='what time is it 0', intent='time', language='en')]  # datasets repeat texts
 )
+UNIQUE_TEXTS = len({r['text'] for r in TEXT_DATASET})
 
 VOICE_SAMPLES = [
     dict(file='what time is it 0', text='what time is it 0'),
@@ -80,7 +82,7 @@ class NluTrainingPipelineTestCase(TestCase):
         self.assertEqual(0, stats.wer)
         self.assertEqual(1, stats.voice_intent)
         self.assertEqual(1, stats.text_intent)
-        self.assertEqual(len(TEXT_DATASET) - len(evaluation_index), stats.texts)
+        self.assertEqual(UNIQUE_TEXTS - len({u['text'] for u in evaluation_index}), stats.texts)
 
     def test_works_without_voices(self):
         whisper, chroma = WhisperKenLMMock(), ChromaMock()
