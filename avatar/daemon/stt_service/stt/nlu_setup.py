@@ -1,23 +1,20 @@
 from dataclasses import dataclass
 
 from brainbox import BrainBox
-from brainbox.deciders import Chroma, Collector, WhisperKenLM
+from brainbox.deciders import Chroma, Collector, WhisperKenLM, LlamaLoraServer
 from brainbox.framework import JobRequest
-from grammatron import LanguageDispatchDub, Template, VariableDub
+from grammatron import LanguageDispatchDub, Template
 
 from .recognition_setup import IPostprocessor, IRecognitionSetup, RecognitionContext, STTConfirmation
+from .nlu_slots import template_variables, text_to_slots, slots_to_values
 
 
 def _has_variables(template: Template) -> bool:
     dub = template.dub
     dubs = dub.dispatch.values() if isinstance(dub, LanguageDispatchDub) else [dub]
-    for d in dubs:
-        sequences = getattr(d, 'sequences', None)
-        if sequences is None:
-            return True
-        if any(isinstance(leaf, VariableDub) for sequence in sequences for leaf in sequence.get_leaves()):
-            return True
-    return False
+    if any(getattr(d, 'sequences', None) is None for d in dubs):
+        return True
+    return len(template_variables(template)) > 0
 
 
 def _without_duplicate_jobs(request: JobRequest) -> JobRequest:
@@ -30,9 +27,10 @@ def _without_duplicate_jobs(request: JobRequest) -> JobRequest:
 
 
 class NluPostprocessor(IPostprocessor):
-    def __init__(self, intent_to_template: dict[str, Template], distance_threshold: float):
+    def __init__(self, intent_to_template: dict[str, Template], distance_threshold: float, with_slots: bool = False):
         self.intent_to_template = intent_to_template
         self.distance_threshold = distance_threshold
+        self.with_slots = with_slots
         self.slot_free_intents = {
             name for name, template in intent_to_template.items() if not _has_variables(template)
         }
@@ -59,11 +57,21 @@ class NluPostprocessor(IPostprocessor):
             return None
         if intent in self.slot_free_intents:
             return template.utter({})
-        # Templates with variables need their values extracted by the NER model,
-        # whose output is expected to arrive in `results` alongside `text` and `neighbors`.
-        # Until then they are rejected: uttering them without values would silently drop
-        # what the user said, e.g. "the date tomorrow" would be answered with today's date.
-        return None
+        # Without the slots model, templates with variables are rejected: uttering them without values
+        # would silently drop what the user said, e.g. "the date tomorrow" would be answered with today's date.
+        if not self.with_slots:
+            return None
+        slots = text_to_slots(str(results.get('slots') or ''))
+        if slots is None:
+            return None
+        values = slots_to_values(template, slots)
+        if values is None:
+            return None
+        try:
+            return template.utter(values)
+        except Exception:
+            # e.g. the model has seen no value, but the template has no sequence without variables
+            return None
 
 
 @dataclass
@@ -75,6 +83,10 @@ class NluRecognitionSetup(IRecognitionSetup):
     neighbors: int = 3
     collection_name: str | None = None
     languages: tuple[str, ...] | None = ('en', 'de', 'ru')
+    # The LoRA adapter of LlamaLoraServer that extracts the variables, see chara/nlu/ner_training.
+    # None means that the intents with variables are not recognized.
+    slots_adapter: str | None = None
+    slots_model: str = 'gemma-3-270m-it'
 
     def create_task_and_postprocessor(self, context: RecognitionContext) -> tuple[BrainBox.Task, IPostprocessor]:
         base_id = context.command.file.split('.')[0]
@@ -96,7 +108,14 @@ class NluRecognitionSetup(IRecognitionSetup):
         builder = Collector.TaskBuilder()
         builder.append(transcription, dict(kind='text'))
         builder.append(lookup, dict(kind='neighbors'))
+        if self.slots_adapter is not None:
+            slots = (
+                LlamaLoraServer
+                .new_task(id=base_id + '.nlu-slots', parameter=self.slots_model)
+                .completion(task_name=self.slots_adapter, prompt=transcription, max_tokens=24)
+            )
+            builder.append(slots, dict(kind='slots'))
         task = _without_duplicate_jobs(builder.to_collector_pack('to_array'))
 
         handler = context.rhasspy_handlers[self.model]
-        return task, NluPostprocessor(handler.intent_to_template, self.distance_threshold)
+        return task, NluPostprocessor(handler.intent_to_template, self.distance_threshold, self.slots_adapter is not None)

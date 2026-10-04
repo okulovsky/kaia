@@ -7,9 +7,10 @@ from foundation_kaia.misc import Loc
 from foundation_kaia.fork import Fork
 from avatar.app import compile_frontend
 from avatar.daemon import NluRecognitionSetup
-from brainbox.deciders import WhisperKenLM, Chroma
+from brainbox.deciders import WhisperKenLM, Chroma, LlamaLoraSFTTrainer, LlamaLoraServer
 from chara.common import Chara
 from chara.nlu.nlu_training import NluTrainingPipeline, load_nlu_datasets
+from chara.nlu.ner_training import NerTrainingPipeline
 
 
 parser = argparse.ArgumentParser()
@@ -27,8 +28,9 @@ if __name__ == '__main__':
     settings = KaiaAppSettings()
     settings.brainbox.deciders_files_in_kaia_working_folder = False
     settings.custom_avatar_resources_folder = Loc.root_folder/'kaia/app/files/avatar-resources'
-    settings.brainbox_setup.up(WhisperKenLM).up(Chroma)
-    settings.avatar_processor.stt_setup = NluRecognitionSetup()
+    ner = NerTrainingPipeline()
+    settings.brainbox_setup.up(WhisperKenLM).up(Chroma).up(LlamaLoraSFTTrainer).up(LlamaLoraServer, parameter=ner.model_id)
+    settings.avatar_processor.stt_setup = NluRecognitionSetup(slots_adapter=ner.ADAPTER, slots_model=ner.model_id)
     app = settings.create_app(working_folder)
 
     with Fork(app.brainbox_server):
@@ -39,6 +41,7 @@ if __name__ == '__main__':
         Chara.Apis.brainbox_api = app.brainbox_api
         Chara.start(Chara.Apis.cache_folder / 'nlu/nlu-training')
         print(Chara.call(NluTrainingPipeline())(text_dataset, voice_samples))
+        print(Chara.call(ner)(text_dataset))
 
         app.get_fork_app(None).run()
         app.avatar_api.wait_for_connection(30)
