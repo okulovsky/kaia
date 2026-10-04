@@ -29,7 +29,7 @@ if __name__ == '__main__':
     settings.brainbox.deciders_files_in_kaia_working_folder = False
     settings.custom_avatar_resources_folder = Loc.root_folder/'kaia/app/files/avatar-resources'
     ner = NerTrainingPipeline()
-    settings.brainbox_setup.up(WhisperKenLM).up(Chroma).up(LlamaLoraSFTTrainer).up(LlamaLoraServer, parameter=ner.model_id)
+    settings.brainbox_setup.up(WhisperKenLM).up(Chroma).up(LlamaLoraServer, parameter=ner.model_id).up(LlamaLoraSFTTrainer)
     settings.avatar_processor.stt_setup = NluRecognitionSetup(slots_adapter=ner.ADAPTER, slots_model=ner.model_id)
     app = settings.create_app(working_folder)
 
