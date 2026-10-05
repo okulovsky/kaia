@@ -32,20 +32,20 @@ class SlotsServerMock(LlamaLoraServerMock):
     def completion(self, *, task_name: str, prompt=None, prompts=None, max_tokens: int = 500):
         self.task_names.append(task_name)
         if task_name.endswith(f'_{CHECKPOINTS[1]}'):
-            return ['\nduration: 0:05:00\n' if 'set the timer' in p else '\n-\n' for p in prompts]
+            return ['\nduration: 5m\n' if 'set the timer' in p else '\n-\n' for p in prompts]
         return ['\n-\n' for _ in prompts]
 
 
 class NerTrainingPipelineTestCase(TestCase):
     def test_samples(self):
-        pipeline = NerTrainingPipeline(samples_per_intent=10, validation_per_intent=100, test_share=0.25)
+        pipeline = NerTrainingPipeline(samples_per_intent=10, validation_per_intent=100, test_share=0.25, synthetic_timers_per_language=0)
         train, validation = pipeline._samples(TEXT_DATASET)
 
         self.assertEqual(set(), {s['INPUT'] for s in train} & {s['INPUT'] for s in validation})
         self.assertNotIn('time', {s['intent'] for s in train + validation})
         self.assertEqual(10, sum(s['intent'] == 'timer' for s in train))
         samples = {s['INPUT']: s['OUTPUT'] for s in train + validation}
-        self.assertEqual('\nduration: 0:05:00', samples['set the timer for 0 minutes en'])
+        self.assertEqual('\nduration: 5m', samples['set the timer for 0 minutes en'])
         self.assertEqual('\n-', samples['cancel the timer'])
         self.assertEqual('\nindex: 2', samples['cancel the second timer'])
 
@@ -57,7 +57,7 @@ class NerTrainingPipelineTestCase(TestCase):
                 Chara.Apis.brainbox_api = api
                 _upload_run_files(api, model_id, NerTrainingPipeline.ADAPTER)
                 Chara.start(folder)
-                report = Chara.call(NerTrainingPipeline(model_id=model_id, test_share=0.25))(TEXT_DATASET)
+                report = Chara.call(NerTrainingPipeline(model_id=model_id, test_share=0.25, synthetic_timers_per_language=0))(TEXT_DATASET)
                 adapters = api.resources('LlamaLoraServer').list(f'models/{model_id}/lora_adapters')
 
         self.assertEqual(CHECKPOINTS[1], report.deployed_checkpoint)

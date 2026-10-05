@@ -2,8 +2,10 @@
 The text format of the slots model (the LoRA adapter of NluRecognitionSetup) and its conversion to template values.
 
 The model receives the recognized text and outputs one `name: value` line per variable, after a line break:
-durations as `H:MM:SS`, numbers as digits, options as they were said. `-` means that no variable was said.
+durations as `1h 30m` (only non-zero parts), numbers as digits, options as they were said,
+closed lists of options (e.g. the relative day) as their English value. `-` means that no variable was said.
 """
+import re
 from datetime import timedelta
 from typing import Any
 from grammatron import (
@@ -34,9 +36,22 @@ def text_to_slots(text: str) -> dict[str, str] | None:
     return slots
 
 
+_DURATION = re.compile(r'^(?:(\d+)h)?\s*(?:(\d+)m)?\s*(?:(\d+)s)?$')
+
+
 def timedelta_to_text(value: timedelta) -> str:
     seconds = int(value.total_seconds())
-    return f'{seconds // 3600}:{seconds // 60 % 60:02d}:{seconds % 60:02d}'
+    parts = [(seconds // 3600, 'h'), (seconds // 60 % 60, 'm'), (seconds % 60, 's')]
+    return ' '.join(f'{n}{unit}' for n, unit in parts if n > 0)
+
+
+def text_to_timedelta(text: str) -> timedelta | None:
+    match = _DURATION.match(text.strip())
+    if match is None:
+        return None
+    hours, minutes, seconds = (int(g) if g else 0 for g in match.groups())
+    value = timedelta(hours=hours, minutes=minutes, seconds=seconds)
+    return value if value.total_seconds() > 0 else None
 
 
 def template_variables(template: Template) -> dict[str, VariableDub]:
@@ -67,11 +82,7 @@ def slots_to_values(template: Template, slots: dict[str, str]) -> dict[str, Any]
 
 def _parse_value(dub, text: str):
     if isinstance(dub, TimedeltaDub):
-        parts = text.split(':')
-        if len(parts) != 3 or not all(p.isdigit() for p in parts):
-            return None
-        value = timedelta(hours=int(parts[0]), minutes=int(parts[1]), seconds=int(parts[2]))
-        return value if value.total_seconds() > 0 else None
+        return text_to_timedelta(text)
     if isinstance(dub, _IntDub):
         if not text.isdigit():
             return None

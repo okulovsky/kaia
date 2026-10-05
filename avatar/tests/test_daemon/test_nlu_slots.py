@@ -20,8 +20,8 @@ TIME = Template('What time is it?')
 
 class SlotsFormatTestCase(TestCase):
     def test_round_trip(self):
-        slots = dict(duration='0:05:00', index='2')
-        self.assertEqual('\nduration: 0:05:00\nindex: 2', slots_to_text(slots))
+        slots = dict(duration='5m', index='2')
+        self.assertEqual('\nduration: 5m\nindex: 2', slots_to_text(slots))
         self.assertEqual(slots, text_to_slots(slots_to_text(slots)))
 
     def test_empty(self):
@@ -32,14 +32,14 @@ class SlotsFormatTestCase(TestCase):
         self.assertIsNone(text_to_slots('set the timer for five minutes'))
 
     def test_values(self):
-        self.assertEqual(dict(duration=timedelta(hours=1, minutes=30)), slots_to_values(SET_TIMER, dict(duration='1:30:00')))
+        self.assertEqual(dict(duration=timedelta(hours=1, minutes=30)), slots_to_values(SET_TIMER, dict(duration='1h 30m')))
         self.assertEqual(dict(index=3), slots_to_values(CANCEL_TIMER, dict(index='3')))
         self.assertEqual(dict(delta=Day.Tomorrow), slots_to_values(DATE, dict(delta='tomorrow')))
         self.assertEqual(dict(character='Forest'), slots_to_values(CHARACTER, dict(character='forest')))
 
     def test_values_that_do_not_fit(self):
         self.assertIsNone(slots_to_values(SET_TIMER, dict(duration='five minutes')))
-        self.assertIsNone(slots_to_values(SET_TIMER, dict(duration='0:00:00')))
+        self.assertIsNone(slots_to_values(SET_TIMER, dict(duration='0m')))
         self.assertIsNone(slots_to_values(CANCEL_TIMER, dict(index='11')))
         self.assertIsNone(slots_to_values(CHARACTER, dict(character='Cliff')))
         self.assertIsNone(slots_to_values(CHARACTER, dict(dish='tea')))
@@ -69,7 +69,7 @@ class NluPostprocessorTestCase(TestCase):
         self.assertIsInstance(recognition, Utterance)
 
     def test_values_are_extracted(self):
-        recognition = self.recognize(self.with_slots, 'Поставь таймер на пять минут', 'set_timer', '\nduration: 0:05:00')
+        recognition = self.recognize(self.with_slots, 'Поставь таймер на пять минут', 'set_timer', '\nduration: 5m')
         self.assertIsInstance(recognition, Utterance)
         self.assertEqual(timedelta(minutes=5), recognition.value['duration'])
 

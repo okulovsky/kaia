@@ -6,7 +6,7 @@ from brainbox.deciders.text.llama_lora_sft_trainer.app.interface import Training
 from chara.common import Chara
 from ..slm_training.pipeline import LlamaLoraPipeline, upload_checkpoint
 from ..slm_training.stats import TrainingRunStats, CheckpointValStats
-from .dataset import record_to_sample
+from .dataset import record_to_sample, synthetic_timer_records
 
 
 def default_training_settings() -> TrainingSettings:
@@ -47,6 +47,7 @@ class NerTrainingPipeline:
                  validation_per_intent: int = 50,
                  test_share: float = 0.15,
                  settings: TrainingSettings | None = None,
+                 synthetic_timers_per_language: int = 60,
                  seed: int = 0,
                  ):
         self.model_id = model_id
@@ -54,6 +55,7 @@ class NerTrainingPipeline:
         self.validation_per_intent = validation_per_intent
         self.test_share = test_share
         self.settings = settings if settings is not None else default_training_settings()
+        self.synthetic_timers_per_language = synthetic_timers_per_language
         self.seed = seed
 
     def __call__(self, text_dataset: list[dict]) -> NerTrainingReport:
@@ -80,6 +82,9 @@ class NerTrainingPipeline:
     def _samples(self, text_dataset: list[dict]):
         intents_with_values = {r['intent'] for r in text_dataset if r['values']}
         records = [r for r in text_dataset if r['intent'] in intents_with_values]
+        timer_intents = {r['intent'] for r in records if any(v['type'] == 'TimedeltaDub' for v in r['values'])}
+        for intent in sorted(timer_intents):
+            records.extend(synthetic_timer_records(intent, self.synthetic_timers_per_language, self.seed))
         rnd = random.Random(self.seed)
         texts = sorted({r['text'] for r in records})
         test_texts = set(rnd.sample(texts, int(len(texts) * self.test_share)))
