@@ -57,7 +57,9 @@ if __name__ == '__main__':
         # A separate client: the app's one is pickled into the forks, and API clients keep the last request,
         # which for uploads holds a generator that cannot be pickled.
         Chara.Apis.brainbox_api = BrainBox.Api(app.brainbox_api.base_url)
-        generator = TextDatasetPipeline(args.model, kaia_intent_templates(), list(LANGUAGES), list(MOODS))
+        generator = None
+        if args.generate_rounds > 0:
+            generator = TextDatasetPipeline(args.model, kaia_intent_templates(), list(LANGUAGES), list(MOODS))
         pipeline = NluPipeline(NluDatasetStore(datasets), Chara.Apis.cache_folder / 'nlu', generator, NluTrainingPipeline(), ner)
         for _ in range(args.generate_rounds):
             print(f'Round {pipeline.generate_round()} of the text dataset is generated')

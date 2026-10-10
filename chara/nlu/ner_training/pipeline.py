@@ -34,8 +34,8 @@ class NerTrainingPipeline:
     """
     Trains the slots model of NluRecognitionSetup: a LoRA adapter for LlamaLoraServer that receives
     the recognized text and outputs the intent and the values of the template's variables
-    (the format is in avatar/daemon/stt_service/stt/nlu_slots.py). NluRecognitionSetup accepts a command only
-    when this intent agrees with the one of Chroma.
+    (the format is in avatar/daemon/stt_service/stt/nlu_slots.py). Whether NluRecognitionSetup takes the intent
+    from Chroma, from this model or from their agreement is set by its `intent_source`.
 
     All the intents are learned: `samples_per_intent` records for the intents with variables, which also have to learn
     the values, `samples_per_slot_free_intent` for the others. `negatives` are phrases that are not commands.
