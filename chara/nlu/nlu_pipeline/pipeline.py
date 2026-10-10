@@ -29,7 +29,8 @@ class NluPipeline:
     The dataset is cumulative: each call of `generate_round` adds a new round of phrases to `store`,
     and the earlier rounds stay. The generation of a round is cached in its own folder,
     so a round that failed in the middle continues on the next call instead of starting anew.
-    The training is cached by the content of the dataset: it reruns only when the dataset has changed.
+    The training is cached by the content of the dataset and of the negatives (`negatives.txt` next to the dataset):
+    it reruns only when they have changed.
     """
     def __init__(self,
                  store: NluDatasetStore,
@@ -71,11 +72,13 @@ class NluPipeline:
         dataset = self.store.read()
         if len(dataset) == 0:
             raise ValueError(f"The dataset in {self.store.folder} is empty: generate a round first")
-        fingerprint = hashlib.sha256(self.store.dataset_path.read_bytes()).hexdigest()[:16]
+        negatives = self.store.read_negatives()
+        content = self.store.dataset_path.read_bytes() + '\n'.join(negatives).encode('utf-8')
+        fingerprint = hashlib.sha256(content).hexdigest()[:16]
         Chara.start(self.cache_folder / 'training' / fingerprint)
-        return Chara.call(self._train, 'training')(dataset, voice_samples)
+        return Chara.call(self._train, 'training')(dataset, negatives, voice_samples)
 
-    def _train(self, dataset: list[dict], voice_samples: list[dict] | None) -> NluPipelineReport:
+    def _train(self, dataset: list[dict], negatives: list[str], voice_samples: list[dict] | None) -> NluPipelineReport:
         nlu_report = Chara.call(self.nlu)(dataset, voice_samples)
-        ner_report = Chara.call(self.ner)(dataset) if self.ner is not None else None
+        ner_report = Chara.call(self.ner)(dataset, negatives) if self.ner is not None else None
         return NluPipelineReport(len(dataset), nlu_report, ner_report)

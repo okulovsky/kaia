@@ -6,7 +6,7 @@ from brainbox.deciders.text.llama_lora_sft_trainer.app.interface import Training
 from chara.common import Chara
 from ..slm_training.pipeline import LlamaLoraPipeline, upload_checkpoint
 from ..slm_training.stats import TrainingRunStats, CheckpointValStats
-from .dataset import record_to_sample, synthetic_timer_records
+from .dataset import record_to_sample, synthetic_timer_records, negative_to_sample
 
 
 def default_training_settings() -> TrainingSettings:
@@ -33,10 +33,13 @@ class NerTrainingReport:
 class NerTrainingPipeline:
     """
     Trains the slots model of NluRecognitionSetup: a LoRA adapter for LlamaLoraServer that receives
-    the recognized text and outputs the values of the template's variables
-    (the format is in avatar/daemon/stt_service/stt/nlu_slots.py).
+    the recognized text and outputs the intent and the values of the template's variables
+    (the format is in avatar/daemon/stt_service/stt/nlu_slots.py). NluRecognitionSetup accepts a command only
+    when this intent agrees with the one of Chroma.
 
-    Only the intents with variables are used. Every checkpoint is validated on the records with held-out texts,
+    All the intents are learned: `samples_per_intent` records for the intents with variables, which also have to learn
+    the values, `samples_per_slot_free_intent` for the others. `negatives` are phrases that are not commands.
+    Every checkpoint is validated on the records with held-out texts,
     and the best one is deployed to LlamaLoraServer as the adapter ADAPTER.
     """
     ADAPTER = 'nlu-slots'
@@ -44,6 +47,7 @@ class NerTrainingPipeline:
     def __init__(self,
                  model_id: str = 'gemma-3-270m-it',
                  samples_per_intent: int | None = 400,
+                 samples_per_slot_free_intent: int | None = 150,
                  validation_per_intent: int = 50,
                  test_share: float = 0.15,
                  settings: TrainingSettings | None = None,
@@ -52,16 +56,17 @@ class NerTrainingPipeline:
                  ):
         self.model_id = model_id
         self.samples_per_intent = samples_per_intent
+        self.samples_per_slot_free_intent = samples_per_slot_free_intent
         self.validation_per_intent = validation_per_intent
         self.test_share = test_share
         self.settings = settings if settings is not None else default_training_settings()
         self.synthetic_timers_per_language = synthetic_timers_per_language
         self.seed = seed
 
-    def __call__(self, text_dataset: list[dict]) -> NerTrainingReport:
+    def __call__(self, text_dataset: list[dict], negatives: list[str] | None = None) -> NerTrainingReport:
         @Chara.phase
         def samples():
-            train, validation = self._samples(text_dataset)
+            train, validation = self._samples(text_dataset, negatives or [])
             for name, data in (('train', train), ('validation', validation)):
                 (Chara.current.folder / f'{name}.jsonl').write_text(
                     ''.join(json.dumps(dict(INPUT=s['INPUT'], OUTPUT=s['OUTPUT']), ensure_ascii=False) + '\n' for s in data)
@@ -69,7 +74,7 @@ class NerTrainingPipeline:
             return Chara.current.folder, validation
 
         folder, validation = samples
-        pipeline = LlamaLoraPipeline(self.model_id, self.settings, max_tokens=24)
+        pipeline = LlamaLoraPipeline(self.model_id, self.settings, max_tokens=32)
         stats = Chara.call(pipeline)(self.ADAPTER, folder / 'train.jsonl', folder / 'validation.jsonl')
         best = stats.get_best_checkpoint()
 
@@ -79,9 +84,9 @@ class NerTrainingPipeline:
 
         return NerTrainingReport(stats, best.number, self._accuracy(best, validation))
 
-    def _samples(self, text_dataset: list[dict]):
+    def _samples(self, text_dataset: list[dict], negatives: list[str]):
         intents_with_values = {r['intent'] for r in text_dataset if r['values']}
-        records = [r for r in text_dataset if r['intent'] in intents_with_values]
+        records = list(text_dataset)
         timer_intents = {r['intent'] for r in records if any(v['type'] == 'TimedeltaDub' for v in r['values'])}
         for intent in sorted(timer_intents):
             records.extend(synthetic_timer_records(intent, self.synthetic_timers_per_language, self.seed))
@@ -100,15 +105,23 @@ class NerTrainingPipeline:
             intent_train, intent_validation = by_intent[intent]
             rnd.shuffle(intent_train)
             rnd.shuffle(intent_validation)
-            train.extend(intent_train[:self.samples_per_intent])
+            limit = self.samples_per_intent if intent in intents_with_values else self.samples_per_slot_free_intent
+            train.extend(intent_train[:limit])
             validation.extend(intent_validation[:self.validation_per_intent])
+        negatives = sorted(set(negatives))
+        rnd.shuffle(negatives)
+        held = int(len(negatives) * self.test_share)
+        for i, text in enumerate(negatives):
+            sample = negative_to_sample(text)
+            sample.update(intent='none', language='none')
+            (validation if i < held else train).append(sample)
         rnd.shuffle(train)
         return train, validation
 
     def _accuracy(self, checkpoint: CheckpointValStats, validation: list[dict]) -> dict[str, float]:
         counts = defaultdict(lambda: [0, 0])
         for sample, result in zip(validation, checkpoint.generation_results):
-            for key in ('all', sample['language'], sample['intent'].split('.')[-1]):
+            for key in ('all', sample['language'], '.'.join(sample['intent'].split('.')[-2:])):
                 counts[key][0] += result.is_correct()
                 counts[key][1] += 1
         return {key: correct / total for key, (correct, total) in counts.items()}

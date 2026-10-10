@@ -6,7 +6,7 @@ from brainbox.framework import JobRequest
 from grammatron import LanguageDispatchDub, Template
 
 from .recognition_setup import IPostprocessor, IRecognitionSetup, RecognitionContext, STTConfirmation
-from .nlu_slots import template_variables, text_to_slots, slots_to_values
+from .nlu_slots import template_variables, text_to_slots, slots_to_values, intent_label, INTENT
 
 
 def _has_variables(template: Template) -> bool:
@@ -49,9 +49,18 @@ class NluPostprocessor(IPostprocessor):
         return STTConfirmation(utterance if utterance is not None else text, meta)
 
     def _recognize(self, neighbors: list[dict], results: dict):
-        if not neighbors or neighbors[0]['distance'] > self.distance_threshold:
+        if not neighbors:
             return None
         intent = neighbors[0]['intent']
+        slots = text_to_slots(str(results.get('slots') or '')) if self.with_slots else None
+        model_intent = slots.pop(INTENT, None) if slots is not None else None
+        if model_intent is not None:
+            # The slots model names the intent too. The command is accepted only if it agrees with Chroma:
+            # on misrecognized speech the two rarely agree, which rejects better than the distance threshold.
+            if model_intent != intent_label(intent):
+                return None
+        elif neighbors[0]['distance'] > self.distance_threshold:
+            return None
         template = self.intent_to_template.get(intent)
         if template is None:
             return None
@@ -59,9 +68,6 @@ class NluPostprocessor(IPostprocessor):
             return template.utter({})
         # Without the slots model, templates with variables are rejected: uttering them without values
         # would silently drop what the user said, e.g. "the date tomorrow" would be answered with today's date.
-        if not self.with_slots:
-            return None
-        slots = text_to_slots(str(results.get('slots') or ''))
         if slots is None:
             return None
         values = slots_to_values(template, slots)

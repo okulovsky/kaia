@@ -19,6 +19,10 @@ TIME = Template('What time is it?')
 
 
 class SlotsFormatTestCase(TestCase):
+    def test_intent_line(self):
+        self.assertEqual('\nintent: TimerIntents.set\nduration: 5m', slots_to_text(dict(duration='5m'), 'kaia.skills.TimerIntents.set'))
+        self.assertEqual(dict(intent='TimerIntents.set', duration='5m'), text_to_slots('\nintent: TimerIntents.set\nduration: 5m'))
+
     def test_round_trip(self):
         slots = dict(duration='5m', index='2')
         self.assertEqual('\nduration: 5m\nindex: 2', slots_to_text(slots))
@@ -86,6 +90,22 @@ class NluPostprocessorTestCase(TestCase):
 
     def test_garbage_from_model_is_rejected(self):
         self.assertEqual('Set a timer', self.recognize(self.with_slots, 'Set a timer', 'set_timer', 'five minutes'))
+
+    def test_agreement_accepts_beyond_the_threshold(self):
+        recognition = self.recognize(self.with_slots, 'Cancel the second timer', 'cancel_timer',
+                                     '\nintent: cancel_timer\nindex: 2', distance=0.5)
+        self.assertIsInstance(recognition, Utterance)
+        self.assertEqual({'index': 2}, recognition.value)
+
+    def test_disagreement_rejects_below_the_threshold(self):
+        recognition = self.recognize(self.with_slots, 'What time is it', 'time', '\nintent: set_timer', distance=0.01)
+        self.assertEqual('What time is it', recognition)
+
+    def test_not_a_command(self):
+        self.assertEqual('Pass the salt', self.recognize(self.with_slots, 'Pass the salt', 'time', '\nintent: none'))
+
+    def test_slot_free_intent_with_intent_line(self):
+        self.assertIsInstance(self.recognize(self.with_slots, 'What time is it', 'time', '\nintent: time', distance=0.3), Utterance)
 
     def test_without_slots_model_variables_are_rejected(self):
         self.assertEqual('Cancel the timer', self.recognize(self.without_slots, 'Cancel the timer', 'cancel_timer'))

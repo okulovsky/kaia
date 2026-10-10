@@ -16,6 +16,7 @@ class NluDatasetStore:
         self.folder = folder
         self.rounds_folder = folder / 'text-dataset'
         self.dataset_path = folder / 'text-dataset.json'
+        self.negatives_path = folder / 'negatives.txt'
 
     def _round_path(self, number: int) -> Path:
         return self.rounds_folder / f'round-{number:03d}.json'
@@ -44,6 +45,12 @@ class NluDatasetStore:
         if not self.dataset_path.is_file():
             return []
         return json.loads(self.dataset_path.read_text())
+
+    def read_negatives(self) -> list[str]:
+        """Phrases that are not commands, one per line (e.g. made by NegativePipeline); empty if there are none"""
+        if not self.negatives_path.is_file():
+            return []
+        return [line.strip() for line in self.negatives_path.read_text().splitlines() if line.strip()]
 
     def _write_union(self):
         records = []
