@@ -1,9 +1,16 @@
 """
 The text format of the slots model (the LoRA adapter of NluRecognitionSetup) and its conversion to template values.
 
-The model receives the recognized text and outputs one `name: value` line per variable, after a line break:
-durations as `1h 30m` (only non-zero parts), numbers as digits, options as they were said,
-closed lists of options (e.g. the relative day) as their English value. `-` means that no variable was said.
+The model receives the recognized text and outputs, after a line break, the intent and then one `name: value`
+line per variable:
+
+    intent: TimerIntents.set_the_timer
+    duration: 1h 30m
+
+The intent is `TemplatesCollection.template`, or `none` if the text is not a command. Durations are `1h 30m`
+(only non-zero parts), numbers are digits, options are as they were said, closed lists of options
+(e.g. the relative day) are their English value. Adapters trained before the intent line output only the variables,
+with `-` for no variables; they are still read.
 """
 import re
 from datetime import timedelta
@@ -14,12 +21,29 @@ from grammatron import (
 from grammatron.dubs.implementation.int_dub import _IntDub
 
 EMPTY = '-'
+INTENT = 'intent'
+NO_INTENT = 'none'
 
 
-def slots_to_text(slots: dict[str, str]) -> str:
-    if len(slots) == 0:
+def intent_label(intent: str | None) -> str:
+    """`kaia.skills.timer_skill.TimerIntents.set_the_timer` -> `TimerIntents.set_the_timer`"""
+    if intent is None:
+        return NO_INTENT
+    return '.'.join(intent.split('.')[-2:])
+
+
+def slots_to_text(slots: dict[str, str], intent: str | None = None) -> str:
+    """The model's output. With `intent`, the output starts with the intent line (pass a full intent name)."""
+    lines = [] if intent is None else [f'{INTENT}: {intent_label(intent)}']
+    lines += [f'{name}: {value}' for name, value in slots.items()]
+    if len(lines) == 0:
         return '\n' + EMPTY
-    return '\n' + '\n'.join(f'{name}: {value}' for name, value in slots.items())
+    return '\n' + '\n'.join(lines)
+
+
+def no_command_text() -> str:
+    """The model's output for a text that is not a command"""
+    return f'\n{INTENT}: {NO_INTENT}'
 
 
 def text_to_slots(text: str) -> dict[str, str] | None:
