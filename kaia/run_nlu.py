@@ -7,6 +7,7 @@ from foundation_kaia.misc import Loc
 from foundation_kaia.fork import Fork
 from avatar.app import compile_frontend
 from avatar.daemon import NluRecognitionSetup
+from avatar.daemon.stt_service.stt import IntentSource
 from brainbox import BrainBox
 from brainbox.deciders import WhisperKenLM, Chroma, LlamaLoraSFTTrainer, LlamaLoraServer, Ollama
 from chara.common import Chara
@@ -22,6 +23,8 @@ parser.add_argument('--datasets', default=str(Chara.Apis.content_folder / 'nlu/d
 parser.add_argument('--generate-rounds', type=int, default=0,
                     help='New rounds of the text dataset to generate before the training; needs the LLM in BrainBox (Ollama)')
 parser.add_argument('--model', default='mistral-small', help='The LLM that generates the text dataset')
+parser.add_argument('--intent-source', default=IntentSource.CHROMA, choices=IntentSource.ALL,
+                    help='Who decides the intent: Chroma, the LoRA of the slots, or their agreement')
 
 
 if __name__ == '__main__':
@@ -40,7 +43,9 @@ if __name__ == '__main__':
     if args.generate_rounds > 0:
         # The model given by --model must be available in this Ollama
         settings.brainbox_setup.up(Ollama)
-    settings.avatar_processor.stt_setup = NluRecognitionSetup(slots_adapter=ner.ADAPTER, slots_model=ner.model_id)
+    settings.avatar_processor.stt_setup = NluRecognitionSetup(
+        slots_adapter=ner.ADAPTER, slots_model=ner.model_id, intent_source=args.intent_source,
+    )
     app = settings.create_app(working_folder)
 
     with Fork(app.brainbox_server):

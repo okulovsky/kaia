@@ -2,7 +2,7 @@ from datetime import timedelta
 from enum import Enum
 from unittest import TestCase
 from grammatron import Template, VariableDub, TimedeltaDub, OrdinalDub, OptionsDub, Utterance
-from avatar.daemon.stt_service.stt.nlu_setup import NluPostprocessor
+from avatar.daemon.stt_service.stt.nlu_setup import NluPostprocessor, IntentSource, NluRecognitionSetup
 from avatar.daemon.stt_service.stt.nlu_slots import slots_to_text, text_to_slots, slots_to_values
 
 
@@ -64,6 +64,8 @@ class NluPostprocessorTestCase(TestCase):
         templates = dict(set_timer=SET_TIMER, cancel_timer=CANCEL_TIMER, date=DATE, character=CHARACTER, time=TIME)
         self.with_slots = NluPostprocessor(templates, 0.18, with_slots=True)
         self.without_slots = NluPostprocessor(templates, 0.18)
+        self.agreement = NluPostprocessor(templates, 0.18, True, IntentSource.AGREEMENT)
+        self.lora = NluPostprocessor(templates, 0.18, True, IntentSource.LORA)
 
     def recognize(self, postprocessor, *args, **kwargs):
         return postprocessor.postprocess(_result(*args, **kwargs)).recognition
@@ -91,21 +93,34 @@ class NluPostprocessorTestCase(TestCase):
     def test_garbage_from_model_is_rejected(self):
         self.assertEqual('Set a timer', self.recognize(self.with_slots, 'Set a timer', 'set_timer', 'five minutes'))
 
+    def test_chroma_ignores_the_intent_of_the_model(self):
+        recognition = self.recognize(self.with_slots, 'Cancel the second timer', 'cancel_timer', '\nintent: time\nindex: 2')
+        self.assertEqual({'index': 2}, recognition.value)
+        self.assertEqual('Cancel', self.recognize(self.with_slots, 'Cancel', 'cancel_timer', '\nintent: cancel_timer', distance=0.5))
+
     def test_agreement_accepts_beyond_the_threshold(self):
-        recognition = self.recognize(self.with_slots, 'Cancel the second timer', 'cancel_timer',
+        recognition = self.recognize(self.agreement, 'Cancel the second timer', 'cancel_timer',
                                      '\nintent: cancel_timer\nindex: 2', distance=0.5)
-        self.assertIsInstance(recognition, Utterance)
         self.assertEqual({'index': 2}, recognition.value)
 
     def test_disagreement_rejects_below_the_threshold(self):
-        recognition = self.recognize(self.with_slots, 'What time is it', 'time', '\nintent: set_timer', distance=0.01)
-        self.assertEqual('What time is it', recognition)
+        self.assertEqual('What time is it', self.recognize(self.agreement, 'What time is it', 'time', '\nintent: set_timer', distance=0.01))
 
-    def test_not_a_command(self):
-        self.assertEqual('Pass the salt', self.recognize(self.with_slots, 'Pass the salt', 'time', '\nintent: none'))
+    def test_lora_decides_without_chroma(self):
+        result = [dict(tags=dict(kind='text'), result='Cancel the second timer'),
+                  dict(tags=dict(kind='slots'), result='\nintent: cancel_timer\nindex: 2')]
+        recognition = self.lora.postprocess(result).recognition
+        self.assertEqual({'index': 2}, recognition.value)
+        self.assertEqual(CANCEL_TIMER.get_name(), recognition.template.get_name())
 
-    def test_slot_free_intent_with_intent_line(self):
-        self.assertIsInstance(self.recognize(self.with_slots, 'What time is it', 'time', '\nintent: time', distance=0.3), Utterance)
+    def test_lora_not_a_command(self):
+        self.assertEqual('Pass the salt', self.recognize(self.lora, 'Pass the salt', 'time', '\nintent: none'))
+        self.assertEqual('Pass the salt', self.recognize(self.lora, 'Pass the salt', 'time', '\nintent: unknown_intent'))
+
+    def test_lora_needs_the_adapter(self):
+        with self.assertRaises(ValueError):
+            NluRecognitionSetup(intent_source=IntentSource.LORA)
+        NluRecognitionSetup(intent_source=IntentSource.LORA, slots_adapter='nlu-slots')
 
     def test_without_slots_model_variables_are_rejected(self):
         self.assertEqual('Cancel the timer', self.recognize(self.without_slots, 'Cancel the timer', 'cancel_timer'))
