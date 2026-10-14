@@ -1,5 +1,4 @@
 from unittest import TestCase
-from unittest.mock import patch
 from brainbox import BrainBox
 from brainbox.deciders import Collector
 from foundation_kaia.misc import Loc
@@ -59,7 +58,7 @@ class NerTrainingPipelineTestCase(TestCase):
     def test_best_checkpoint_is_deployed(self):
         model_id = 'mock_model'
         trainer, server = LlamaLoraSFTTrainerMock(), SlotsServerMock()
-        with Loc.create_test_folder() as folder, patch('chara.nlu.slm_training.pipeline.restart_llama_lora_server'):
+        with Loc.create_test_folder() as folder:
             with BrainBox.Api.serverless_test([server, trainer, Collector()]) as api:
                 Chara.Apis.brainbox_api = api
                 _upload_run_files(api, model_id, NerTrainingPipeline.ADAPTER)

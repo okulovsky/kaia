@@ -1,7 +1,6 @@
 import json
 from pathlib import Path
 from brainbox import BrainBox
-from brainbox.framework import ControllerRegistry
 from brainbox.deciders import LlamaLoraSFTTrainer, LlamaLoraServer
 from brainbox.deciders.text.llama_lora_sft_trainer.api import TrainingSettings, TrainingRun
 from foundation_kaia.marshalling import TypeTools
@@ -20,23 +19,12 @@ def checkpoint_numbers(run: TrainingRun) -> list[int]:
 
 
 def upload_checkpoint(run: TrainingRun, number: int, task_name: str) -> str:
-    """Uploads the checkpoint to LlamaLoraServer as the adapter `task_name` and restarts the server to load it."""
+    """Uploads the checkpoint to LlamaLoraServer as the adapter `task_name`; the server loads it on the first request."""
     api = Chara.Apis.brainbox_api
     destination = f'models/{run.model_id}/lora_adapters/{task_name}.gguf'
     source = f'{training_run_folder(run)}/gguf_checkpoints/checkpoint-{number}.gguf'
     api.resources(LlamaLoraServer).upload(destination, api.resources(LlamaLoraSFTTrainer).open(source))
-    restart_llama_lora_server()
     return destination
-
-
-def restart_llama_lora_server():
-    # LlamaLoraServer loads the adapters at the start, so the running instances must be stopped to see the new ones
-    api = Chara.Apis.brainbox_api
-    name = ControllerRegistry.to_controller_name(LlamaLoraServer)
-    for controller in api.controllers.status().controllers:
-        if controller.name == name:
-            for instance in controller.instances:
-                api.controllers.stop(controller.name, instance.instance_id)
 
 
 class LlamaLoraPipeline:

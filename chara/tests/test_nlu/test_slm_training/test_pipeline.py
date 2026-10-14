@@ -2,7 +2,6 @@ import json
 from pathlib import Path
 from typing import Optional
 from unittest import TestCase
-from unittest.mock import patch
 from brainbox import BrainBox, File, ISelfManagingDecider
 from brainbox.deciders import Collector, LlamaLoraSFTTrainer
 from foundation_kaia.marshalling import FileLike, TypeTools
@@ -56,8 +55,7 @@ class LlamaLoraPipelineTestCase(TestCase):
         adapter_name = "mock_skill"
         trainer, server = LlamaLoraSFTTrainerMock(), LlamaLoraServerMock()
 
-        # Restarting the server needs the controllers' status, which asks Docker
-        with Loc.create_test_folder() as folder, patch('chara.nlu.slm_training.pipeline.restart_llama_lora_server') as restart:
+        with Loc.create_test_folder() as folder:
             with BrainBox.Api.serverless_test([server, trainer, Collector()]) as api:
                 Chara.Apis.brainbox_api = api
                 _upload_run_files(api, model_id, adapter_name)
@@ -68,7 +66,6 @@ class LlamaLoraPipelineTestCase(TestCase):
                 temporary_adapters = api.resources('LlamaLoraServer').list(f'models/{model_id}/lora_adapters')
 
         self.assertEqual(1, trainer.trainings)
-        self.assertEqual(len(CHECKPOINTS), restart.call_count)
         self.assertEqual({f'mock_guid_{n}' for n in CHECKPOINTS}, set(server.task_names))
         self.assertEqual([], temporary_adapters)
 
