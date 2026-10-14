@@ -4,7 +4,7 @@ from brainbox import BrainBox
 from brainbox.deciders import Collector
 from foundation_kaia.misc import Loc
 from chara.common import Chara
-from chara.nlu.ner_training import NerTrainingPipeline
+from chara.nlu.ner_training import NerTrainingPipeline, record_to_sample
 from chara.tests.test_nlu.test_slm_training.test_pipeline import (
     LlamaLoraSFTTrainerMock, LlamaLoraServerMock, _upload_run_files, CHECKPOINTS,
 )
@@ -27,27 +27,34 @@ TEXT_DATASET = (
 )
 
 
+NEGATIVES = ['pass the salt', 'nice weather today', 'where is my cup', 'the coffee is cold']
+ANSWERS = {r['text']: record_to_sample(r)['OUTPUT'] for r in TEXT_DATASET} | {t: '\nintent: none' for t in NEGATIVES}
+
+
 class SlotsServerMock(LlamaLoraServerMock):
     """The middle checkpoint knows the answers, the others answer nothing"""
     def completion(self, *, task_name: str, prompt=None, prompts=None, max_tokens: int = 500):
         self.task_names.append(task_name)
         if task_name.endswith(f'_{CHECKPOINTS[1]}'):
-            return ['\nduration: 5m\n' if 'set the timer' in p else '\n-\n' for p in prompts]
+            return [ANSWERS[p] + '\n' for p in prompts]
         return ['\n-\n' for _ in prompts]
 
 
 class NerTrainingPipelineTestCase(TestCase):
     def test_samples(self):
         pipeline = NerTrainingPipeline(samples_per_intent=10, validation_per_intent=100, test_share=0.25, synthetic_timers_per_language=0)
-        train, validation = pipeline._samples(TEXT_DATASET)
+        train, validation = pipeline._samples(TEXT_DATASET, NEGATIVES)
 
         self.assertEqual(set(), {s['INPUT'] for s in train} & {s['INPUT'] for s in validation})
-        self.assertNotIn('time', {s['intent'] for s in train + validation})
+        self.assertIn('time', {s['intent'] for s in train + validation})
         self.assertEqual(10, sum(s['intent'] == 'timer' for s in train))
         samples = {s['INPUT']: s['OUTPUT'] for s in train + validation}
-        self.assertEqual('\nduration: 5m', samples['set the timer for 0 minutes en'])
-        self.assertEqual('\n-', samples['cancel the timer'])
-        self.assertEqual('\nindex: 2', samples['cancel the second timer'])
+        self.assertEqual('\nintent: timer\nduration: 5m', samples['set the timer for 0 minutes en'])
+        self.assertEqual('\nintent: cancel', samples['cancel the timer'])
+        self.assertEqual('\nintent: cancel\nindex: 2', samples['cancel the second timer'])
+        self.assertEqual('\nintent: time', samples['what time is it'])
+        self.assertEqual('\nintent: none', samples['pass the salt'])
+        self.assertEqual(1, sum(s['intent'] == 'none' for s in validation))
 
     def test_best_checkpoint_is_deployed(self):
         model_id = 'mock_model'
@@ -57,10 +64,9 @@ class NerTrainingPipelineTestCase(TestCase):
                 Chara.Apis.brainbox_api = api
                 _upload_run_files(api, model_id, NerTrainingPipeline.ADAPTER)
                 Chara.start(folder)
-                report = Chara.call(NerTrainingPipeline(model_id=model_id, test_share=0.25, synthetic_timers_per_language=0))(TEXT_DATASET)
+                report = Chara.call(NerTrainingPipeline(model_id=model_id, test_share=0.25, synthetic_timers_per_language=0))(TEXT_DATASET, NEGATIVES)
                 adapters = api.resources('LlamaLoraServer').list(f'models/{model_id}/lora_adapters')
 
         self.assertEqual(CHECKPOINTS[1], report.deployed_checkpoint)
         self.assertEqual([f'{NerTrainingPipeline.ADAPTER}.gguf'], adapters)
-        self.assertGreater(report.accuracy['all'], 0.5)
-        self.assertEqual(1, report.accuracy['timer'])
+        self.assertEqual(1, report.accuracy['all'])

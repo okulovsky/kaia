@@ -1,7 +1,7 @@
 from chara.paraphrasing.common import Paraphrase, ParsedTemplate, generate_values_for_variables
 from pathlib import Path
 from grammatron import Template
-from chara.common import Chara
+from chara.common import Chara, CaseCollection
 from chara.common.llm import BrainBoxLLMEngine, LLMSetup
 
 
@@ -34,8 +34,8 @@ class TextDatasetPipeline:
             enable_option_values_translation=True,
         )
         pipe = Paraphrase.Pipeline(settings)
-        paraphrase_results = Chara.call(pipe)(cases)
-        return self._export_cases(paraphrase_results)
+        paraphrase_results = Chara.call(pipe)(CaseCollection(cases))
+        return self._export_cases(paraphrase_results.cases)
 
     def _export_cases(self, cases):
         result = []
