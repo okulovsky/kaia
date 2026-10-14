@@ -33,7 +33,7 @@ class ChromaService(IChroma):
     def _encode(self, texts: list[str]) -> list[list[float]]:
         return [v.tolist() for v in self._embed_model.embed(texts)]
 
-    def train(self, utterances: list[dict], collection_name: str|None = None) -> None:
+    def _recreate_collection(self, collection_name: str|None):
         name = self._get_collection_name(collection_name)
         try:
             self.client.delete_collection(name)
@@ -47,20 +47,53 @@ class ChromaService(IChroma):
         # the same collection would break every later query until the service is restarted.
         self._loaded_collection_name = name
         self._loaded_collection = collection
+        return collection
+
+    def _add(self, collection, texts: list[str], embeddings: list[list[float]], metadatas: list[dict]):
+        chunk_size = 5000
+        for start in range(0, len(texts), chunk_size):
+            end = start + chunk_size
+            collection.add(
+                ids=[str(i) for i in range(start, min(end, len(texts)))],
+                embeddings=embeddings[start:end],
+                documents=texts[start:end],
+                metadatas=metadatas[start:end],
+            )
+
+    def train(self, utterances: list[dict], collection_name: str|None = None) -> None:
+        collection = self._recreate_collection(collection_name)
         if not utterances:
             return
         texts = [u['text'] for u in utterances]
         embeddings = self._encode(texts)
         metadatas = [{'intent': u.get('intent', ''), 'language': u.get('language', '')} for u in utterances]
-        chunk_size = 5000
-        for start in range(0, len(utterances), chunk_size):
-            end = start + chunk_size
-            collection.add(
-                ids=[str(i) for i in range(start, min(end, len(utterances)))],
-                embeddings=embeddings[start:end],
-                documents=texts[start:end],
-                metadatas=metadatas[start:end],
-            )
+        self._add(collection, texts, embeddings, metadatas)
+
+    def export_collection(self, collection_name: str|None = None) -> list[dict]:
+        result = self._get_collection(collection_name).get(include=['documents', 'metadatas', 'embeddings'])
+        records = [
+            {
+                'id': result['ids'][i],
+                'text': result['documents'][i],
+                'intent': result['metadatas'][i]['intent'],
+                'language': result['metadatas'][i]['language'],
+                'embedding': [float(x) for x in result['embeddings'][i]],
+            }
+            for i in range(len(result['ids']))
+        ]
+        records.sort(key=lambda r: int(r['id']))
+        for r in records:
+            del r['id']
+        return records
+
+    def import_collection(self, records: list[dict], collection_name: str|None = None) -> None:
+        collection = self._recreate_collection(collection_name)
+        if not records:
+            return
+        texts = [r['text'] for r in records]
+        embeddings = [r['embedding'] for r in records]
+        metadatas = [{'intent': r['intent'], 'language': r['language']} for r in records]
+        self._add(collection, texts, embeddings, metadatas)
 
     def find_neighbors(self, text: str, k: int = 5, collection_name: str|None = None) -> list[dict]:
         embedding = self._encode([text])

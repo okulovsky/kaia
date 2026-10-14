@@ -2,9 +2,11 @@ import json
 import random
 from collections import defaultdict
 from dataclasses import dataclass, field
+from pathlib import Path
+from brainbox.deciders import LlamaLoraSFTTrainer, LlamaLoraServer
 from brainbox.deciders.text.llama_lora_sft_trainer.app.interface import TrainingSettings
 from chara.common import Chara
-from ..slm_training.pipeline import LlamaLoraPipeline, upload_checkpoint
+from ..slm_training.pipeline import LlamaLoraPipeline, training_run_folder
 from ..slm_training.stats import TrainingRunStats, CheckpointValStats
 from .dataset import record_to_sample, synthetic_timer_records, negative_to_sample
 
@@ -22,6 +24,8 @@ class NerTrainingReport:
     stats: TrainingRunStats
     deployed_checkpoint: int
     accuracy: dict[str, float] = field(default_factory=dict)
+    # The deployed adapter
+    adapter_file: Path | None = None
 
     def __str__(self):
         lines = [f'Slots exact match on held-out texts, checkpoint {self.deployed_checkpoint} deployed:']
@@ -80,9 +84,14 @@ class NerTrainingPipeline:
 
         @Chara.phase
         def deployment():
-            upload_checkpoint(stats.training_run, best.number, self.ADAPTER)
+            api = Chara.Apis.brainbox_api
+            adapter_file = Chara.current.folder / f'{self.ADAPTER}.gguf'
+            source = f'{training_run_folder(stats.training_run)}/gguf_checkpoints/checkpoint-{best.number}.gguf'
+            adapter_file.write_bytes(api.resources(LlamaLoraSFTTrainer).read(source))
+            api.resources(LlamaLoraServer).upload(f'models/{self.model_id}/lora_adapters/{self.ADAPTER}.gguf', adapter_file)
+            return adapter_file
 
-        return NerTrainingReport(stats, best.number, self._accuracy(best, validation))
+        return NerTrainingReport(stats, best.number, self._accuracy(best, validation), deployment)
 
     def _samples(self, text_dataset: list[dict], negatives: list[str]):
         intents_with_values = {r['intent'] for r in text_dataset if r['values']}

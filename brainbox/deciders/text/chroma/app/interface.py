@@ -9,6 +9,14 @@ class IChroma:
         ...
 
     @brainbox_endpoint
+    def export_collection(self, collection_name: str|None = None) -> list[dict]:
+        ...
+
+    @brainbox_endpoint
+    def import_collection(self, records: list[dict], collection_name: str|None = None) -> None:
+        ...
+
+    @brainbox_endpoint
     def find_neighbors(self, text: str, k: int = 5, collection_name: str|None = None) -> list[dict]:
         ...
 

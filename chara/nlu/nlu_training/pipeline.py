@@ -25,6 +25,8 @@ class NluTrainingReport:
     distance_threshold: float
     languages: dict[str, NluLanguageStats] = field(default_factory=dict)
     transcriptions: list[dict] = field(default_factory=list)
+    # The deployed artifacts: corpus.txt and lm.binary of KenLM, utterances.json and chroma_collection.json (with the embeddings) of Chroma
+    deployment_folder: Path | None = None
 
     def __str__(self):
         def pct(value):
@@ -114,9 +116,20 @@ class NluTrainingPipeline:
 
         @Chara.phase
         def deployment():
-            Chara.call(KenLMTrainingPipeline())([r['text'] for r in text_dataset])
-            Chara.Apis.brainbox_api.execute(Chroma.new_task().train(_utterances(text_dataset)))
+            api = Chara.Apis.brainbox_api
+            folder = Chara.current.folder
+            corpus = KenLMTrainingPipeline.corpus([r['text'] for r in text_dataset])
+            (folder / 'corpus.txt').write_text(corpus)
+            api.execute(WhisperKenLM.new_task().train_lm(corpus))
+            (folder / 'lm.binary').write_bytes(api.resources(WhisperKenLM).read('lm/lm.binary'))
+            utterances = _utterances(text_dataset)
+            (folder / 'utterances.json').write_text(json.dumps(utterances, indent=2, ensure_ascii=False))
+            api.execute(Chroma.new_task().train(utterances))
+            collection = api.execute(Chroma.new_task().export_collection())
+            (folder / 'chroma_collection.json').write_text(json.dumps(collection, ensure_ascii=False))
+            return folder
 
+        report.deployment_folder = deployment
         return report
 
     def _split(self, text_dataset: list[dict], text_to_record: dict[str, dict], voice_samples: list[dict]):

@@ -46,6 +46,9 @@ class ChromaMock(ISelfManagingDecider):
     def train(self, utterances: list[dict], collection_name: str | None = None) -> None:
         self.collections[collection_name] = utterances
 
+    def export_collection(self, collection_name: str | None = None) -> list[dict]:
+        return [dict(u, embedding=[0.0]) for u in self.collections[collection_name]]
+
     def find_neighbors(self, text: str, k: int = 5, collection_name: str | None = None) -> list[dict]:
         intent = 'time' if text.startswith('what') else 'timer'
         return [dict(text=text, intent=intent, distance=0.1)]
