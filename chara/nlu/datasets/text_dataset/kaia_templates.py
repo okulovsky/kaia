@@ -9,7 +9,7 @@ MOODS = (
 
 LANGUAGES = ('en', 'de', 'ru')
 
-
+#TODO: it doesn't belong here, as import suggests. It belongs to the final script that runs the training.
 def kaia_intent_templates() -> list[Template]:
     """The intents of the Kaia assistant: the templates the text dataset paraphrases"""
     from kaia.app import AssistantFactory

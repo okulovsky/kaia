@@ -19,6 +19,9 @@ class TextDatasetPipeline:
         self.moods = moods
 
     def __call__(self) -> list[dict]:
+        return self.export(self.paraphrase(), 10)
+
+    def paraphrase(self) -> list[TextDatasetCase]:
         cases = []
         for mood in self.moods:
             for language in self.languages:
@@ -35,9 +38,10 @@ class TextDatasetPipeline:
         )
         pipe = Paraphrase.Pipeline(settings)
         paraphrase_results = Chara.call(pipe)(CaseCollection(cases))
-        return self._export_cases(paraphrase_results.cases)
+        return list(paraphrase_results.successes)
 
-    def _export_cases(self, cases):
+    @staticmethod
+    def export(cases, variants_count: int) -> list[dict]:
         result = []
         for case in cases:
             intent = case.original_template.get_name()
@@ -45,7 +49,7 @@ class TextDatasetPipeline:
             if len(variables) == 0:
                 values_instances = [{}]
             else:
-                values_instances = generate_values_for_variables(list(variables), 10)
+                values_instances = generate_values_for_variables(list(variables), variants_count)
 
             for instance in values_instances:
                 values_description = []
