@@ -3,7 +3,7 @@ import re
 from datetime import timedelta
 from grammatron import CardinalDub, OrdinalDub, DubParameters, TimedeltaDub
 from grammatron.dubs.implementation.categorical_variable_dub import string_values_to_values
-from avatar.daemon.stt_service.stt.nlu_slots import slots_to_text, timedelta_to_text, no_command_text
+from avatar.daemon.streaming_stt_service.nlu_slots import slots_to_text, timedelta_to_text, no_command_text
 
 # TextDatasetPipeline stores durations and ordinals as English words, whatever the language of the text
 _CARDINALS = string_values_to_values(CardinalDub(0, 120), DubParameters())

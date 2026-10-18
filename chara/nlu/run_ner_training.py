@@ -4,7 +4,7 @@ from pathlib import Path
 from chara.common import Chara
 from chara.nlu.ner_training import NerTrainingPipeline
 
-# Trains and deploys the slots adapter of NluRecognitionSetup to the BrainBox at CHARA_BRAINBOX_URL.
+# Trains and deploys the slots adapter of NLUService to the BrainBox at CHARA_BRAINBOX_URL.
 # LlamaLoraSFTTrainer and LlamaLoraServer must be installed there.
 # The results are cached: to retrain, delete the cache folder.
 

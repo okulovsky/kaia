@@ -48,6 +48,10 @@ def _build_handler(dt: 'DeclaredType') -> ITypeHandler:
     raise ValueError(f"Cannot find handler for {dt}")
 
 
+class SerializationMismatch(TypeError):
+    """A value does not match the annotation at some path; raised at the deepest path where it happens."""
+
+
 class Serializer:
     Context = SerializationContext
 
@@ -94,19 +98,36 @@ class Serializer:
     def is_nullable(self) -> bool:
         return self._nullable
 
+    def _mismatch(self, value: Any, last_error: Exception, ctx: SerializationContext) -> Exception:
+        """A mismatch already reported by a nested serializer is kept, since it points at the deeper path;
+        otherwise, the value does not match the annotation at this very path. Only the reported error is chosen
+        here: which handler serializes the value is decided by the loop, the first one to succeed."""
+        if isinstance(last_error, SerializationMismatch):
+            return last_error
+        handled = ' | '.join(getattr(h.python_type, '__name__', str(h.python_type)) for h in self._handlers)
+        raw = self.annotation.raw_annotation
+        raw = raw.__name__ if isinstance(raw, type) else str(raw)
+        expected = f'`{raw}`' if raw == handled else f'`{raw}` (handled as `{handled}`)'
+        error = SerializationMismatch(f"At {ctx.current_path}, expected {expected}, but was `{type(value).__name__}` ({last_error})")
+        error.__cause__ = last_error
+        return error
+
     def to_json(self, value: Any, ctx: SerializationContext|None = None) -> Any:
         if ctx is None:
             ctx = SerializationContext()
         if not self._handlers:
             return value
         last_error = None
+        nested_mismatch = None
         for h in self._handlers:
             try:
                 return h.to_json(value, ctx)
             except (TypeError, ValueError) as e:
                 last_error = e
+                if isinstance(e, SerializationMismatch):
+                    nested_mismatch = e
         if last_error:
-            raise last_error
+            raise self._mismatch(value, nested_mismatch or last_error, ctx)
         raise TypeError(f"No handler for {type(value)}")
 
     def from_json(self, json_value: Any, ctx: SerializationContext|None = None) -> Any:
@@ -115,13 +136,16 @@ class Serializer:
         if not self._handlers:
             return json_value
         last_error = None
+        nested_mismatch = None
         for h in self._handlers:
             try:
                 return h.from_json(json_value, ctx)
             except (TypeError, ValueError) as e:
                 last_error = e
+                if isinstance(e, SerializationMismatch):
+                    nested_mismatch = e
         if last_error:
-            raise last_error
+            raise self._mismatch(json_value, nested_mismatch or last_error, ctx)
         raise TypeError(f"No handler could deserialize {json_value}")
 
     def to_string(self, value: Any, ctx: SerializationContext|None = None) -> str:

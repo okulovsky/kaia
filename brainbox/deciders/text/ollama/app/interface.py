@@ -30,18 +30,22 @@ class OllamaOptions:
     num_gpu: int|None = None  # Number of model layers to offload to GPU.
     num_thread: int|None = None  # CPU threads to use for inference.
 
-    # Not a sampling option: a decoding-mode switch, sent as its own top-level
-    # request field rather than nested in `options` (see to_options_and_format).
+    # Not sampling options: sent as top-level request fields rather than nested in `options`
+    # (see TOP_LEVEL_FIELDS).
     format: dict|str|None = None  # `"json"`, or a JSON Schema the output must conform to.
+    logprobs: bool|None = None  # Return the log-probability of each generated token in the reply's `logprobs`.
+    top_logprobs: int|None = None  # With `logprobs`, also return this many most likely alternatives per token.
 
-    def to_options_and_format(self) -> tuple[dict|None, 'dict|str|None']:
-        """`format` is a top-level field in Ollama's request body, not part of `options`."""
-        options = {
-            f.name: getattr(self, f.name)
-            for f in dataclasses.fields(self)
-            if f.name != 'format' and getattr(self, f.name) is not None
-        }
-        return (options or None), self.format
+    TOP_LEVEL_FIELDS = ('format', 'logprobs', 'top_logprobs')
+
+    def to_body_fields(self) -> dict:
+        """The fields to add to Ollama's request body: `options`, and the fields of `TOP_LEVEL_FIELDS`."""
+        values = {f.name: getattr(self, f.name) for f in dataclasses.fields(self) if getattr(self, f.name) is not None}
+        body = {k: v for k, v in values.items() if k in self.TOP_LEVEL_FIELDS}
+        options = {k: v for k, v in values.items() if k not in self.TOP_LEVEL_FIELDS}
+        if options:
+            body['options'] = options
+        return body
 
     def __add__(self, other: 'OllamaOptions|None') -> 'OllamaOptions':
         if other is None:

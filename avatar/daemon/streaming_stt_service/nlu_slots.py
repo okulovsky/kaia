@@ -1,5 +1,5 @@
 """
-The text format of the slots model (the LoRA adapter of NluRecognitionSetup) and its conversion to template values.
+The text format of the slots model (the LoRA adapter of NLUService) and its conversion to template values.
 
 The model receives the recognized text and outputs, after a line break, the intent and then one `name: value`
 line per variable:

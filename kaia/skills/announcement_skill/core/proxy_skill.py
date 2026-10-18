@@ -38,4 +38,4 @@ class ProxySkill(IKaiaSkill):
         packs = []
         for skill in self.get_inner_skills():
             packs.extend(skill.get_extended_intents_packs())
-        return self._unique(packs, lambda z: z.name)
+        return self._unique(packs, lambda z: z.context)

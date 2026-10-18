@@ -1,4 +1,4 @@
-from kaia import KaiaSkillBase, ErrorAnnouncement, World, WhisperOpenMicListen
+from kaia import KaiaSkillBase, ErrorAnnouncement, World, FreeSpeechListen
 from loguru import logger
 from grammatron import *
 
@@ -31,7 +31,7 @@ class LogFeedbackSkill(KaiaSkillBase):
 
     def run(self):
         yield LogFeedbackReplies.report_request()
-        s = yield WhisperOpenMicListen()
+        s = yield FreeSpeechListen()
         logger.error(f"Error is reported by user {s}")
         yield ErrorAnnouncement(s)
         yield LogFeedbackReplies.confirmation()

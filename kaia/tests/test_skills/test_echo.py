@@ -1,9 +1,9 @@
 from unittest import TestCase
-from kaia.skills.echo_skill import EchoSkill, EchoIntents, EchoReplies, WhisperOpenMicListen
+from kaia.skills.echo_skill import EchoSkill, EchoIntents, EchoReplies, FreeSpeechListen
 from eaglesong.core import Automaton, Scenario, Return
 
 def S():
-    return Scenario(lambda: Automaton(EchoSkill().run, None), keep_listens_type_in_log=(WhisperOpenMicListen,))
+    return Scenario(lambda: Automaton(EchoSkill().run, None), keep_listens_type_in_log=(FreeSpeechListen,))
 
 
 
@@ -12,7 +12,7 @@ class EchoSkillTestCase(TestCase):
         (
             S()
             .send(EchoIntents.echo())
-            .check(EchoReplies.echo_request(), WhisperOpenMicListen)
+            .check(EchoReplies.echo_request(), FreeSpeechListen)
             .send("Make me a sandwich")
             .check('Make me a sandwich',Return)
             .validate()

@@ -1,15 +1,16 @@
 import argparse
+from dataclasses import dataclass
 import time
 import webbrowser
 from pathlib import Path
-from kaia.app import KaiaAppSettings
+from kaia.app import KaiaAppSettings, AvatarDaemonAppSettings, KaiaApp
 from foundation_kaia.misc import Loc
 from foundation_kaia.fork import Fork
 from avatar.app import compile_frontend
-from avatar.daemon import NluRecognitionSetup
-from avatar.daemon.stt_service.stt import IntentSource
+from avatar.daemon import StreamingSTTService, NLUService, State
+from avatar.daemon.streaming_stt_service import IntentSource
 from brainbox import BrainBox
-from brainbox.deciders import WhisperKenLM, Chroma, LlamaLoraSFTTrainer, LlamaLoraServer, Ollama
+from brainbox.deciders import WhisperKenLM, Nemotron, Chroma, LlamaLoraSFTTrainer, LlamaLoraServer, Ollama
 from chara.common import Chara
 from chara.nlu.nlu_training import NluTrainingPipeline, load_nlu_datasets
 from chara.nlu.ner_training import NerTrainingPipeline
@@ -27,6 +28,19 @@ parser.add_argument('--intent-source', default=IntentSource.CHROMA, choices=Inte
                     help='Who decides the intent: Chroma, the LoRA of the slots, or their agreement')
 
 
+@dataclass
+class NluAvatarDaemonAppSettings(AvatarDaemonAppSettings):
+    slots_adapter: str|None = None
+    slots_model: str = 'gemma-3-270m-it'
+    intent_source: str = IntentSource.CHROMA
+
+    def create_stt_service(self, app: KaiaApp, state: State):
+        return StreamingSTTService(state, app.brainbox_cache_folder)
+
+    def create_nlu_service(self, app: KaiaApp, state: State):
+        return NLUService(slots_adapter=self.slots_adapter, slots_model=self.slots_model, intent_source=self.intent_source)
+
+
 if __name__ == '__main__':
     args = parser.parse_args()
     datasets = Path(args.datasets)
@@ -39,11 +53,12 @@ if __name__ == '__main__':
     settings.brainbox.deciders_files_in_kaia_working_folder = False
     settings.custom_avatar_resources_folder = Loc.root_folder/'kaia/app/files/avatar-resources'
     ner = NerTrainingPipeline()
-    settings.brainbox_setup.up(WhisperKenLM).up(Chroma).up(LlamaLoraServer, parameter=ner.model_id).up(LlamaLoraSFTTrainer)
+    # WhisperKenLM is needed only for the training on the voice samples
+    settings.brainbox_setup.up(Nemotron, model='multilingual').up(WhisperKenLM).up(Chroma).up(LlamaLoraServer, parameter=ner.model_id).up(LlamaLoraSFTTrainer)
     if args.generate_rounds > 0:
         # The model given by --model must be available in this Ollama
         settings.brainbox_setup.up(Ollama)
-    settings.avatar_processor.stt_setup = NluRecognitionSetup(
+    settings.avatar_processor = NluAvatarDaemonAppSettings(
         slots_adapter=ner.ADAPTER, slots_model=ner.model_id, intent_source=args.intent_source,
     )
     app = settings.create_app(working_folder)

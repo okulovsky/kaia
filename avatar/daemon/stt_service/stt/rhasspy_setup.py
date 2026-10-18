@@ -1,6 +1,6 @@
 from typing import Iterable
 from brainbox import BrainBox
-from .recognition_setup import IRecognitionSetup, RecognitionContext, STTConfirmation, IPostprocessor
+from .recognition_setup import IRecognitionSetup, RecognitionContext, RecognitionResult, IPostprocessor
 from dataclasses import dataclass
 from ..rhasspy_training import RhasspyHandler, IntentsPack
 from brainbox.deciders import RhasspyKaldi, Collector
@@ -12,9 +12,9 @@ class RhasspyPostprocessor(IPostprocessor):
 
     def postprocess(self, result):
         try:
-            return STTConfirmation(self.handler.parse_kaldi_output(result), result)
+            return RecognitionResult(self.handler.parse_kaldi_output(result), result)
         except Exception as error:
-            return STTConfirmation(None, result, error)
+            return RecognitionResult(None, result, error)
 
 @dataclass
 class RhasspyRecognitionSetup(IRecognitionSetup):
@@ -23,8 +23,8 @@ class RhasspyRecognitionSetup(IRecognitionSetup):
     def create_task_and_postprocessor(self, context: RecognitionContext) -> tuple[BrainBox.Task, IPostprocessor]:
         task = (
             RhasspyKaldi
-            .new_task(id=context.command.file.split('.')[0] + '.rhasspy')
-            .transcribe(file=context.command.file, model=self.model)
+            .new_task(id=context.file.split('.')[0] + '.rhasspy')
+            .transcribe(file=context.file, model=self.model)
         )
         handler = context.rhasspy_handlers[self.model]
         postprocessor = RhasspyPostprocessor(
@@ -38,6 +38,6 @@ class RhasspyRecognitionSetup(IRecognitionSetup):
         for pack in intents_packs:
             handler = RhasspyHandler(pack.templates)
             builder.append(
-                RhasspyKaldi.new_task().train(pack.name, pack.language, handler.ini_file, pack.custom_words),
+                RhasspyKaldi.new_task().train(pack.context, pack.language, handler.ini_file, pack.custom_words),
             )
         return builder.to_collector_pack('to_array')

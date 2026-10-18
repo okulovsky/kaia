@@ -1,3 +1,5 @@
+import traceback
+from typing import Any
 from brainbox.deciders import Resemblyzer
 from .common import SoundEvent, IMessage, message_handler, State, AvatarService, InitializationEvent
 from .common.vector_identificator import VectorIdentificator, IStrategy
@@ -5,7 +7,6 @@ from .brainbox_service import BrainBoxService
 from dataclasses import dataclass
 from foundation_kaia.marshalling import FileLike
 from ..app import AvatarApi
-from ..messaging import Confirmation
 
 
 @dataclass
@@ -14,14 +15,16 @@ class SpeakerIdentificationTrain(IMessage):
     actual_user: str
 
 @dataclass
-class SpeakerIdentificationCommand(IMessage):
+class SpeakerIdentificationEvent(IMessage):
     file_id: str
+    speaker: str|None
+    error: Any = None
 
 
 
 class SpeakerIdentificationService(AvatarService):
     Train = SpeakerIdentificationTrain
-    Command = SpeakerIdentificationCommand
+    Event = SpeakerIdentificationEvent
 
     def __init__(self,
                  avatar_api: AvatarApi,
@@ -49,9 +52,12 @@ class SpeakerIdentificationService(AvatarService):
         return self.client.run_synchronously(command, BrainBoxService.Confirmation).result
 
     @message_handler.with_call(BrainBoxService.Command, BrainBoxService.Confirmation)
-    def on_sound_event(self, message: SpeakerIdentificationCommand) -> Confirmation:
-        speaker = self.vector_identificator.analyze(message.file_id)
-        return Confirmation(speaker).as_confirmation_for(message)
+    def on_sound_event(self, message: SoundEvent) -> SpeakerIdentificationEvent:
+        try:
+            speaker = self.vector_identificator.analyze(message.file_id)
+        except Exception:
+            return SpeakerIdentificationEvent(message.file_id, None, traceback.format_exc())
+        return SpeakerIdentificationEvent(message.file_id, speaker)
 
 
     @message_handler.with_call(BrainBoxService.Command, BrainBoxService.Confirmation)

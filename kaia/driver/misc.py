@@ -1,10 +1,18 @@
 from eaglesong import Listen
-from avatar.daemon import OpenMicCommand, WhisperRecognitionSetup
+from grammatron import TemplateBase
+from avatar.daemon import OpenMicCommand, FreeSpeechRecognitionRequest, TemplatesRecognitionRequest
 
-class WhisperOpenMicListen(Listen):
-    def __init__(self, whisper_prompt: str|None = None, whisper_language: str|None = None):
+class FreeSpeechListen(Listen):
+    def __init__(self, language: str|None = None, prompt: str|None = None, template: TemplateBase|None = None):
         super().__init__(
-            WhisperRecognitionSetup(whisper_prompt, whisper_language),
+            FreeSpeechRecognitionRequest(language, prompt, template),
             OpenMicCommand()
         )
 
+
+class ContextListen(Listen):
+    def __init__(self, context: str):
+        super().__init__(
+            TemplatesRecognitionRequest(context),
+            OpenMicCommand()
+        )

@@ -21,7 +21,7 @@ if __name__ == "__main__":
     )
     assistant = AssistantFactory(None).create_assistant(None)
     intents = assistant.get_intents()
-    templates = next(i for i in intents if i.name=='CORE').templates
+    templates = next(i for i in intents if i.context=='CORE').templates
     allowed_intents = (
         'kaia.skills.time.TimeIntents.question', #No variables
         'kaia.skills.cookbook_skill.intents.CookBookIntents.recipe', #with OptionsDub

@@ -16,11 +16,7 @@ class OllamaService(IOllama):
     def _apply_options(body: dict, options: OllamaOptions|None) -> None:
         if options is None:
             return
-        ollama_options, format = options.to_options_and_format()
-        if ollama_options is not None:
-            body['options'] = ollama_options
-        if format is not None:
-            body['format'] = format
+        body.update(options.to_body_fields())
 
     def completions_json(self,
                           prompt: str,
