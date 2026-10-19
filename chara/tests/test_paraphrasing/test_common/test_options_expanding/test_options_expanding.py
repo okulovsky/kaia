@@ -21,7 +21,7 @@ class OllamaMock(ISelfManagingDecider):
             raise ValueError("Should be called once")
         self.call_count += 1
         if prompt == 'fruit':
-            return "* mango\n* kiwi\n* We need to buy {fruit}"
+            return "* mango\n* kiwi\n* We need to buy {fruit}\n* buy some apples or pears"
         raise ValueError(f"Unexpected prompt: {prompt}")
 
 
@@ -53,3 +53,5 @@ class TestOptionExpandingPipeline(TestCase):
         self.assertEqual("You ordered mango", templates[1].to_str("mango"))
         with self.assertRaises(Exception):
             templates[0].to_str("We need to buy {fruit}")
+        with self.assertRaises(Exception):
+            templates[0].to_str("buy some apples or pears")
