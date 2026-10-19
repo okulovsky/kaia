@@ -17,7 +17,7 @@ from chara.nlu.slm_training.stats import TrainingRunStats
 
 
 class OllamaMock(ISelfManagingDecider):
-    """Every answer is a new list of phrases, the first phrase repeats in all of them"""
+    """Every answer is a new list of phrases, the first phrase repeats in all of them; numbers and translations as small models add them"""
     def __init__(self):
         self.calls = 0
 
@@ -26,7 +26,7 @@ class OllamaMock(ISelfManagingDecider):
 
     def question(self, prompt: str, system_prompt: str | None = None, options: Ollama.Options | None = None, image: FileLike | None = None) -> str:
         self.calls += 1
-        return f'- what a day\n- phrase {self.calls}a\n- phrase {self.calls}b'
+        return f'- 1. what a day (was für ein Tag)\n- phrase {self.calls}a\n- "phrase {self.calls}b" (Satz)'
 
 
 class TrainingMock:
@@ -51,6 +51,7 @@ class CreateNegativesTestCase(TestCase):
         self.assertEqual(2, len(runs))
         self.assertEqual('what a day', phrases[0])
         self.assertEqual(1, phrases.count('what a day'))
+        self.assertIn('phrase 1b', phrases)
         # 2 runs, 2 languages, 2 batches, 2 new phrases in each answer
         self.assertEqual(1 + 2 * 2 * 2 * 2, len(phrases))
 

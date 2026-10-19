@@ -1,6 +1,12 @@
+import re
 from chara.common import Chara, CaseCollection
 from chara.common.llm import BulletPointDivider, LLMRequest
 from .negative_case import NegativeCase
+
+
+# Small models number the phrases and add the translations: `15. Ich habe Hunger." (I'm hungry.)`
+_NUMBERING = re.compile(r'^\d+[.)]\s*')
+_TRANSLATION = re.compile(r'\s*\([^()]*\)\s*$')
 
 
 class NegativePipeline:
@@ -9,7 +15,9 @@ class NegativePipeline:
         self.request = request
 
     def _strip(self, case: NegativeCase, text: str) -> str:
-        return text.strip()
+        text = _NUMBERING.sub('', text.strip())
+        text = _TRANSLATION.sub('', text)
+        return text.strip().strip('"').strip()
 
     def __call__(self, cases: list[NegativeCase]) -> list[str]:
         request = (self.request
