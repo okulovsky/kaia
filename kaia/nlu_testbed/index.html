@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>NLU testbed</title>
+  <style>
+    body { margin: 0; background: #141414; color: #ddd; font-family: sans-serif; }
+    #controls { position: fixed; top: 0; left: 0; right: 0; display: flex; gap: 8px; padding: 10px; background: #202020; }
+    #controls textarea { flex: 1; height: 2.4em; background: #111; color: #ddd; border: 1px solid #444; font-size: 16px; }
+    #controls button { font-size: 16px; padding: 0 18px; }
+    #state { align-self: center; min-width: 7em; color: #8a8; }
+    #chat { margin-top: 64px; padding: 10px; }
+    #chat p { margin: 6px 0; padding: 8px 10px; border-radius: 6px; }
+    #chat p.right { background: #2a3a4a; text-align: right; }
+    #chat p.left { background: #2a2a2a; }
+    #chat p.system { background: #1d241d; font-family: monospace; font-size: 14px; white-space: pre-wrap; }
+    #chat p.error { background: #4a2020; font-family: monospace; font-size: 12px; white-space: pre-wrap; }
+  </style>
+</head>
+
+<body>
+  <div id="controls">
+    <button id="talk">Talk</button>
+    <span id="state">Loading…</span>
+    <textarea id="text" placeholder="Type a command, Ctrl+Enter to send"></textarea>
+    <button id="send">Send</button>
+  </div>
+  <div id="chat"></div>
+
+  <script type="module">
+    const v = Math.random().toString(36).slice(2);
+    const { AvatarClient, Dispatcher, ChatCommandHandler, TextInputHandler, Microphone, FakeMicrophone, MicController,
+            Recorder, StatefulRecorder, SilenceDetector, Automaton, AudioController, Message, Envelop } =
+      await import(`/frontend/scripts/kaia-frontend.js?v=${v}`);
+
+    const params  = new URLSearchParams(window.location.search);
+    // ?fake_mic: the recordings are played by SoundInjectionCommand instead of the microphone, for the automated tests
+    const fakeMic = params.has('fake_mic');
+    const session = params.get('session') ?? 'default';
+    const baseUrl = window.location.origin;
+
+    const client     = new AvatarClient({ baseUrl, name: 'web', session });
+    const dispatcher = new Dispatcher(client);
+    new ChatCommandHandler({ dispatcher, container: document.getElementById('chat'), baseUrl });
+    new TextInputHandler({ input: document.getElementById('text'), button: document.getElementById('send'), client });
+    new AudioController({ dispatcher, baseUrl, silent: fakeMic });
+
+    const stateSpan = document.getElementById('state');
+    dispatcher.subscribe('StatefulRecorderStateEvent', async (msg) => { stateSpan.textContent = msg.payload.state; });
+
+    const input     = fakeMic ? new FakeMicrophone({ sampleRate: 16000, dispatcher, baseUrl }) : new Microphone();
+    const recorder  = new Recorder({ startBufferLength: 1.0, normalBufferLength: 0.3, dispatcher, baseUrl });
+    const stateful  = new StatefulRecorder({ recorder, dispatcher });
+    const silence   = new SilenceDetector({ timeBetweenReportsInSeconds: 0.5, decisionWindowSeconds: 1.0, reportingWindowSeconds: 0.1, silenceLevel: 0.01, dispatcher });
+    // No wake word: the microphone is opened by the Talk button
+    const automaton = new Automaton({ silenceDetector: silence, wakeWordDetector: null, statefulRecorder: stateful, dispatcher });
+    const controller = new MicController(input, m => automaton.process(m));
+
+    // The browser gives the microphone and the sound only after a click, so the real microphone starts on the first Talk
+    let started = false;
+    async function start() {
+      if (started) return;
+      started = true;
+      await controller.start();
+      stateSpan.textContent = 'Standby';
+    }
+    document.getElementById('talk').addEventListener('click', async () => {
+      await start();
+      dispatcher.push(new Message('OpenMicCommand', new Envelop(), {}));
+    });
+
+    const initMsg = new Message('InitializationEvent', new Envelop(), {});
+    await client.push(initMsg);
+    client.setLastId(initMsg.envelop.id);
+    dispatcher.start();
+    stateSpan.textContent = 'Press Talk';
+    if (fakeMic) await start();
+  </script>
+</body>
+</html>
