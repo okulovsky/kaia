@@ -25,6 +25,10 @@ class OllamaMock(ISelfManagingDecider):
             return "Badezimmer"
         if word == 'living room' and language == 'de':
             return "Wohnzimmer"
+        if word == 'Haruto' and language == 'de':
+            return "Haruto"
+        if word == 'Sakura' and language == 'de':
+            return "Kirschblüte"
         raise ValueError(f"Wrong request {prompt}")
 
 
@@ -65,3 +69,9 @@ class TestWordTranslationPipeline(TestCase):
         self.assertEqual("Таймер заведен на десять минут", result[0].utter(10).to_str())
         self.assertEqual("Нужно купить банан", result[1].utter('банан').to_str())
         self.assertEqual("Ich gehe in Wohnzimmer", result[2].utter("Wohnzimmer").to_str())
+
+    def test_header_translated_to_itself(self):
+        templates = [Template(de=f"Ruf {OptionsDub(['Haruto', 'Sakura']).as_variable('person')} an")]
+        result = self._run(templates, also_translate_options_header=True)
+        self.assertEqual("Ruf Haruto an", result[0].utter('Haruto').to_str())
+        self.assertEqual("Ruf Kirschblüte an", result[0].utter('Kirschblüte').to_str())
