@@ -216,23 +216,6 @@ class NluTrainingPipeline:
         return True, neighbors[0]['distance'] <= self.distance_threshold
 
 
-def load_nlu_datasets(folder: Path) -> tuple[list[dict], list[dict]]:
-    """
-    Reads the datasets in the layout of chara/nlu/datasets/run_*.py:
-    `text-dataset.json` and, optionally, the voiced samples `to_zip/samples.json` with their audio files.
-    """
-    text_dataset_path = folder / 'text-dataset.json'
-    if not text_dataset_path.is_file():
-        raise FileNotFoundError(f"{text_dataset_path} is not found, create it with chara/nlu/datasets/run_text_dataset.py")
-    text_dataset = json.loads(text_dataset_path.read_text())
-    voice_samples = []
-    samples_path = folder / 'to_zip' / 'samples.json'
-    if samples_path.is_file():
-        for sample in json.loads(samples_path.read_text()):
-            voice_samples.append(dict(file=str(samples_path.parent / sample['filename']), text=sample['text']))
-    return text_dataset, voice_samples
-
-
 def _utterances(records: list[dict]) -> list[dict]:
     return [dict(text=r['text'], intent=r['intent'], language=r['language']) for r in records]
 
