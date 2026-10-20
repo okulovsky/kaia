@@ -13,7 +13,7 @@ from brainbox.framework import BrainBoxSetup
 from brainbox.deciders import WhisperKenLM, Nemotron, Chroma, LlamaLoraSFTTrainer, LlamaLoraServer, Ollama
 from chara.common import Chara
 from chara.nlu.ner_training import NerTrainingPipeline
-from chara.nlu.scripts import create_dataset, create_negatives, train_ultimate_nlu
+from chara.nlu.scripts import create_dataset, create_negatives, train_ultimate_nlu, deploy_ultimate_nlu
 from kaia.app import KaiaAppSettings, AvatarDaemonAppSettings, KaiaApp
 from .reporting_nlu_service import ReportingNLUService
 from .testbed_service import TestbedService, TestbedChatService
@@ -132,6 +132,9 @@ def run_nlu_testbed(
             create_dataset(templates, generation_model, folder=folder)
             create_negatives(generation_model, folder=folder)
         print(train_ultimate_nlu(folder))
+        # The deployment inside the training is cached: when the folder was trained before, BrainBox keeps
+        # the models of the last trained folder
+        deploy_ultimate_nlu(Chara.Apis.brainbox_api, folder)
 
         app.get_fork_app(None).run()
         app.avatar_api.wait_for_connection(30)
