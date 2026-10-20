@@ -20,7 +20,7 @@ class SilenceLevelService(AvatarService):
 
     def _write_file(self, value):
         os.makedirs(self.get_settings_file().parent, exist_ok=True)
-        self.get_settings_file().write_text(str(self.current_silence_level))
+        self.get_settings_file().write_text(str(value))
 
     @message_handler
     def on_initialization(self, message: InitializationEvent) -> SetSilenceLevelCommand:
