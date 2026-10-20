@@ -8,9 +8,6 @@ from avatar.daemon import (
 from avatar.daemon.common import AvatarService, message_handler
 from .reporting_nlu_service import NLUReportEvent
 
-GREETING = 'Press "Talk" and say a command, or type it. Every phrase gets the report of the NLU.'
-
-
 class TestbedService(AvatarService):
     """
     Replaces the Kaia driver in the testbed: gives the templates to NLUService, sends the typed texts
@@ -23,11 +20,8 @@ class TestbedService(AvatarService):
         return False
 
     @message_handler
-    def on_initialization(self, message: InitializationEvent) -> tuple[STTTrainingCommand | ChatCommand, ...]:
-        return (
-            STTTrainingCommand([IntentsPack(MAIN_CONTEXT, tuple(self.templates))]),
-            ChatCommand(GREETING, ChatCommand.MessageType.system),
-        )
+    def on_initialization(self, message: InitializationEvent) -> STTTrainingCommand:
+        return STTTrainingCommand([IntentsPack(MAIN_CONTEXT, tuple(self.templates))])
 
     @message_handler
     def on_typed_text(self, message: TextEvent) -> NLUTextEvent | None:

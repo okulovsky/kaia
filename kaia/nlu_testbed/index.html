@@ -42,19 +42,8 @@
       height: 100%; max-width: 760px; margin: 0 auto; padding: 16px;
       display: flex; flex-direction: column; gap: 12px;
     }
-    header { display: flex; align-items: center; gap: 12px; min-width: 0; }
-    header h1 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
-    header p { margin: 0; color: var(--muted-foreground); font-size: 13px; }
-    header .titles { flex: 1; min-width: 0; }
-
-    .badge {
-      display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0;
-      padding: 2px 10px; border: 1px solid var(--border); border-radius: 999px;
-      font-size: 12px; font-weight: 500; color: var(--muted-foreground); white-space: nowrap;
-    }
-    .badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ring); }
-    .badge.live { color: var(--foreground); }
-    .badge.live .dot { background: var(--live); box-shadow: 0 0 0 3px color-mix(in srgb, var(--live) 25%, transparent); }
+    header { display: flex; align-items: center; gap: 12px; }
+    header h1 { flex: 1; margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
 
     .card {
       background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
@@ -76,10 +65,6 @@
     #chat p.system {
       align-self: stretch; max-width: 100%; background: var(--muted); border: 1px solid var(--border);
       font: 12.5px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre-wrap;
-    }
-    #chat p.system:first-child {
-      align-self: center; background: none; border: none; text-align: center;
-      font: 13px/1.5 inherit; font-family: inherit; color: var(--muted-foreground);
     }
     #chat p.error {
       align-self: stretch; max-width: 100%; max-height: 9em; overflow: auto;
@@ -111,11 +96,8 @@
     .btn-icon { width: 40px; padding: 0; }
     .btn svg { width: 16px; height: 16px; }
 
-    footer { display: flex; justify-content: space-between; gap: 12px; color: var(--muted-foreground); font-size: 12px; }
-    kbd {
-      padding: 1px 5px; border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px;
-      font: 11px ui-monospace, SFMono-Regular, Menlo, monospace;
-    }
+    /* The microphone is open or recording */
+    .btn-talk.live { color: var(--live); border-color: var(--live); }
 
     /* DebugViewController of Kaia: the list of the debug views, then the chosen one */
     /* A centered dialog over a dimmed page; the settings button stays above it to close it */
@@ -141,7 +123,6 @@
 
     @media (max-width: 520px) {
       #app { padding: 10px; }
-      header p, footer { display: none; }
       #chat p { max-width: 100%; }
       .btn .label { display: none; }
       .btn-talk { width: 40px; padding: 0; }
@@ -152,11 +133,7 @@
 <body>
   <div id="app">
     <header>
-      <div class="titles">
-        <h1>NLU testbed</h1>
-        <p>Every phrase gets the report of the NLU: text, neighbors, slots, recognized</p>
-      </div>
-      <span id="state" class="badge"><span class="dot"></span><span id="state-text">Loading…</span></span>
+      <h1>NLU testbed</h1>
       <button id="debug-settings-btn" class="btn btn-outline btn-icon" title="Debug views" aria-label="Debug views">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>
       </button>
@@ -175,11 +152,6 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </button>
     </div>
-
-    <footer>
-      <span class="hint"><kbd>Enter</kbd> to send, <kbd>Shift</kbd>+<kbd>Enter</kbd> for a new line</span>
-      <span>Ultimate NLU</span>
-    </footer>
   </div>
   <div id="debug-div"></div>
 
@@ -217,13 +189,10 @@
       }
     });
 
-    const stateBadge = document.getElementById('state');
-    const stateText  = document.getElementById('state-text');
-    function showState(text) {
-      stateText.textContent = text;
-      stateBadge.classList.toggle('live', /open|record|listen/i.test(text));
-    }
-    dispatcher.subscribe('StatefulRecorderStateEvent', async (msg) => { showState(msg.payload.state); });
+    const talkButton = document.getElementById('talk');
+    dispatcher.subscribe('StatefulRecorderStateEvent', async (msg) => {
+      talkButton.classList.toggle('live', !/standby/i.test(msg.payload.state));
+    });
 
     const input     = fakeMic ? new FakeMicrophone({ sampleRate: 16000, dispatcher, baseUrl }) : new Microphone();
     const recorder  = new Recorder({ startBufferLength: 1.0, normalBufferLength: 0.3, dispatcher, baseUrl });
@@ -239,9 +208,8 @@
       if (started) return;
       started = true;
       await controller.start();
-      showState('Standby');
     }
-    document.getElementById('talk').addEventListener('click', async () => {
+    talkButton.addEventListener('click', async () => {
       await start();
       dispatcher.push(new Message('OpenMicCommand', new Envelop(), {}));
     });
@@ -250,7 +218,6 @@
     await client.push(initMsg);
     client.setLastId(initMsg.envelop.id);
     dispatcher.start();
-    showState('Press Talk');
     textInput.focus();
     if (fakeMic) await start();
   </script>
