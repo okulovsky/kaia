@@ -26,11 +26,13 @@
     const UPLOAD_WAKEWORD_SOUND = true;
     // Change this value to select a model; see kaia/WAKE_WORD_MODELS_RU.md.
     // 'computer' keeps the original Porcupine; 'alexa' keeps the original OWW.
+    // 'alexa_porcupine' selects Alexa with Porcupine, as supported in wakeword_research.
     const WAKE_WORD_MODEL = 'computer_nanoWakeWord';
     const WAKE_WORD_THRESHOLD = 0.5; // ONNX score threshold; Porcupine uses its own default sensitivity.
     const MODEL_RESOURCES = '/resources/open/WakeWordModels';
     const WAKE_WORD_MODELS = {
       alexa: { keyword: 'alexa' },
+      alexa_porcupine: { keyword: 'alexa', porcupine: true },
       computer: { keyword: 'computer', porcupine: true },
       computer_OpenWakeWord: { keyword: 'computer', modelUrl: `${MODEL_RESOURCES}/openwakeword/computer_OpenWakeWord.onnx` },
       computer_oww_self_positive: { keyword: 'computer', modelUrl: `${MODEL_RESOURCES}/openwakeword/computer_oww_self_positive.onnx` },
@@ -96,7 +98,7 @@
     const controller  = new MicController(input, m => automaton.process(m));
 
     const webcam = new Webcam();
-    const webcamProcessor = new WebcamProcessor({ webcam, client, baseUrl: window.location.origin, rateMs: 2000 });
+    const webcamProcessor = new WebcamProcessor({ webcam, client, baseUrl: window.location.origin, rateMs: 2000, cooldownSeconds: 15 });
     debugViewController.register(webcamProcessor);
 
 
