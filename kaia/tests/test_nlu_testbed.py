@@ -1,13 +1,14 @@
+from types import SimpleNamespace
 from unittest import TestCase
 from brainbox import BrainBox, ISelfManagingDecider
 from brainbox.deciders import Collector
 from grammatron import Utterance
 from avatar.daemon import (
     BrainBoxService, ChatCommand, InitializationEvent, TextEvent, NLUTextEvent, RecognitionEvent, STTTrainingCommand,
-    TemplatesRecognitionRequest,
+    TemplatesRecognitionRequest, State, StreamingSTTService, WhisperKenLMSTTService,
 )
 from avatar.messaging import AvatarDaemon, AvatarClient
-from kaia.nlu_testbed import TestbedIntents, TestbedService, ReportingNLUService, NLUReportEvent
+from kaia.nlu_testbed import TestbedIntents, TestbedService, ReportingNLUService, NLUReportEvent, TestbedDaemonSettings, Stt
 
 CALL = TestbedIntents.call
 WEATHER = TestbedIntents.weather
@@ -99,3 +100,17 @@ class NLUReportTestCase(TestCase):
         event = TestbedService([]).on_typed_text(TextEvent('Call Yuki'))
         self.assertEqual(TemplatesRecognitionRequest(), event.request)
         self.assertTrue(event.file_id.startswith('typed-'))
+
+
+class SttTestCase(TestCase):
+    def test_each_stt_creates_its_service(self):
+        app = SimpleNamespace(brainbox_cache_folder='cache')
+        services = {stt: TestbedDaemonSettings(stt=stt).create_stt_service(app, State()) for stt in Stt.ALL}
+        self.assertIsNone(services[Stt.NEMOTRON].languages)
+        self.assertEqual(Stt.LANGUAGES, services[Stt.NEMOTRON_LANGUAGES].languages)
+        self.assertIsInstance(services[Stt.NEMOTRON_LANGUAGES], StreamingSTTService)
+        self.assertIsInstance(services[Stt.WHISPER_KENLM], WhisperKenLMSTTService)
+
+    def test_unknown_stt(self):
+        with self.assertRaises(ValueError):
+            TestbedDaemonSettings(stt='vosk').create_stt_service(SimpleNamespace(brainbox_cache_folder='cache'), State())

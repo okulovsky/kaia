@@ -21,8 +21,11 @@ from .testbed_service import TestbedService
 
 class Stt:
     NEMOTRON = 'nemotron'
+    # Nemotron in `auto` and in each of LANGUAGES at once, see StreamingSTTService
+    NEMOTRON_LANGUAGES = 'nemotron-languages'
     WHISPER_KENLM = 'whisper-kenlm'
-    ALL = (NEMOTRON, WHISPER_KENLM)
+    ALL = (NEMOTRON, NEMOTRON_LANGUAGES, WHISPER_KENLM)
+    LANGUAGES = ('en', 'de', 'ru')
 
 
 @dataclass
@@ -35,8 +38,10 @@ class TestbedDaemonSettings(AvatarDaemonAppSettings):
     def create_stt_service(self, app: KaiaApp, state: State):
         if self.stt == Stt.NEMOTRON:
             return StreamingSTTService(state, app.brainbox_cache_folder)
+        if self.stt == Stt.NEMOTRON_LANGUAGES:
+            return StreamingSTTService(state, app.brainbox_cache_folder, languages=Stt.LANGUAGES)
         if self.stt == Stt.WHISPER_KENLM:
-            return WhisperKenLMSTTService(state)
+            return WhisperKenLMSTTService(state, languages=Stt.LANGUAGES)
         raise ValueError(f"Unknown STT `{self.stt}`, expected one of {Stt.ALL}")
 
     def create_nlu_service(self, app: KaiaApp, state: State):
@@ -94,7 +99,7 @@ def run_nlu_testbed(
     settings.avatar_processor = TestbedDaemonSettings(templates=templates, stt=stt, intent_source=intent_source)
     ner = NerTrainingPipeline()
     settings.brainbox_setup = BrainBoxSetup()
-    if stt == Stt.NEMOTRON:
+    if stt in (Stt.NEMOTRON, Stt.NEMOTRON_LANGUAGES):
         settings.brainbox_setup.up(Nemotron, model='multilingual')
     # WhisperKenLM is also needed for the training of KenLM
     settings.brainbox_setup.up(WhisperKenLM).up(Chroma).up(LlamaLoraServer, parameter=ner.model_id).up(LlamaLoraSFTTrainer)
