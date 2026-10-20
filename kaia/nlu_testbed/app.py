@@ -6,7 +6,7 @@ from grammatron import Template
 from foundation_kaia.fork import Fork
 from foundation_kaia.misc import Loc
 from avatar.app import compile_frontend
-from avatar.daemon import StreamingSTTService, WhisperKenLMSTTService, State
+from avatar.daemon import StreamingSTTService, STTIntegrationService, SilenceLevelService, State
 from avatar.daemon.streaming_stt_service import IntentSource
 from brainbox import BrainBox
 from brainbox.framework import BrainBoxSetup
@@ -16,7 +16,8 @@ from chara.nlu.ner_training import NerTrainingPipeline
 from chara.nlu.scripts import create_dataset, create_negatives, train_ultimate_nlu
 from kaia.app import KaiaAppSettings, AvatarDaemonAppSettings, KaiaApp
 from .reporting_nlu_service import ReportingNLUService
-from .testbed_service import TestbedService
+from .testbed_service import TestbedService, TestbedChatService
+from .silence_skipping_stt_service import SilenceSkippingWhisperKenLMSTTService
 
 
 class Stt:
@@ -36,7 +37,7 @@ class TestbedDaemonSettings(AvatarDaemonAppSettings):
         if self.stt == Stt.NEMOTRON:
             return StreamingSTTService(state, app.brainbox_cache_folder)
         if self.stt == Stt.WHISPER_KENLM:
-            return WhisperKenLMSTTService(state)
+            return SilenceSkippingWhisperKenLMSTTService(state, app.brainbox_cache_folder)
         raise ValueError(f"Unknown STT `{self.stt}`, expected one of {Stt.ALL}")
 
     def create_nlu_service(self, app: KaiaApp, state: State):
@@ -45,6 +46,17 @@ class TestbedDaemonSettings(AvatarDaemonAppSettings):
 
     def create_testbed_service(self, app: KaiaApp, state: State):
         return TestbedService(self.templates)
+
+    def create_chat_service(self, app: KaiaApp, state: State):
+        return TestbedChatService()
+
+    def create_sound_event_to_stt_command(self, app: KaiaApp, state: State):
+        # The first recognition after the start waits for the model to load
+        return STTIntegrationService(app.brainbox_cache_folder, 16000, False, results_timeout_in_seconds=30)
+
+    def create_silence_level_controller(self, app: KaiaApp, state: State):
+        # 0.1 of Kaia is above the speech of a laptop microphone, which is about 0.01
+        return SilenceLevelService(0.004)
 
     def create_image_service(self, app: KaiaApp, state: State):
         return None

@@ -190,9 +190,6 @@
     });
 
     const talkButton = document.getElementById('talk');
-    dispatcher.subscribe('StatefulRecorderStateEvent', async (msg) => {
-      talkButton.classList.toggle('live', !/standby/i.test(msg.payload.state));
-    });
 
     const input     = fakeMic ? new FakeMicrophone({ sampleRate: 16000, dispatcher, baseUrl }) : new Microphone();
     const recorder  = new Recorder({ startBufferLength: 1.0, normalBufferLength: 0.3, dispatcher, baseUrl });
@@ -201,6 +198,8 @@
     // No wake word: the microphone is opened by the Talk button
     const automaton = new Automaton({ silenceDetector: silence, wakeWordDetector: null, statefulRecorder: stateful, dispatcher });
     const controller = new MicController(input, m => automaton.process(m));
+    // Read from the recorder itself: its state events go through the server and may arrive out of order
+    setInterval(() => talkButton.classList.toggle('live', stateful.state !== 'Standby'), 100);
 
     // The browser gives the microphone and the sound only after a click, so the real microphone starts on the first Talk
     let started = false;
