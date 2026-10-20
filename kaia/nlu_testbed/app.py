@@ -109,6 +109,8 @@ def run_nlu_testbed(
 
     with Fork(app.brainbox_server):
         app.brainbox_api.wait_for_connection(30)
+        # BrainBoxSetup installs the deciders with a parameter last, but the self-test of LlamaLoraSFTTrainer needs LlamaLoraServer
+        BrainBoxSetup().up(LlamaLoraServer, parameter=ner.model_id).execute(app.brainbox_api)
         settings.brainbox_setup.execute(app.brainbox_api)
 
         # A separate client: the app's one is pickled into the forks, and API clients keep the last request,
