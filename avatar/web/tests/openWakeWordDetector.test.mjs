@@ -17,9 +17,9 @@ class FakeWorker {
 globalThis.Worker = FakeWorker
 globalThis.window = { location: { href: 'https://kaia.test/' } }
 
-async function setup () {
+async function setup (options = {}) {
     const events = []
-    const detector = new OpenWakeWordDetector({ dispatcher: { push: event => events.push(event) } })
+    const detector = new OpenWakeWordDetector({ ...options, dispatcher: { push: event => events.push(event) } })
     const ready = detector.initialize()
     const worker = FakeWorker.latest
     worker.respond({ type: 'ready' })
@@ -55,6 +55,20 @@ test('delivers Alexa to the automaton and dispatcher exactly once', async () => 
     assert.equal(detector.detect(frame(4)), false)
     assert.equal(events.length, 1)
     assert.equal(events[0].payload.word, 'alexa')
+})
+
+test('passes a selected resource model and computer keyword to the worker', async () => {
+    const modelUrl = '/resources/open/WakeWordModels/nanowakeword/computer_nanoWakeWord.onnx'
+    const { detector, worker, events } = await setup({ modelUrl, keyword: 'computer', detectionThreshold: 0.7 })
+    assert.equal(worker.messages[0].modelUrl, `https://kaia.test${modelUrl}`)
+    assert.equal(worker.messages[0].keyword, 'computer')
+    assert.equal(worker.messages[0].detectionThreshold, 0.7)
+    for (let i = 0; i < 3; i++) detector.detect(frame(i))
+    worker.respond({ type: 'result', generation: worker.messages[1].generation, keyword: 'computer', score: 0.9 })
+    assert.equal(detector.detect(frame(3)), true)
+    assert.equal(detector.detect(frame(4)), false)
+    assert.equal(events.length, 1)
+    assert.equal(events[0].payload.word, 'computer')
 })
 
 test('a pause discards partial audio and stale in-flight detections', async () => {
