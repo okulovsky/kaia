@@ -9,7 +9,7 @@ const FRAME_SIZE = 1280
 const MAX_PENDING_CHUNKS = 25 // Bound latency/memory to two seconds of audio.
 
 export class OpenWakeWordDetector implements ILoadingScreenComponent, IWakeWordDetector {
-    readonly name = 'OpenWakeWordDetector (Alexa)'
+    get name (): string { return `ONNX wake word (${this.options.modelUrl ? this.options.keyword ?? 'computer' : 'alexa'})` }
     private worker?: Worker
     private initialization?: Promise<void>
     private initialized = false
@@ -25,6 +25,9 @@ export class OpenWakeWordDetector implements ILoadingScreenComponent, IWakeWordD
     constructor (private readonly options: {
         dispatcher: Dispatcher,
         assetBaseUrl?: string,
+        // A trained [batch,16,96] OWW-compatible head, served by Avatar resources.
+        modelUrl?: string,
+        keyword?: string,
         detectionThreshold?: number,
         cooldownMs?: number,
         debug?: boolean,
@@ -64,6 +67,8 @@ export class OpenWakeWordDetector implements ILoadingScreenComponent, IWakeWordD
             ).href.replace(/\/+$/, '')
             this.post({
                 type: 'initialize', assetBaseUrl,
+                modelUrl: this.options.modelUrl ? new URL(this.options.modelUrl, window.location.href).href : undefined,
+                keyword: this.options.keyword ?? (this.options.modelUrl ? 'computer' : 'alexa'),
                 detectionThreshold: this.options.detectionThreshold ?? 0.5,
                 cooldownMs: this.options.cooldownMs ?? 2000,
                 debug: this.options.debug ?? false,

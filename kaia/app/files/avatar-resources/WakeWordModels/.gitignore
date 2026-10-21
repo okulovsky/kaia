@@ -1,0 +1,6 @@
+# Model weights are distributed separately; keep the directory layout in Git.
+*.onnx
+*.onnx.data
+*.pt
+*.pth
+*.tflite

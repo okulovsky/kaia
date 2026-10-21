@@ -1,12 +1,14 @@
 import WakeWordEngine from 'openwakeword-wasm-browser'
 import { env } from 'onnxruntime-web'
 import type { WorkerRequest, WorkerResponse } from './protocol.js'
+import { ComputerWakeWordEngine } from './computerEngine.js'
 
 // Run in a dedicated worker without requiring COOP/COEP or SharedArrayBuffer.
 env.wasm.numThreads = 1
 env.wasm.proxy = false
 
 let engine: WakeWordEngine
+let computerEngine: ComputerWakeWordEngine | undefined
 let generation = -1
 let detected: string | null = null
 let pipelineError: unknown = null
@@ -21,6 +23,13 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
     try {
         const message = event.data
         if (message.type === 'initialize') {
+            if (message.modelUrl) {
+                env.wasm.wasmPaths = `${message.assetBaseUrl}/ort/`
+                computerEngine = new ComputerWakeWordEngine(message)
+                await computerEngine.load()
+                respond({ type: 'ready' })
+                return
+            }
             engine = new WakeWordEngine({
                 keywords: ['alexa'],
                 baseAssetUrl: `${message.assetBaseUrl}/models`,
@@ -36,8 +45,14 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
             respond({ type: 'ready' })
         } else {
             if (generation !== message.generation) {
-                engine._resetState()
+                if (computerEngine) computerEngine.reset()
+                else engine._resetState()
                 generation = message.generation
+            }
+            if (computerEngine) {
+                const result = await computerEngine.process(message.chunk)
+                respond({ type: 'result', generation, ...result })
+                return
             }
             detected = null
             pipelineError = null
