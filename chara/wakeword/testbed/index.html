@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"></head><body>
+<div id="loading"></div>
+<script type="module">
+  // Model selection mirrors kaia/web/index.html; the .onnx heads are taken from
+  // chara/wakeword/testbed/resources/WakeWordModels, served as /resources/open/WakeWordModels.
+  // 'computer' and 'alexa_porcupine' are Porcupine; 'alexa' is the built-in OWW model.
+  const WAKE_WORD_MODEL = 'computer_nanoWakeWord';
+  const WAKE_WORD_THRESHOLD = 0.5; // ONNX score threshold; Porcupine uses its own default sensitivity.
+  const MODEL_RESOURCES = '/resources/open/WakeWordModels';
+  const WAKE_WORD_MODELS = {
+    alexa: { keyword: 'alexa' },
+    alexa_porcupine: { keyword: 'alexa', porcupine: true },
+    computer: { keyword: 'computer', porcupine: true },
+    computer_OpenWakeWord: { keyword: 'computer', modelUrl: `${MODEL_RESOURCES}/openwakeword/computer_OpenWakeWord.onnx` },
+    computer_oww_self_positive: { keyword: 'computer', modelUrl: `${MODEL_RESOURCES}/openwakeword/computer_oww_self_positive.onnx` },
+    computer_nanoWakeWord: { keyword: 'computer', modelUrl: `${MODEL_RESOURCES}/nanowakeword/computer_nanoWakeWord.onnx` },
+  };
+  const wakeWordModel = WAKE_WORD_MODELS[WAKE_WORD_MODEL];
+  if (!wakeWordModel) throw new Error(`Unknown wake word model: ${WAKE_WORD_MODEL}`);
+  const useOpenWakeWord = !wakeWordModel.porcupine;
+
+  const { AvatarClient, Dispatcher, Microphone, MicController, AudioController, SystemSoundSlot,
+          SilenceControllingWakeWordDetector, Message, Envelop, LoadingScreen } = await import('/frontend/scripts/kaia-frontend.js');
+  const { OpenWakeWordDetector, BumblebeeWakeWordDetector } = await import(useOpenWakeWord
+    ? '/frontend/scripts/open-wake-word-detector.js'
+    : '/frontend/scripts/bumblebee-wake-word-detector.js');
+
+  const client     = new AvatarClient({ baseUrl: window.location.origin, name: 'wakeword_testbed' });
+  const dispatcher = new Dispatcher(client);
+  new AudioController({ dispatcher, baseUrl: window.location.origin });
+
+  const inner = useOpenWakeWord
+    ? new OpenWakeWordDetector({ dispatcher, keyword: wakeWordModel.keyword,
+        modelUrl: wakeWordModel.modelUrl, detectionThreshold: WAKE_WORD_THRESHOLD })
+    : new BumblebeeWakeWordDetector({ words: [wakeWordModel.keyword], dispatcher });
+  // Trained heads need continuous context, including quiet speech/background.
+  // Preserve the external silence gate for Alexa and Porcupine.
+  const wake = wakeWordModel.modelUrl ? inner
+    : new SilenceControllingWakeWordDetector({ detector: inner, dispatcher });
+
+  // The wake word only plays the `open` system sound; the recorder is never involved.
+  // While the sound is playing, the detector is not fed, as in Automaton.
+  const confirmation = new SystemSoundSlot({ soundName: 'open', dispatcher });
+
+  const controller = new MicController(new Microphone(), m => {
+    if (confirmation.isSent) {
+      if (confirmation.confirmed) confirmation.reset();
+      return;
+    }
+    if (wake.detect(m)) confirmation.send();
+  });
+
+  new LoadingScreen(document.getElementById('loading'), [wake], async () => {
+    const initMsg = new Message('InitializationEvent', new Envelop(), {});
+    await client.push(initMsg);
+    client.setLastId(initMsg.envelop.id);
+    dispatcher.start();
+    controller.start().catch(console.error);
+  });
+</script>
+</body></html>
