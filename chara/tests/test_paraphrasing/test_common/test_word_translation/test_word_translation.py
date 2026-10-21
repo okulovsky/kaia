@@ -65,3 +65,21 @@ class TestWordTranslationPipeline(TestCase):
         self.assertEqual("Таймер заведен на десять минут", result[0].utter(10).to_str())
         self.assertEqual("Нужно купить банан", result[1].utter('банан').to_str())
         self.assertEqual("Ich gehe in Wohnzimmer", result[2].utter("Wohnzimmer").to_str())
+
+
+class TestTranslationCleaning(TestCase):
+    def test_comments_are_removed(self):
+        case = WordTranslation.Case('Haruto', 'de', 'German')
+        answers = {
+            ' Haruto → Haruto (Keine Umschrift erforderlich)': 'Haruto',
+            ' Ren (English) = Ren (German) - same name in both languages': 'Ren',
+            ' Yuki (Japanese name) wird in Deutsch als "Yuki" übersetzt.': 'Yuki',
+            'Харуто (Харуто)\n\nThis is the direct transcription of Haruto': 'Харуто',
+            '"Wohnzimmer"': 'Wohnzimmer',
+        }
+        for answer, expected in answers.items():
+            self.assertEqual(expected, WordTranslation.Pipeline._clean(case, answer))
+
+    def test_empty_answer_is_error(self):
+        with self.assertRaises(ValueError):
+            WordTranslation.Pipeline._clean(WordTranslation.Case('Haruto', 'de', 'German'), '\n (comment)\n')
