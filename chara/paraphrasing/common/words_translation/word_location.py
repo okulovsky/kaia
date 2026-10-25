@@ -48,6 +48,9 @@ class OptionHeaderLocation:
         return self.value
 
     def set(self, value: str) -> None:
+        # Names are often translated to themselves, and then the header must stay
+        if value == self.value:
+            return
         self.dub.value_to_strs[value] = self.dub.value_to_strs[self.value]
         del self.dub.value_to_strs[self.value]
 

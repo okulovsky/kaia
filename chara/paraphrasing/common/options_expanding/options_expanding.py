@@ -72,7 +72,12 @@ class OptionExpanding:
             self.request = request.edit().parse(self._merge).assign('added_options').to_request()
 
         def _merge(self, case: OptionExpandingCase, options: Any) -> tuple[str,...]:
-            return tuple(BulletPointDivider()(options))
+            # Small models sometimes answer with the templates or sentences: "Turn on the light in the {room}!"
+            max_words = 2 * max(len(o.split()) for o in case.existing_options)
+            return tuple(
+                o for o in BulletPointDivider()(options)
+                if '{' not in o and '}' not in o and len(o.split()) <= max_words
+            )
 
         def __call__(self, cases: CaseCollection[OptionExpandingCase]) -> CaseCollection[OptionExpandingCase]:
             pipe = self.request.create_brainbox_pipeline()
