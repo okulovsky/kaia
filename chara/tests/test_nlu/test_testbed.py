@@ -12,7 +12,7 @@ from avatar.daemon import (
     TemplatesRecognitionRequest, State, SoundEvent, StreamingSTTService, WhisperKenLMSTTService,
 )
 from avatar.messaging import AvatarDaemon, AvatarClient
-from kaia.nlu_testbed import (
+from chara.nlu.testbed import (
     TestbedIntents, TestbedService, TestbedChatService, ReportingNLUService, NLUReportEvent,
     SilenceSkippingWhisperKenLMSTTService, loudest_window_level, TestbedDaemonSettings, Stt,
 )
