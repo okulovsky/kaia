@@ -110,7 +110,7 @@ class NemotronController(DockerMarshallingController[NemotronSettings]):
                 _assert_text(tc, expected, result['text'])
                 tc.assertGreater(len(result['words']), 0)
                 # With patches/rnnt_confidence.patch the confidence is computed instead of being always 1
-                tc.assertTrue(0 < result['confidence'] <= 1, str(result['confidence']))
+                tc.assertTrue(0 < result['confidence'] < 1, str(result['confidence']))
                 tc.assertTrue(any(w['confidence'] < 0.999 for w in result['words']), str(result['words']))
             yield SelfTestCase(Nemotron.new_task().transcribe(file, locale), check_offline)
 
@@ -128,4 +128,5 @@ class NemotronController(DockerMarshallingController[NemotronSettings]):
                 tc.assertTrue(events[-1]['is_final'])
                 tc.assertFalse(any(e['is_final'] for e in events[:-1]))
                 _assert_text(tc, expected, events[-1]['text'])
+                tc.assertTrue(0 < events[-1]['confidence'] < 1, str(events[-1]))
             yield SelfTestCase(Nemotron.new_task().transcribe_stream(chunks, locale), check_stream)

@@ -141,7 +141,7 @@ def _read_result(result) -> dict:
     ]
     return dict(
         text=lib.nemo_speech_asr_result_transcript(result, 0).decode(),
-        # The mean entropy-based confidence of the tokens, see patches/rnnt_confidence.patch
+        # The mean entropy-based confidence of the tokens, see patches/rnnt_confidence.patch; 0 for interim results
         confidence=lib.nemo_speech_asr_result_confidence(result, 0),
         is_final=bool(lib.nemo_speech_asr_result_is_final(result)),
         language=languages[0] if languages else None,
