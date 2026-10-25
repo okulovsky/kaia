@@ -17,9 +17,9 @@ class StreamingSTTService(AvatarService):
                  languages: tuple[str, ...] | None = None,
                  ):
         """
-        With `languages`, the templates are recognized in `auto` and in each of these languages at once,
-        and one of the texts is chosen with `choose_text`: in noise, `auto` alone takes Russian for Vietnamese etc.
-        It takes `len(languages) + 1` times the computation of `auto` alone.
+        With `languages`, the templates are recognized in each of these languages at once, and the text of the most
+        confident stream is chosen with `choose_text`. `auto` alone takes Russian for Ukrainian or Vietnamese,
+        and a language outside of `languages` is never chosen. It takes `len(languages)` times the computation of `auto`.
         """
         self.state = state
         self.cache_folder = Path(cache_folder)
@@ -47,7 +47,7 @@ class StreamingSTTService(AvatarService):
         builder = Nemotron.new_task(id=event.file_id.split('.')[0] + '.nemotron-stream')
         several_languages = language == 'auto' and self.languages is not None
         if several_languages:
-            task = builder.transcribe_stream_languages(event.file_id, languages=['auto', *self.languages], model=self.nemotron_model)
+            task = builder.transcribe_stream_languages(event.file_id, languages=list(self.languages), model=self.nemotron_model)
         else:
             task = builder.transcribe_stream(event.file_id, language=language, model=self.nemotron_model)
         try:
@@ -82,33 +82,37 @@ class StreamingSTTService(AvatarService):
         return StreamingSTTService._join_finals(StreamingSTTService._read_events(content))
 
     @staticmethod
-    def read_finals_by_stream(content: bytes) -> dict[str, tuple[str, list[str]]]:
-        """For each stream, the text and the languages Nemotron tagged it with"""
+    def read_finals_by_stream(content: bytes) -> dict[str, tuple[str, float]]:
+        """
+        For each stream, the text and its confidence: the mean confidence of the final results with text,
+        1 if the decider gives none
+        """
         by_stream = {}
         for event in StreamingSTTService._read_events(content):
             by_stream.setdefault(event['stream'], []).append(event)
-        return {
-            stream: (StreamingSTTService._join_finals(events), [l for e in events if e.get('is_final') for l in e.get('languages', [])])
-            for stream, events in by_stream.items()
-        }
+        result = {}
+        for stream, events in by_stream.items():
+            confidences = [
+                e['confidence'] for e in events
+                if e.get('is_final') and e['text'].strip() != '' and e.get('confidence') is not None
+            ]
+            confidence = sum(confidences) / len(confidences) if len(confidences) > 0 else 1.0
+            result[stream] = (StreamingSTTService._join_finals(events), confidence)
+        return result
 
     @staticmethod
-    def choose_text(results: dict[str, tuple[str, list[str]]], languages: tuple[str, ...], state_language: str | None = None) -> str:
+    def choose_text(results: dict[str, tuple[str, float]], languages: tuple[str, ...], state_language: str | None = None) -> str:
         """
-        Chooses the text among the streams of `auto` and of the forced `languages`.
-        A stream forced to a wrong language mostly gives nothing, so the only non-empty one is the right one;
-        Nemotron gives no probabilities of the languages, and the confidence of the words is always 1.
+        Chooses the text of the most confident stream among the ones forced to `languages` that heard anything.
+        A stream forced to a wrong language mostly gives nothing, or a transliteration that Nemotron is less confident in.
+        Equal confidences (e.g. a decider that gives none) are decided by the state language, then by the order of `languages`.
         """
-        def allowed(code: str) -> bool:
-            return any(code.lower().startswith(language.lower()) for language in languages)
+        candidates = [language for language in languages if results.get(language, ('', 0.0))[0] != '']
+        if len(candidates) == 0:
+            return ''
 
-        auto_text, auto_languages = results.get('auto', ('', []))
-        if len(auto_languages) > 0 and allowed(auto_languages[0]):
-            return auto_text
-        candidates = [language for language in languages if results.get(language, ('', []))[0] != '']
-        if len(candidates) > 1 and state_language is not None:
-            candidates = [c for c in candidates if c.lower().startswith(state_language.lower())] or candidates
-        if len(candidates) > 0:
-            return results[candidates[0]][0]
-        # The language of `auto` is unknown rather than wrong
-        return auto_text if len(auto_languages) == 0 else ''
+        def rank(language: str):
+            in_state = state_language is not None and language.lower().startswith(state_language.lower())
+            return results[language][1], in_state, -languages.index(language)
+
+        return results[max(candidates, key=rank)][0]
