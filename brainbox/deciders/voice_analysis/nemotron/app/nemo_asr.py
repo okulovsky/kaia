@@ -89,6 +89,8 @@ def _load_library():
     lib.nemo_speech_asr_result_is_final.restype = c_bool
     lib.nemo_speech_asr_result_transcript.argtypes = [p_result, c_size_t]
     lib.nemo_speech_asr_result_transcript.restype = c_char_p
+    lib.nemo_speech_asr_result_confidence.argtypes = [p_result, c_size_t]
+    lib.nemo_speech_asr_result_confidence.restype = c_float
     lib.nemo_speech_asr_result_word_count.argtypes = [p_result, c_size_t]
     lib.nemo_speech_asr_result_word_count.restype = c_size_t
     lib.nemo_speech_asr_result_word_text.argtypes = [p_result, c_size_t, c_size_t]
@@ -139,6 +141,8 @@ def _read_result(result) -> dict:
     ]
     return dict(
         text=lib.nemo_speech_asr_result_transcript(result, 0).decode(),
+        # The mean entropy-based confidence of the tokens, see patches/rnnt_confidence.patch
+        confidence=lib.nemo_speech_asr_result_confidence(result, 0),
         is_final=bool(lib.nemo_speech_asr_result_is_final(result)),
         language=languages[0] if languages else None,
         languages=languages,

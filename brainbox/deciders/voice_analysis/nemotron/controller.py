@@ -15,8 +15,12 @@ INSTALL_PREFIX = '/opt/nemo-speech'
 
 BUILD_NEMO_SPEECH = (
     'USER root',
+    # patches/rnnt_confidence.patch: the RNNT decoder computes the entropy-based confidence
+    # of the tokens, words and utterances, which is otherwise always 1
+    'COPY patches/ /tmp/nemo-patches/',
     f'RUN git clone https://github.com/NVIDIA/NeMo-Speech.cpp /tmp/nemo-src && '
     f'cd /tmp/nemo-src && git checkout {NEMO_SPEECH_COMMIT} && '
+    f'git apply /tmp/nemo-patches/*.patch && '
     f'git submodule update --init --depth 1 ggml llama.cpp && '
     # The native flags detected on arm64 lack fp16, which ggml needs: set the architecture explicitly
     f'ARM_FLAGS=$([ "$(uname -m)" = aarch64 ] && echo "-DGGML_NATIVE=OFF -DGGML_CPU_ARM_ARCH=armv8.2-a+fp16+dotprod" || true) && '
@@ -25,7 +29,7 @@ BUILD_NEMO_SPEECH = (
     f'cmake --install build/cpu-asr --prefix {INSTALL_PREFIX} && '
     f'find {INSTALL_PREFIX} -name "*.so*" -exec dirname {{}} \\; | sort -u > /etc/ld.so.conf.d/nemo-speech.conf && '
     f'ldconfig && '
-    f'rm -rf /tmp/nemo-src',
+    f'rm -rf /tmp/nemo-src /tmp/nemo-patches',
     'USER app',
 )
 
