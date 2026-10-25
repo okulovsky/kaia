@@ -22,7 +22,7 @@ from .silence_skipping_stt_service import SilenceSkippingWhisperKenLMSTTService
 
 class Stt:
     NEMOTRON = 'nemotron'
-    # Nemotron in `auto` and in each of LANGUAGES at once, see StreamingSTTService
+    # Nemotron in each of LANGUAGES at once, the most confident text is taken, see StreamingSTTService
     NEMOTRON_LANGUAGES = 'nemotron-languages'
     WHISPER_KENLM = 'whisper-kenlm'
     ALL = (NEMOTRON, NEMOTRON_LANGUAGES, WHISPER_KENLM)
