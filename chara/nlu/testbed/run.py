@@ -9,16 +9,15 @@ import argparse
 from pathlib import Path
 import requests
 from brainbox import BrainBox
-from brainbox.deciders import Ollama, WhisperKenLM, Nemotron, Chroma, LlamaLoraServer, LlamaLoraSFTTrainer
-from brainbox.framework import ISelfManagingDecider, BrainBoxSetup
+from brainbox.deciders import Ollama
+from brainbox.framework import ISelfManagingDecider
 from foundation_kaia.fork import Fork
 from foundation_kaia.marshalling import FileLike
 from foundation_kaia.misc import Loc
 from avatar.daemon.streaming_stt_service import IntentSource
 from chara.common import Chara
-from chara.nlu.ner_training import NerTrainingPipeline
 from chara.nlu.scripts import create_dataset, create_negatives
-from chara.nlu.testbed import TestbedIntents, Stt, run_nlu_testbed
+from chara.nlu.testbed import TestbedIntents, Stt, run_nlu_testbed, testbed_deciders, set_up_deciders
 from kaia.app import KaiaAppSettings
 
 FOLDER = Chara.Apis.content_folder/'nlu'/'testbed'
@@ -51,12 +50,9 @@ def install():
     settings.avatar_processor = None
     settings.brainbox.deciders_files_in_kaia_working_folder = False
     app = settings.create_app(WORKING_FOLDER)
-    setup = (BrainBoxSetup()
-             .up(Nemotron, model='multilingual').up(WhisperKenLM).up(Chroma)
-             .up(LlamaLoraServer, parameter=NerTrainingPipeline().model_id).up(LlamaLoraSFTTrainer))
     with Fork(app.brainbox_server):
         app.brainbox_api.wait_for_connection(30)
-        setup.execute(app.brainbox_api)
+        set_up_deciders(app.brainbox_api, testbed_deciders())
 
 
 def generate(model: str, folder: Path):
