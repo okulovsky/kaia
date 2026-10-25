@@ -29,13 +29,14 @@ YES = Template('Yes')
 
 # Files of the tests are named after their text
 TEXTS = {'time.wav': 'What time is it', 'yes.wav': 'Yes', 'free.wav': 'Hello there'}
-# The text and the language tags of each stream, as Nemotron gives them in noise
+# The text and the confidence of each stream forced to a language, as Nemotron gives them on the testbed recordings
 STREAMS = {
-    'time.wav': {'auto': ('What time is it', ['en-US']), 'en': ('What time is it', ['en-US']), 'ru': ('Уот тайм', ['ru-RU'])},
-    'light.wav': {'auto': ('liệu chi dáng', ['vi-VN']), 'en': ('', []), 'ru': ('Включи свет', ['ru-RU'])},
-    'night.wav': {'auto': ('và cô mino', ['vi-VN']), 'en': ('', []), 'ru': ('', [])},
-    'yes.wav': {'auto': ('yes', []), 'en': ('', []), 'ru': ('', [])},
-    'da.wav': {'auto': ('', []), 'en': ('yeah', ['en-US']), 'ru': ('Да', ['ru-RU'])},
+    'time.wav': {'en': ('What time is it', 0.99), 'ru': ('Уот тайм', 0.90)},
+    'privet.wav': {'en': ('priviet', 0.958), 'ru': ('Привет', 0.997)},
+    'light.wav': {'en': ('', None), 'ru': ('Включи свет', 0.95)},
+    'night.wav': {'en': ('', None), 'ru': ('', None)},
+    # A decider without the confidence
+    'da.wav': {'en': ('yeah', None), 'ru': ('Да', None)},
 }
 
 
@@ -61,8 +62,11 @@ class NemotronMock(ISelfManagingDecider):
         self.languages.append(languages)
         lines = []
         for stream in languages:
-            text, tags = STREAMS[audio][stream]
-            lines += [dict(text=text[:3], is_final=False, stream=stream), dict(text=text, is_final=True, languages=tags, stream=stream)]
+            text, confidence = STREAMS[audio][stream]
+            final = dict(text=text, is_final=True, stream=stream)
+            if confidence is not None:
+                final['confidence'] = confidence
+            lines += [dict(text=text[:3], is_final=False, stream=stream), final]
         name = audio + '.jsonl'
         (self.folder / name).write_text(''.join(json.dumps(line) + '\n' for line in lines))
         return name
@@ -148,20 +152,18 @@ class TranscriptionTestCase(TestCase):
         service = StreamingSTTService(state or State(), self.folder, languages=('en', 'ru'))
         return self.run_service(service, *messages, SoundStreamingStartEvent(file))
 
-    def test_nemotron_languages_auto_is_allowed(self):
+    def test_nemotron_languages_most_confident(self):
         self.assertEqual('What time is it', self.run_languages('time.wav').text)
-        self.assertEqual([['auto', 'en', 'ru']], self.nemotron.languages)
+        self.assertEqual([['en', 'ru']], self.nemotron.languages)
+        self.assertEqual('Привет', self.run_languages('privet.wav', State(language='en')).text)
 
-    def test_nemotron_languages_only_forced_with_text(self):
+    def test_nemotron_languages_only_stream_with_text(self):
         self.assertEqual('Включи свет', self.run_languages('light.wav').text)
 
-    def test_nemotron_languages_nothing_in_allowed_languages(self):
+    def test_nemotron_languages_nothing_heard(self):
         self.assertEqual('', self.run_languages('night.wav').text)
 
-    def test_nemotron_languages_auto_without_tag(self):
-        self.assertEqual('yes', self.run_languages('yes.wav').text)
-
-    def test_nemotron_languages_several_forced(self):
+    def test_nemotron_languages_without_confidence(self):
         self.assertEqual('yeah', self.run_languages('da.wav').text)
         self.assertEqual('Да', self.run_languages('da.wav', State(language='ru')).text)
 
