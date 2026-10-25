@@ -109,6 +109,9 @@ class NemotronController(DockerMarshallingController[NemotronSettings]):
             def check_offline(result, api, tc, expected=expected):
                 _assert_text(tc, expected, result['text'])
                 tc.assertGreater(len(result['words']), 0)
+                # With patches/rnnt_confidence.patch the confidence is computed instead of being always 1
+                tc.assertTrue(0 < result['confidence'] <= 1, str(result['confidence']))
+                tc.assertTrue(any(w['confidence'] < 0.999 for w in result['words']), str(result['words']))
             yield SelfTestCase(Nemotron.new_task().transcribe(file, locale), check_offline)
 
             def check_auto(result, api, tc, expected=expected, language=language):
