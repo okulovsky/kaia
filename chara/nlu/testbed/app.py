@@ -85,6 +85,24 @@ class TestbedDaemonSettings(AvatarDaemonAppSettings):
         return None
 
 
+def testbed_deciders(stt: str | None = None, ollama: bool = False) -> BrainBoxSetup:
+    """The deciders of the testbed: the ones the speech recognition `stt` needs, or all of them if it is None"""
+    setup = BrainBoxSetup()
+    if stt is None or stt in (Stt.NEMOTRON, Stt.NEMOTRON_LANGUAGES):
+        setup.up(Nemotron, model='multilingual')
+    # WhisperKenLM is also needed for the training of KenLM
+    setup.up(WhisperKenLM).up(Chroma).up(LlamaLoraServer, parameter=NerTrainingPipeline().model_id).up(LlamaLoraSFTTrainer)
+    if ollama:
+        setup.up(Ollama)
+    return setup
+
+
+def set_up_deciders(api: BrainBox.Api, setup: BrainBoxSetup):
+    # BrainBoxSetup installs the deciders with a parameter last, but the self-test of LlamaLoraSFTTrainer needs LlamaLoraServer
+    BrainBoxSetup().up(LlamaLoraServer, parameter=NerTrainingPipeline().model_id).execute(api)
+    setup.execute(api)
+
+
 def run_nlu_testbed(
         templates: list[Template],
         folder: Path,
@@ -109,21 +127,12 @@ def run_nlu_testbed(
     settings.brainbox.deciders_files_in_kaia_working_folder = False
     settings.avatar_server.custom_html = (Path(__file__).parent/'index.html').read_text()
     settings.avatar_processor = TestbedDaemonSettings(templates=templates, stt=stt, intent_source=intent_source)
-    ner = NerTrainingPipeline()
-    settings.brainbox_setup = BrainBoxSetup()
-    if stt in (Stt.NEMOTRON, Stt.NEMOTRON_LANGUAGES):
-        settings.brainbox_setup.up(Nemotron, model='multilingual')
-    # WhisperKenLM is also needed for the training of KenLM
-    settings.brainbox_setup.up(WhisperKenLM).up(Chroma).up(LlamaLoraServer, parameter=ner.model_id).up(LlamaLoraSFTTrainer)
-    if generation_model is not None:
-        settings.brainbox_setup.up(Ollama)
+    settings.brainbox_setup = testbed_deciders(stt, ollama=generation_model is not None)
     app = settings.create_app(working_folder)
 
     with Fork(app.brainbox_server):
         app.brainbox_api.wait_for_connection(30)
-        # BrainBoxSetup installs the deciders with a parameter last, but the self-test of LlamaLoraSFTTrainer needs LlamaLoraServer
-        BrainBoxSetup().up(LlamaLoraServer, parameter=ner.model_id).execute(app.brainbox_api)
-        settings.brainbox_setup.execute(app.brainbox_api)
+        set_up_deciders(app.brainbox_api, settings.brainbox_setup)
 
         # A separate client: the app's one is pickled into the forks, and API clients keep the last request,
         # which for uploads holds a generator that cannot be pickled.
