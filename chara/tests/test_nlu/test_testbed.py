@@ -1,5 +1,6 @@
 import tempfile
 import wave
+from datetime import datetime, timedelta
 from pathlib import Path
 from unittest import TestCase
 import numpy as np
@@ -10,6 +11,7 @@ from avatar.daemon import (
     BrainBoxService, ChatCommand, InitializationEvent, TextEvent, NLUTextEvent, RecognitionEvent, STTTrainingCommand,
     TemplatesRecognitionRequest, State, SoundEvent,
 )
+from avatar.daemon.common import TickEvent
 from avatar.messaging import AvatarDaemon, AvatarClient
 from chara.nlu.testbed import (
     TestbedIntents, TestbedService, TestbedChatService, ReportingNLUService, NLUReportEvent,
@@ -121,7 +123,7 @@ def _report(file_id: str, text: str) -> NLUReportEvent:
 class TestbedChatServiceTestCase(TestCase):
     def test_report_of_recording_waits_for_its_text(self):
         service = TestbedChatService()
-        self.assertIsNone(service.on_report(_report('recording.wav', 'Позвони Юки')))
+        self.assertEqual((), service.on_report(_report('recording.wav', 'Позвони Юки')))
         message, report = service.on_event(TextEvent(CALL.utter(dict(person='Yuki')), file_id='recording.wav'))
         self.assertEqual(ChatCommand.MessageType.from_user, message.type)
         self.assertEqual('Позвони Юки', message.text)
@@ -129,18 +131,53 @@ class TestbedChatServiceTestCase(TestCase):
         self.assertIn("recognized: TestbedIntents.call {'person': 'Yuki'}", report.text)
         self.assertEqual({}, service.held_reports)
 
+    def test_text_of_recording_waits_for_its_report(self):
+        service = TestbedChatService()
+        self.assertEqual((), service.on_event(TextEvent(CALL.utter(dict(person='Yuki')), file_id='recording.fixed.wav')))
+        message, report = service.on_report(_report('recording.wav', 'Позвони Юки'))
+        self.assertEqual('Позвони Юки', message.text)
+        self.assertIn("recognized: TestbedIntents.call {'person': 'Yuki'}", report.text)
+        self.assertEqual({}, service.held_texts)
+
+    def test_streamed_recording_and_its_fixed_copy_are_paired(self):
+        service = TestbedChatService()
+        service.on_report(_report('recording.wav', 'Позвони Юки'))
+        message, report = service.on_event(TextEvent(CALL.utter(dict(person='Yuki')), file_id='recording.fixed.wav'))
+        self.assertEqual('Позвони Юки', message.text)
+
     def test_report_of_typed_text_is_shown_at_once(self):
-        command = TestbedChatService().on_report(_report('typed-1', 'Call Yuki'))
+        (command,) = TestbedChatService().on_report(_report('typed-1', 'Call Yuki'))
         self.assertEqual(ChatCommand.MessageType.system, command.type)
 
-    def test_empty_recording_is_not_shown(self):
+    def test_typed_text_is_shown_at_once(self):
+        (message,) = TestbedChatService().on_event(TextEvent('Call Yuki'))
+        self.assertEqual(ChatCommand.MessageType.from_user, message.type)
+
+    def test_empty_recording_is_shown_at_once(self):
         service = TestbedChatService()
-        self.assertIsNone(service.on_report(_report('recording.wav', '')))
+        (command,) = service.on_report(_report('recording.wav', ''))
+        self.assertEqual(ChatCommand.MessageType.system, command.type)
         self.assertEqual({}, service.held_reports)
 
-    def test_text_without_report(self):
-        (message,) = TestbedChatService().on_event(TextEvent('Hello', file_id='recording.wav'))
+    def test_report_without_text_is_shown_after_a_while(self):
+        service = TestbedChatService()
+        service.on_report(_report('recording.wav', 'Позвони Юки'))
+        self.assertEqual((), service.on_tick(TickEvent(datetime.now())))
+        (report,) = service.on_tick(TickEvent(datetime.now() + timedelta(seconds=10)))
+        self.assertEqual(ChatCommand.MessageType.system, report.type)
+        self.assertEqual({}, service.held_reports)
+
+    def test_text_without_report_is_shown_after_a_while(self):
+        service = TestbedChatService()
+        service.on_event(TextEvent('Hello', file_id='recording.fixed.wav'))
+        self.assertEqual((), service.on_tick(TickEvent(datetime.now())))
+        (message,) = service.on_tick(TickEvent(datetime.now() + timedelta(seconds=10)))
         self.assertEqual(ChatCommand.MessageType.from_user, message.type)
+        self.assertEqual({}, service.held_texts)
+
+    def test_empty_typed_text_is_ignored(self):
+        self.assertIsNone(TestbedService([]).on_typed_text(TextEvent('  ')))
+        self.assertEqual((), TestbedChatService().on_event(TextEvent('')))
 
 
 def _write_wav(path: Path, samples: np.ndarray):
