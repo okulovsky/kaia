@@ -53,7 +53,7 @@ class TestbedDaemonSettings(AvatarDaemonAppSettings):
         return TestbedService(self.templates)
 
     def create_chat_service(self, app: KaiaApp, state: State):
-        return TestbedChatService()
+        return TestbedChatService(app.brainbox_cache_folder)
 
     def create_sound_event_to_stt_command(self, app: KaiaApp, state: State):
         # The first recognition after the start waits for the model to load

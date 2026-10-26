@@ -1,10 +1,11 @@
 import uuid
 from datetime import datetime
+from pathlib import Path
 from grammatron import Template
 from loguru import logger
 from avatar.daemon import (
     ChatCommand, ChatService, InitializationEvent, TextEvent, NLUTextEvent, STTTrainingCommand, IntentsPack,
-    TemplatesRecognitionRequest, MAIN_CONTEXT,
+    TemplatesRecognitionRequest, MAIN_CONTEXT, StreamingSTTService,
 )
 from avatar.daemon.common import AvatarService, message_handler, TickEvent
 from .reporting_nlu_service import NLUReportEvent
@@ -40,11 +41,13 @@ class TestbedChatService(ChatService):
     Shows every recognition in the chat and in the log: the text that was heard, then the report of NLU.
     NLU sends the report at the same time as the recognition, so the report of a recording and its TextEvent
     come in either order: the first one waits for the second, and is shown alone if the second does not come.
+    With `cache_folder`, the report of a recording also shows what Nemotron heard in each language.
     """
     WAIT_IN_SECONDS = 5
 
-    def __init__(self):
+    def __init__(self, cache_folder: Path | None = None):
         super().__init__(None)
+        self.cache_folder = cache_folder
         self.held_reports: dict[str, tuple[datetime, NLUReportEvent]] = {}
         self.held_texts: dict[str, tuple[datetime, TextEvent]] = {}
 
@@ -91,7 +94,19 @@ class TestbedChatService(ChatService):
         return ChatCommand(report.text, ChatCommand.MessageType.from_user), self._report(report)
 
     def _report(self, report: NLUReportEvent) -> ChatCommand:
-        return ChatCommand(report.to_str(), ChatCommand.MessageType.system)
+        languages = self._languages(report)
+        text = report.to_str() if languages is None else languages + '\n' + report.to_str()
+        return ChatCommand(text, ChatCommand.MessageType.system)
+
+    def _languages(self, report: NLUReportEvent) -> str | None:
+        # The result of Nemotron is in the cache under the name of the recording
+        if self.cache_folder is None:
+            return None
+        files = list(Path(self.cache_folder).glob(f'{_recording(report.file_id)}.*transcribe_stream_languages*.jsonl'))
+        if len(files) == 0:
+            return None
+        streams = StreamingSTTService.read_finals_by_stream(max(files, key=lambda f: f.stat().st_mtime).read_bytes())
+        return _languages_line(streams, report.text)
 
 
 def _is_typed(message: TextEvent) -> bool:
@@ -102,3 +117,14 @@ def _is_typed(message: TextEvent) -> bool:
 def _recording(file_id: str) -> str:
     # Streaming STT reports the recording itself, while STTIntegrationService sends its text with the fixed copy
     return file_id.split('.')[0]
+
+
+def _languages_line(streams: dict[str, tuple[str, float]], chosen: str | None) -> str:
+    heard = sorted(((language, text, confidence) for language, (text, confidence) in streams.items() if text != ''), key=lambda s: -s[2])
+    parts, marked = [], False
+    for language, text, confidence in heard:
+        is_chosen = not marked and text == chosen
+        marked = marked or is_chosen
+        parts.append(f'{language} {confidence:.3f} {text!r}' + (' (chosen)' if is_chosen else ''))
+    parts.extend(f'{language} nothing' for language, (text, _) in streams.items() if text == '')
+    return 'languages: ' + ' | '.join(parts)

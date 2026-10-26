@@ -1,3 +1,4 @@
+import json
 import tempfile
 import wave
 from datetime import datetime, timedelta
@@ -159,6 +160,28 @@ class TestbedChatServiceTestCase(TestCase):
         service.on_report(_report('recording.wav', 'Позвони Юки'))
         message, report = service.on_event(TextEvent(CALL.utter(dict(person='Yuki')), file_id='recording.fixed.wav'))
         self.assertEqual('Позвони Юки', message.text)
+
+    def test_languages_of_recording_are_shown(self):
+        events = [
+            dict(text='Позвони Юки', confidence=0.99, is_final=True, stream='ru'),
+            dict(text='pozvoni yuki', confidence=0.95, is_final=True, stream='en'),
+            dict(text='', confidence=1.0, is_final=True, stream='de'),
+        ]
+        line = "languages: ru 0.990 'Позвони Юки' (chosen) | en 0.950 'pozvoni yuki' | de nothing\ntext:"
+        with tempfile.TemporaryDirectory() as folder:
+            name = 'recording.nemotron-stream.nemotron.transcribe_stream_languages.1.jsonl'
+            (Path(folder)/name).write_text('\n'.join(json.dumps(e) for e in events))
+            service = TestbedChatService(Path(folder))
+            service.on_report(_report('recording.wav', 'Позвони Юки'))
+            message, report = service.on_event(TextEvent(CALL.utter(dict(person='Yuki')), file_id='recording.fixed.wav'))
+            self.assertTrue(report.text.startswith(line))
+            service.on_event(TextEvent(CALL.utter(dict(person='Yuki')), file_id='recording.fixed.wav'))
+            message, report = service.on_report(_report('recording.wav', 'Позвони Юки'))
+            self.assertTrue(report.text.startswith(line))
+            (report,) = service.on_report(_report('recording.wav', ''))
+            self.assertTrue(report.text.startswith("languages: ru 0.990 'Позвони Юки' | en 0.950 'pozvoni yuki' | de nothing\ntext:"))
+            (report,) = service.on_report(_report('typed-1', 'Call Yuki'))
+            self.assertTrue(report.text.startswith('text:'))
 
     def test_report_of_typed_text_is_shown_at_once(self):
         (command,) = TestbedChatService().on_report(_report('typed-1', 'Call Yuki'))
