@@ -4,16 +4,16 @@ from .tts_service import TTSService
 from .narration_service import *
 from .paraphrase_service import ParaphraseService, ParaphraseRecord
 from .image_service import ImageService
-from .stt_service import STTService, RhasspyRecognitionSetup, VoskRecognitionSetup, WhisperRecognitionSetup, NemotronRecognitionSetup, IntentsPack
-from .speaker_identification_service import SpeakerIdentificationService
+from .stt_service import STTService, MAIN_CONTEXT, STTTrainingCommand, IRecognitionRequest, TemplatesRecognitionRequest, FreeSpeechRecognitionRequest, RecognitionEvent, RhasspyRecognitionSetup, VoskRecognitionSetup, WhisperRecognitionSetup, IntentsPack
+from .speaker_identification_service import SpeakerIdentificationService, SpeakerIdentificationEvent
 from .mock_sound_service import MockSoundService
 from .state_to_utterances_application_service import StateToUtterancesApplicationService
 from .mock_sound_service import MockSoundService, MockVoiceoverService
 from .volume_control_service import VolumeControlService
 from .chat_service import ChatService
 from .stt_integration_service import STTIntegrationService
+from .streaming_stt_service import StreamingSTTService, WhisperKenLMSTTService, NLUService, NLUTextEvent
 from .tts_integration_service import TTSIntegrationService
 from .sound_command_unblocker_service import SoundPlayUnblockerService
 from .user_walk_in_service import UserWalkInService
-from .uploaded_wav_fixing import UploadedWavFixer
 from .silence_level_service import SilenceLevelService

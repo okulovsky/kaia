@@ -55,6 +55,20 @@ class ChromaController(DockerMarshallingController[ChromaSettings]):
             lambda result, api, tc: tc.assertEqual('set_timer', result[0]['intent']),
         )
         yield SelfTestCase(
+            Chroma.new_task().export_collection(),
+            lambda result, api, tc: tc.assertEqual([u['text'] for u in utterances], [r['text'] for r in result]),
+        )
+        yield SelfTestCase(
+            Chroma.new_task().import_collection([
+                {'text': 'turn on the light', 'intent': 'light_on', 'language': 'en', 'embedding': [1.0] + [0.0]*383},
+            ], collection_name='import_self_test'),
+            None,
+        )
+        yield SelfTestCase(
+            Chroma.new_task().export_collection(collection_name='import_self_test'),
+            lambda result, api, tc: tc.assertEqual('light_on', result[0]['intent']),
+        )
+        yield SelfTestCase(
             Chroma.new_task().get_vector('hello world'),
             lambda result, api, tc: tc.assertEqual(384, len(result)),
         )

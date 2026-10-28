@@ -1,5 +1,5 @@
 from unittest import TestCase
-from avatar.daemon import BrainBoxService, STTService, WhisperRecognitionSetup, VoskRecognitionSetup, IntentsPack, RhasspyRecognitionSetup
+from avatar.daemon import BrainBoxService, STTService, VoskRecognitionSetup, IntentsPack, TemplatesRecognitionRequest, FreeSpeechRecognitionRequest, RecognitionEvent, SoundEvent, State
 from avatar.messaging import AvatarDaemon, AvatarClient
 from grammatron import Template, TemplatesCollection
 from brainbox import BrainBox, ISelfManagingDecider
@@ -36,40 +36,44 @@ class STTTestCase(TestCase):
     def test_stt(self):
         with BrainBox.Api.serverless_test([WhisperMock()]) as api:
             proc = AvatarDaemon(AvatarClient.default())
-            proc.rules.bind(STTService(WhisperRecognitionSetup()))
+            proc.rules.bind(STTService(State(), default_request=FreeSpeechRecognitionRequest()))
             proc.rules.bind(BrainBoxService(api))
 
-            proc.client.push(STTService.Command('test'))
-            result = proc.debug_and_stop_by_message_type(STTService.Confirmation)
+            result = proc.debug_and_stop_by_message_type(RecognitionEvent, SoundEvent('test'))
 
             message = result.messages[-1]
-            self.assertIsInstance(message, STTService.Confirmation)
+            self.assertIsInstance(message, RecognitionEvent)
+            self.assertEqual('test', message.file_id)
             self.assertEqual('test', message.recognition)
+            self.assertIsNone(message.error)
 
     def test_stt_request(self):
         with BrainBox.Api.serverless_test([WhisperMock(), VoskMock()]) as api:
             proc = AvatarDaemon(AvatarClient.default())
-            proc.rules.bind(STTService(WhisperRecognitionSetup()))
+            stt = STTService(
+                State(),
+                templates_setup=lambda context: VoskRecognitionSetup(context),
+                default_request=FreeSpeechRecognitionRequest(),
+            )
+            proc.rules.bind(stt)
             proc.rules.bind(BrainBoxService(api))
 
-            proc.client.push(VoskRecognitionSetup('x'))
-            proc.client.push(STTService.Command('vosk'))
-
-            message_1 = proc.debug_and_stop_by_message_type(STTService.Confirmation).messages[-1]
+            proc.client.push(TemplatesRecognitionRequest('x'))
+            message_1 = proc.debug_and_stop_by_message_type(RecognitionEvent, SoundEvent('vosk')).messages[-1]
             self.assertEqual('vosk', message_1.recognition)
 
-            proc.client.push(STTService.Command('whisper'))
-            message_2 = proc.debug_and_stop_by_message_type(STTService.Confirmation).messages[-1]
+            message_2 = proc.debug_and_stop_by_message_type(RecognitionEvent, SoundEvent('whisper')).messages[-1]
             self.assertEqual('whisper', message_2.recognition)
 
     def test_stt_kaldi_no_training(self):
         with BrainBox.Api.serverless_test([RhasspyKaldiMock()]) as api:
             proc = AvatarDaemon(AvatarClient.default(), timeout_in_pull_in_seconds=0)
-            proc.rules.bind(STTService(RhasspyRecognitionSetup('test_1')))
+            proc.rules.bind(STTService(State(), default_request=TemplatesRecognitionRequest('test_1')))
             proc.rules.bind(BrainBoxService(api))
 
-            proc.client.push(STTService.Command('file'))
-            self.assertRaises(ValueError, lambda: proc.debug_and_stop_by_message_type(STTService.Confirmation))
+            message = proc.debug_and_stop_by_message_type(RecognitionEvent, SoundEvent('file')).messages[-1]
+            self.assertIsNone(message.recognition)
+            self.assertIsNotNone(message.error)
 
     def test_stt_kaldi_training(self):
         class Collection1(TemplatesCollection):
@@ -84,15 +88,14 @@ class STTTestCase(TestCase):
 
         with BrainBox.Api.serverless_test([RhasspyKaldiMock()]) as api:
             proc = AvatarDaemon(AvatarClient.default(), timeout_in_pull_in_seconds=0)
-            stt = STTService(RhasspyRecognitionSetup('test_2'))
+            stt = STTService(State())
             proc.rules.bind(stt)
             proc.rules.bind(BrainBoxService(api))
 
-            proc.client.push(STTService.RhasspyTrainingCommand(packs))
-            proc.client.push(RhasspyRecognitionSetup('test_2'))
-            proc.client.push(STTService.Command('file'))
-            messages = proc.debug_and_stop_by_message_type(STTService.Confirmation).messages
+            proc.client.push(STTService.TrainingCommand(packs))
+            proc.client.push(TemplatesRecognitionRequest('test_2'))
+            messages = proc.debug_and_stop_by_message_type(RecognitionEvent, SoundEvent('file')).messages
 
-            self.assertIsInstance(messages[-1], STTService.Confirmation)
+            self.assertIsInstance(messages[-1], RecognitionEvent)
             self.assertIn('test_1', stt.handlers)
             self.assertIn('test_2', stt.handlers)

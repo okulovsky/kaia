@@ -1,5 +1,5 @@
 from typing import *
-from kaia import KaiaSkillBase, World, WhisperOpenMicListen
+from kaia import KaiaSkillBase, World, FreeSpeechListen
 from grammatron import Template, Utterance, TemplatesCollection
 
 
@@ -36,7 +36,7 @@ class EchoSkill(KaiaSkillBase):
 
     def run(self):
         yield EchoReplies.echo_request()
-        s = yield WhisperOpenMicListen()
+        s = yield FreeSpeechListen()
         yield s
 
 

@@ -10,7 +10,8 @@ class TrainingRun:
     model_id: str
     adapter_name: str
     guid: str
-    path: Path
+    # Not set by the service: the run's files are in the resources at experiments/{model_id}/{adapter_name}/{guid}
+    path: Path | None = None
 
 
 @dataclass

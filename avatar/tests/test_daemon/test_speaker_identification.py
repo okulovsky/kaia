@@ -1,7 +1,7 @@
 import os
 from unittest import TestCase
 from avatar.messaging import *
-from avatar.daemon import SpeakerIdentificationService, State, SoundEvent, InitializationEvent
+from avatar.daemon import SpeakerIdentificationService, SpeakerIdentificationEvent, State, SoundEvent, InitializationEvent
 from avatar.app import AvatarApi
 from avatar.daemon.common.vector_identificator import BestOfStrategy
 from foundation_kaia.misc import Loc
@@ -46,8 +46,10 @@ class SpeakerIdentificationTestCase(TestCase):
                     self.assertEqual([0, 0, 0, 1, 1, 1], list(df[1]))
 
 
-                    result = proc.debug_and_stop_by_count(1, SpeakerIdentificationService.Command('1_10')).messages
-                    self.assertEqual('B', result[-1].result)
+                    result = proc.debug_and_stop_by_count(1, SoundEvent('1_10')).messages
+                    self.assertIsInstance(result[-1], SpeakerIdentificationEvent)
+                    self.assertEqual('1_10', result[-1].file_id)
+                    self.assertEqual('B', result[-1].speaker)
 
     def test_train(self):
         with Loc.create_test_folder() as avatar_cache_folder:

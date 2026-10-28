@@ -2,7 +2,7 @@ from typing import *
 from .kaia_skill import IKaiaSkill
 from eaglesong.core import Automaton, ContextRequest, AutomatonExit, Listen, Return
 from grammatron import Template
-from avatar.daemon import IntentsPack, ChatCommand, NarrationService, State
+from avatar.daemon import IntentsPack, ChatCommand, NarrationService, State, MAIN_CONTEXT
 from dataclasses import dataclass, field
 import traceback
 from datetime import datetime
@@ -42,7 +42,7 @@ class AssistantHistoryItem:
 
 
 class KaiaAssistant:
-    RHASSPY_MAIN_MODEL_NAME = 'CORE'
+    MAIN_CONTEXT = MAIN_CONTEXT
 
     def __init__(self,
                  skills: Iterable[IKaiaSkill],
@@ -105,7 +105,7 @@ class KaiaAssistant:
         core_intents = [i for skill in self.all_skills for i in skill.get_intents()] + self.additional_intents
         packs = []
         packs.append(IntentsPack(
-            KaiaAssistant.RHASSPY_MAIN_MODEL_NAME,
+            KaiaAssistant.MAIN_CONTEXT,
             tuple(core_intents),
             {} if self.custom_words_in_core_intents is None else self.custom_words_in_core_intents
         ))

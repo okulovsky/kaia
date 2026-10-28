@@ -27,6 +27,11 @@ class BrainboxImageBuilder(IImageBuilder):
     keep_dockerfile: bool = False
     copy_foundation_kaia: bool = True
 
+    # foundation_kaia is copied into the build context for COPY. Not into the root itself: the deciders' run.py
+    # lives there, so Python would import that copy instead of the real foundation_kaia, and the copy is deleted
+    # after the build, in the middle of the run.
+    FOUNDATION_KAIA_COPY_FOLDER = '.foundation_kaia_copy'
+
     Repository = Repository
     RequirementsLockTxt = RequirementsDependencies
     CustomDependencies = CustomDependencies
@@ -111,7 +116,7 @@ class BrainboxImageBuilder(IImageBuilder):
             if dockerfile.exists() and not self.keep_dockerfile:
                 os.unlink(dockerfile)
 
-            kaia_path = self.root_path/'foundation_kaia'
+            kaia_path = self.root_path/self.FOUNDATION_KAIA_COPY_FOLDER
             if kaia_path.exists():
                 shutil.rmtree(kaia_path)
 
@@ -147,15 +152,16 @@ class BrainboxImageBuilder(IImageBuilder):
 
 
         source_path = path/'foundation_kaia'
-        target_path = self.root_path/'foundation_kaia'
-        if target_path.is_dir():
-            shutil.rmtree(target_path)
-        shutil.copytree(source_path, target_path)
+        copy_folder = self.root_path/self.FOUNDATION_KAIA_COPY_FOLDER
+        if copy_folder.is_dir():
+            shutil.rmtree(copy_folder)
+        shutil.copytree(source_path, copy_folder/'foundation_kaia')
+        src = f'{self.FOUNDATION_KAIA_COPY_FOLDER}/foundation_kaia'
         return [
-            'COPY --chown=app:app foundation_kaia/marshalling /home/app/foundation_kaia_src/foundation_kaia/marshalling',
-            'COPY --chown=app:app foundation_kaia/brainbox_utils /home/app/foundation_kaia_src/foundation_kaia/brainbox_utils',
-            'COPY --chown=app:app foundation_kaia/logging /home/app/foundation_kaia_src/foundation_kaia/logging',
-            'COPY --chown=app:app foundation_kaia/misc /home/app/foundation_kaia_src/foundation_kaia/misc',
-            'COPY --chown=app:app foundation_kaia/__init__.py /home/app/foundation_kaia_src/foundation_kaia/__init__.py',
+            f'COPY --chown=app:app {src}/marshalling /home/app/foundation_kaia_src/foundation_kaia/marshalling',
+            f'COPY --chown=app:app {src}/brainbox_utils /home/app/foundation_kaia_src/foundation_kaia/brainbox_utils',
+            f'COPY --chown=app:app {src}/logging /home/app/foundation_kaia_src/foundation_kaia/logging',
+            f'COPY --chown=app:app {src}/misc /home/app/foundation_kaia_src/foundation_kaia/misc',
+            f'COPY --chown=app:app {src}/__init__.py /home/app/foundation_kaia_src/foundation_kaia/__init__.py',
             'ENV PYTHONPATH="/home/app/foundation_kaia_src:$PYTHONPATH"',
         ]

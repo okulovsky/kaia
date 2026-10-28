@@ -9,13 +9,15 @@ from functools import partial
 import json
 from huggingface_hub import snapshot_download
 
+EXPERIMENTS_ROOT = Path("/resources/experiments")
+
 
 class Trainer:
     def __init__(self, model_id:str, adapter_name: str, guid: str) -> None:
         self.model_id = model_id
         self.adapter_name = adapter_name
         self.guid = guid
-        self.exp_folder = Path("/resources/experiments") / self.model_id / self.adapter_name / self.guid
+        self.exp_folder = EXPERIMENTS_ROOT / self.model_id / self.adapter_name / self.guid
         self.settings = self._load_settings()
         self.hf_dir = self.exp_folder / "hf_checkpoints"
         self.gguf_dir = self.exp_folder / "gguf_checkpoints"
@@ -43,19 +45,16 @@ class Trainer:
         return f"{inp}{out}" + tokenizer.eos_token
 
     @staticmethod
-    def _tokenize(
-        sample, max_length, tokenizer
-    ) -> (
-        dict
-    ):  # TODO:
-        # - works for gemma3 with \n separator, not tested for others (right padding side, tokenization differences);
+    def _tokenize(sample, tokenizer) -> dict:
+        # No padding here: the collator of SFTTrainer pads the batch and sets the attention mask,
+        # while for the padding added here it would attend to the pad tokens, unlike llama-server at inference.
+        # TODO:
+        # - works for gemma3 with \n separator, not tested for others (tokenization differences);
         # - add a more universal solution, e.g. apply_chat_template with return_assistant_tokens_mask
-        prompt = f"{sample['INPUT']}"
-        prompt_len = len(tokenizer(prompt)["input_ids"])
-        tokenized = tokenizer(sample["text"], padding="max_length", max_length=max_length)
-        pad_len = tokenized["input_ids"].count(tokenizer.pad_token_id)
+        prompt_len = len(tokenizer(sample["INPUT"])["input_ids"])
+        tokenized = tokenizer(sample["text"])
         tokenized["labels"] = tokenized["input_ids"].copy()
-        tokenized["labels"][: pad_len + prompt_len] = [-100] * (pad_len + prompt_len)
+        tokenized["labels"][:prompt_len] = [-100] * prompt_len
         return tokenized
 
     def _load_dataset(self):
@@ -63,17 +62,14 @@ class Trainer:
         dataset = load_dataset(
             "json",
             data_files={
-                "train": str(Path("/resources/experiments") / self.model_id / self.adapter_name / self.guid / "train.jsonl"),
+                "train": str(self.exp_folder / "train.jsonl"),
             },
         )
         dataset["train"] = dataset["train"].map(
             lambda x: {"text": self._format_prompt(tokenizer, x)}
         )
-        max_length = max(
-            len(tokenizer(sample["text"])["input_ids"]) for sample in dataset["train"]
-        )
         dataset["train"] = dataset["train"].map(
-            partial(self._tokenize, tokenizer=tokenizer, max_length=max_length), batched=False
+            partial(self._tokenize, tokenizer=tokenizer), batched=False
         )
         return dataset
 

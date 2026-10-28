@@ -2,7 +2,7 @@ from typing import Type
 import time
 from typing import Callable, Any
 from avatar.messaging import AvatarClient
-from avatar.daemon import TextCommand, STTService, SoundCommand
+from avatar.daemon import TextCommand, STTTrainingCommand, SoundCommand
 from loguru import logger
 from ..assistant import KaiaContext
 from eaglesong import Automaton
@@ -65,7 +65,7 @@ class KaiaDriver:
             if not self.rhasspy_training_is_done:
                 logger.info("Sending Rhasspy Train Command")
                 packs = assistant.get_intents()
-                context.get_client().push(STTService.RhasspyTrainingCommand(packs))
+                context.get_client().push(STTTrainingCommand(packs))
             else:
                 logger.info("Training is done, skipping")
 

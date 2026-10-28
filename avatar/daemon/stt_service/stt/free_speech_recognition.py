@@ -1,5 +1,5 @@
 from grammatron import TemplateBase, AStarParser
-from .recognition_setup import STTConfirmation, IPostprocessor
+from .recognition_setup import RecognitionResult, IPostprocessor
 
 class FreeSpeechPostprocessor(IPostprocessor):
     def __init__(self, template: TemplateBase|None):
@@ -14,5 +14,5 @@ class FreeSpeechPostprocessor(IPostprocessor):
                 result = parser.parse(result)
                 recognized = self.template(result)
         except Exception as exception:
-            return STTConfirmation(None, result, exception)
-        return STTConfirmation(recognized, result)
+            return RecognitionResult(None, result, exception)
+        return RecognitionResult(recognized, result)

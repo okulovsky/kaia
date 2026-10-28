@@ -75,7 +75,8 @@ def brainbox_pipeline(
 
     @Chara.phase
     def collecting_results():
-        _wait_for_brainbox(batch_id)
+        if len(task_ids) > 0:  # an empty batch is never stored by BrainBox, so there is nothing to wait for
+            _wait_for_brainbox(batch_id)
         tar_path = Chara.current.folder / 'items.tar'
         files_folder = Chara.current.folder / 'files'
         os.makedirs(files_folder, exist_ok=True)

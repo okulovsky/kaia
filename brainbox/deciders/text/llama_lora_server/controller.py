@@ -1,9 +1,9 @@
 from unittest import TestCase
 from ....framework import (
     RunConfiguration,
-    SmallImageBuilder,
+    BrainboxImageBuilder,
     IImageBuilder,
-    DockerWebServiceController,
+    DockerMarshallingController,
     IModelDownloadingController,
     BrainBoxApi,
     BrainBoxTask,
@@ -11,13 +11,14 @@ from ....framework import (
 )
 from .settings import LlamaLoraServerSettings
 from .model import LlamaLoraServerResource
+from .image_builder import LlamaCppImageBuilder
 from pathlib import Path
 import subprocess
 import platform
 
 
 class LlamaLoraServerController(
-    DockerWebServiceController[LlamaLoraServerSettings], IModelDownloadingController
+    DockerMarshallingController[LlamaLoraServerSettings], IModelDownloadingController
 ):
     def get_downloadable_model_type(self) -> type[DownloadableModel]:
         return LlamaLoraServerResource
@@ -31,40 +32,28 @@ class LlamaLoraServerController(
         else:
             source_image = "ghcr.io/ggml-org/llama.cpp:server-b7018"
 
-        return SmallImageBuilder(
-            Path(__file__).parent / "container",
-            f'FROM {source_image}\nENTRYPOINT ["/app/llama-server"]',
-            None,
+        return LlamaCppImageBuilder(
+            Path(__file__).parent,
+            source_image,
+            allow_arm64=True,
+            install_requirements_as_root=True,
+            dependencies=(
+                BrainboxImageBuilder.KaiaFoundationDependencies(),
+            ),
         )
-
-    def get_tasknames(self, model_id: str) -> list[str]:
-        lora_path = self.resource_folder("models", model_id, "lora_adapters")
-        file_stems = [name.stem for name in lora_path.iterdir() if name.is_file()]
-        return sorted(file_stems)
 
     def get_service_run_configuration(self, port: int, parameter: str | None) -> RunConfiguration:
         if parameter is None:
             raise ValueError(f"`parameter` cannot be None for {self.get_name()}")
-        cmd_args = [
-            "--lora-init-without-apply",
-            "--host",
-            "0.0.0.0",
-            "--model",
-            f"/app/models/{parameter}/model.gguf",
-            "--no-mmproj",
-        ]
-
-        for taskname in self.get_tasknames(parameter):
-            path = f"/app/models/{parameter}/lora_adapters/{taskname}.gguf"
-            cmd_args.extend(["--lora", path])
-
+        # The adapters are loaded by the app inside the container, see app/service.py
         return RunConfiguration(
+            parameter,
             publish_ports={port: 8080},
             mount_top_resource_folder=False,
             mount_resource_folders={
                 "models": "/app/models",
             },
-            command_line_arguments=cmd_args,
+            command_line_arguments=[parameter],
         )
 
     def get_default_settings(self):

@@ -35,7 +35,7 @@ export class SoundUploadingWakeWordDetector implements IWakeWordDetector, ILoadi
             dispatcher,
             baseUrl,
             filenamePrefix: 'wakeword_',
-            // Silent: a SoundStreamingEndEvent would reach UploadedWavFixer and be replayed
+            // Silent: a SoundStreamingEndEvent would reach STTIntegrationService and be replayed
             // into the pipeline as if the user had addressed Kaia.
             emitEvents: false,
         })

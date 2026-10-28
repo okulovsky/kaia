@@ -1,7 +1,7 @@
 from typing import Iterable
-from avatar.daemon import IntentsPack, RhasspyRecognitionSetup, OpenMicCommand
-from eaglesong import Listen
+from avatar.daemon import IntentsPack
 from ....assistant import KaiaSkillBase
+from ....driver import ContextListen
 from grammatron import Template, TemplatesCollection, Utterance
 
 
@@ -18,7 +18,7 @@ class AnnouncementReplies(TemplatesCollection):
     cool = Template("Great, you're awesome!")
 
 
-MODEL = 'ConfirmationAnnouncement'
+CONTEXT = 'ConfirmationAnnouncement'
 
 class ConfirmationAnnouncementSkill(KaiaSkillBase):
     NEXT_TIME = 'next_time'
@@ -31,7 +31,7 @@ class ConfirmationAnnouncementSkill(KaiaSkillBase):
 
     def get_extended_intents_packs(self) -> Iterable[IntentsPack]:
         return [IntentsPack(
-            MODEL,
+            CONTEXT,
             (AnnouncementConfirmation.yes, AnnouncementConfirmation.no, AnnouncementConfirmation.next_day, AnnouncementConfirmation.already_done),
         )]
 
@@ -41,7 +41,7 @@ class ConfirmationAnnouncementSkill(KaiaSkillBase):
     def run(self):
         yield self.announcement()
         yield AnnouncementReplies.will_you_do_it()
-        input = yield Listen(RhasspyRecognitionSetup(MODEL), OpenMicCommand())
+        input = yield ContextListen(CONTEXT)
         if input in AnnouncementConfirmation.yes or input in AnnouncementConfirmation.already_done:
             yield AnnouncementReplies.cool()
             return None

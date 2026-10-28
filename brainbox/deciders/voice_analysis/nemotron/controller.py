@@ -15,15 +15,21 @@ INSTALL_PREFIX = '/opt/nemo-speech'
 
 BUILD_NEMO_SPEECH = (
     'USER root',
+    # patches/rnnt_confidence.patch: the RNNT decoder computes the entropy-based confidence
+    # of the tokens, words and utterances, which is otherwise always 1
+    'COPY patches/ /tmp/nemo-patches/',
     f'RUN git clone https://github.com/NVIDIA/NeMo-Speech.cpp /tmp/nemo-src && '
     f'cd /tmp/nemo-src && git checkout {NEMO_SPEECH_COMMIT} && '
+    f'git apply /tmp/nemo-patches/*.patch && '
     f'git submodule update --init --depth 1 ggml llama.cpp && '
-    f'scripts/configure.sh cpu-asr && '
+    # The native flags detected on arm64 lack fp16, which ggml needs: set the architecture explicitly
+    f'ARM_FLAGS=$([ "$(uname -m)" = aarch64 ] && echo "-DGGML_NATIVE=OFF -DGGML_CPU_ARM_ARCH=armv8.2-a+fp16+dotprod" || true) && '
+    f'scripts/configure.sh cpu-asr $ARM_FLAGS && '
     f'cmake --build --preset cpu-asr && '
     f'cmake --install build/cpu-asr --prefix {INSTALL_PREFIX} && '
     f'find {INSTALL_PREFIX} -name "*.so*" -exec dirname {{}} \\; | sort -u > /etc/ld.so.conf.d/nemo-speech.conf && '
     f'ldconfig && '
-    f'rm -rf /tmp/nemo-src',
+    f'rm -rf /tmp/nemo-src /tmp/nemo-patches',
     'USER app',
 )
 
@@ -103,6 +109,9 @@ class NemotronController(DockerMarshallingController[NemotronSettings]):
             def check_offline(result, api, tc, expected=expected):
                 _assert_text(tc, expected, result['text'])
                 tc.assertGreater(len(result['words']), 0)
+                # With patches/rnnt_confidence.patch the confidence is computed instead of being always 1
+                tc.assertTrue(0 < result['confidence'] < 1, str(result['confidence']))
+                tc.assertTrue(any(w['confidence'] < 0.999 for w in result['words']), str(result['words']))
             yield SelfTestCase(Nemotron.new_task().transcribe(file, locale), check_offline)
 
             def check_auto(result, api, tc, expected=expected, language=language):
@@ -119,4 +128,12 @@ class NemotronController(DockerMarshallingController[NemotronSettings]):
                 tc.assertTrue(events[-1]['is_final'])
                 tc.assertFalse(any(e['is_final'] for e in events[:-1]))
                 _assert_text(tc, expected, events[-1]['text'])
+                tc.assertTrue(0 < events[-1]['confidence'] < 1, str(events[-1]))
             yield SelfTestCase(Nemotron.new_task().transcribe_stream(chunks, locale), check_stream)
+
+            def check_languages(result, api, tc, expected=expected, locale=locale):
+                events = _parse_events(api.cache.read_file(result).content)
+                tc.assertEqual({'auto', 'en-US', 'de-DE'}, {e['stream'] for e in events})
+                finals = [e for e in events if e['is_final'] and e['stream'] == locale]
+                _assert_text(tc, expected, finals[-1]['text'])
+            yield SelfTestCase(Nemotron.new_task().transcribe_stream_languages(chunks, ['auto', 'en-US', 'de-DE']), check_languages)

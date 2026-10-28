@@ -1,7 +1,7 @@
 from chara.paraphrasing.common import Paraphrase, ParsedTemplate, generate_values_for_variables
 from pathlib import Path
-from grammatron import Template
-from chara.common import Chara
+from grammatron import Template, OptionsDub, VariableDub
+from chara.common import Chara, CaseCollection
 from chara.common.llm import BrainBoxLLMEngine, LLMSetup
 
 
@@ -19,6 +19,9 @@ class TextDatasetPipeline:
         self.moods = moods
 
     def __call__(self) -> list[dict]:
+        return self.export(self.paraphrase(), 10)
+
+    def paraphrase(self) -> list[TextDatasetCase]:
         cases = []
         for mood in self.moods:
             for language in self.languages:
@@ -31,29 +34,43 @@ class TextDatasetPipeline:
             grammar_correction_attempts=3,
             words_translation_attempts=3,
             enable_options_expanding=True,
-            enable_option_values_translation=True,
+            enable_option_values_translation=False,
         )
         pipe = Paraphrase.Pipeline(settings)
-        paraphrase_results = Chara.call(pipe)(cases)
-        return self._export_cases(paraphrase_results)
+        paraphrase_results = Chara.call(pipe)(CaseCollection(cases))
+        return list(paraphrase_results.successes)
 
-    def _export_cases(self, cases):
+    @staticmethod
+    def export(cases, variants_count: int) -> list[dict]:
         result = []
         for case in cases:
             intent = case.original_template.get_name()
             variables = ParsedTemplate.parse_single(case.resulting_template).variables
+            # The values of the options are written as the original template has them, whatever the language of the text
+            original_options = {
+                leaf.name: leaf.dub
+                for template_dub in case.original_template.dub.dispatch.values()
+                for sequence in template_dub.sequences
+                for leaf in sequence.get_leaves()
+                if isinstance(leaf, VariableDub) and isinstance(leaf.dub, OptionsDub)
+            }
             if len(variables) == 0:
                 values_instances = [{}]
             else:
-                values_instances = generate_values_for_variables(list(variables), 10)
+                values_instances = generate_values_for_variables(list(variables), variants_count)
 
             for instance in values_instances:
                 values_description = []
                 for variable in variables:
+                    value = instance[variable.name]
+                    dub = original_options.get(variable.name)
+                    # Options added by OptionExpanding are not in the original template and stay as they are said
+                    if dub is None or value not in dub.value_to_strs:
+                        dub = variable.dub
                     values_description.append(dict(
                         name=variable.name,
                         type=type(variable.dub).__name__,
-                        value=variable.dub.to_str(instance[variable.name])
+                        value=dub.to_str(value)
                     ))
 
                 result.append(dict(

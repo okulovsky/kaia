@@ -28,6 +28,15 @@ class MyMock(ISelfManagingDecider):
 
 
 class BrainBoxPipelineTestCase(TestCase):
+    def test_empty(self):
+        # An empty batch is never stored by BrainBox: the pipeline must not wait for it
+        with Loc.create_test_folder() as folder:
+            Chara.start(folder)
+            with BrainBox.Api.serverless_test([MyMock()]) as api:
+                Chara.Apis.brainbox_api = api
+                Chara.call(brainbox_pipeline)([])
+            self.assertEqual([], list(Chara.previous.result.read_all()))
+
     def test_simple(self):
         with Loc.create_test_folder() as folder:
             Chara.start(folder)

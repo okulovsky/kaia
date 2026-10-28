@@ -12,8 +12,8 @@ class VoskRecognitionSetup(IRecognitionSetup):
 
     def create_task_and_postprocessor(self, context: RecognitionContext) -> tuple[BrainBox.Task, IPostprocessor]:
         task = (Vosk
-                .new_task(id=context.command.file.split('.')[0] + '.vosk')
-                .transcribe_to_string(file=context.command.file, model=self.model)
+                .new_task(id=context.file.split('.')[0] + '.vosk')
+                .transcribe_to_string(file=context.file, model=self.model)
                 )
         postprocessor = FreeSpeechPostprocessor(self.free_speech_recognition_template)
         return task, postprocessor
