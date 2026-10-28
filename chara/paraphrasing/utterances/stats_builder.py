@@ -104,10 +104,3 @@ def build_statistics(tasks: tuple[UtteranceParaphraseCase,...]):
     stats = _create_statistics(tasks)
     _fill_statistics(stats)
     return tasks
-
-
-
-
-
-
-

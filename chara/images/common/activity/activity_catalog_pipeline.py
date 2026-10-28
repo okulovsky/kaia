@@ -2,10 +2,11 @@ from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 from brainbox.deciders import Ollama
-from chara import Chara, CaseCollection, BrainBoxCasePipeline
+from chara import Chara, CaseCollection, CasePrioritization
 from chara.common.llm import BrainBoxLLMEngine, BulletPointDivider, LLMSetup
 from .case import ActivityCase
 from .activity_catalog_item import ActivityCatalogItem
+from .activity_prioritization import ActivityPrioritization
 from .lookahead import is_theme_within_lookahead
 
 
@@ -13,7 +14,8 @@ from .lookahead import is_theme_within_lookahead
 class ActivityCatalogPipelineSettings:
     llm_model: str
     activities_path: Path
-    desired_activity_count: int
+    strategy: CasePrioritization.Strategy
+    budget: int
     lookahead_span: int = 3
     options: Ollama.Options | None = None
 
@@ -39,8 +41,10 @@ class ActivityCatalogPipeline:
                     if activity not in case.activities:
                         case.activities.append(activity)
 
-        to_generate = [c for c in relevant if len(c.activities) < self.settings.desired_activity_count]
-        already_enough = [c for c in relevant if len(c.activities) >= self.settings.desired_activity_count]
+        prioritization = ActivityPrioritization(catalog, self.settings.strategy, self.settings.budget)
+        prioritized = Chara.call(prioritization, 'prioritization')(CaseCollection(relevant))
+        to_generate = prioritized.successes
+        not_selected = prioritized.errors
 
         def merge(case: ActivityCase, result: str) -> None:
             for activity in BulletPointDivider()(result):
@@ -60,7 +64,7 @@ class ActivityCatalogPipeline:
         else:
             generated = CaseCollection(to_generate)
 
-        result = CaseCollection(generated, already_enough, cases.errors)
+        result = CaseCollection(generated, not_selected, cases.errors)
 
         for case in result.successes:
             fingerprint = case.to_fingerprint()

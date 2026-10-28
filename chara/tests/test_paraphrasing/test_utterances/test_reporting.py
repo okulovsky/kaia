@@ -23,9 +23,9 @@ def stats(name: str, existing: int, seen: int) -> ParaphraseStats:
 class ParaphraseRunReportTestCase(unittest.TestCase):
     def _report(self) -> ParaphraseRunReport:
         before = {fingerprint('hello'): stats('hello', 4, 12), fingerprint('bye'): stats('bye', 1, 3)}
-        attempts = {fingerprint('hello'): 1, fingerprint('bye'): 2}
+        selected = {fingerprint('hello'), fingerprint('bye')}
         records = [record('hello')] * 3
-        return ParaphraseRunReport.build(before, attempts, records)
+        return ParaphraseRunReport.build(before, selected, records)
 
     def test_before_and_after(self):
         row = self._report().rows[0]
@@ -35,10 +35,9 @@ class ParaphraseRunReportTestCase(unittest.TestCase):
         self.assertEqual(3, row.produced)
         self.assertEqual(7, row.existing_after)
 
-    def test_an_attempt_that_produced_nothing_is_still_reported(self):
+    def test_a_selected_case_that_produced_nothing_is_still_reported(self):
         failures = self._report().failures
         self.assertEqual(['bye'], [row.fingerprint.template_name for row in failures])
-        self.assertEqual(2, failures[0].attempts)
         self.assertEqual(1, failures[0].existing_after, "nothing produced, so nothing changed")
 
     def test_rows_are_ordered_by_relative_deficit(self):
@@ -55,7 +54,7 @@ class ParaphraseRunReportTestCase(unittest.TestCase):
         self.assertEqual(2, len(report.rows))
 
     def test_a_fingerprint_with_no_prior_statistics_starts_at_zero(self):
-        report = ParaphraseRunReport.build({}, {}, [record('new')])
+        report = ParaphraseRunReport.build({}, set(), [record('new')])
         self.assertEqual(0, report.rows[0].existing_before)
         self.assertEqual(1, report.rows[0].existing_after)
 

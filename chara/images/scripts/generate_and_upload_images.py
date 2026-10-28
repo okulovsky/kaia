@@ -1,4 +1,3 @@
-from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable
 from chara import Chara, CaseCollection, ICasePipeline
@@ -7,13 +6,6 @@ from chara.images.common import (
     DrawingCase, DrawingPipeline, ReviewSetup, GenerationPipeline,
 )
 from chara.images.krea import KreaCase, KreaSettings, KreaImageToImage, KreaPipelineFactory
-
-
-def _find_last_generation_folder(generation_root: Path) -> Path|None:
-    candidates = [p for p in generation_root.iterdir() if p.is_dir()] if generation_root.is_dir() else []
-    if not candidates:
-        return None
-    return max(candidates, key=lambda p: p.name)
 
 
 def generate_and_upload_images(
@@ -63,11 +55,5 @@ def generate_and_upload_images(
     drawing_pipeline = DrawingPipeline(review_setup, variant_pipelines)
     pipeline = GenerationPipeline(activities_file, budget, scenario_pipeline, drawing_pipeline, report_groups)
 
-    generation_root = Chara.Apis.content_folder / 'images/generation'
-    last_folder = _find_last_generation_folder(generation_root)
-    if last_folder is not None and not Chara.from_folder(last_folder).has_result:
-        folder = last_folder
-    else:
-        folder = generation_root / ('$' + datetime.now().isoformat())
-    Chara.start(folder)
+    Chara.start_or_resume(Chara.Apis.content_folder / 'images/generation', '$')
     Chara.call(pipeline)(setups)
