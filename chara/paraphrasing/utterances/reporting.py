@@ -12,11 +12,7 @@ LOGGED_ROWS = 20
 
 
 def log_statistics(stats: Iterable[ParaphraseStats]) -> None:
-    """The whole pool, before anything is selected.
-
-    What a selection makes of this pool is its own to report, so that this module does
-    not have to know which behaviours exist.
-    """
+    """The whole pool, before anything is selected. CasePrioritization logs what it selects."""
     stats = list(stats)
     logger.info(
         f"Statistics before the run: {len(stats)} case(s), "
@@ -29,7 +25,6 @@ class ParaphraseRunRow:
     fingerprint: ParaphraseFingerprint
     seen: int
     existing_before: int
-    attempts: int
     produced: int
 
     @property
@@ -38,7 +33,7 @@ class ParaphraseRunRow:
 
     @property
     def plays_per_paraphrase(self) -> float:
-        """The relative deficit DeficitSelection ranks by; above 1.0 means repeats."""
+        """Above 1.0 means repeats"""
         return self.seen / max(1, self.existing_before)
 
     @property
@@ -59,7 +54,7 @@ class ParaphraseRunReport:
     @staticmethod
     def build(
             stats_before: dict[ParaphraseFingerprint, ParaphraseStats],
-            attempts: dict[ParaphraseFingerprint, int],
+            selected: set[ParaphraseFingerprint],
             records: Iterable[ParaphraseRecord],
     ) -> 'ParaphraseRunReport':
         produced: dict[ParaphraseFingerprint, int] = {}
@@ -68,13 +63,12 @@ class ParaphraseRunReport:
             produced[fingerprint] = produced.get(fingerprint, 0) + 1
 
         rows = []
-        for fingerprint in set(attempts) | set(produced):
+        for fingerprint in set(selected) | set(produced):
             stats = stats_before.get(fingerprint, None)
             rows.append(ParaphraseRunRow(
                 fingerprint,
                 0 if stats is None else stats.seen,
                 0 if stats is None else stats.existing,
-                attempts.get(fingerprint, 0),
                 produced.get(fingerprint, 0),
             ))
         return ParaphraseRunReport(rows)
@@ -105,7 +99,7 @@ class ParaphraseRunReport:
 
     def write(self, folder: Path) -> Path:
         headers = ('Template', 'Variables', 'Language', 'Character', 'User',
-                   'Seen', 'Existing before', 'Plays/paraphrase', 'Attempts', 'Produced', 'Existing after')
+                   'Seen', 'Existing before', 'Plays/paraphrase', 'Produced', 'Existing after')
         lines = [
             '<html><head><meta charset="utf-8"><style>',
             'body{font-family:sans-serif;font-size:14px}',
@@ -129,7 +123,7 @@ class ParaphraseRunReport:
                 html.escape(fingerprint.record or ''),
             ]
             numbers = [row.seen, row.existing_before, f'{row.plays_per_paraphrase:.2f}',
-                       row.attempts, row.produced, row.existing_after]
+                       row.produced, row.existing_after]
             lines.append(
                 f'<tr class="{"failed" if row.failed else ""}">'
                 + ''.join(f'<td>{c}</td>' for c in cells)
