@@ -55,6 +55,15 @@ class NerTrainingPipelineTestCase(TestCase):
         self.assertEqual('\nintent: none', samples['pass the salt'])
         self.assertEqual(1, sum(s['intent'] == 'none' for s in validation))
 
+    def test_numbers_are_digits(self):
+        record = dict(text='remind me in thirty-two minutes', intent='remind', language='en',
+                      values=[dict(name='minutes', type='CardinalDub', value='thirty-two')])
+        self.assertEqual('\nintent: remind\nminutes: 32', record_to_sample(record)['OUTPUT'])
+        record['values'][0]['value'] = '15'
+        self.assertEqual('\nintent: remind\nminutes: 15', record_to_sample(record)['OUTPUT'])
+        record['values'][0]['value'] = 'a few'
+        self.assertIsNone(record_to_sample(record))
+
     def test_best_checkpoint_is_deployed(self):
         model_id = 'mock_model'
         trainer, server = LlamaLoraSFTTrainerMock(), SlotsServerMock()

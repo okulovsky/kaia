@@ -64,6 +64,14 @@ def record_to_slots(record: dict) -> dict[str, str] | None:
             if value.lower() not in _ORDINALS:
                 return None
             slots[name] = str(_ORDINALS[value.lower()])
+        elif variable['type'] == 'CardinalDub':
+            # NLUService reads numbers only as digits
+            if value.isdigit():
+                slots[name] = value
+            elif value.lower() in _CARDINALS:
+                slots[name] = str(_CARDINALS[value.lower()])
+            else:
+                return None
         elif name in _CLOSED_OPTIONS_INDEX:
             if value.lower() not in _CLOSED_OPTIONS_INDEX[name]:
                 return None
