@@ -1,7 +1,9 @@
+import json
 import tempfile
 import wave
 from datetime import datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 from unittest import TestCase
 import numpy as np
 from brainbox import BrainBox, ISelfManagingDecider
@@ -9,13 +11,13 @@ from brainbox.deciders import Collector
 from grammatron import Utterance
 from avatar.daemon import (
     BrainBoxService, ChatCommand, InitializationEvent, TextEvent, NLUTextEvent, RecognitionEvent, STTTrainingCommand,
-    TemplatesRecognitionRequest, State, SoundEvent,
+    TemplatesRecognitionRequest, State, SoundEvent, StreamingSTTService, WhisperKenLMSTTService,
 )
 from avatar.daemon.common import TickEvent
 from avatar.messaging import AvatarDaemon, AvatarClient
 from chara.nlu.testbed import (
     TestbedIntents, TestbedService, TestbedChatService, ReportingNLUService, NLUReportEvent,
-    SilenceSkippingWhisperKenLMSTTService, loudest_window_level,
+    SilenceSkippingWhisperKenLMSTTService, loudest_window_level, TestbedDaemonSettings, Stt,
 )
 
 CALL = TestbedIntents.call
@@ -116,6 +118,20 @@ class NLUReportTestCase(TestCase):
         self.assertTrue(event.file_id.startswith('typed-'))
 
 
+class SttTestCase(TestCase):
+    def test_each_stt_creates_its_service(self):
+        app = SimpleNamespace(brainbox_cache_folder='cache')
+        services = {stt: TestbedDaemonSettings(stt=stt).create_stt_service(app, State()) for stt in Stt.ALL}
+        self.assertIsNone(services[Stt.NEMOTRON].languages)
+        self.assertEqual(Stt.LANGUAGES, services[Stt.NEMOTRON_LANGUAGES].languages)
+        self.assertIsInstance(services[Stt.NEMOTRON_LANGUAGES], StreamingSTTService)
+        self.assertIsInstance(services[Stt.WHISPER_KENLM], WhisperKenLMSTTService)
+
+    def test_unknown_stt(self):
+        with self.assertRaises(ValueError):
+            TestbedDaemonSettings(stt='vosk').create_stt_service(SimpleNamespace(brainbox_cache_folder='cache'), State())
+
+
 def _report(file_id: str, text: str) -> NLUReportEvent:
     return NLUReportEvent(file_id, text, None, '\nintent: TestbedIntents.call\nperson: Yuki', CALL.utter(dict(person='Yuki')))
 
@@ -144,6 +160,28 @@ class TestbedChatServiceTestCase(TestCase):
         service.on_report(_report('recording.wav', 'Позвони Юки'))
         message, report = service.on_event(TextEvent(CALL.utter(dict(person='Yuki')), file_id='recording.fixed.wav'))
         self.assertEqual('Позвони Юки', message.text)
+
+    def test_languages_of_recording_are_shown(self):
+        events = [
+            dict(text='Позвони Юки', confidence=0.99, is_final=True, stream='ru'),
+            dict(text='pozvoni yuki', confidence=0.95, is_final=True, stream='en'),
+            dict(text='', confidence=1.0, is_final=True, stream='de'),
+        ]
+        line = "languages: ru 0.990 'Позвони Юки' (chosen) | en 0.950 'pozvoni yuki' | de nothing\ntext:"
+        with tempfile.TemporaryDirectory() as folder:
+            name = 'recording.nemotron-stream.nemotron.transcribe_stream_languages.1.jsonl'
+            (Path(folder)/name).write_text('\n'.join(json.dumps(e) for e in events))
+            service = TestbedChatService(Path(folder))
+            service.on_report(_report('recording.wav', 'Позвони Юки'))
+            message, report = service.on_event(TextEvent(CALL.utter(dict(person='Yuki')), file_id='recording.fixed.wav'))
+            self.assertTrue(report.text.startswith(line))
+            service.on_event(TextEvent(CALL.utter(dict(person='Yuki')), file_id='recording.fixed.wav'))
+            message, report = service.on_report(_report('recording.wav', 'Позвони Юки'))
+            self.assertTrue(report.text.startswith(line))
+            (report,) = service.on_report(_report('recording.wav', ''))
+            self.assertTrue(report.text.startswith("languages: ru 0.990 'Позвони Юки' | en 0.950 'pozvoni yuki' | de nothing\ntext:"))
+            (report,) = service.on_report(_report('typed-1', 'Call Yuki'))
+            self.assertTrue(report.text.startswith('text:'))
 
     def test_report_of_typed_text_is_shown_at_once(self):
         (command,) = TestbedChatService().on_report(_report('typed-1', 'Call Yuki'))

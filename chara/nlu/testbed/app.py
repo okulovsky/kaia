@@ -22,8 +22,11 @@ from .silence_skipping_stt_service import SilenceSkippingWhisperKenLMSTTService
 
 class Stt:
     NEMOTRON = 'nemotron'
+    # Nemotron in each of LANGUAGES at once, the most confident text is taken, see StreamingSTTService
+    NEMOTRON_LANGUAGES = 'nemotron-languages'
     WHISPER_KENLM = 'whisper-kenlm'
-    ALL = (NEMOTRON, WHISPER_KENLM)
+    ALL = (NEMOTRON, NEMOTRON_LANGUAGES, WHISPER_KENLM)
+    LANGUAGES = ('en', 'de', 'ru')
 
 
 @dataclass
@@ -36,8 +39,10 @@ class TestbedDaemonSettings(AvatarDaemonAppSettings):
     def create_stt_service(self, app: KaiaApp, state: State):
         if self.stt == Stt.NEMOTRON:
             return StreamingSTTService(state, app.brainbox_cache_folder)
+        if self.stt == Stt.NEMOTRON_LANGUAGES:
+            return StreamingSTTService(state, app.brainbox_cache_folder, languages=Stt.LANGUAGES)
         if self.stt == Stt.WHISPER_KENLM:
-            return SilenceSkippingWhisperKenLMSTTService(state, app.brainbox_cache_folder)
+            return SilenceSkippingWhisperKenLMSTTService(state, app.brainbox_cache_folder, languages=Stt.LANGUAGES)
         raise ValueError(f"Unknown STT `{self.stt}`, expected one of {Stt.ALL}")
 
     def create_nlu_service(self, app: KaiaApp, state: State):
@@ -48,7 +53,7 @@ class TestbedDaemonSettings(AvatarDaemonAppSettings):
         return TestbedService(self.templates)
 
     def create_chat_service(self, app: KaiaApp, state: State):
-        return TestbedChatService()
+        return TestbedChatService(app.brainbox_cache_folder)
 
     def create_sound_event_to_stt_command(self, app: KaiaApp, state: State):
         # The first recognition after the start waits for the model to load
@@ -83,7 +88,7 @@ class TestbedDaemonSettings(AvatarDaemonAppSettings):
 def testbed_deciders(stt: str | None = None, ollama: bool = False) -> BrainBoxSetup:
     """The deciders of the testbed: the ones the speech recognition `stt` needs, or all of them if it is None"""
     setup = BrainBoxSetup()
-    if stt is None or stt == Stt.NEMOTRON:
+    if stt is None or stt in (Stt.NEMOTRON, Stt.NEMOTRON_LANGUAGES):
         setup.up(Nemotron, model='multilingual')
     # WhisperKenLM is also needed for the training of KenLM
     setup.up(WhisperKenLM).up(Chroma).up(LlamaLoraServer, parameter=NerTrainingPipeline().model_id).up(LlamaLoraSFTTrainer)
