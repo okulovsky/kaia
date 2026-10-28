@@ -130,3 +130,10 @@ class NemotronController(DockerMarshallingController[NemotronSettings]):
                 _assert_text(tc, expected, events[-1]['text'])
                 tc.assertTrue(0 < events[-1]['confidence'] < 1, str(events[-1]))
             yield SelfTestCase(Nemotron.new_task().transcribe_stream(chunks, locale), check_stream)
+
+            def check_languages(result, api, tc, expected=expected, locale=locale):
+                events = _parse_events(api.cache.read_file(result).content)
+                tc.assertEqual({'auto', 'en-US', 'de-DE'}, {e['stream'] for e in events})
+                finals = [e for e in events if e['is_final'] and e['stream'] == locale]
+                _assert_text(tc, expected, finals[-1]['text'])
+            yield SelfTestCase(Nemotron.new_task().transcribe_stream_languages(chunks, ['auto', 'en-US', 'de-DE']), check_languages)
