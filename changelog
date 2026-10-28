@@ -1,3 +1,31 @@
+5.2.2
+    Brainbox
+        Tinkering Nemotron
+    Avatar
+        BIG STT REFACTORING:
+            Sound processing is split to classic (Kaldi/Whisper) and new (Nemotron+SLM) pipelines, that are interchangeable.
+            In the new pipeline, processing of streamed sound is finally implemented with Nemotron
+    Chara
+        Case prioritization: selecting of cases to proceed in image, paraphrase generation is based on the same pipeline
+        chara/nlu: numerous pipelines to train the new NLU, as well as a testbed to run and test it
+
+5.2.1
+    Brainbox
+        Parler is added
+        Nemotron is added
+    Avatar
+        Tag matching in image and paraphrases is greatly simplified
+        Draft support for Nemotron
+        Presentation features: automaton without wakeword and videos
+        Cooldown in WebCamHandler to reduce the usage of the console
+    Chara
+        Tags for images are updated in accordance with Avatar changes
+        Small fixes in error processing
+    Kaia
+        Small fixes
+    Talents
+        Language quizes are removed.
+
 5.2.0
     Foundation
         Lock on object, small fixes
