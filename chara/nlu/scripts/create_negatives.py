@@ -3,8 +3,7 @@ from pathlib import Path
 from chara.common import Chara
 from chara.common.llm import BrainBoxLLMEngine, LLMSetup
 from chara.nlu.datasets.negatives import NegativeCase, NegativePipeline, create_negative_request
-from chara.nlu.datasets.text_dataset import LANGUAGES
-from .common import default_ultimate_nlu_folder
+from .common import default_ultimate_nlu_folder, LANGUAGES
 
 
 def create_negatives(

@@ -14,7 +14,7 @@ INDEX = VariableDub(
 
 PERSON = VariableDub(
     'person',
-    OptionsDub(['Haruto', 'Yuki', 'Sakura', 'Ren', 'Aoi']),
+    OptionsDub(['Naruto', 'Kirishima', 'Uroraka', 'Yaoyorozu', 'Todoroki', 'Aomine', 'Kagami']),
     'the name of the person to call',
 )
 

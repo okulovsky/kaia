@@ -64,7 +64,20 @@ class NerTrainingPipelineTestCase(TestCase):
         record['values'][0]['value'] = 'a few'
         self.assertIsNone(record_to_sample(record))
 
-    def test_best_checkpoint_is_deployed(self):
+    def test_all_options_are_trained(self):
+        def call(person: str, i: int) -> dict:
+            return dict(text=f'call {person} {i}', intent='call', language='en',
+                        values=[dict(name='person', type='OptionsDub', value=person)])
+
+        dataset = [call('Yuki', i) for i in range(50)] + [call('Sakura', 0), call('Ren', 0)]
+        pipeline = NerTrainingPipeline(samples_per_intent=5, test_share=0, synthetic_timers_per_language=0)
+        train, _ = pipeline._samples(dataset, [])
+
+        self.assertEqual(5, len(train))
+        self.assertIn('call Sakura 0', {s['INPUT'] for s in train})
+        self.assertIn('call Ren 0', {s['INPUT'] for s in train})
+
+    def test_best_checkpoint_is_saved(self):
         model_id = 'mock_model'
         trainer, server = LlamaLoraSFTTrainerMock(), SlotsServerMock()
         with Loc.create_test_folder() as folder:
@@ -73,8 +86,7 @@ class NerTrainingPipelineTestCase(TestCase):
                 _upload_run_files(api, model_id, NerTrainingPipeline.ADAPTER)
                 Chara.start(folder)
                 report = Chara.call(NerTrainingPipeline(model_id=model_id, test_share=0.25, synthetic_timers_per_language=0))(TEXT_DATASET, NEGATIVES)
-                adapters = api.resources('LlamaLoraServer').list(f'models/{model_id}/lora_adapters')
+                self.assertTrue(report.adapter_file.is_file())
 
-        self.assertEqual(CHECKPOINTS[1], report.deployed_checkpoint)
-        self.assertEqual([f'{NerTrainingPipeline.ADAPTER}.gguf'], adapters)
+        self.assertEqual(CHECKPOINTS[1], report.best_checkpoint)
         self.assertEqual(1, report.accuracy['all'])

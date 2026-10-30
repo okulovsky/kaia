@@ -10,32 +10,6 @@ _CARDINALS = string_values_to_values(CardinalDub(0, 120), DubParameters())
 _ORDINALS = string_values_to_values(OrdinalDub(1, 10), DubParameters())
 _UNITS = {'hour': 'hours', 'hours': 'hours', 'minute': 'minutes', 'minutes': 'minutes', 'second': 'seconds', 'seconds': 'seconds'}
 
-# Closed lists of options: the model outputs the English value Kaia's template has, whatever the language.
-# Dataset values that are not in the list (weekdays, weeks, "in three days") are dropped:
-# learning them would teach the model to output values Kaia cannot use.
-_CLOSED_OPTIONS = {
-    'delta': {
-        'Today': ['Today', 'This morning', 'This afternoon', 'This evening',
-                  'Heute', 'Сегодня', 'Сегодня вечером'],
-        'Tomorrow': ['Tomorrow', 'Next day', 'The following day', 'The next morning', 'The next afternoon',
-                     'The following night', 'The subsequent day', 'The ensuing day', 'The upcoming day',
-                     'The coming day', 'The forthcoming day',
-                     'Morgen', 'Morgen früh', 'Am Tag danach', 'Завтра', 'Завтра утром'],
-        'Yesterday': ['Yesterday', 'Previous day', 'The preceding day', 'The previous evening', 'The previous morning',
-                      'The preceding morning', 'The past day', 'The prior day', 'The former day', 'The earlier day',
-                      'Last night', 'Gestern', 'Gestern Abend', 'Am Tag davor', 'Вчера', 'Вчера вечером'],
-        'The day after tomorrow': ['The day after tomorrow', 'Day after next', 'In two days', 'Two days from now',
-                                   'Übermorgen', 'Übermorgen Nachmittag', 'In zwei Tagen',
-                                   'Послезавтра', 'Послезавтра ночью'],
-        'The day before yesterday': ['The day before yesterday', 'Vorgestern', 'Vorgestern Nacht',
-                                     'Позавчера', 'Позавчера днем'],
-    }
-}
-_CLOSED_OPTIONS_INDEX = {
-    name: {said.lower(): value for value, saids in options.items() for said in saids}
-    for name, options in _CLOSED_OPTIONS.items()
-}
-
 
 def _parse_duration(text: str) -> timedelta | None:
     parts = {}
@@ -72,10 +46,6 @@ def record_to_slots(record: dict) -> dict[str, str] | None:
                 slots[name] = str(_CARDINALS[value.lower()])
             else:
                 return None
-        elif name in _CLOSED_OPTIONS_INDEX:
-            if value.lower() not in _CLOSED_OPTIONS_INDEX[name]:
-                return None
-            slots[name] = _CLOSED_OPTIONS_INDEX[name][value.lower()]
         else:
             slots[name] = value
     return slots

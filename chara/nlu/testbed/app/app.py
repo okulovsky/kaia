@@ -2,18 +2,17 @@ import time
 import webbrowser
 from dataclasses import dataclass, field
 from pathlib import Path
+import requests
 from grammatron import Template
-from foundation_kaia.fork import Fork
 from foundation_kaia.misc import Loc
 from avatar.app import compile_frontend
 from avatar.daemon import StreamingSTTService, STTIntegrationService, SilenceLevelService, State
 from avatar.daemon.streaming_stt_service import IntentSource
 from brainbox import BrainBox
-from brainbox.framework import BrainBoxSetup
-from brainbox.deciders import WhisperKenLM, Nemotron, Chroma, LlamaLoraSFTTrainer, LlamaLoraServer, Ollama
-from chara.common import Chara
+from brainbox.framework import BrainBoxSetup, BrainBoxServer, BrainBoxServerSettings, BrainBoxLocations, ControllerRegistry, AlwaysOnPlanner
+from brainbox.deciders import WhisperKenLM, Nemotron, Chroma, LlamaLoraSFTTrainer, LlamaLoraServer
 from chara.nlu.ner_training import NerTrainingPipeline
-from chara.nlu.scripts import create_dataset, create_negatives, train_ultimate_nlu, deploy_ultimate_nlu
+from chara.nlu.scripts import deploy_ultimate_nlu
 from kaia.app import KaiaAppSettings, AvatarDaemonAppSettings, KaiaApp
 from .reporting_nlu_service import ReportingNLUService
 from .testbed_service import TestbedService, TestbedChatService
@@ -85,15 +84,13 @@ class TestbedDaemonSettings(AvatarDaemonAppSettings):
         return None
 
 
-def testbed_deciders(stt: str | None = None, ollama: bool = False) -> BrainBoxSetup:
+def testbed_deciders(stt: str | None = None) -> BrainBoxSetup:
     """The deciders of the testbed: the ones the speech recognition `stt` needs, or all of them if it is None"""
     setup = BrainBoxSetup()
     if stt is None or stt in (Stt.NEMOTRON, Stt.NEMOTRON_LANGUAGES):
         setup.up(Nemotron, model='multilingual')
     # WhisperKenLM is also needed for the training of KenLM
     setup.up(WhisperKenLM).up(Chroma).up(LlamaLoraServer, parameter=NerTrainingPipeline().model_id).up(LlamaLoraSFTTrainer)
-    if ollama:
-        setup.up(Ollama)
     return setup
 
 
@@ -103,51 +100,86 @@ def set_up_deciders(api: BrainBox.Api, setup: BrainBoxSetup):
     setup.execute(api)
 
 
+BRAINBOX_PORT = 8090
+
+
+def run_inference_brainbox(working_folder: Path | None = None):
+    """
+    The BrainBox of the testbed. It runs apart from the testbed, so its deciders stay up between the runs of the testbed,
+    and on the port of the research BrainBox, so only one of them can run at a time.
+    The resources (the models) are shared with the research BrainBox; the cache, the database and the self-tests
+    are in `working_folder`/brainbox, and the testbed takes the cache from there.
+    """
+    if working_folder is None:
+        working_folder = Loc.data_folder/'nlu-testbed'
+    settings = BrainBoxServerSettings(
+        registry=ControllerRegistry.discover(),
+        planner=AlwaysOnPlanner(AlwaysOnPlanner.Mode.FindThenStart),
+        locations=BrainBoxLocations.default(working_folder/'brainbox'),
+        stop_controllers_at_termination=False,
+        port=BRAINBOX_PORT,
+    )
+    BrainBoxServer(settings)()
+
+
+def _check_inference_brainbox(api: BrainBox.Api, cache_folder: Path):
+    try:
+        requests.get(f'{api.base_url}/heartbeat', timeout=1)
+    except requests.ConnectionError:
+        raise RuntimeError(f"No BrainBox at {api.base_url}: start run_inference_brainbox") from None
+    # The avatar and the BrainBox exchange the recordings through the cache, so it must be the same folder
+    probe = 'nlu-testbed-probe'
+    cache_folder.mkdir(parents=True, exist_ok=True)
+    (cache_folder/probe).write_text(probe)
+    try:
+        same_cache = api.cache.is_file(probe)
+    finally:
+        (cache_folder/probe).unlink()
+    if not same_cache:
+        raise RuntimeError(f"The BrainBox at {api.base_url} does not use the cache {cache_folder}, "
+                           f"probably it is the research BrainBox: bring it down and start run_inference_brainbox")
+
+
 def run_nlu_testbed(
         templates: list[Template],
         folder: Path,
         stt: str = Stt.NEMOTRON,
         intent_source: str = IntentSource.CHROMA,
-        generation_model: str | None = None,
         working_folder: Path | None = None,
         open_browser: bool = True,
+        deploy_models: bool = True,
 ):
     """
-    Trains Ultimate NLU on `templates` in `folder` (see chara/nlu/scripts) and starts the testbed:
+    Deploys Ultimate NLU trained by train_ultimate_nlu on `folder` and starts the testbed on `templates`:
     a web page with the microphone and the chat, where every phrase gets the report of the NLU.
-    With `generation_model`, a new run of paraphrases and negatives is added to `folder` first; it needs this model in Ollama.
-    The training is restored from the cache while the dataset and the negatives are the same.
+    The BrainBox started by run_inference_brainbox with the same `working_folder` must be running.
+    Without `deploy_models`, the testbed works with the models that were deployed the last time, whatever they are.
     """
     if working_folder is None:
         working_folder = Loc.data_folder/'nlu-testbed'
-    compile_frontend(working_folder/'avatar'/'frontend')
+    app = KaiaApp(working_folder)
+    app.brainbox_api = BrainBox.Api(f'http://127.0.0.1:{BRAINBOX_PORT}')
+    app.brainbox_cache_folder = working_folder/'brainbox'/'cache'
+    _check_inference_brainbox(app.brainbox_api, app.brainbox_cache_folder)
 
     settings = KaiaAppSettings()
     settings.kaia = None
-    settings.brainbox.deciders_files_in_kaia_working_folder = False
+    settings.brainbox = None
     settings.avatar_server.custom_html = (Path(__file__).parent/'index.html').read_text()
     settings.avatar_processor = TestbedDaemonSettings(templates=templates, stt=stt, intent_source=intent_source)
-    settings.brainbox_setup = testbed_deciders(stt, ollama=generation_model is not None)
-    app = settings.create_app(working_folder)
+    settings.brainbox_setup = testbed_deciders(stt)
+    settings.bind_app(app)
 
-    with Fork(app.brainbox_server):
-        app.brainbox_api.wait_for_connection(30)
-        set_up_deciders(app.brainbox_api, settings.brainbox_setup)
-
+    set_up_deciders(app.brainbox_api, settings.brainbox_setup)
+    if deploy_models:
         # A separate client: the app's one is pickled into the forks, and API clients keep the last request,
         # which for uploads holds a generator that cannot be pickled.
-        Chara.Apis.brainbox_api = BrainBox.Api(app.brainbox_api.base_url)
-        if generation_model is not None:
-            create_dataset(templates, generation_model, folder=folder)
-            create_negatives(generation_model, folder=folder)
-        print(train_ultimate_nlu(folder))
-        # The deployment inside the training is cached: when the folder was trained before, BrainBox keeps
-        # the models of the last trained folder
-        deploy_ultimate_nlu(Chara.Apis.brainbox_api, folder)
+        deploy_ultimate_nlu(BrainBox.Api(app.brainbox_api.base_url), folder)
 
-        app.get_fork_app(None).run()
-        app.avatar_api.wait_for_connection(30)
-        if open_browser:
-            webbrowser.open(f'http://127.0.0.1:{settings.avatar_server.port}')
-        while True:
-            time.sleep(1)
+    compile_frontend(working_folder/'avatar'/'frontend')
+    app.get_fork_app(None).run()
+    app.avatar_api.wait_for_connection(30)
+    if open_browser:
+        webbrowser.open(f'http://127.0.0.1:{settings.avatar_server.port}')
+    while True:
+        time.sleep(1)
