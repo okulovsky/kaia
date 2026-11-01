@@ -52,6 +52,18 @@ class TextDatasetExportTestCase(TestCase):
         self.assertEqual({'Какое число сегодня?': english.to_str(Day.Today), 'Какое число завтра?': english.to_str(Day.Tomorrow)},
                          text_to_value)
 
+    def test_export_is_deterministic(self):
+        template = Template(f"Call {OptionsDub(['Yuki', 'Sakura', 'Ren']).as_variable('person')}").with_name('Intents.call')
+        case = SimpleNamespace(original_template=template, resulting_template=template, target_language_code='en')
+
+        random.seed(1)
+        state = random.getstate()
+        records = TextDatasetPipeline.export([case], 30)
+        self.assertEqual(state, random.getstate())
+
+        random.seed(2)
+        self.assertEqual(records, TextDatasetPipeline.export([case], 30))
+
 
 class TextDatasetFingerprintTestCase(TestCase):
     def test_fingerprint(self):
