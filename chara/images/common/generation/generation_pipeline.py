@@ -1,14 +1,15 @@
 from typing import Any, Callable
-from chara import CaseCollection, Chara, logger
+from chara import CaseCollection, Chara, logger, CasePrioritization
 from chara.common.tools.drawing import Drawer, Img
 from .package_pipeline import PackagePipeline
 from .dto import ImageSetupStatistics
-from ..activity import ImageRequest, ImageSetup
+from ..activity import ImageRequest, ImageSetup, is_theme_within_lookahead
 from ..scenario import IImageScenario
 from ..drawing import DrawingCase
 from .image_statistics_pipeline import ImageStatisticsPipeline
-from .balancing_requests import balancing_requests
+from .image_prioritization import ImagePrioritization
 from pathlib import Path
+from datetime import date
 
 
 DEFAULT_STRATIFICATION_FIELDS = ('character_name', 'season', 'good_weather', 'time_of_day', 'special_day')
@@ -22,6 +23,9 @@ class GenerationPipeline:
                  drawing_pipeline: Callable[[CaseCollection[IImageScenario]], CaseCollection[DrawingCase]],
                  report_groups: tuple[Callable[[DrawingCase], Any], ...] = (),
                  stratification_fields: tuple[str, ...] = DEFAULT_STRATIFICATION_FIELDS,
+                 lookahead_span: int = 3,
+                 strategy: CasePrioritization.Strategy = CasePrioritization.Strategy.expand,
+                 max_images_per_group: int|None = None,
                  ):
         self.activities_file = activities_file
         self.images_budget = images_budget
@@ -29,11 +33,17 @@ class GenerationPipeline:
         self.drawing_pipeline = drawing_pipeline
         self.report_groups = report_groups
         self.stratification_fields = stratification_fields
+        self.lookahead_span = lookahead_span
+        self.strategy = strategy
+        self.max_images_per_group = max_images_per_group
 
     def __call__(self, setups: list[ImageSetup]):
         # Captured before any nested Chara.call() pushes its own subfolder, so the
         # reports land next to this run's result.pickle, not inside a "reports" subfolder.
         folder = Chara.current.folder
+
+        today = date.today()
+        setups = [s for s in setups if is_theme_within_lookahead(s.theme, today, self.lookahead_span)]
 
         statistics_pipeline = ImageStatisticsPipeline(self.activities_file)
 
@@ -43,7 +53,20 @@ class GenerationPipeline:
 
         @Chara.phase
         def select_requests():
-            return balancing_requests(statistics_before, self.images_budget, self.stratification_fields)
+            candidates = [
+                ImageRequest(stat.setup, activity)
+                for stat in statistics_before
+                for activity, activity_stat in stat.activity_status.items()
+                if activity_stat.generated == 0
+            ]
+            prioritization = ImagePrioritization(
+                statistics_before,
+                self.stratification_fields,
+                self.strategy,
+                self.images_budget,
+                self.max_images_per_group,
+            )
+            return list(prioritization(CaseCollection(candidates)).successes)
 
         requests = Chara.previous.result
         scenarios = Chara.call(self.scenario_pipeline)(requests).successes_collection
@@ -68,7 +91,7 @@ class GenerationPipeline:
             available[key] = available.get(key, 0) + len(stat.activity_status)
 
         # A group with no catalog activities at all (e.g. outside the activity
-        # catalog's lookahead window) can never be picked by balancing_requests,
+        # catalog's lookahead window) can never be picked by ImagePrioritization,
         # no matter the budget - it's not "pending", it's delayed until the
         # catalog catches up to it.
         delayed = sum(1 for key in totals if available[key] == 0)

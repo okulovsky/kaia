@@ -1,0 +1,353 @@
+diff --git a/src/asr/decoders/rnnt_greedy_decoder.cpp b/src/asr/decoders/rnnt_greedy_decoder.cpp
+index 8b36670..ccfad16 100644
+--- a/src/asr/decoders/rnnt_greedy_decoder.cpp
++++ b/src/asr/decoders/rnnt_greedy_decoder.cpp
+@@ -130,6 +130,9 @@ RnntGreedyDecoder::reset() {
+     late_punctuation_pending_.clear();
+     late_punctuation_.clear();
+     bias_node_ = ContextBiasingTree::kRoot;
++    token_confidence_ = 1.0f;
++    utterance_confidence_sum_ = 0.0;
++    utterance_tokens_ = 0;
+ }
+ 
+ void
+@@ -156,6 +159,8 @@ RnntGreedyDecoder::present_token(int token, int64_t frame) {
+     const bool special = !text.empty() && text.front() == '<' && text.back() == '>';
+     const bool content = !whitespace && !punctuation && !special;
+     if (content) {
++        utterance_confidence_sum_ += token_confidence_;
++        ++utterance_tokens_;
+         last_speech_frame_ = frame;
+         utterance_has_content_ = true;
+         last_presented_punctuation_ = false;
+@@ -191,7 +196,10 @@ RnntGreedyDecoder::present_token(int token, int64_t frame) {
+             flush_word();
+             cur_open_ = true;
+             cur_.start_frame = frame;
+-            cur_.confidence = 1.0f;
++            cur_.confidence = token_confidence_;
++        } else if (!punctuation) {
++            // A word is as confident as its least confident token
++            cur_.confidence = std::min(cur_.confidence, token_confidence_);
+         }
+         cur_.word += text;
+         // Punctuation attaches to a word without extending its speech duration.
+@@ -240,6 +248,7 @@ RnntGreedyDecoder::step_impl(
+     // committing that token changes the predictor and requires a fresh round
+     // beginning at the same frame.
+     token_ids_.resize(static_cast<size_t>(T));
++    frame_neg_entropy_.resize(static_cast<size_t>(T));
+     int t = 0;
+     int symbols_at_frame = 0;
+     while (t < T) {
+@@ -268,7 +277,7 @@ RnntGreedyDecoder::step_impl(
+         if (!predictor_valid_ && device_enc_out != nullptr && boost_bias == nullptr) {
+             engine_->predict_and_joint_rnnt_argmax_device(
+                 *stream_state_, prev_token_, active_bank_, *device_enc_out, t, d_model, remaining,
+-                token_ids_.data());
++                token_ids_.data(), nullptr, frame_neg_entropy_.data());
+             ++stats_.predictor_calls;
+             ++stats_.joint_calls;
+             stats_.joint_frames += static_cast<uint64_t>(remaining);
+@@ -285,11 +294,12 @@ RnntGreedyDecoder::step_impl(
+         if (!joint_complete) {
+             if (device_enc_out != nullptr) {
+                 engine_->joint_argmax_device(
+-                    *stream_state_, *device_enc_out, t, d_model, remaining, token_ids_.data());
++                    *stream_state_, *device_enc_out, t, d_model, remaining, token_ids_.data(),
++                    nullptr, frame_neg_entropy_.data());
+             } else {
+                 engine_->joint_argmax(
+                     *stream_state_, enc_out + static_cast<size_t>(t) * d_model, d_model, remaining,
+-                    token_ids_.data());
++                    token_ids_.data(), nullptr, frame_neg_entropy_.data());
+             }
+             ++stats_.joint_calls;
+             stats_.joint_frames += static_cast<uint64_t>(remaining);
+@@ -331,6 +341,11 @@ RnntGreedyDecoder::step_impl(
+             symbols_at_frame = 0;
+         t += first_emit;
+         const int token = token_ids_[static_cast<size_t>(first_emit)];
++        // Normalized Gibbs entropy: 1 for a certain token, 0 for a uniform distribution
++        token_confidence_ = std::clamp(
++            1.0f + frame_neg_entropy_[static_cast<size_t>(first_emit)] /
++                       std::log(static_cast<float>(cfg.vocab_size)),
++            0.0f, 1.0f);
+ 
+         ++stats_.emitted_tokens;
+         last_emit_frame_ = frame_offset + t;
+diff --git a/src/asr/decoders/rnnt_greedy_decoder.h b/src/asr/decoders/rnnt_greedy_decoder.h
+index 66809bd..7dfedc9 100644
+--- a/src/asr/decoders/rnnt_greedy_decoder.h
++++ b/src/asr/decoders/rnnt_greedy_decoder.h
+@@ -97,22 +97,25 @@ class RnntEngine {
+     // cached predictor projection. enc_proj is [joint_dim, T], column-major;
+     // token_ids receives the device-side argmax for each frame. The caller uses
+     // results only up to the first non-blank (later results are speculative).
++    // frame_neg_entropy, if given, receives sum(p * log p) of each frame's token
++    // distribution before the bias, for the confidence of the emitted tokens.
+     virtual void joint_argmax(
+         RnntStreamState& state, const float* enc_proj, int joint_dim, int T, int32_t* token_ids,
+-        const float* logit_bias = nullptr) = 0;
++        const float* logit_bias = nullptr, float* frame_neg_entropy = nullptr) = 0;
+ 
+     virtual void joint_argmax_device(
+         RnntStreamState&, const ggml_runtime::DeviceTensor&, int, int, int, int32_t*,
+-        const float* = nullptr) {
++        const float* = nullptr, float* = nullptr) {
+         throw std::runtime_error("device RNNT joint is not supported by this engine");
+     }
+ 
+     virtual void predict_and_joint_rnnt_argmax_device(
+         RnntStreamState& state, int prev_token, int active_bank,
+         const ggml_runtime::DeviceTensor& enc_proj, int frame_offset, int joint_dim, int T,
+-        int32_t* token_ids, const float* logit_bias = nullptr) {
++        int32_t* token_ids, const float* logit_bias = nullptr, float* frame_neg_entropy = nullptr) {
+         predict_rnnt(state, prev_token, active_bank);
+-        joint_argmax_device(state, enc_proj, frame_offset, joint_dim, T, token_ids, logit_bias);
++        joint_argmax_device(
++            state, enc_proj, frame_offset, joint_dim, T, token_ids, logit_bias, frame_neg_entropy);
+     }
+ 
+     // TDT splits the joint output into independent token and duration slices.
+@@ -155,6 +158,14 @@ class RnntGreedyDecoder : public Decoder {
+         last_presented_punctuation_ = false;
+         pending_word_boundary_ = false;
+         bias_node_ = ContextBiasingTree::kRoot;
++        utterance_confidence_sum_ = 0.0;
++        utterance_tokens_ = 0;
++    }
++    // Mean entropy-based confidence of the utterance's word tokens, 1 if there are none
++    float confidence() const override {
++        return utterance_tokens_ > 0
++                   ? static_cast<float>(utterance_confidence_sum_ / utterance_tokens_)
++                   : 1.0f;
+     }
+     // Build the per-request context-biasing tree from speech_contexts.
+     void set_request_options(const AsrRequestOptions& opts) override;
+@@ -233,6 +244,13 @@ class RnntGreedyDecoder : public Decoder {
+     double bias_max_boost_ = 5.0;           // greedy-safe upper clamp on the request boost
+     std::vector<float> bias_scratch_;       // dense per-round joint-logit bias
+     std::vector<int32_t> boost_token_ids_;  // blank-excluded re-rank pass output
++
++    // Entropy-based confidence (NeMo's normalized Gibbs entropy): the joint
++    // returns sum(p * log p) per frame; a token's confidence is 1 + that / log(V).
++    std::vector<float> frame_neg_entropy_;
++    float token_confidence_ = 1.0f;  // of the token being presented
++    double utterance_confidence_sum_ = 0.0;
++    int utterance_tokens_ = 0;
+ };
+ 
+ // Token-and-Duration Transducer greedy decoder. Predictor state commits only
+diff --git a/src/asr/decoders/rnnt_modules.cpp b/src/asr/decoders/rnnt_modules.cpp
+index e4fded5..c3ec90a 100644
+--- a/src/asr/decoders/rnnt_modules.cpp
++++ b/src/asr/decoders/rnnt_modules.cpp
+@@ -254,6 +254,7 @@ RnntJointModule::build_joint_tail(
+         const int64_t T = l.tensor->ne[1];
+         const int64_t B = l.tensor->ne[2];
+         ggml_runtime::TensorBag out;
++        ggml_tensor* unbiased = l.tensor;
+         if (logit_bias != nullptr) {
+             if (cfg_.is_tdt())
+                 throw std::runtime_error("TDT joint logit bias is not supported");
+@@ -268,6 +269,13 @@ RnntJointModule::build_joint_tail(
+             auto flat_logits = ggml_reshape_2d(bf_ctx.ctx, l.tensor, V, T * B);
+             auto flat_ids = ggml_argmax(bf_ctx.ctx, flat_logits);
+             out.add_tensor(ggml_runtime::ggml_bf_tensor(flat_ids, bf_ctx.buft));
++            // Per-frame sum(p * log p) of the unbiased token distribution: the
++            // decoder turns it into the entropy-based confidence of the emitted
++            // tokens (as NeMo's RNNT confidence), which is otherwise always 1.
++            auto probs = ggml_soft_max(bf_ctx.ctx, ggml_reshape_2d(bf_ctx.ctx, unbiased, V, T * B));
++            auto log_probs = ggml_log(bf_ctx.ctx, ggml_clamp(bf_ctx.ctx, probs, 1e-30f, 1.0f));
++            auto neg_entropy = ggml_sum_rows(bf_ctx.ctx, ggml_mul(bf_ctx.ctx, probs, log_probs));
++            out.add_tensor(ggml_runtime::ggml_bf_tensor(neg_entropy, bf_ctx.buft));
+             return out;
+         }
+ 
+diff --git a/src/asr/model.cpp b/src/asr/model.cpp
+index a82c06c..3fb0dbd 100644
+--- a/src/asr/model.cpp
++++ b/src/asr/model.cpp
+@@ -473,6 +473,8 @@ class RnntModel::DecoderBatchers {
+     struct JointResult {
+         std::vector<int32_t> tokens;
+         std::vector<int32_t> durations;
++        // RNNT only: sum(p * log p) of each frame's token distribution
++        std::vector<float> neg_entropy;
+     };
+ 
+     DecoderBatchers(RnntModel* owner, const BatchingConfig& cfg)
+@@ -832,6 +834,7 @@ class RnntModel::DecoderBatchers {
+             inputs.push_back({"rnnt.joint.bias", GGML_TYPE_F32, bias.data(), {V, 1, B}});
+         std::vector<int32_t> packed_tokens(static_cast<size_t>(key.T) * B);
+         std::vector<int32_t> packed_durations;
++        std::vector<float> packed_neg_entropy;
+         std::vector<ggml_runtime::Session::Output> outputs(1);
+         outputs[0].index = 0;
+         outputs[0].host_buffer = packed_tokens.data();
+@@ -842,6 +845,12 @@ class RnntModel::DecoderBatchers {
+             outputs[1].index = 1;
+             outputs[1].host_buffer = packed_durations.data();
+             outputs[1].nbytes = packed_durations.size() * sizeof(int32_t);
++        } else {
++            packed_neg_entropy.resize(static_cast<size_t>(key.T) * B);
++            outputs.resize(2);
++            outputs[1].index = 1;
++            outputs[1].host_buffer = packed_neg_entropy.data();
++            outputs[1].nbytes = packed_neg_entropy.size() * sizeof(float);
+         }
+         owner_->decoder_session_->run(inputs, outputs);
+         std::vector<JointResult> result(static_cast<size_t>(B));
+@@ -852,6 +861,10 @@ class RnntModel::DecoderBatchers {
+                 const auto duration_begin =
+                     packed_durations.begin() + static_cast<size_t>(b) * key.T;
+                 result[b].durations.assign(duration_begin, duration_begin + key.T);
++            } else {
++                const auto entropy_begin =
++                    packed_neg_entropy.begin() + static_cast<size_t>(b) * key.T;
++                result[b].neg_entropy.assign(entropy_begin, entropy_begin + key.T);
+             }
+         }
+         return result;
+@@ -887,6 +900,12 @@ class RnntModel::DecoderBatchers {
+             outputs[1].index = 1;
+             outputs[1].host_buffer = result.durations.data();
+             outputs[1].nbytes = result.durations.size() * sizeof(int32_t);
++        } else {
++            result.neg_entropy.resize(static_cast<size_t>(T));
++            outputs.resize(2);
++            outputs[1].index = 1;
++            outputs[1].host_buffer = result.neg_entropy.data();
++            outputs[1].nbytes = result.neg_entropy.size() * sizeof(float);
+         }
+         owner_->decoder_session_->run(inputs, outputs);
+         return result;
+@@ -914,10 +933,14 @@ class RnntModel::DecoderBatchers {
+ 
+         JointResult result;
+         result.tokens.resize(static_cast<size_t>(T));
+-        std::vector<ggml_runtime::Session::Output> outputs(1);
++        result.neg_entropy.resize(static_cast<size_t>(T));
++        std::vector<ggml_runtime::Session::Output> outputs(2);
+         outputs[0].index = 0;
+         outputs[0].host_buffer = result.tokens.data();
+         outputs[0].nbytes = result.tokens.size() * sizeof(int32_t);
++        outputs[1].index = 1;
++        outputs[1].host_buffer = result.neg_entropy.data();
++        outputs[1].nbytes = result.neg_entropy.size() * sizeof(float);
+         owner_->decoder_session_->run(inputs, outputs);
+         return result;
+     }
+@@ -1913,10 +1936,22 @@ RnntModel::predict_rnnt(RnntStreamState& stream_state, int prev_token, int activ
+     state->needs_reset = false;
+ }
+ 
++static void
++copy_neg_entropy(const std::vector<float>& neg_entropy, int T, float* frame_neg_entropy) {
++    if (frame_neg_entropy == nullptr)
++        return;
++    if (neg_entropy.size() < static_cast<size_t>(T)) {
++        // No entropy output: an unknown confidence reads as full
++        std::fill(frame_neg_entropy, frame_neg_entropy + T, 0.0f);
++        return;
++    }
++    std::copy(neg_entropy.begin(), neg_entropy.begin() + T, frame_neg_entropy);
++}
++
+ void
+ RnntModel::joint_argmax(
+     RnntStreamState& stream_state, const float* enc_proj, int joint_dim, int T, int32_t* token_ids,
+-    const float* logit_bias) {
++    const float* logit_bias, float* frame_neg_entropy) {
+     auto* state = dynamic_cast<RnntDecoderState*>(&stream_state);
+     if (!state || state->owner != this || state->slot < 0)
+         throw std::invalid_argument("joint_argmax: stream state belongs to another engine");
+@@ -1927,12 +1962,13 @@ RnntModel::joint_argmax(
+         state->slot, enc_proj, T, logit_bias, rnnt_cfg_.vocab_size,
+         admitted_decode_steps_.load(std::memory_order_acquire));
+     std::copy(result.tokens.begin(), result.tokens.end(), token_ids);
++    copy_neg_entropy(result.neg_entropy, T, frame_neg_entropy);
+ }
+ 
+ void
+ RnntModel::joint_argmax_device(
+     RnntStreamState& stream_state, const ggml_runtime::DeviceTensor& enc_proj, int frame_offset,
+-    int joint_dim, int T, int32_t* token_ids, const float* logit_bias) {
++    int joint_dim, int T, int32_t* token_ids, const float* logit_bias, float* frame_neg_entropy) {
+     auto* state = dynamic_cast<RnntDecoderState*>(&stream_state);
+     if (!state || state->owner != this || state->slot < 0)
+         throw std::invalid_argument("joint_argmax_device: stream state belongs to another engine");
+@@ -1941,13 +1977,14 @@ RnntModel::joint_argmax_device(
+     auto result = decoder_batchers_->joint_device(
+         state->slot, enc_proj, frame_offset, T, logit_bias, rnnt_cfg_.vocab_size);
+     std::copy(result.tokens.begin(), result.tokens.end(), token_ids);
++    copy_neg_entropy(result.neg_entropy, T, frame_neg_entropy);
+ }
+ 
+ void
+ RnntModel::predict_and_joint_rnnt_argmax_device(
+     RnntStreamState& stream_state, int prev_token, int active_bank,
+     const ggml_runtime::DeviceTensor& enc_proj, int frame_offset, int joint_dim, int T,
+-    int32_t* token_ids, const float* logit_bias) {
++    int32_t* token_ids, const float* logit_bias, float* frame_neg_entropy) {
+     auto* state = dynamic_cast<RnntDecoderState*>(&stream_state);
+     if (!state || state->owner != this || state->slot < 0)
+         throw std::invalid_argument(
+@@ -1963,6 +2000,7 @@ RnntModel::predict_and_joint_rnnt_argmax_device(
+         logit_bias, rnnt_cfg_.vocab_size, state->needs_reset);
+     state->needs_reset = false;
+     std::copy(result.tokens.begin(), result.tokens.end(), token_ids);
++    copy_neg_entropy(result.neg_entropy, T, frame_neg_entropy);
+ }
+ 
+ void
+diff --git a/src/asr/model.h b/src/asr/model.h
+index 9f7aa8c..8937cc5 100644
+--- a/src/asr/model.h
++++ b/src/asr/model.h
+@@ -194,14 +194,16 @@ class RnntModel final : public AsrModel, public RnntEngine {
+     void predict_rnnt(RnntStreamState& state, int prev_token, int active_bank) override;
+     void joint_argmax(
+         RnntStreamState& state, const float* enc_proj, int joint_dim, int T, int32_t* token_ids,
+-        const float* logit_bias = nullptr) override;
++        const float* logit_bias = nullptr, float* frame_neg_entropy = nullptr) override;
+     void joint_argmax_device(
+         RnntStreamState& state, const ggml_runtime::DeviceTensor& enc_proj, int frame_offset,
+-        int joint_dim, int T, int32_t* token_ids, const float* logit_bias = nullptr) override;
++        int joint_dim, int T, int32_t* token_ids, const float* logit_bias = nullptr,
++        float* frame_neg_entropy = nullptr) override;
+     void predict_and_joint_rnnt_argmax_device(
+         RnntStreamState& state, int prev_token, int active_bank,
+         const ggml_runtime::DeviceTensor& enc_proj, int frame_offset, int joint_dim, int T,
+-        int32_t* token_ids, const float* logit_bias = nullptr) override;
++        int32_t* token_ids, const float* logit_bias = nullptr,
++        float* frame_neg_entropy = nullptr) override;
+     void joint_tdt_argmax(
+         RnntStreamState& state, const float* enc_proj, int joint_dim, int T, int32_t* token_ids,
+         int32_t* duration_ids) override;
+diff --git a/tests/cpp/asr/test_decoders.cpp b/tests/cpp/asr/test_decoders.cpp
+index e7fe528..2739968 100644
+--- a/tests/cpp/asr/test_decoders.cpp
++++ b/tests/cpp/asr/test_decoders.cpp
+@@ -314,7 +314,8 @@ class MockRnntEngine : public RnntEngine {
+ 
+     void joint_argmax(
+         RnntStreamState& /*state*/, const float* /*enc_proj*/, int joint_dim, int T,
+-        int32_t* token_ids, const float* logit_bias = nullptr) override {
++        int32_t* token_ids, const float* logit_bias = nullptr,
++        float* /*frame_neg_entropy*/ = nullptr) override {
+         check(joint_dim == cfg_.joint_dim, "rnnt mock: projected width");
+         joint_calls++;
+         if (logit_bias != nullptr) {
+@@ -719,7 +720,8 @@ class MockTdtEngine : public RnntEngine {
+         last_prev_token = prev_token;
+         ++predictor_calls;
+     }
+-    void joint_argmax(RnntStreamState&, const float*, int, int, int32_t*, const float*) override {
++    void joint_argmax(
++        RnntStreamState&, const float*, int, int, int32_t*, const float*, float*) override {
+         throw std::runtime_error("TDT mock does not implement RNNT argmax");
+     }
+     void joint_tdt_argmax(

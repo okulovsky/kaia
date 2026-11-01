@@ -5,7 +5,7 @@ from chara.common.descriptions import Character
 from grammatron import TemplateContext
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from .stats_builder import ParaphraseStats
+    from .stats_builder import ParaphraseStats, ParaphraseFingerprint
 
 class UtteranceParaphraseCase(ParaphraseCase):
     def __init__(self,
@@ -28,6 +28,10 @@ class UtteranceParaphraseCase(ParaphraseCase):
         self.context: TemplateContext|None = None
         self.reply_to_examples: tuple[str, ...] | None = None
 
+
+    def to_fingerprint(self) -> ParaphraseFingerprint:
+        from .stats_builder import ParaphraseFingerprint
+        return ParaphraseFingerprint.from_case(self)
 
     def prepare(self):
         self.samples = tuple(c.representation for c in self.parsed_template.all_alternatives)

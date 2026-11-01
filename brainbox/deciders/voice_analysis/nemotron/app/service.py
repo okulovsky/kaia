@@ -24,17 +24,39 @@ class NemotronService(INemotron):
             sample_rate: int = 16000,
             model: str | None = None,
     ) -> Iterable[dict[str, JSON]]:
+        for _, result in self._transcribe_streams(audio, [language], sample_rate, model):
+            yield result
+
+    def transcribe_stream_languages(
+            self,
+            audio: Iterable[bytes] | FileLike,
+            languages: list[str],
+            sample_rate: int = 16000,
+            model: str | None = None,
+    ) -> Iterable[dict[str, JSON]]:
+        for language, result in self._transcribe_streams(audio, languages, sample_rate, model):
+            yield dict(result, stream=language)
+
+    def _transcribe_streams(self, audio, languages: list[str], sample_rate: int, model: str | None):
+        # The audio is decoded once and pushed to a stream per language
         recognizer = self.storage.get_model(model or DEFAULT_MODEL)
         decoder = PcmStreamDecoder(sample_rate)
-        stream = recognizer.open_stream(language)
+        streams = {}
         try:
+            for language in languages:
+                streams[language] = recognizer.open_stream(language)
             for chunk in FileLikeHandler.to_bytes_iterable(audio):
                 samples = decoder.feed(chunk)
                 if samples is None:
                     continue
-                stream.push(samples, decoder.sample_rate)
-                yield from stream.poll()
-            stream.finish()
-            yield from stream.poll()
+                for language, stream in streams.items():
+                    stream.push(samples, decoder.sample_rate)
+                    for result in stream.poll():
+                        yield language, result
+            for language, stream in streams.items():
+                stream.finish()
+                for result in stream.poll():
+                    yield language, result
         finally:
-            stream.close()
+            for stream in streams.values():
+                stream.close()

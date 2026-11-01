@@ -1,26 +1,19 @@
-from datetime import datetime
 from pathlib import Path
 
-from chara.common import Chara
+from chara.common import Chara, CasePrioritization
 from chara.common.llm import BrainBoxLLMEngine, LLMSetup
 from chara.paraphrasing.common import Paraphrase
 from chara.paraphrasing.utterances import (
-    ICaseSelection, UtteranceParaphraseCaseManager, UtteranceParaphrasePipeline,
+    ParaphrasePrioritization, UtteranceParaphraseCaseManager, UtteranceParaphrasePipeline,
     create_default_utterance_request,
 )
 from avatar.daemon.paraphrase_service import ParaphraseRecord
 
 
-def _find_last_run_folder(root: Path) -> Path|None:
-    candidates = [p for p in root.iterdir() if p.is_dir()] if root.is_dir() else []
-    if not candidates:
-        return None
-    return max(candidates, key=lambda p: p.name)
-
-
 def paraphrase_utterances(
         manager: UtteranceParaphraseCaseManager,
-        selection: ICaseSelection,
+        strategy: CasePrioritization.Strategy,
+        budget: int,
         *,
         llm_model: str = 'mistral-small',
         settings: Paraphrase.Settings|None = None,
@@ -28,17 +21,18 @@ def paraphrase_utterances(
 ) -> list[ParaphraseRecord]:
     """Paraphrases utterances and uploads them to the avatar.
 
-    Two arguments decide everything. The `manager` says what content exists -- which
-    templates, characters, users and languages -- and the `selection` says what this
-    run generates out of it and when it stops:
+    The `manager` says what content exists -- which templates, characters, users and
+    languages -- and `strategy` and `budget` say which of these cases this run paraphrases:
 
-        paraphrase_utterances(manager, NewEntitiesSelection())
-        paraphrase_utterances(manager, DeficitSelection(budget=500))
+        paraphrase_utterances(manager, CasePrioritization.Strategy.only_new, 100)
+        paraphrase_utterances(manager, CasePrioritization.Strategy.expand, 100)
 
-    Runs are kept under `paraphrasing/<selection name>`, so one behaviour never resumes
+    A run selects once and stops; a big job is several runs.
+
+    Runs are kept under `paraphrasing/<strategy>`, so one strategy never resumes
     another's folder. If the most recent run there never finished, it is resumed:
     Chara.start() picks back up from whatever phases already have a cached result, so
-    batches already paraphrased are not paid for twice.
+    cases already paraphrased are not paid for twice.
     """
 
     if settings is None:
@@ -49,12 +43,8 @@ def paraphrase_utterances(
         )
 
     if folder is None:
-        root = Chara.Apis.content_folder/'paraphrasing'/selection.name
-        last = _find_last_run_folder(root)
-        if last is not None and not Chara.from_folder(last).has_result:
-            folder = last
-        else:
-            folder = root/('$' + datetime.now().isoformat())
-
-    Chara.start(folder)
-    return Chara.call(UtteranceParaphrasePipeline(manager, settings, selection))()
+        Chara.start_or_resume(Chara.Apis.content_folder/'paraphrasing'/strategy.value, '$')
+    else:
+        Chara.start(folder)
+    prioritization = ParaphrasePrioritization(strategy, budget)
+    return Chara.call(UtteranceParaphrasePipeline(manager, settings, prioritization))()

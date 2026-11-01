@@ -8,9 +8,9 @@ line per variable:
     duration: 1h 30m
 
 The intent is `TemplatesCollection.template`, or `none` if the text is not a command. Durations are `1h 30m`
-(only non-zero parts), numbers are digits, options are as they were said, closed lists of options
-(e.g. the relative day) are their English value. Adapters trained before the intent line output only the variables,
-with `-` for no variables; they are still read.
+(only non-zero parts), numbers are digits, options are the values of the template whatever the language of the text
+(the options that are not in the template are as they were said). Adapters trained before the intent line output
+only the variables, with `-` for no variables; they are still read.
 """
 import re
 from datetime import timedelta

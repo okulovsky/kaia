@@ -3,7 +3,7 @@ import random
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
-from brainbox.deciders import LlamaLoraSFTTrainer, LlamaLoraServer
+from brainbox.deciders import LlamaLoraSFTTrainer
 from brainbox.deciders.text.llama_lora_sft_trainer.app.interface import TrainingSettings
 from chara.common import Chara
 from ..slm_training.pipeline import LlamaLoraPipeline, training_run_folder
@@ -13,7 +13,7 @@ from .dataset import record_to_sample, synthetic_timer_records, negative_to_samp
 
 def default_training_settings() -> TrainingSettings:
     settings = TrainingSettings()
-    # One checkpoint per epoch, each is validated and the best one is deployed.
+    # One checkpoint per epoch, each is validated and the best one is kept.
     # fp16 is off, so the training also runs on CPU (e.g. BrainBox on a Mac)
     settings.training_args.update(save_strategy='epoch', save_total_limit=None, fp16=False)
     return settings
@@ -22,13 +22,13 @@ def default_training_settings() -> TrainingSettings:
 @dataclass
 class NerTrainingReport:
     stats: TrainingRunStats
-    deployed_checkpoint: int
+    best_checkpoint: int
     accuracy: dict[str, float] = field(default_factory=dict)
-    # The deployed adapter
+    # The adapter of the best checkpoint, deploy_ultimate_nlu uploads it to LlamaLoraServer
     adapter_file: Path | None = None
 
     def __str__(self):
-        lines = [f'Slots exact match on held-out texts, checkpoint {self.deployed_checkpoint} deployed:']
+        lines = [f'Slots exact match on held-out texts, best checkpoint {self.best_checkpoint}:']
         for key, value in self.accuracy.items():
             lines.append(f'  {key:20} {value:.1%}')
         return '\n'.join(lines)
@@ -44,7 +44,7 @@ class NerTrainingPipeline:
     All the intents are learned: `samples_per_intent` records for the intents with variables, which also have to learn
     the values, `samples_per_slot_free_intent` for the others. `negatives` are phrases that are not commands.
     Every checkpoint is validated on the records with held-out texts,
-    and the best one is deployed to LlamaLoraServer as the adapter ADAPTER.
+    and the best one is saved as the adapter ADAPTER for LlamaLoraServer.
     """
     ADAPTER = 'nlu-slots'
 
@@ -83,15 +83,13 @@ class NerTrainingPipeline:
         best = stats.get_best_checkpoint()
 
         @Chara.phase
-        def deployment():
-            api = Chara.Apis.brainbox_api
+        def adapter():
             adapter_file = Chara.current.folder / f'{self.ADAPTER}.gguf'
             source = f'{training_run_folder(stats.training_run)}/gguf_checkpoints/checkpoint-{best.number}.gguf'
-            adapter_file.write_bytes(api.resources(LlamaLoraSFTTrainer).read(source))
-            api.resources(LlamaLoraServer).upload(f'models/{self.model_id}/lora_adapters/{self.ADAPTER}.gguf', adapter_file)
+            adapter_file.write_bytes(Chara.Apis.brainbox_api.resources(LlamaLoraSFTTrainer).read(source))
             return adapter_file
 
-        return NerTrainingReport(stats, best.number, self._accuracy(best, validation), deployment)
+        return NerTrainingReport(stats, best.number, self._accuracy(best, validation), adapter)
 
     def _samples(self, text_dataset: list[dict], negatives: list[str]):
         intents_with_values = {r['intent'] for r in text_dataset if r['values']}
@@ -108,15 +106,16 @@ class NerTrainingPipeline:
             if sample is None:
                 continue
             sample.update(intent=record['intent'], language=record['language'])
-            by_intent[record['intent']][record['text'] in test_texts].append(sample)
+            options = frozenset((v['name'], v['value']) for v in record['values'] if v['type'] == 'OptionsDub')
+            by_intent[record['intent']][record['text'] in test_texts].append((sample, options))
         train, validation = [], []
         for intent in sorted(by_intent):
             intent_train, intent_validation = by_intent[intent]
             rnd.shuffle(intent_train)
             rnd.shuffle(intent_validation)
             limit = self.samples_per_intent if intent in intents_with_values else self.samples_per_slot_free_intent
-            train.extend(intent_train[:limit])
-            validation.extend(intent_validation[:self.validation_per_intent])
+            train.extend(self._take_covering_options(intent_train, limit))
+            validation.extend(sample for sample, _ in intent_validation[:self.validation_per_intent])
         negatives = sorted(set(negatives))
         rnd.shuffle(negatives)
         held = int(len(negatives) * self.test_share)
@@ -126,6 +125,23 @@ class NerTrainingPipeline:
             (validation if i < held else train).append(sample)
         rnd.shuffle(train)
         return train, validation
+
+    @staticmethod
+    def _take_covering_options(samples: list[tuple[dict, frozenset]], limit: int | None) -> list[dict]:
+        """
+        The first `limit` samples, but every value of the OptionsDub variables is there at least once,
+        so `limit` is exceeded if there are more values than that
+        """
+        if limit is None:
+            return [sample for sample, _ in samples]
+        covering, others, covered = [], [], set()
+        for sample, options in samples:
+            if options - covered:
+                covering.append(sample)
+                covered |= options
+            else:
+                others.append(sample)
+        return covering + others[:max(0, limit - len(covering))]
 
     def _accuracy(self, checkpoint: CheckpointValStats, validation: list[dict]) -> dict[str, float]:
         counts = defaultdict(lambda: [0, 0])

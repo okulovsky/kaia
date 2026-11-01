@@ -35,8 +35,9 @@ class OllamaOptions:
     format: dict|str|None = None  # `"json"`, or a JSON Schema the output must conform to.
     logprobs: bool|None = None  # Return the log-probability of each generated token in the reply's `logprobs`.
     top_logprobs: int|None = None  # With `logprobs`, also return this many most likely alternatives per token.
+    think: bool|None = None  # For thinking models (e.g. qwen3), whether the model thinks before answering.
 
-    TOP_LEVEL_FIELDS = ('format', 'logprobs', 'top_logprobs')
+    TOP_LEVEL_FIELDS = ('format', 'logprobs', 'top_logprobs', 'think')
 
     def to_body_fields(self) -> dict:
         """The fields to add to Ollama's request body: `options`, and the fields of `TOP_LEVEL_FIELDS`."""

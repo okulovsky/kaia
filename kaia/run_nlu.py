@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import time
 import webbrowser
 from pathlib import Path
-from kaia.app import KaiaAppSettings, AvatarDaemonAppSettings, KaiaApp
+from kaia.app import KaiaAppSettings, AvatarDaemonAppSettings, KaiaApp, AssistantFactory
 from foundation_kaia.misc import Loc
 from foundation_kaia.fork import Fork
 from avatar.app import compile_frontend
@@ -11,21 +11,30 @@ from avatar.daemon import StreamingSTTService, NLUService, State
 from avatar.daemon.streaming_stt_service import IntentSource
 from brainbox import BrainBox
 from brainbox.deciders import WhisperKenLM, Nemotron, Chroma, LlamaLoraSFTTrainer, LlamaLoraServer, Ollama
+from grammatron import Template
 from chara.common import Chara
-from chara.nlu.nlu_training import NluTrainingPipeline, load_nlu_datasets
 from chara.nlu.ner_training import NerTrainingPipeline
-from chara.nlu.nlu_pipeline import NluDatasetStore, NluPipeline
-from chara.nlu.datasets.text_dataset import TextDatasetPipeline, kaia_intent_templates, MOODS, LANGUAGES
+from chara.nlu.scripts import create_dataset, create_negatives, train_ultimate_nlu
+from chara.nlu.scripts.common import default_ultimate_nlu_folder
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--datasets', default=str(Chara.Apis.content_folder / 'nlu/datasets'),
-                    help='Folder with text-dataset.json and, optionally, to_zip/samples.json')
-parser.add_argument('--generate-rounds', type=int, default=0,
-                    help='New rounds of the text dataset to generate before the training; needs the LLM in BrainBox (Ollama)')
-parser.add_argument('--model', default='mistral-small', help='The LLM that generates the text dataset')
+parser.add_argument('--folder', default=str(default_ultimate_nlu_folder()),
+                    help='Folder with dataset.json and, optionally, negatives.txt, see chara/nlu/scripts')
+parser.add_argument('--generate', action='store_true',
+                    help='Adds a new run of paraphrases and negatives to the folder before the training; needs the LLM in BrainBox (Ollama)')
+parser.add_argument('--model', default='mistral-small', help='The LLM that generates the dataset and the negatives')
 parser.add_argument('--intent-source', default=IntentSource.CHROMA, choices=IntentSource.ALL,
                     help='Who decides the intent: Chroma, the LoRA of the slots, or their agreement')
+
+
+def kaia_intent_templates() -> list[Template]:
+    """The intents of the Kaia assistant: the templates the dataset paraphrases"""
+    assistant = AssistantFactory(None).create_assistant(None)
+    templates = []
+    for pack in assistant.get_intents():
+        templates.extend(pack.templates)
+    return templates
 
 
 @dataclass
@@ -43,8 +52,7 @@ class NluAvatarDaemonAppSettings(AvatarDaemonAppSettings):
 
 if __name__ == '__main__':
     args = parser.parse_args()
-    datasets = Path(args.datasets)
-    _, voice_samples = load_nlu_datasets(datasets)
+    folder = Path(args.folder)
 
     working_folder = Loc.data_folder / 'demo'
     compile_frontend(working_folder / 'avatar' / 'frontend')
@@ -53,9 +61,9 @@ if __name__ == '__main__':
     settings.brainbox.deciders_files_in_kaia_working_folder = False
     settings.custom_avatar_resources_folder = Loc.root_folder/'kaia/app/files/avatar-resources'
     ner = NerTrainingPipeline()
-    # WhisperKenLM is needed only for the training on the voice samples
+    # Nemotron recognizes the speech, WhisperKenLM is needed only for the training of KenLM
     settings.brainbox_setup.up(Nemotron, model='multilingual').up(WhisperKenLM).up(Chroma).up(LlamaLoraServer, parameter=ner.model_id).up(LlamaLoraSFTTrainer)
-    if args.generate_rounds > 0:
+    if args.generate:
         # The model given by --model must be available in this Ollama
         settings.brainbox_setup.up(Ollama)
     settings.avatar_processor = NluAvatarDaemonAppSettings(
@@ -67,18 +75,14 @@ if __name__ == '__main__':
         app.brainbox_api.wait_for_connection(30)
         settings.brainbox_setup.execute(app.brainbox_api)
 
-        # Trains on the stored dataset, restored from the cache while the dataset is the same.
-        # New rounds of the dataset are generated only with --generate-rounds: it takes long (see chara/nlu/run_nlu_training.py).
         # A separate client: the app's one is pickled into the forks, and API clients keep the last request,
         # which for uploads holds a generator that cannot be pickled.
         Chara.Apis.brainbox_api = BrainBox.Api(app.brainbox_api.base_url)
-        generator = None
-        if args.generate_rounds > 0:
-            generator = TextDatasetPipeline(args.model, kaia_intent_templates(), list(LANGUAGES), list(MOODS))
-        pipeline = NluPipeline(NluDatasetStore(datasets), Chara.Apis.cache_folder / 'nlu', generator, NluTrainingPipeline(), ner)
-        for _ in range(args.generate_rounds):
-            print(f'Round {pipeline.generate_round()} of the text dataset is generated')
-        print(pipeline.train(voice_samples))
+        if args.generate:
+            create_dataset(kaia_intent_templates(), args.model, folder=folder)
+            create_negatives(args.model, folder=folder)
+        # Restored from the cache while the dataset and the negatives are the same
+        print(train_ultimate_nlu(folder))
 
         app.get_fork_app(None).run()
         app.avatar_api.wait_for_connection(30)

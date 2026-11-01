@@ -2,11 +2,11 @@ from avatar.app import AvatarApi
 from unittest import TestCase
 from grammatron import Template
 from chara.paraphrasing.utterances import (
-    NewEntitiesSelection, UtteranceParaphraseCaseManager, UtteranceParaphrasePipeline)
+    ParaphrasePrioritization, UtteranceParaphraseCaseManager, UtteranceParaphrasePipeline)
 from chara.paraphrasing.utterances.reporting import REPORT_FILENAME
 from chara.paraphrasing.common import Paraphrase
 from chara.paraphrasing.utterances.prompter import create_default_utterance_request
-from chara.common import Chara
+from chara.common import Chara, CasePrioritization
 from chara.common.llm import BrainBoxLLMEngine, LLMSetup
 from foundation_kaia.misc import Loc
 from brainbox import BrainBox, ISelfManagingDecider
@@ -35,7 +35,7 @@ class UtterancePipelineTestCase(TestCase):
             [Template("yes"), Template("no")],
             target_languages=('en',)
         )
-        pipe = UtteranceParaphrasePipeline(manager, settings, NewEntitiesSelection(batch_size=10))
+        pipe = UtteranceParaphrasePipeline(manager, settings, ParaphrasePrioritization(CasePrioritization.Strategy.only_new, 10))
 
         with Loc.create_test_folder() as avatar_folder:
             with Loc.create_test_folder() as folder:

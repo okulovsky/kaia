@@ -29,6 +29,15 @@ YES = Template('Yes')
 
 # Files of the tests are named after their text
 TEXTS = {'time.wav': 'What time is it', 'yes.wav': 'Yes', 'free.wav': 'Hello there'}
+# The text and the confidence of each stream forced to a language, as Nemotron gives them on the testbed recordings
+STREAMS = {
+    'time.wav': {'en': ('What time is it', 0.99), 'ru': ('Уот тайм', 0.90)},
+    'privet.wav': {'en': ('priviet', 0.958), 'ru': ('Привет', 0.997)},
+    'light.wav': {'en': ('', None), 'ru': ('Включи свет', 0.95)},
+    'night.wav': {'en': ('', None), 'ru': ('', None)},
+    # A decider without the confidence
+    'da.wav': {'en': ('yeah', None), 'ru': ('Да', None)},
+}
 
 
 class NemotronMock(ISelfManagingDecider):
@@ -45,6 +54,19 @@ class NemotronMock(ISelfManagingDecider):
             raise ValueError("Upstream job aborted")
         text = TEXTS[audio]
         lines = [dict(text=text[:3], is_final=False), dict(text=text, is_final=True)]
+        name = audio + '.jsonl'
+        (self.folder / name).write_text(''.join(json.dumps(line) + '\n' for line in lines))
+        return name
+
+    def transcribe_stream_languages(self, audio, languages: list[str], sample_rate: int = 16000, model: str | None = None):
+        self.languages.append(languages)
+        lines = []
+        for stream in languages:
+            text, confidence = STREAMS[audio][stream]
+            final = dict(text=text, is_final=True, stream=stream)
+            if confidence is not None:
+                final['confidence'] = confidence
+            lines += [dict(text=text[:3], is_final=False, stream=stream), final]
         name = audio + '.jsonl'
         (self.folder / name).write_text(''.join(json.dumps(line) + '\n' for line in lines))
         return name
@@ -125,6 +147,30 @@ class TranscriptionTestCase(TestCase):
         self.assertIsNone(result.text)
         self.assertIsNotNone(result.error)
         self.assertEqual(request, self.service.requested)
+
+    def run_languages(self, file, state=None, *messages):
+        service = StreamingSTTService(state or State(), self.folder, languages=('en', 'ru'))
+        return self.run_service(service, *messages, SoundStreamingStartEvent(file))
+
+    def test_nemotron_languages_most_confident(self):
+        self.assertEqual('What time is it', self.run_languages('time.wav').text)
+        self.assertEqual([['en', 'ru']], self.nemotron.languages)
+        self.assertEqual('Привет', self.run_languages('privet.wav', State(language='en')).text)
+
+    def test_nemotron_languages_only_stream_with_text(self):
+        self.assertEqual('Включи свет', self.run_languages('light.wav').text)
+
+    def test_nemotron_languages_nothing_heard(self):
+        self.assertEqual('', self.run_languages('night.wav').text)
+
+    def test_nemotron_languages_without_confidence(self):
+        self.assertEqual('yeah', self.run_languages('da.wav').text)
+        self.assertEqual('Да', self.run_languages('da.wav', State(language='ru')).text)
+
+    def test_nemotron_languages_free_speech_is_one_stream(self):
+        result = self.run_languages('free.wav', State(language='de'), FreeSpeechRecognitionRequest())
+        self.assertEqual('Hello there', result.text)
+        self.assertEqual(['de'], self.nemotron.languages)
 
     def test_read_final_text(self):
         lines = [dict(text='Hel', is_final=False), dict(text='Hello', is_final=True), dict(text=' there ', is_final=True)]

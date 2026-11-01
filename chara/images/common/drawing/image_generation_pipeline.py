@@ -86,8 +86,12 @@ class DrawingPipeline:
         for c in cases.successes:
             drawing_case = DrawingCase(c, c.to_workflow())
             drawing_cases_list.append(drawing_case)
-        drawing_cases_list = random.sample(drawing_cases_list, len(drawing_cases_list))
-        drawing_cases = CaseCollection(drawing_cases_list)
+
+        @Chara.phase
+        def shuffle():
+            return random.sample(drawing_cases_list, len(drawing_cases_list))
+
+        drawing_cases = CaseCollection(Chara.previous.result)
         pipeline = BrainBoxCasePipeline(self._create_task, 'image', result_to_file=True)
 
         drawing_cases = Chara.call(pipeline,'drawing')(drawing_cases).raise_if_all_errors()

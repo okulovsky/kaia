@@ -85,7 +85,19 @@ class WordTranslation:
     class Pipeline:
         def __init__(self, source: ILLM[WordTranslationCase, str]):
             request = source.default().template(Path(__file__).parent / 'prompt.jinja').to_request()
-            self.request = request.edit().assign('translation').to_request()
+            self.request = request.edit().parse(self._clean).assign('translation').to_request()
+
+        @staticmethod
+        def _clean(case: WordTranslationCase, answer: str) -> str:
+            # Small models add comments: "Haruto → Haruto (no transcription needed)\n\nP.S. ..."
+            line = next((line for line in answer.splitlines() if line.strip()), '')
+            line = line.split('(')[0]
+            for arrow in ('→', '=', '≡'):
+                line = line.split(arrow)[-1]
+            line = line.strip().strip('"*`\'').strip()
+            if line == '':
+                raise ValueError(f"No translation in the answer {answer!r}")
+            return line
 
         def __call__(self, cases: CaseCollection[WordTranslationCase]) -> CaseCollection[WordTranslationCase]:
             pipe = self.request.create_brainbox_pipeline()
