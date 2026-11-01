@@ -100,8 +100,7 @@ the audio path relative to the manifest, the text written as Nemotron writes it 
    - `--targets`: `attention` (the least), `encoder` (attention and feed-forward of the encoder),
      `all` (also the projections, the joint and the language prompt). The LSTM predictor cannot take LoRA.
    - Speed, gain and noise are added on the fly (`--augment`); `--noise-dir` takes recorded noise, e.g. MUSAN.
-   - Utterances whose transcript does not fit the audio give a loss of thousands per token and are skipped
-     (`--max-loss-per-token`); many skips mean bad data.
+   - The loss starts at about 1 per token. An utterance above `--max-loss-per-token` is skipped; many skips mean bad data.
    - On a CPU a step of 4 utterances takes 5-20 s, so a CPU is for a small pilot at most.
 
 3. The tuned model on the same sets. `new` should get better, `control` should not get worse, and the general WER should not
@@ -146,6 +145,12 @@ all its 657 tensors are identical to the direct conversion of the `.nemo` by the
 
 ## Things the scripts work around (Transformers 5.20)
 
+- The labels of the processor do not fit the model. `tokenizer.json` splits the words differently from the SentencePiece
+  model the checkpoint was trained with, and the model closes every text with its language tag (`<en-US>`). With these labels
+  the loss is 6 per token instead of 1, and the training teaches the splitting, not the words. So the labels are made with
+  the SentencePiece model of the `.nemo`, with the tag.
+- The config has `layerdrop` 0.1, the checkpoint was trained without it (`stochastic_depth_drop_prob: 0`). A layer is dropped
+  for the whole batch, and every 6th batch got a loss of thousands. It is turned off.
 - The processor starts `decoder_input_ids` with its `<blank>` = 13088, outside of the model's vocabulary;
   the model's blank is `config.blank_token_id` = 13087.
 - `model(..., labels=...)` falls back to the causal LM loss; the RNN-T loss is computed with torchaudio,

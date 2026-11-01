@@ -19,6 +19,11 @@ def as_model_writes(text: str) -> str:
     return text if text[-1] in '.!?' else text + '.'
 
 
+def transcript(record: dict) -> str:
+    """What the model is trained to write: the text, and the tag of the language closing it"""
+    return f"{record['text']} <{record['language']}>"
+
+
 def write(path: Path, records: list[dict]):
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, 'w') as file:

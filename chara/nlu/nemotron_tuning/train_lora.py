@@ -9,6 +9,7 @@ which export_gguf.py converts for NeMo-Speech.cpp. See README.md for the setting
 import argparse
 import json
 import random
+import tarfile
 import time
 from pathlib import Path
 import librosa
@@ -16,12 +17,15 @@ import numpy as np
 import soundfile
 import torch
 import torchaudio
+from huggingface_hub import hf_hub_download
 from peft import LoraConfig, PeftModel, get_peft_model
+from sentencepiece import SentencePieceProcessor
 from transformers import AutoProcessor, Nemotron3_5AsrForRNNT, get_cosine_schedule_with_warmup
 import manifest
 
 MODEL = 'nvidia/nemotron-3.5-asr-streaming-0.6b'
 REVISION = 'ea30d66debe3740a08b573244286791d423d6b3e'
+NEMO_FILE = 'nemotron-3.5-asr-streaming-0.6b.nemo'
 SAMPLE_RATE = 16000
 LAYER = r'encoder\.layers\.\d+\.'
 TARGETS = {
@@ -73,16 +77,29 @@ class Augmentation:
         return np.convolve(white, np.ones(8) / 8, mode='same')
 
 
-def make_batch(processor, model, items: list[dict], augmentation: Augmentation | None, device):
+def load_tokenizer() -> SentencePieceProcessor:
+    """
+    The tokenizer the model was trained with, from the .nemo. tokenizer.json of Transformers splits the words differently
+    (`▁`, `З`, `а` where the model writes `▁За`), and with such labels the training teaches the splitting, not the words.
+    """
+    with tarfile.open(hf_hub_download(MODEL, NEMO_FILE, revision=REVISION)) as tar:
+        member = next(m for m in tar.getmembers() if m.name.endswith('tokenizer.model'))
+        return SentencePieceProcessor(model_proto=tar.extractfile(member).read())
+
+
+def make_batch(processor, tokenizer, model, items: list[dict], augmentation: Augmentation | None, device):
     audios = [load_audio(i['audio']) for i in items]
     if augmentation is not None:
         audios = [augmentation(a) for a in audios]
-    inputs = processor(audios, text=[i['text'] for i in items], sampling_rate=SAMPLE_RATE,
-                       language=[i['language'] for i in items], return_tensors='pt', padding=True)
-    # The processor starts the decoder with its `<blank>`, which is outside of the model's vocabulary;
-    # the model's blank is config.blank_token_id, the same id the labels are padded with
-    decoder_ids = inputs['decoder_input_ids']
-    decoder_ids[decoder_ids >= model.config.vocab_size] = model.config.blank_token_id
+    inputs = processor(audios, sampling_rate=SAMPLE_RATE, language=[i['language'] for i in items], return_tensors='pt', padding=True)
+    # The decoder starts with the blank, and the labels are padded with it. This is config.blank_token_id:
+    # the `<blank>` of the processor is outside of the model's vocabulary
+    blank = model.config.blank_token_id
+    labels = tokenizer.encode([manifest.transcript(i) for i in items])
+    width = max(len(ids) for ids in labels)
+    labels = torch.tensor([ids + [blank] * (width - len(ids)) for ids in labels])
+    inputs['labels'] = labels
+    inputs['decoder_input_ids'] = torch.cat([torch.full((len(items), 1), blank), labels], dim=1)
     return {k: v.to(device) if hasattr(v, 'to') else v for k, v in inputs.items()}
 
 
@@ -166,7 +183,11 @@ def main():
     print(f'train {len(train)}, replay {len(replay)}, dev {len(dev)}, noise files {len(noise_files)}, device {args.device}')
 
     processor = AutoProcessor.from_pretrained(MODEL, revision=REVISION)
+    tokenizer = load_tokenizer()
     base = Nemotron3_5AsrForRNNT.from_pretrained(MODEL, revision=REVISION, torch_dtype=torch.float32).to(args.device)
+    # 0.1 is the default of the config, the checkpoint was trained without it (stochastic_depth_drop_prob: 0).
+    # A layer is dropped for the whole batch, and every 6th batch got a loss of thousands
+    base.encoder.layerdrop = 0
     log = dict(args=vars(args), base_dev=word_error_rate(dev, transcribe(base, processor, dev, args.device)), steps=[])
     print('dev WER before:', log['base_dev'])
 
@@ -180,7 +201,7 @@ def main():
     for step in range(1, args.steps + 1):
         replay_count = int(round(args.batch * args.replay_share)) if replay else 0
         items = rnd.sample(train, min(args.batch - replay_count, len(train))) + rnd.sample(replay, min(replay_count, len(replay)))
-        inputs = make_batch(processor, base, items, augmentation, args.device)
+        inputs = make_batch(processor, tokenizer, base, items, augmentation, args.device)
         labels = inputs.pop('labels')
         begin = time.time()
         with autocast:

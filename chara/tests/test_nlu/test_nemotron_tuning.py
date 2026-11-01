@@ -99,3 +99,6 @@ class SlotResultTestCase(TestCase):
 class ManifestTestCase(TestCase):
     def test_yo_is_the_same_as_ye(self):
         self.assertEqual(manifest.normalize('Ещё раз!'), manifest.normalize('еще раз'))
+
+    def test_transcript_closes_with_the_language_tag(self):
+        self.assertEqual('Call Anna. <en-US>', manifest.transcript(dict(text='Call Anna.', language='en-US')))
