@@ -4,7 +4,7 @@ Builds the speech datasets for the fine-tuning of Nemotron, in the environment o
     # The texts of the NLU dataset voiced by many Piper speakers: <out>/train.jsonl, <out>/dev.jsonl and <out>/wavs
     python chara/nlu/nemotron_tuning/build_dataset.py tts --dataset <folder>/dataset.json --out <out>
 
-    # Phrases with made-up words: <out>/words-test.jsonl, and <out>/words-train.jsonl with --train-per-language
+    # Phrases with made-up words: <out>/words-test.jsonl, <out>/words-train.jsonl with --train-per-language
     python chara/nlu/nemotron_tuning/build_dataset.py words --dataset <folder>/dataset.json --out <out>
 
     # Recordings of real voices as the test set: <out>/real.jsonl and <out>/real
@@ -146,10 +146,18 @@ def tts(args):
     voice_over(jobs, catalog, Path(args.out), dict(train='train.jsonl', dev='dev.jsonl'))
 
 
+def speaker_name(voice: str, speaker: int | None) -> str:
+    return voice if speaker is None else f'{voice}#{speaker}'
+
+
 def words(args):
-    """The test words and speakers are never in the training set, so the test measures hearing and not memory"""
+    """The words and the speakers of the test are never in the training set: the test measures hearing and not memory"""
     rnd = random.Random(args.seed)
-    known = {w.lower() for path in args.dataset for r in json.loads(Path(path).read_text()) for w in manifest.normalize(r['text']).split()}
+    dataset = [r for path in args.dataset for r in json.loads(Path(path).read_text())]
+    known = {w for r in dataset for w in manifest.normalize(r['text']).split()}
+    held_out = [r for path in args.hold_out for r in manifest.read(path)]
+    known |= {w for r in held_out for w in manifest.normalize(r['text']).split()}
+    held_out_speakers = {r['voice'] for r in held_out}
     catalog = piper_catalog()
     jobs = []
     for language in made_up.LANGUAGES:
@@ -157,16 +165,20 @@ def words(args):
         many = [s for s in all_speakers if s[1] is not None]
         test_speakers = [s for s in all_speakers if s[0] in TEST_VOICES[language]]
         test_speakers += rnd.sample(many, int(len(many) * args.test_speakers_share))
-        train_speakers = [s for s in all_speakers if s not in test_speakers]
+        train_speakers = [s for s in all_speakers if s not in test_speakers and speaker_name(*s) not in held_out_speakers]
         test = [p for group in made_up.GROUPS for p in made_up.phrases(language, group, args.test_per_group, rnd, known)]
         train = made_up.phrases(language, 'new', args.train_per_language, rnd, known)
-        for part, part_phrases, part_speakers in (('test', test, test_speakers), ('train', train, train_speakers)):
+        # Names of the dataset would teach the `names` group of the test
+        texts = sorted({r['text'].replace('**', '') for r in dataset
+                        if r['language'] == language and not any(v['name'] == 'person' for v in r['values'])})
+        ordinary = [dict(text=t, word='', group='ordinary', skill='', language=language)
+                    for t in rnd.sample(texts, min(args.train_ordinary, len(texts)))]
+        for part, part_phrases, part_speakers in (('test', test, test_speakers), ('train', train, train_speakers), ('ordinary', ordinary, train_speakers)):
             for phrase in part_phrases:
                 voice, speaker = rnd.choice(part_speakers)
-                text = manifest.as_model_writes(phrase['text'])
-                jobs.append(dict(phrase, part=part, text=text, voice=voice, speaker=speaker))
+                jobs.append(dict(phrase, part=part, text=manifest.as_model_writes(phrase['text']), voice=voice, speaker=speaker))
     print(f'{len(jobs)} utterances, test ' + str(sum(j['part'] == 'test' for j in jobs)))
-    voice_over(jobs, catalog, Path(args.out), {'test': 'words-test.jsonl', 'train': 'words-train.jsonl'})
+    voice_over(jobs, catalog, Path(args.out), {'test': 'words-test.jsonl', 'train': 'words-train.jsonl', 'ordinary': 'words-ordinary.jsonl'})
 
 
 def real(args):
@@ -200,6 +212,8 @@ if __name__ == '__main__':
     p.add_argument('--out', required=True)
     p.add_argument('--test-per-group', type=int, default=100, help='test phrases per language and group (control, names, new)')
     p.add_argument('--train-per-language', type=int, default=0, help='training phrases with made-up words per language')
+    p.add_argument('--train-ordinary', type=int, default=0, help='ordinary phrases of --dataset per language, for --replay of train_lora.py')
+    p.add_argument('--hold-out', action='append', default=[], help='a manifest whose words and speakers must not be used')
     p.add_argument('--speakers-per-voice', type=int, default=60)
     p.add_argument('--test-speakers-share', type=float, default=0.2)
     p.add_argument('--seed', type=int, default=0)
