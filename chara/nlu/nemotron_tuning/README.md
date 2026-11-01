@@ -1,15 +1,29 @@
-# Fine-tuning Nemotron for Kaia's commands
+# Fine-tuning Nemotron to hear any word
 
-Nemotron 3.5 ASR makes domain errors on Kaia's commands: names ("Col Sakura"), words cut off ("Отмени удильник"),
-English said with an accent. These scripts fine-tune it with LoRA on the commands voiced by many TTS speakers,
-merge the LoRA into the weights and convert the model to the GGUF of NeMo-Speech.cpp. The runtime and the decider
-stay as they are: only the model file changes.
+The goal, in Yuri's words: how to fine-tune Nemotron so that it recognizes any word. Commands work, but a slot with a word
+the model does not know fails: "Позвони Тодороки", "добавь мумзики в список покупок". It breaks the word and the words around it.
 
-What was measured before (testbed recordings of one real voice, en/de/ru):
+These scripts make the test for that, fine-tune Nemotron with LoRA, merge the LoRA into the weights and convert the model to
+the GGUF of NeMo-Speech.cpp. The runtime and the decider stay as they are: only the model file changes.
+
+What is measured now, on 900 phrases voiced by Piper with speakers that are checked by ordinary phrases (`build_dataset.py words`,
+`compare.py`). The share of phrases with the exact slot word, and in brackets the WER of the words around it:
+
+| System | ordinary word | long name | made-up word |
+|---|---|---|---|
+| Whisper base | 80.0% (0.137) | 18.3% (0.192) | 6.7% (0.187) |
+| Whisper base + KenLM | 80.0% (0.110) | 20.7% (0.170) | 5.7% (0.172) |
+| Nemotron, auto | 69.7% (0.172) | 19.7% (0.243) | 6.0% (0.239) |
+| Nemotron, 3 languages | 71.0% (0.150) | 21.3% (0.214) | 5.3% (0.224) |
+| The same, NeMo-Speech.cpp 1a7e945, regenerated GGUF | 72.3% (0.139) | 21.0% (0.193) | 4.3% (0.207) |
+
+An unknown word raises the errors in the words around it by about a half, in every system, and nobody hears made-up words:
+only 4-7% are exact. A made-up word has no single spelling, so `compare.py` also shows the share within 25% of wrong characters.
+
+Earlier results (testbed recordings of one real voice, en/de/ru):
 - word boosting with the words of the intents does not help reliably: at boost 2 WER goes from 0.212 to 0.182,
   but it inserts words that were not said, and on noisy speech WER grows from 0.673 to 0.837;
-- the base model via Transformers transcribes these recordings like the GGUF (similarity 0.913, 21/27 exact);
-- the GGUF converted back from the Transformers weights has all 657 tensors identical to the published one.
+- the base model via Transformers transcribes these recordings like the GGUF (similarity 0.913, 21/27 exact).
 
 Expected gain, from the literature on the same kind of data (SLURP, smart home commands):
 - NVIDIA, text-only adaptation with a TTS-like generator: WER from 47.1 to 27.7 (41% less) for a LibriSpeech Conformer-L,
@@ -31,24 +45,32 @@ NVIDIA's guide to fine-tuning this model with NeMo (full fine-tuning, no LoRA):
        .venv-tuning/bin/pip install -r chara/nlu/nemotron_tuning/requirements.txt
 
    Run the scripts from `chara/nlu/nemotron_tuning`, they import `manifest.py` next to them.
-3. **Converter** of NeMo-Speech.cpp, at the commit the decider is built from (4c101bc):
+3. **Converter** of NeMo-Speech.cpp, at the commit the decider is built from (1a7e945):
 
-       git clone https://github.com/NVIDIA/NeMo-Speech.cpp && git -C NeMo-Speech.cpp checkout 4c101bc7113f49101a3e11d2c994c519f41939f6
+       git clone https://github.com/NVIDIA/NeMo-Speech.cpp && git -C NeMo-Speech.cpp checkout 1a7e945f3e5553bc51995a1a7ec361ccee3c7280
        python3.12 -m venv NeMo-Speech.cpp/.venv && NeMo-Speech.cpp/.venv/bin/pip install -r NeMo-Speech.cpp/requirements.txt
+
+   The commit matters: since 1a7e945 the converter keeps the pointwise convolutions in F16, because quantizing them can turn
+   speech into long blank runs. The GGUF published on Hugging Face in September is older, and a new runtime does not repair it.
 
 ## Data
 
 A manifest is a JSON line per utterance: `{"audio": "wavs/x.wav", "text": "Позвони Сакуре.", "language": "ru-RU"}`,
 the audio path relative to the manifest, the text written as Nemotron writes it (a capital letter, final punctuation).
 
-1. **Synthetic commands**: the texts of the NLU dataset (`dataset.json` of `chara/nlu/scripts`) voiced by Piper,
-   about 1870 English speakers (LibriTTS, VCTK, L2-ARCTIC with foreign accents), 250 German, but only 4 Russian:
+1. **Made-up words**, `words.py`: carriers of four skills (call, meeting, shopping, room) with a word in the slot. The test has three
+   groups: `control` with ordinary words, `names` with the long names of the testbed, `new` with made-up words.
 
-       python chara/nlu/nemotron_tuning/build_dataset.py tts --dataset <folder>/dataset.json --out <data>
+       # The test set: 100 phrases per language and group
+       python chara/nlu/nemotron_tuning/build_dataset.py words --dataset <folder>/dataset.json --out <test>
+       # The training set: nothing from the test, neither words nor speakers
+       python chara/nlu/nemotron_tuning/build_dataset.py words --dataset <folder>/dataset.json --hold-out <test>/words-test.jsonl \
+           --out <data> --test-per-group 0 --train-per-language 5000 --train-ordinary 1000
 
-   It writes `train.jsonl` and `dev.jsonl`; the dev set has texts and speakers that are not in the training set.
-   Russian needs more voices: cloned voices of `chara/voice_clone` or real recordings in the training set.
-2. **Real voices, the test set**: record the commands with the testbed (`chara/nlu/testbed/run.py`, the recordings are
+   It writes `words-test.jsonl`, `words-train.jsonl` and `words-ordinary.jsonl` (phrases of the dataset without names, for `--replay`).
+   Voices are checked on ordinary phrases, see `VOICES` in `build_dataset.py`: `de_DE-mls` is not understood at all. There are few good
+   voices: Russian has 4 and only 2 of them go to training, German has 2 for training. More need cloned voices or real recordings.
+2. **Real voices, the test set**: record the commands with the testbed (`chara/nlu/testbed/run_testbed.py`, the recordings are
    in `data/nlu-testbed/brainbox/cache`) and label them in `labels.json`, `[{"file": ..., "language": "ru", "text": ...}]`:
 
        python chara/nlu/nemotron_tuning/build_dataset.py real --labels labels.json --audio-dir <folder> --out <data>
@@ -59,15 +81,19 @@ the audio path relative to the manifest, the text written as Nemotron writes it 
 
 ## Steps
 
-1. Baseline:
+1. Baseline, in the environment of Kaia, through BrainBox as Kaia runs the systems. The results are in `<run>/report.txt`:
+
+       python chara/nlu/nemotron_tuning/compare.py --manifest <test>/words-test.jsonl --dataset <folder>/dataset.json --out <baseline>
+
+   The general speech and the real voices, in the training environment:
 
        python evaluate.py --manifest <data>/real.jsonl --out base-real.json
        python evaluate.py --manifest <general>/test.jsonl --out base-general.json
 
 2. Training. A start:
 
-       python train_lora.py --train <data>/train.jsonl --dev <data>/dev.jsonl --replay <general>/train.jsonl \
-           --out <run> --steps 3000 --batch 16 --lr 1e-4 --rank 16 --targets encoder
+       python train_lora.py --train <data>/words-train.jsonl --dev <test>/words-test.jsonl --replay <data>/words-ordinary.jsonl \
+           --replay <general>/train.jsonl --out <run> --steps 3000 --batch 16 --lr 1e-4 --rank 16 --targets encoder
 
    - It evaluates the dev set every `--eval-every` steps, keeps the best adapter in `<run>/adapter` and merges it
      into `<run>/merged`; `<run>/log.json` has the loss, the dev WER and the skipped utterances per step.
@@ -76,10 +102,12 @@ the audio path relative to the manifest, the text written as Nemotron writes it 
    - Speed, gain and noise are added on the fly (`--augment`); `--noise-dir` takes recorded noise, e.g. MUSAN.
    - Utterances whose transcript does not fit the audio give a loss of thousands per token and are skipped
      (`--max-loss-per-token`); many skips mean bad data.
-   - On the CPU of a laptop a step of 4 utterances takes 5-20 s, so the CPU is only for checking that it runs.
+   - On a CPU a step of 4 utterances takes 5-20 s, so a CPU is for a small pilot at most.
 
-3. The tuned model, on the same sets; the general WER should not grow by more than 0.5-1 point:
+3. The tuned model on the same sets. `new` should get better, `control` should not get worse, and the general WER should not
+   grow by more than 0.5-1 point. With the slot fields in the manifest `evaluate.py` prints the table of `compare.py`:
 
+       python evaluate.py --manifest <test>/words-test.jsonl --model <run>/merged --out tuned-words.json
        python evaluate.py --manifest <data>/real.jsonl --model <run>/merged --out tuned-real.json
        python evaluate.py --manifest <general>/test.jsonl --model <run>/merged --out tuned-general.json
 
@@ -98,8 +126,8 @@ the audio path relative to the manifest, the text written as Nemotron writes it 
          size: ...
          url: ''
 
-   Then `StreamingSTTService(..., nemotron_model='multilingual-tuned')` uses it. Check it in the testbed by voice:
-   `evaluate.py` decodes offline, while Kaia streams.
+   Then `StreamingSTTService(..., nemotron_model='multilingual-tuned')` uses it. `evaluate.py` decodes offline, while Kaia streams,
+   so the last word is `compare.py --systems nemotron-languages --nemotron-model multilingual-tuned` and the testbed by voice.
 
 ## Checking that everything runs
 
@@ -114,7 +142,7 @@ A few minutes on a laptop CPU, with the base model and two training steps. This 
 
 The GGUF of the two steps differs from the published one in exactly the 192 tensors LoRA was put on (24 layers,
 attention and feed-forward) and decodes in the image of the Nemotron decider. Exported from the original weights,
-it is identical to the published GGUF.
+all its 657 tensors are identical to the direct conversion of the `.nemo` by the same converter.
 
 ## Things the scripts work around (Transformers 5.20)
 

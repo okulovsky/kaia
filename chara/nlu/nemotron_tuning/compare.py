@@ -32,19 +32,19 @@ def nemotron_chunks(data: bytes) -> list[bytes]:
     return [data[i:i + CHUNK_SIZE] for i in range(0, len(data), CHUNK_SIZE)]
 
 
-def nemotron_auto(api, data: bytes, name: str) -> str:
-    result = api.execute(Nemotron.new_task().transcribe_stream(nemotron_chunks(data), language='auto'))
+def nemotron_auto(api, data: bytes, name: str, model: str | None) -> str:
+    result = api.execute(Nemotron.new_task().transcribe_stream(nemotron_chunks(data), language='auto', model=model))
     return StreamingSTTService.read_final_text(api.cache.read_file(result).content)
 
 
-def nemotron_languages(api, data: bytes, name: str) -> str:
-    result = api.execute(Nemotron.new_task().transcribe_stream_languages(nemotron_chunks(data), languages=list(LANGUAGES)))
+def nemotron_languages(api, data: bytes, name: str, model: str | None) -> str:
+    result = api.execute(Nemotron.new_task().transcribe_stream_languages(nemotron_chunks(data), languages=list(LANGUAGES), model=model))
     streams = StreamingSTTService.read_finals_by_stream(api.cache.read_file(result).content)
     return StreamingSTTService.choose_text(streams, LANGUAGES)
 
 
 def whisper(weight: float):
-    def transcribe(api, data: bytes, name: str) -> str:
+    def transcribe(api, data: bytes, name: str, model: str | None) -> str:
         api.cache.upload(name, data)
         return api.execute(WhisperKenLM.new_task().transcribe(name, weight=weight, languages=list(LANGUAGES)))
     return transcribe
@@ -63,7 +63,7 @@ def duration(data_path: str) -> float:
         return w.getnframes() / w.getframerate()
 
 
-def run(api, system: str, items: list[dict], out: Path) -> list[dict]:
+def run(api, system: str, items: list[dict], out: Path, model: str | None) -> list[dict]:
     path = out/f'{system}.jsonl'
     done = {}
     if path.is_file():
@@ -74,7 +74,7 @@ def run(api, system: str, items: list[dict], out: Path) -> list[dict]:
                 continue
             data = Path(item['audio']).read_bytes()
             begin = time.perf_counter()
-            hypothesis = SYSTEMS[system](api, data, f'compare-{Path(item["audio"]).name}')
+            hypothesis = SYSTEMS[system](api, data, f'compare-{Path(item["audio"]).name}', model)
             row = dict(item, hypothesis=hypothesis, seconds=time.perf_counter() - begin)
             done[item['audio']] = row
             file.write(json.dumps(row, ensure_ascii=False) + '\n')
@@ -90,6 +90,7 @@ def main():
     parser.add_argument('--dataset', required=True, help='dataset.json: the corpus of KenLM')
     parser.add_argument('--out', required=True)
     parser.add_argument('--systems', nargs='+', default=list(SYSTEMS), choices=list(SYSTEMS))
+    parser.add_argument('--nemotron-model', default=None, help='a model of installation.yaml, e.g. the tuned one')
     args = parser.parse_args()
 
     items = manifest.read(args.manifest)
@@ -111,7 +112,7 @@ def main():
             api.execute(WhisperKenLM.new_task().train_lm(KenLMTrainingPipeline.corpus(texts)))
         reports = []
         for system in args.systems:
-            rows = run(api, system, items, out)
+            rows = run(api, system, items, out, args.nemotron_model)
             rtf = sum(r['seconds'] for r in rows) / total
             lines = [f'{system}: {len(rows)} phrases, {total:.0f} s of audio, RTF {rtf:.2f}'] + metrics.table(rows)
             reports.extend(lines + [''])
