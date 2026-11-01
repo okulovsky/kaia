@@ -32,11 +32,19 @@ import manifest  # noqa: E402
 import words as made_up  # noqa: E402
 
 PIPER_VOICES = 'https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/'
-# Multi-speaker voices give the variety; l2arctic is English with foreign accents, as Kaia often hears
+# Checked on ordinary phrases: Nemotron does not understand de_DE-mls and de_DE-ramona, and thorsten_emotional has
+# whispering and drunk speakers. Multi-speaker voices give the variety; l2arctic is English with foreign accents.
 VOICES = {
-    'en': ['en_US-libritts_r-medium', 'en_GB-vctk-medium', 'en_US-l2arctic-medium'],
-    'de': ['de_DE-mls-medium', 'de_DE-thorsten_emotional-medium', 'de_DE-thorsten-medium'],
-    'ru': ['ru_RU-irina-medium', 'ru_RU-denis-medium', 'ru_RU-dmitri-medium', 'ru_RU-ruslan-medium'],
+    'en': ['en_US-libritts_r-medium', 'en_GB-vctk-medium', 'en_US-arctic-medium', 'en_US-l2arctic-medium', 'en_US-lessac-medium',
+           'en_US-amy-medium', 'en_US-kristin-medium', 'en_GB-alan-medium', 'en_US-ryan-medium'],
+    'de': ['de_DE-thorsten-high', 'de_DE-thorsten-medium', 'de_DE-karlsson-low', 'de_DE-eva_k-x_low', 'de_DE-pavoque-low', 'de_DE-kerstin-low'],
+    'ru': ['ru_RU-irina-medium', 'ru_RU-ruslan-medium', 'ru_RU-denis-medium', 'ru_RU-dmitri-medium'],
+}
+# Never in the training set. Thorsten is the same person in both voices
+TEST_VOICES = {
+    'en': ['en_US-lessac-medium', 'en_US-amy-medium', 'en_GB-alan-medium', 'en_US-ryan-medium'],
+    'de': ['de_DE-thorsten-high', 'de_DE-thorsten-medium', 'de_DE-karlsson-low', 'de_DE-eva_k-x_low'],
+    'ru': ['ru_RU-irina-medium', 'ru_RU-ruslan-medium'],
 }
 WORKING_FOLDER = Loc.data_folder/'nemotron-tuning'
 BATCH = 32
@@ -146,7 +154,9 @@ def words(args):
     jobs = []
     for language in made_up.LANGUAGES:
         all_speakers = speakers(catalog, language, args.speakers_per_voice, rnd)
-        test_speakers = rnd.sample(all_speakers, max(2, int(len(all_speakers) * args.test_speakers_share)))
+        many = [s for s in all_speakers if s[1] is not None]
+        test_speakers = [s for s in all_speakers if s[0] in TEST_VOICES[language]]
+        test_speakers += rnd.sample(many, int(len(many) * args.test_speakers_share))
         train_speakers = [s for s in all_speakers if s not in test_speakers]
         test = [p for group in made_up.GROUPS for p in made_up.phrases(language, group, args.test_per_group, rnd, known)]
         train = made_up.phrases(language, 'new', args.train_per_language, rnd, known)
