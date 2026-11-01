@@ -1,6 +1,8 @@
 from unittest import TestCase
-from brainbox import BrainBox, ISelfManagingDecider
+from brainbox import ISelfManagingDecider
 from brainbox.deciders import Collector
+from brainbox.framework.app.serverless_test import ServerlessTest
+from brainbox.framework.controllers.architecture import ControllerRegistry
 from foundation_kaia.marshalling import FileLike
 from foundation_kaia.misc import Loc
 from chara.common import Chara
@@ -61,8 +63,11 @@ class NluTrainingPipelineTestCase(TestCase):
     def run_pipeline(self, whisper, chroma, voice_samples):
         with Loc.create_test_folder() as folder:
             Chara.start(folder)
-            with BrainBox.Api.serverless_test([whisper, chroma, Collector()]) as api:
+            # BrainBox.Api.serverless_test has the default resources folder, with the real lm.binary of the developer
+            registry = ControllerRegistry([whisper, chroma, Collector()], folder/'resources')
+            with ServerlessTest(registry=registry) as api:
                 Chara.Apis.brainbox_api = api
+                api.resources(whisper).upload('lm/lm.binary', b'lm')
                 pipeline = NluTrainingPipeline(test_share=0.2, voices_per_language=1)
                 return Chara.call(pipeline)(TEXT_DATASET, voice_samples)
 
