@@ -6,9 +6,9 @@ Converts a model merged by train_lora.py into the GGUF of NeMo-Speech.cpp, the r
 
 convert_model.py of NeMo-Speech.cpp reads .nemo, and the names of the weights in Transformers and in NeMo differ.
 So the merged weights are put into a copy of the original .nemo by a mapping found on the original weights:
-each NeMo tensor is matched to the Transformers tensor with the same values. On the original model this gives
-a GGUF whose 657 tensors are identical to the published one, i.e. the conversion loses nothing.
-The checkout of NeMo-Speech.cpp must be at the commit of the decider (NEMO_SPEECH_COMMIT below).
+each NeMo tensor is matched to the Transformers tensor with the same values.
+The checkout of NeMo-Speech.cpp must be at the commit of the decider (NEMO_SPEECH_COMMIT below): since 1a7e945 the converter
+keeps the pointwise convolutions of cache-aware RNNT models in F16, so the GGUF differs from the one published in September.
 """
 import argparse
 import io
@@ -24,7 +24,7 @@ from safetensors import safe_open
 MODEL = 'nvidia/nemotron-3.5-asr-streaming-0.6b'
 REVISION = 'ea30d66debe3740a08b573244286791d423d6b3e'
 # brainbox/deciders/voice_analysis/nemotron/controller.py builds the runtime from this commit
-NEMO_SPEECH_COMMIT = '4c101bc7113f49101a3e11d2c994c519f41939f6'
+NEMO_SPEECH_COMMIT = '1a7e945f3e5553bc51995a1a7ec361ccee3c7280'
 
 
 class LazyTensors:

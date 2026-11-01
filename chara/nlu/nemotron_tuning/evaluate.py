@@ -12,6 +12,7 @@ from pathlib import Path
 import torch
 from transformers import AutoProcessor, Nemotron3_5AsrForRNNT
 import manifest
+import metrics
 from train_lora import MODEL, REVISION, transcribe, word_error_rate
 
 
@@ -31,6 +32,8 @@ def main():
     wer = word_error_rate(items, texts)
     exact = sum(manifest.normalize(i['text']) == manifest.normalize(t) for i, t in zip(items, texts))
     print(f'WER {wer}, exact {exact}/{len(items)}')
+    if all('word' in i for i in items):
+        print('\n'.join(metrics.table([dict(i, hypothesis=t) for i, t in zip(items, texts)])))
     for item, text in zip(items, texts):
         if manifest.normalize(item['text']) != manifest.normalize(text):
             print(f'   {item["text"]!r} -> {text!r}')
