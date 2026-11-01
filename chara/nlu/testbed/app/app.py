@@ -46,7 +46,9 @@ class TestbedDaemonSettings(AvatarDaemonAppSettings):
 
     def create_nlu_service(self, app: KaiaApp, state: State):
         ner = NerTrainingPipeline()
-        return ReportingNLUService(slots_adapter=ner.ADAPTER, slots_model=ner.model_id, intent_source=self.intent_source)
+        return ReportingNLUService(
+            slots_adapter=ner.ADAPTER, slots_model=ner.model_id, intent_source=self.intent_source, brainbox_api=app.brainbox_api,
+        )
 
     def create_testbed_service(self, app: KaiaApp, state: State):
         return TestbedService(self.templates)

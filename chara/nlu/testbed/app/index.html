@@ -173,7 +173,7 @@
     const chatDiv    = document.getElementById('chat');
     const textInput  = document.getElementById('text');
     const sendButton = document.getElementById('send');
-    new ChatCommandHandler({ dispatcher, container: chatDiv, baseUrl });
+    new ChatCommandHandler({ dispatcher, container: chatDiv, baseUrl, enableDragScrolling: false });
     new TextInputHandler({ input: textInput, button: sendButton, client });
     new AudioController({ dispatcher, baseUrl, silent: fakeMic });
 
