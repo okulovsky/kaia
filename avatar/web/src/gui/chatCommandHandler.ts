@@ -7,6 +7,7 @@ interface ChatCommandHandlerOptions {
   client?: AvatarClient
   enableSwiping?: boolean
   enableDeletion?: boolean
+  enableDragScrolling?: boolean
 }
 
 export class ChatCommandHandler {
@@ -26,6 +27,7 @@ export class ChatCommandHandler {
     client,
     enableSwiping = false,
     enableDeletion = false,
+    enableDragScrolling = true,
   }: ChatCommandHandlerOptions) {
     this.container = container
     this.baseUrl = baseUrl
@@ -42,6 +44,13 @@ export class ChatCommandHandler {
     dispatcher.subscribe(this.suffix, this.handle.bind(this))
     dispatcher.subscribe(this.deleteSuffix, this.handleDelete.bind(this))
 
+    // Dragging with the mouse scrolls the chat, which prevents selecting its text
+    if (enableDragScrolling) {
+      this.attachDragScrolling()
+    }
+  }
+
+  private attachDragScrolling (): void {
     let isDragging = false
     let startScroll = 0
     let startY = 0

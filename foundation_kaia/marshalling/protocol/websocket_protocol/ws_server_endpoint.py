@@ -97,7 +97,12 @@ def ws_endpoint(data: EndpointRegistrationData) -> Callable:
                 await websocket.send_text(json.dumps({'type': 'error', 'message': str(e)}))
                 await websocket.close()
                 return
+            # A generator service runs only when its result is iterated, so the result is sent while the input
+            # is still arriving: otherwise, the whole input would be buffered before the processing starts
+            await _send_result(websocket, result, model)
             await fill_task
+            await websocket.close()
+            return
         else:
             try:
                 result = await loop.run_in_executor(None, lambda: service(**kwargs))

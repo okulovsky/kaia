@@ -11,13 +11,13 @@ from brainbox.deciders import Collector
 from grammatron import Utterance
 from avatar.daemon import (
     BrainBoxService, ChatCommand, InitializationEvent, TextEvent, NLUTextEvent, RecognitionEvent, STTTrainingCommand,
-    TemplatesRecognitionRequest, State, SoundEvent, StreamingSTTService, WhisperKenLMSTTService,
+    TemplatesRecognitionRequest, State, SoundEvent, StreamingSTTService, WhisperKenLMSTTService, IntentsPack, MAIN_CONTEXT,
 )
-from avatar.daemon.common import TickEvent
+from avatar.daemon.common import TickEvent, SoundStreamingStartEvent, SoundStreamingEndEvent
 from avatar.messaging import AvatarDaemon, AvatarClient
 from chara.nlu.testbed import (
     TestbedIntents, TestbedService, TestbedChatService, ReportingNLUService, NLUReportEvent,
-    SilenceSkippingWhisperKenLMSTTService, loudest_window_level, TestbedDaemonSettings, Stt,
+    SilenceSkippingWhisperKenLMSTTService, loudest_window_level, TestbedDaemonSettings, Stt, NLULatency,
 )
 
 CALL = TestbedIntents.call
@@ -56,7 +56,7 @@ class TestbedTestCase(TestCase):
             proc = AvatarDaemon(AvatarClient.default(), timeout_in_pull_in_seconds=0)
             proc.rules.bind(TestbedService(TestbedIntents.get_templates()))
             proc.rules.bind(TestbedChatService())
-            proc.rules.bind(ReportingNLUService(slots_adapter='nlu-slots'))
+            proc.rules.bind(ReportingNLUService(slots_adapter='nlu-slots', brainbox_api=api))
             proc.rules.bind(BrainBoxService(api))
             if stop_type is None:
                 return proc.debug_and_stop_by_empty_queue(InitializationEvent(), *messages).messages
@@ -86,6 +86,21 @@ class TestbedTestCase(TestCase):
         chat = [m for m in messages if isinstance(m, ChatCommand)]
         self.assertEqual([ChatCommand.MessageType.from_user, ChatCommand.MessageType.system], [m.type for m in chat])
 
+    def test_latency_of_recording(self):
+        messages = self.run_testbed(
+            NLUReportEvent,
+            STTTrainingCommand([IntentsPack(MAIN_CONTEXT, tuple(TestbedIntents.get_templates()))]),
+            SoundStreamingStartEvent('recording.wav'),
+            SoundStreamingEndEvent('recording.wav', True),
+            NLUTextEvent('recording.wav', 'Call Yuki', TemplatesRecognitionRequest()),
+        )
+        latency = _last(messages, NLUReportEvent).latency
+        self.assertLessEqual(latency.recording_started, latency.recording_finished)
+        self.assertLessEqual(latency.recording_finished, latency.stt_finished)
+        self.assertLessEqual(latency.stt_finished, latency.chroma_finished)
+        self.assertLessEqual(latency.stt_finished, latency.ner_finished)
+        self.assertLessEqual(max(latency.chroma_finished, latency.ner_finished), latency.emitted)
+
     def test_recognized_speech_is_not_sent_again(self):
         messages = self.run_testbed(None, TextEvent('Call Yuki', file_id='recording.wav'))
         self.assertFalse(any(isinstance(m, NLUTextEvent) for m in messages))
@@ -111,6 +126,22 @@ class NLUReportTestCase(TestCase):
     def test_not_recognized(self):
         report = NLUReportEvent('file', 'Pass the salt', None, '\nintent: none', 'Pass the salt')
         self.assertEqual('text: Pass the salt\nslots: intent: none\nrecognized: nothing', report.to_str())
+
+    def test_latency_to_str(self):
+        t = datetime(2026, 11, 1, 12, 0, 0)
+        latency = NLULatency(
+            t, t + timedelta(seconds=2), t + timedelta(seconds=2.5),
+            t + timedelta(seconds=2.6), t + timedelta(seconds=2.8), t + timedelta(seconds=3),
+        )
+        self.assertEqual(
+            'latency: recorded 12:00:00.000-12:00:02.000 (2.00s) | stt +0.50s | chroma +0.10s | ner +0.30s | emitted +1.00s',
+            latency.to_str(),
+        )
+
+    def test_latency_without_recording(self):
+        t = datetime(2026, 11, 1, 12, 0, 0)
+        latency = NLULatency(stt_finished=t, chroma_finished=t + timedelta(seconds=0.1), emitted=t)
+        self.assertEqual('latency: chroma +0.10s', latency.to_str())
 
     def test_typed_text_request(self):
         event = TestbedService([]).on_typed_text(TextEvent('Call Yuki'))
