@@ -15,6 +15,7 @@ from avatar.daemon import (
 )
 from avatar.daemon.common import TickEvent, SoundStreamingStartEvent, SoundStreamingEndEvent
 from avatar.messaging import AvatarDaemon, AvatarClient
+from avatar.messaging.processing.filters import IProcessingFilter, ExceptionFilter, MaxTimeFilter
 from chara.nlu.testbed import (
     TestbedIntents, TestbedService, TestbedChatService, ReportingNLUService, NLUReportEvent,
     SilenceSkippingWhisperKenLMSTTService, loudest_window_level, TestbedDaemonSettings, Stt, NLULatency,
@@ -37,7 +38,7 @@ class ChromaMock(ISelfManagingDecider):
         return 'Chroma'
 
     def find_neighbors(self, text: str, k: int = 5, collection_name: str | None = None) -> list[dict]:
-        return [dict(text='Call Yuki', intent=CALL.get_name(), distance=0.05),
+        return [dict(text='Call Naruto', intent=CALL.get_name(), distance=0.05),
                 dict(text="What's the weather like?", intent=WEATHER.get_name(), distance=0.4)]
 
 
@@ -46,21 +47,29 @@ class LlamaLoraServerMock(ISelfManagingDecider):
         return 'LlamaLoraServer'
 
     def completion(self, task_name: str, prompt: str, max_tokens: int = 32):
-        return f'\nintent: {_label(CALL)}\nperson: Yuki'
+        return f'\nintent: {_label(CALL)}\nperson: Naruto'
+
+
+class ReportInChatFilter(IProcessingFilter):
+    """The queue is empty while BrainBoxService is working, so the daemon must wait for the report itself"""
+    def should_stop_on_queue(self, messages):
+        return any(isinstance(m, ChatCommand) and m.type == ChatCommand.MessageType.system for m in messages)
 
 
 class TestbedTestCase(TestCase):
-    def run_testbed(self, stop_type, *messages):
-        """Runs until a message of `stop_type`, or until the queue is empty if it is None"""
+    def run_testbed(self, stop, *messages):
+        """Runs until a message of type `stop`, until the filter `stop` fires, or until the queue is empty if it is None"""
         with BrainBox.Api.serverless_test([ChromaMock(), LlamaLoraServerMock(), Collector()]) as api:
             proc = AvatarDaemon(AvatarClient.default(), timeout_in_pull_in_seconds=0)
             proc.rules.bind(TestbedService(TestbedIntents.get_templates()))
             proc.rules.bind(TestbedChatService())
             proc.rules.bind(ReportingNLUService(slots_adapter='nlu-slots', brainbox_api=api))
             proc.rules.bind(BrainBoxService(api))
-            if stop_type is None:
+            if stop is None:
                 return proc.debug_and_stop_by_empty_queue(InitializationEvent(), *messages).messages
-            return proc.debug_and_stop_by_message_type(stop_type, InitializationEvent(), *messages).messages
+            if isinstance(stop, IProcessingFilter):
+                return proc.debug((InitializationEvent(), *messages), [stop, ExceptionFilter(), MaxTimeFilter(10)]).messages
+            return proc.debug_and_stop_by_message_type(stop, InitializationEvent(), *messages).messages
 
     def test_initialization_trains_nlu(self):
         messages = self.run_testbed(STTTrainingCommand)
@@ -68,21 +77,21 @@ class TestbedTestCase(TestCase):
         self.assertEqual(len(TestbedIntents.get_templates()), len(templates))
 
     def test_typed_text_is_reported(self):
-        messages = self.run_testbed(NLUReportEvent, TextEvent('Call Yuki'))
+        messages = self.run_testbed(NLUReportEvent, TextEvent('Call Naruto'))
         report = _last(messages, NLUReportEvent)
-        self.assertEqual('Call Yuki', report.text)
+        self.assertEqual('Call Naruto', report.text)
         self.assertEqual(2, len(report.neighbors))
-        self.assertEqual(f'\nintent: {_label(CALL)}\nperson: Yuki', report.slots)
+        self.assertEqual(f'\nintent: {_label(CALL)}\nperson: Naruto', report.slots)
         self.assertIsInstance(report.recognition, Utterance)
-        self.assertEqual({'person': 'Yuki'}, report.recognition.value)
+        self.assertEqual({'person': 'Naruto'}, report.recognition.value)
         self.assertEqual(report.file_id, _last(messages, RecognitionEvent).file_id)
 
     def test_report_is_shown_in_chat(self):
-        messages = self.run_testbed(None, TextEvent('Call Yuki'))
+        messages = self.run_testbed(ReportInChatFilter(), TextEvent('Call Naruto'))
         self.assertIn('recognized: TestbedIntents.call', _last(messages, ChatCommand).text)
 
     def test_typed_text_comes_before_its_report(self):
-        messages = self.run_testbed(None, TextEvent('Call Yuki'))
+        messages = self.run_testbed(ReportInChatFilter(), TextEvent('Call Naruto'))
         chat = [m for m in messages if isinstance(m, ChatCommand)]
         self.assertEqual([ChatCommand.MessageType.from_user, ChatCommand.MessageType.system], [m.type for m in chat])
 
@@ -102,24 +111,24 @@ class TestbedTestCase(TestCase):
         self.assertLessEqual(max(latency.chroma_finished, latency.ner_finished), latency.emitted)
 
     def test_recognized_speech_is_not_sent_again(self):
-        messages = self.run_testbed(None, TextEvent('Call Yuki', file_id='recording.wav'))
+        messages = self.run_testbed(None, TextEvent('Call Naruto', file_id='recording.wav'))
         self.assertFalse(any(isinstance(m, NLUTextEvent) for m in messages))
 
 
 class NLUReportTestCase(TestCase):
     def test_to_str(self):
         report = NLUReportEvent(
-            'file', 'Call Yuki',
-            [dict(text='Call Yuki', intent=CALL.get_name(), distance=0.05)],
-            '\nintent: TestbedIntents.call\nperson: Yuki',
-            CALL.utter(dict(person='Yuki')),
+            'file', 'Call Naruto',
+            [dict(text='Call Naruto', intent=CALL.get_name(), distance=0.05)],
+            '\nintent: TestbedIntents.call\nperson: Naruto',
+            CALL.utter(dict(person='Naruto')),
         )
         self.assertEqual(
-            'text: Call Yuki\n'
+            'text: Call Naruto\n'
             'neighbors:\n'
-            '  0.050 TestbedIntents.call: Call Yuki\n'
-            'slots: intent: TestbedIntents.call | person: Yuki\n'
-            "recognized: TestbedIntents.call {'person': 'Yuki'}",
+            '  0.050 TestbedIntents.call: Call Naruto\n'
+            'slots: intent: TestbedIntents.call | person: Naruto\n'
+            "recognized: TestbedIntents.call {'person': 'Naruto'}",
             report.to_str(),
         )
 
@@ -144,7 +153,7 @@ class NLUReportTestCase(TestCase):
         self.assertEqual('latency: chroma +0.10s', latency.to_str())
 
     def test_typed_text_request(self):
-        event = TestbedService([]).on_typed_text(TextEvent('Call Yuki'))
+        event = TestbedService([]).on_typed_text(TextEvent('Call Naruto'))
         self.assertEqual(TemplatesRecognitionRequest(), event.request)
         self.assertTrue(event.file_id.startswith('typed-'))
 
@@ -164,62 +173,62 @@ class SttTestCase(TestCase):
 
 
 def _report(file_id: str, text: str) -> NLUReportEvent:
-    return NLUReportEvent(file_id, text, None, '\nintent: TestbedIntents.call\nperson: Yuki', CALL.utter(dict(person='Yuki')))
+    return NLUReportEvent(file_id, text, None, '\nintent: TestbedIntents.call\nperson: Naruto', CALL.utter(dict(person='Naruto')))
 
 
 class TestbedChatServiceTestCase(TestCase):
     def test_report_of_recording_waits_for_its_text(self):
         service = TestbedChatService()
-        self.assertEqual((), service.on_report(_report('recording.wav', 'Позвони Юки')))
-        message, report = service.on_event(TextEvent(CALL.utter(dict(person='Yuki')), file_id='recording.wav'))
+        self.assertEqual((), service.on_report(_report('recording.wav', 'Позвони Наруто')))
+        message, report = service.on_event(TextEvent(CALL.utter(dict(person='Naruto')), file_id='recording.wav'))
         self.assertEqual(ChatCommand.MessageType.from_user, message.type)
-        self.assertEqual('Позвони Юки', message.text)
+        self.assertEqual('Позвони Наруто', message.text)
         self.assertEqual(ChatCommand.MessageType.system, report.type)
-        self.assertIn("recognized: TestbedIntents.call {'person': 'Yuki'}", report.text)
+        self.assertIn("recognized: TestbedIntents.call {'person': 'Naruto'}", report.text)
         self.assertEqual({}, service.held_reports)
 
     def test_text_of_recording_waits_for_its_report(self):
         service = TestbedChatService()
-        self.assertEqual((), service.on_event(TextEvent(CALL.utter(dict(person='Yuki')), file_id='recording.fixed.wav')))
-        message, report = service.on_report(_report('recording.wav', 'Позвони Юки'))
-        self.assertEqual('Позвони Юки', message.text)
-        self.assertIn("recognized: TestbedIntents.call {'person': 'Yuki'}", report.text)
+        self.assertEqual((), service.on_event(TextEvent(CALL.utter(dict(person='Naruto')), file_id='recording.fixed.wav')))
+        message, report = service.on_report(_report('recording.wav', 'Позвони Наруто'))
+        self.assertEqual('Позвони Наруто', message.text)
+        self.assertIn("recognized: TestbedIntents.call {'person': 'Naruto'}", report.text)
         self.assertEqual({}, service.held_texts)
 
     def test_streamed_recording_and_its_fixed_copy_are_paired(self):
         service = TestbedChatService()
-        service.on_report(_report('recording.wav', 'Позвони Юки'))
-        message, report = service.on_event(TextEvent(CALL.utter(dict(person='Yuki')), file_id='recording.fixed.wav'))
-        self.assertEqual('Позвони Юки', message.text)
+        service.on_report(_report('recording.wav', 'Позвони Наруто'))
+        message, report = service.on_event(TextEvent(CALL.utter(dict(person='Naruto')), file_id='recording.fixed.wav'))
+        self.assertEqual('Позвони Наруто', message.text)
 
     def test_languages_of_recording_are_shown(self):
         events = [
-            dict(text='Позвони Юки', confidence=0.99, is_final=True, stream='ru'),
-            dict(text='pozvoni yuki', confidence=0.95, is_final=True, stream='en'),
+            dict(text='Позвони Наруто', confidence=0.99, is_final=True, stream='ru'),
+            dict(text='pozvoni naruto', confidence=0.95, is_final=True, stream='en'),
             dict(text='', confidence=1.0, is_final=True, stream='de'),
         ]
-        line = "languages: ru 0.990 'Позвони Юки' (chosen) | en 0.950 'pozvoni yuki' | de nothing\ntext:"
+        line = "languages: ru 0.990 'Позвони Наруто' (chosen) | en 0.950 'pozvoni naruto' | de nothing\ntext:"
         with tempfile.TemporaryDirectory() as folder:
             name = 'recording.nemotron-stream.nemotron.transcribe_stream_languages.1.jsonl'
             (Path(folder)/name).write_text('\n'.join(json.dumps(e) for e in events))
             service = TestbedChatService(Path(folder))
-            service.on_report(_report('recording.wav', 'Позвони Юки'))
-            message, report = service.on_event(TextEvent(CALL.utter(dict(person='Yuki')), file_id='recording.fixed.wav'))
+            service.on_report(_report('recording.wav', 'Позвони Наруто'))
+            message, report = service.on_event(TextEvent(CALL.utter(dict(person='Naruto')), file_id='recording.fixed.wav'))
             self.assertTrue(report.text.startswith(line))
-            service.on_event(TextEvent(CALL.utter(dict(person='Yuki')), file_id='recording.fixed.wav'))
-            message, report = service.on_report(_report('recording.wav', 'Позвони Юки'))
+            service.on_event(TextEvent(CALL.utter(dict(person='Naruto')), file_id='recording.fixed.wav'))
+            message, report = service.on_report(_report('recording.wav', 'Позвони Наруто'))
             self.assertTrue(report.text.startswith(line))
             (report,) = service.on_report(_report('recording.wav', ''))
-            self.assertTrue(report.text.startswith("languages: ru 0.990 'Позвони Юки' | en 0.950 'pozvoni yuki' | de nothing\ntext:"))
-            (report,) = service.on_report(_report('typed-1', 'Call Yuki'))
+            self.assertTrue(report.text.startswith("languages: ru 0.990 'Позвони Наруто' | en 0.950 'pozvoni naruto' | de nothing\ntext:"))
+            (report,) = service.on_report(_report('typed-1', 'Call Naruto'))
             self.assertTrue(report.text.startswith('text:'))
 
     def test_report_of_typed_text_is_shown_at_once(self):
-        (command,) = TestbedChatService().on_report(_report('typed-1', 'Call Yuki'))
+        (command,) = TestbedChatService().on_report(_report('typed-1', 'Call Naruto'))
         self.assertEqual(ChatCommand.MessageType.system, command.type)
 
     def test_typed_text_is_shown_at_once(self):
-        (message,) = TestbedChatService().on_event(TextEvent('Call Yuki'))
+        (message,) = TestbedChatService().on_event(TextEvent('Call Naruto'))
         self.assertEqual(ChatCommand.MessageType.from_user, message.type)
 
     def test_empty_recording_is_shown_at_once(self):
@@ -230,7 +239,7 @@ class TestbedChatServiceTestCase(TestCase):
 
     def test_report_without_text_is_shown_after_a_while(self):
         service = TestbedChatService()
-        service.on_report(_report('recording.wav', 'Позвони Юки'))
+        service.on_report(_report('recording.wav', 'Позвони Наруто'))
         self.assertEqual((), service.on_tick(TickEvent(datetime.now())))
         (report,) = service.on_tick(TickEvent(datetime.now() + timedelta(seconds=10)))
         self.assertEqual(ChatCommand.MessageType.system, report.type)
