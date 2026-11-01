@@ -4,6 +4,9 @@ Builds the speech datasets for the fine-tuning of Nemotron, in the environment o
     # The texts of the NLU dataset voiced by many Piper speakers: <out>/train.jsonl, <out>/dev.jsonl and <out>/wavs
     python chara/nlu/nemotron_tuning/build_dataset.py tts --dataset <folder>/dataset.json --out <out>
 
+    # Phrases with made-up words: <out>/words-test.jsonl, and <out>/words-train.jsonl with --train-per-language
+    python chara/nlu/nemotron_tuning/build_dataset.py words --dataset <folder>/dataset.json --out <out>
+
     # Recordings of real voices as the test set: <out>/real.jsonl and <out>/real
     python chara/nlu/nemotron_tuning/build_dataset.py real --labels labels.json --audio-dir <folder> --out <out>
 
@@ -26,6 +29,7 @@ from kaia.app import KaiaAppSettings
 
 sys.path.insert(0, str(Path(__file__).parent))
 import manifest  # noqa: E402
+import words as made_up  # noqa: E402
 
 PIPER_VOICES = 'https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/'
 # Multi-speaker voices give the variety; l2arctic is English with foreign accents, as Kaia often hears
@@ -83,20 +87,8 @@ def plan(texts_by_language: dict, catalog: dict, args, rnd: random.Random) -> li
     return jobs
 
 
-def tts(args):
-    rnd = random.Random(args.seed)
-    texts_by_language = {}
-    for path in args.dataset:
-        for record in json.loads(Path(path).read_text()):
-            if record['language'] in VOICES:
-                texts_by_language.setdefault(record['language'], set()).add(manifest.as_model_writes(record['text']))
-    if args.limit is not None:
-        texts_by_language = {l: set(rnd.sample(sorted(t), min(args.limit, len(t)))) for l, t in texts_by_language.items()}
-    catalog = piper_catalog()
-    jobs = plan(texts_by_language, catalog, args, rnd)
-    print(f'{len(jobs)} utterances: ' + ', '.join(f'{l} {sum(j["language"] == l for j in jobs)}' for l in texts_by_language))
-
-    out = Path(args.out)
+def voice_over(jobs: list[dict], catalog: dict, out: Path, part_names: dict[str, str]):
+    """Voices the jobs and writes a manifest per part; the fields of a job besides the voice go to its record"""
     (out/'wavs').mkdir(parents=True, exist_ok=True)
     settings = KaiaAppSettings()
     settings.kaia = None
@@ -111,21 +103,60 @@ def tts(args):
         for voice in sorted({j['voice'] for j in jobs}):
             print('Installing the voice', voice)
             api.execute(Piper.new_task().download_model(voice, spec(catalog, voice)))
-        records = {'train': [], 'dev': []}
+        records = {part: [] for part in part_names}
         for start in range(0, len(jobs), BATCH):
             batch = jobs[start:start + BATCH]
             results = api.execute([Piper.new_task().voiceover(j['text'], model=j['voice'], speaker=j['speaker']) for j in batch])
             for index, (job, result) in enumerate(zip(batch, results)):
                 name = f'{job["part"]}-{start + index:06d}.wav'
                 (out/'wavs'/name).write_bytes(api.cache.read_file(result).content)
+                extra = {k: v for k, v in job.items() if k not in ('part', 'text', 'language', 'voice', 'speaker')}
                 records[job['part']].append(dict(
                     audio=f'wavs/{name}', text=job['text'], language=manifest.LOCALES[job['language']],
                     voice=job['voice'] if job['speaker'] is None else f'{job["voice"]}#{job["speaker"]}',
+                    **extra,
                 ))
             print(f'{min(start + BATCH, len(jobs))}/{len(jobs)}', flush=True)
-    for part, part_records in records.items():
-        manifest.write(out/f'{part}.jsonl', part_records)
-        print(part, len(part_records), 'utterances in', out/f'{part}.jsonl')
+    for part, file_name in part_names.items():
+        manifest.write(out/file_name, records[part])
+        print(part, len(records[part]), 'utterances in', out/file_name)
+
+
+def tts(args):
+    rnd = random.Random(args.seed)
+    texts_by_language = {}
+    for path in args.dataset:
+        for record in json.loads(Path(path).read_text()):
+            if record['language'] in VOICES:
+                texts_by_language.setdefault(record['language'], set()).add(manifest.as_model_writes(record['text']))
+    if args.limit is not None:
+        texts_by_language = {l: set(rnd.sample(sorted(t), min(args.limit, len(t)))) for l, t in texts_by_language.items()}
+    catalog = piper_catalog()
+    jobs = plan(texts_by_language, catalog, args, rnd)
+    print(f'{len(jobs)} utterances: ' + ', '.join(f'{l} {sum(j["language"] == l for j in jobs)}' for l in texts_by_language))
+
+    voice_over(jobs, catalog, Path(args.out), dict(train='train.jsonl', dev='dev.jsonl'))
+
+
+def words(args):
+    """The test words and speakers are never in the training set, so the test measures hearing and not memory"""
+    rnd = random.Random(args.seed)
+    known = {w.lower() for path in args.dataset for r in json.loads(Path(path).read_text()) for w in manifest.normalize(r['text']).split()}
+    catalog = piper_catalog()
+    jobs = []
+    for language in made_up.LANGUAGES:
+        all_speakers = speakers(catalog, language, args.speakers_per_voice, rnd)
+        test_speakers = rnd.sample(all_speakers, max(2, int(len(all_speakers) * args.test_speakers_share)))
+        train_speakers = [s for s in all_speakers if s not in test_speakers]
+        test = [p for group in made_up.GROUPS for p in made_up.phrases(language, group, args.test_per_group, rnd, known)]
+        train = made_up.phrases(language, 'new', args.train_per_language, rnd, known)
+        for part, part_phrases, part_speakers in (('test', test, test_speakers), ('train', train, train_speakers)):
+            for phrase in part_phrases:
+                voice, speaker = rnd.choice(part_speakers)
+                text = manifest.as_model_writes(phrase['text'])
+                jobs.append(dict(phrase, part=part, text=text, voice=voice, speaker=speaker))
+    print(f'{len(jobs)} utterances, test ' + str(sum(j['part'] == 'test' for j in jobs)))
+    voice_over(jobs, catalog, Path(args.out), {'test': 'words-test.jsonl', 'train': 'words-train.jsonl'})
 
 
 def real(args):
@@ -154,9 +185,17 @@ if __name__ == '__main__':
     p.add_argument('--dev-share', type=float, default=0.1)
     p.add_argument('--limit', type=int, default=None, help='texts per language, for a quick check')
     p.add_argument('--seed', type=int, default=0)
+    p = commands.add_parser('words')
+    p.add_argument('--dataset', action='append', default=[], help='dataset.json of the NLU: the made-up words are not in its texts')
+    p.add_argument('--out', required=True)
+    p.add_argument('--test-per-group', type=int, default=100, help='test phrases per language and group (control, names, new)')
+    p.add_argument('--train-per-language', type=int, default=0, help='training phrases with made-up words per language')
+    p.add_argument('--speakers-per-voice', type=int, default=60)
+    p.add_argument('--test-speakers-share', type=float, default=0.2)
+    p.add_argument('--seed', type=int, default=0)
     p = commands.add_parser('real')
     p.add_argument('--labels', required=True)
     p.add_argument('--audio-dir', required=True)
     p.add_argument('--out', required=True)
     args = parser.parse_args()
-    {'tts': tts, 'real': real}[args.command](args)
+    {'tts': tts, 'words': words, 'real': real}[args.command](args)

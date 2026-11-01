@@ -40,7 +40,7 @@ def read(path: Path) -> list[dict]:
 
 
 def normalize(text: str) -> str:
-    return re.sub(r'\s+', ' ', re.sub(r'[^\w\s]', '', text.lower())).strip()
+    return re.sub(r'\s+', ' ', re.sub(r'[^\w\s]', '', text.lower().replace('ё', 'е'))).strip()
 
 
 def word_errors(expected: str, text: str) -> tuple[int, int]:
