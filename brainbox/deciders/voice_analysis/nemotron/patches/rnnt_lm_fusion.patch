@@ -1,0 +1,371 @@
+diff --git a/include/nemo_speech/asr.h b/include/nemo_speech/asr.h
+index 70ceace..7c8b3ae 100644
+--- a/include/nemo_speech/asr.h
++++ b/include/nemo_speech/asr.h
+@@ -78,6 +78,8 @@ typedef struct nemo_speech_asr_streaming_config {
+ typedef struct nemo_speech_asr_decoder_config {
+     size_t size;
+     nemo_speech_asr_decoder_kind kind;
++    // RNNT models: a token-level ARPA for shallow fusion in the greedy decoder,
++    // weighted by lm_weight. kind and the other fields do not apply to them.
+     const char* flashlight_lm;
+     const char* flashlight_lexicon;
+     const char* flashlight_tokenizer;
+diff --git a/src/asr/decoders/decoder.h b/src/asr/decoders/decoder.h
+index f48a239..038c279 100644
+--- a/src/asr/decoders/decoder.h
++++ b/src/asr/decoders/decoder.h
+@@ -17,6 +17,8 @@
+ 
+ namespace nemo_speech::asr {
+ 
++class NgramFusionLm;
++
+ struct DecoderConfig {
+     enum class Kind { Greedy, Flashlight };
+     Kind kind = Kind::Greedy;
+@@ -29,6 +31,10 @@ struct DecoderConfig {
+     double beam_threshold = 20.0;
+     double lm_weight = 0.8;
+     double word_insertion_score = 1.0;
++    // RNNT has no beam: lm_path is a token-level ARPA for shallow fusion in the
++    // greedy decoder, weighted by lm_weight. The recognizer loads it here once
++    // and all its streams share it.
++    std::shared_ptr<const NgramFusionLm> rnnt_lm;
+     // Upper bound on the magnitude of a per-word speech-context boost. The boost
+     // is added to a word's LM score on every emission, so an unbounded value
+     // makes re-emitting the boosted word net-positive in the beam and the word
+diff --git a/src/asr/decoders/ngram_fusion.cpp b/src/asr/decoders/ngram_fusion.cpp
+new file mode 100644
+index 0000000..c3659e4
+--- /dev/null
++++ b/src/asr/decoders/ngram_fusion.cpp
+@@ -0,0 +1,168 @@
++// SPDX-License-Identifier: Apache-2.0
++#include "ngram_fusion.h"
++
++#include <algorithm>
++#include <cmath>
++#include <cstdlib>
++#include <fstream>
++#include <stdexcept>
++#include <unordered_map>
++
++namespace nemo_speech::asr {
++
++namespace {
++constexpr float kLog10ToLn = 2.302585093f;
++
++float
++parse_score(const std::string& text) {
++    return std::strtof(text.c_str(), nullptr) * kLog10ToLn;
++}
++}  // namespace
++
++NgramFusionLm::NgramFusionLm(const std::string& arpa_path, int vocab_size) {
++    std::ifstream in(arpa_path);
++    if (!in)
++        throw std::runtime_error("NgramFusionLm: cannot read " + arpa_path);
++    const auto fail = [&arpa_path](const std::string& what) {
++        throw std::runtime_error("NgramFusionLm: " + arpa_path + ": " + what);
++    };
++
++    // Contexts by their text in the ARPA, needed only here.
++    std::unordered_map<std::string, int> contexts;
++    const auto context = [&](const std::string& ngram) {
++        const auto it = contexts.find(ngram);
++        if (it == contexts.end())
++            fail("n-gram '" + ngram + "' is missing");
++        return it->second;
++    };
++    const auto token_id = [&](const std::string& word) {
++        char* end = nullptr;
++        const long id = std::strtol(word.c_str(), &end, 10);
++        if (word.empty() || *end != '\0' || id < 0 || id >= vocab_size)
++            fail("'" + word + "' is not a token id");
++        return static_cast<int>(id);
++    };
++
++    states_[kRoot].arcs.assign(vocab_size, Arc{-1, kRoot, 0.0f});  // -1: not among the unigrams
++    bool has_unk = false;
++    bool ended = false;
++    float unk = 0.0f;
++    int max_order = 0;
++    int order = 0;
++    std::vector<long> declared, found;  // n-grams per order: in the header, in the file
++    std::string line;
++    while (std::getline(in, line)) {
++        if (line.rfind("ngram ", 0) == 0) {
++            const int n = std::atoi(line.c_str() + 6);
++            const size_t eq = line.find('=');
++            if (n < 1 || eq == std::string::npos)
++                fail("bad line '" + line + "'");
++            max_order = std::max(max_order, n);
++            declared.resize(max_order + 1, 0);
++            found.resize(max_order + 1, 0);
++            declared[n] = std::atol(line.c_str() + eq + 1);
++            continue;
++        }
++        if (line == "\\end\\") {
++            ended = true;
++            break;
++        }
++        if (line.empty() || line == "\\data\\")
++            continue;
++        if (line[0] == '\\') {  // \N-grams:
++            order = std::atoi(line.c_str() + 1);
++            if (order < 1 || order > max_order)
++                fail("bad line '" + line + "'");
++            continue;
++        }
++
++        const size_t tab = line.find('\t');
++        if (order == 0 || tab == std::string::npos)
++            fail("bad line '" + line + "'");
++        const size_t second_tab = line.find('\t', tab + 1);
++        const std::string ngram = line.substr(tab + 1, second_tab - tab - 1);
++        if (std::count(ngram.begin(), ngram.end(), ' ') != order - 1)
++            fail("bad line '" + line + "'");
++        ++found[order];
++        const float score = parse_score(line);
++        const float backoff =
++            second_tab == std::string::npos ? 0.0f : parse_score(line.substr(second_tab + 1));
++        const size_t last_space = ngram.rfind(' ');
++        const std::string word =
++            last_space == std::string::npos ? ngram : ngram.substr(last_space + 1);
++        if (word == "</s>")
++            continue;
++        if (ngram == "<unk>") {
++            unk = score;
++            has_unk = true;
++            continue;
++        }
++
++        const int suffix = order == 1 ? kRoot : context(ngram.substr(ngram.find(' ') + 1));
++        int to = suffix;
++        if (order < max_order || word == "<s>") {
++            to = static_cast<int>(states_.size());
++            contexts[ngram] = to;
++            states_.emplace_back();
++            states_[to].backoff_to = suffix;
++            states_[to].backoff = backoff;
++        }
++        if (word == "<s>") {
++            start_state_ = to;
++            continue;
++        }
++        const int token = token_id(word);
++        if (order == 1)
++            states_[kRoot].arcs[token] = Arc{token, to, score};
++        else
++            states_[context(ngram.substr(0, last_space))].arcs.push_back(Arc{token, to, score});
++    }
++    if (!ended || found != declared)
++        fail("it is cut short: the n-grams do not match the header");
++    if (!has_unk || start_state_ == kRoot)
++        fail("<unk> or <s> is missing");
++
++    // As normalize_unk in NeMo: the tokens out of the unigrams share <unk>.
++    const auto unknown = std::count_if(
++        states_[kRoot].arcs.begin(), states_[kRoot].arcs.end(),
++        [](const Arc& arc) { return arc.token < 0; });
++    const float unknown_score = unk - std::log(static_cast<float>(std::max<long>(unknown, 1)));
++    for (int token = 0; token < vocab_size; ++token) {
++        Arc& arc = states_[kRoot].arcs[token];
++        if (arc.token < 0)
++            arc = Arc{token, kRoot, unknown_score};
++    }
++    for (State& state : states_) {
++        std::sort(state.arcs.begin(), state.arcs.end(), [](const Arc& a, const Arc& b) {
++            return a.token < b.token;
++        });
++    }
++}
++
++void
++NgramFusionLm::scores(int state, float* out) const {
++    const State& s = states_[state];
++    if (state != kRoot) {
++        scores(s.backoff_to, out);
++        const size_t vocab_size = states_[kRoot].arcs.size();
++        for (size_t token = 0; token < vocab_size; ++token) out[token] += s.backoff;
++    }
++    for (const Arc& arc : s.arcs) out[arc.token] = arc.score;
++}
++
++int
++NgramFusionLm::advance(int state, int token) const {
++    while (true) {
++        const State& s = states_[state];
++        const auto arc = std::lower_bound(
++            s.arcs.begin(), s.arcs.end(), token,
++            [](const Arc& a, int value) { return a.token < value; });
++        if (arc != s.arcs.end() && arc->token == token)
++            return arc->to;
++        if (state == kRoot)  // a token out of the vocabulary
++            return kRoot;
++        state = s.backoff_to;
++    }
++}
++
++}  // namespace nemo_speech::asr
+diff --git a/src/asr/decoders/ngram_fusion.h b/src/asr/decoders/ngram_fusion.h
+new file mode 100644
+index 0000000..11500f5
+--- /dev/null
++++ b/src/asr/decoders/ngram_fusion.h
+@@ -0,0 +1,44 @@
++// SPDX-License-Identifier: Apache-2.0
++// Token-level n-gram LM for RNNT shallow fusion, as NeMo's NGramGPULanguageModel for one
++// hypothesis. The words of the ARPA are token ids. A token missing in a state backs off down to the
++// root, where the tokens out of the unigrams share <unk>. Immutable: the streams of a recognizer
++// share one model.
++#pragma once
++
++#include <string>
++#include <vector>
++
++namespace nemo_speech::asr {
++
++class NgramFusionLm {
++   public:
++    // Throws if the file is not an ARPA over the token ids of [0, vocab_size).
++    NgramFusionLm(const std::string& arpa_path, int vocab_size);
++
++    // The state at the beginning of a sentence.
++    int start_state() const { return start_state_; }
++
++    // Writes log P(token | state) for the whole vocabulary to out[0, vocab_size).
++    void scores(int state, float* out) const;
++
++    // The state after `token` from `state`.
++    int advance(int state, int token) const;
++
++   private:
++    struct Arc {
++        int token;
++        int to;
++        float score;
++    };
++    struct State {
++        std::vector<Arc> arcs;  // by token; the root has exactly one per token
++        int backoff_to = 0;
++        float backoff = 0.0f;
++    };
++    static constexpr int kRoot = 0;
++
++    std::vector<State> states_{State{}};  // states_[0] = root
++    int start_state_ = kRoot;
++};
++
++}  // namespace nemo_speech::asr
+diff --git a/src/asr/decoders/rnnt_greedy_decoder.cpp b/src/asr/decoders/rnnt_greedy_decoder.cpp
+index ccfad16..007fde4 100644
+--- a/src/asr/decoders/rnnt_greedy_decoder.cpp
++++ b/src/asr/decoders/rnnt_greedy_decoder.cpp
+@@ -50,7 +50,8 @@ is_class_hint(const std::string& s) {
+ RnntGreedyDecoder::RnntGreedyDecoder(RnntEngine* engine, const DecoderConfig& cfg)
+     : engine_(engine), bias_alpha_cfg_(static_cast<float>(cfg.boosting_tree_alpha)),
+       bias_depth_scaling_(static_cast<float>(cfg.boosting_depth_scaling)),
+-      bias_max_boost_(cfg.boosting_max_boost) {
++      bias_max_boost_(cfg.boosting_max_boost), lm_(cfg.rnnt_lm),
++      lm_alpha_(static_cast<float>(cfg.lm_weight)) {
+     reset();
+ }
+ 
+@@ -130,6 +131,8 @@ RnntGreedyDecoder::reset() {
+     late_punctuation_pending_.clear();
+     late_punctuation_.clear();
+     bias_node_ = ContextBiasingTree::kRoot;
++    if (lm_)
++        lm_state_ = lm_->start_state();
+     token_confidence_ = 1.0f;
+     utterance_confidence_sum_ = 0.0;
+     utterance_tokens_ = 0;
+@@ -254,7 +257,7 @@ RnntGreedyDecoder::step_impl(
+     while (t < T) {
+         const int remaining = T - t;
+         const float* boost_bias = nullptr;
+-        if (bias_on_) {
++        if (bias_on_ || lm_) {
+             // NeMo/riva semantics (rnnt_label_looping.py): blank vs non-blank is
+             // decided on the unboosted logits; boosting only re-ranks which
+             // non-blank label wins. Build a second bias for a blank-excluded
+@@ -265,6 +268,10 @@ RnntGreedyDecoder::step_impl(
+             // which starts a fresh round.
+             const ContextBiasingTree::StepBoost sb = bias_tree_.step_boost(bias_node_);
+             bias_scratch_.assign(static_cast<size_t>(cfg.vocab_size), 0.0f);
++            if (lm_) {
++                lm_->scores(lm_state_, bias_scratch_.data());
++                for (float& score : bias_scratch_) score *= lm_alpha_;
++            }
+             for (const auto& sp : sb.specials) {
+                 if (sp.first != blank_id && sp.first >= 0 && sp.first < cfg.vocab_size)
+                     bias_scratch_[static_cast<size_t>(sp.first)] +=
+@@ -362,6 +369,8 @@ RnntGreedyDecoder::step_impl(
+         // Advance the context-biasing match on the emitted token.
+         if (bias_on_)
+             bias_node_ = bias_tree_.advance(bias_node_, token);
++        if (lm_)
++            lm_state_ = lm_->advance(lm_state_, token);
+ 
+         if (++symbols_at_frame >= max_sym) {
+             ++t;
+diff --git a/src/asr/decoders/rnnt_greedy_decoder.h b/src/asr/decoders/rnnt_greedy_decoder.h
+index 7dfedc9..7ae1d99 100644
+--- a/src/asr/decoders/rnnt_greedy_decoder.h
++++ b/src/asr/decoders/rnnt_greedy_decoder.h
+@@ -28,6 +28,7 @@
+ 
+ #include "context_biasing.h"  // ContextBiasingTree (RNNT word boosting)
+ #include "decoder.h"          // Decoder, WordTiming, DecoderConfig (and runtime.h transitively)
++#include "ngram_fusion.h"     // NgramFusionLm (RNNT shallow fusion)
+ 
+ namespace nemo_speech::asr {
+ 
+@@ -158,6 +159,8 @@ class RnntGreedyDecoder : public Decoder {
+         last_presented_punctuation_ = false;
+         pending_word_boundary_ = false;
+         bias_node_ = ContextBiasingTree::kRoot;
++        if (lm_)
++            lm_state_ = lm_->start_state();
+         utterance_confidence_sum_ = 0.0;
+         utterance_tokens_ = 0;
+     }
+@@ -245,6 +248,11 @@ class RnntGreedyDecoder : public Decoder {
+     std::vector<float> bias_scratch_;       // dense per-round joint-logit bias
+     std::vector<int32_t> boost_token_ids_;  // blank-excluded re-rank pass output
+ 
++    // N-gram LM shallow fusion, on the same re-rank pass as the word boosting.
++    std::shared_ptr<const NgramFusionLm> lm_;
++    float lm_alpha_ = 0.0f;
++    int lm_state_ = 0;
++
+     // Entropy-based confidence (NeMo's normalized Gibbs entropy): the joint
+     // returns sum(p * log p) per frame; a token's confidence is 1 + that / log(V).
+     std::vector<float> frame_neg_entropy_;
+diff --git a/src/asr/recognizer.cpp b/src/asr/recognizer.cpp
+index ce9bdb2..51ee648 100644
+--- a/src/asr/recognizer.cpp
++++ b/src/asr/recognizer.cpp
+@@ -114,6 +114,11 @@ Recognizer::Recognizer(RecognizerConfig cfg)
+         vad_model_ = std::make_shared<SileroVadModel>(*bm_, cfg_.vad.model_path, cfg_.batching);
+         GGMLF_LOG_INFO("[recognizer] VAD weights/session loaded once and shared across streams\n");
+     }
++    if (model_->head_kind() == HeadKind::Rnnt && !cfg_.decoder.lm_path.empty()) {
++        cfg_.decoder.rnnt_lm = std::make_shared<const NgramFusionLm>(
++            cfg_.decoder.lm_path, static_cast<int>(model_->vocab().size()));
++        GGMLF_LOG_INFO("[recognizer] RNNT fusion LM loaded once and shared across streams\n");
++    }
+ #ifdef NEMO_SPEECH_WITH_FLASHLIGHT
+     // Share the loaded language model and lexicon trie across streams.
+     if (model_->head_kind() == HeadKind::Ctc &&
+@@ -158,6 +163,8 @@ Recognizer::log_model_status() const {
+         summary += " vad=on";
+     if (diar_model_)
+         summary += " diarization=on";
++    if (cfg_.decoder.rnnt_lm)
++        summary += " lm=on";
+ #ifdef NEMO_SPEECH_WITH_FLASHLIGHT
+     if (flashlight_resources_)
+         summary += " decoder=flashlight";

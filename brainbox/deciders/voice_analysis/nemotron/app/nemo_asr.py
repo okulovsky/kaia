@@ -1,7 +1,7 @@
 import ctypes
 import glob
 import os
-from ctypes import Structure, POINTER, byref, c_bool, c_char_p, c_float, c_int32, c_size_t, c_void_p
+from ctypes import Structure, POINTER, byref, c_bool, c_char_p, c_double, c_float, c_int32, c_size_t, c_void_p
 import numpy as np
 
 
@@ -23,13 +23,28 @@ class _StreamingConfig(Structure):
     ]
 
 
+class _DecoderConfig(Structure):
+    # The C struct goes on with word_insertion_score and max_boost: `size` tells the C API to keep their defaults
+    _fields_ = [
+        ('size', c_size_t),
+        ('kind', c_int32),
+        ('flashlight_lm', c_char_p),
+        ('flashlight_lexicon', c_char_p),
+        ('flashlight_tokenizer', c_char_p),
+        ('beam_size', c_int32),
+        ('beam_size_token', c_int32),
+        ('beam_threshold', c_double),
+        ('lm_weight', c_double),
+    ]
+
+
 class _RecognizerConfig(Structure):
     _fields_ = [
         ('size', c_size_t),
         ('backend', POINTER(_BackendConfig)),
         ('model', POINTER(_ModelConfig)),
         ('streaming', POINTER(_StreamingConfig)),
-        ('decoder', c_void_p),
+        ('decoder', POINTER(_DecoderConfig)),
         ('vad', c_void_p),
         ('endpointing', c_void_p),
         ('postproc', c_void_p),
@@ -197,7 +212,7 @@ class NemoStream:
 
 
 class NemoRecognizer:
-    def __init__(self, model_path: str, rnnt_right_context: int = 1):
+    def __init__(self, model_path: str, rnnt_right_context: int = 1, lm_path: str | None = None, lm_weight: float = 0.2):
         lib = _get_lib()
         backend = _BackendConfig(ctypes.sizeof(_BackendConfig), -1)
         model = _ModelConfig(ctypes.sizeof(_ModelConfig), model_path.encode(), None)
@@ -206,6 +221,10 @@ class NemoRecognizer:
         config.backend = ctypes.pointer(backend)
         config.model = ctypes.pointer(model)
         config.streaming = ctypes.pointer(streaming)
+        if lm_path is not None:
+            # For an RNNT model this is shallow fusion, see patches/rnnt_lm_fusion.patch
+            config.decoder = ctypes.pointer(_DecoderConfig(
+                ctypes.sizeof(_DecoderConfig), flashlight_lm=lm_path.encode(), lm_weight=lm_weight))
         self._handle = c_void_p()
         _check(lib.nemo_speech_asr_create(byref(config), byref(self._handle)))
 

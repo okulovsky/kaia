@@ -17,6 +17,8 @@ BUILD_NEMO_SPEECH = (
     'USER root',
     # patches/rnnt_confidence.patch: the RNNT decoder computes the entropy-based confidence
     # of the tokens, words and utterances, which is otherwise always 1
+    # patches/rnnt_lm_fusion.patch: the RNNT decoder reranks the tokens with an optional n-gram LM;
+    # it is on top of the confidence patch, git applies them in the order of the names
     'COPY patches/ /tmp/nemo-patches/',
     f'RUN git clone https://github.com/NVIDIA/NeMo-Speech.cpp /tmp/nemo-src && '
     f'cd /tmp/nemo-src && git checkout {NEMO_SPEECH_COMMIT} && '
