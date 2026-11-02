@@ -10,18 +10,20 @@ from .settings import NemotronSettings
 from pathlib import Path
 from .app.model import NemotronInstaller
 
-NEMO_SPEECH_COMMIT = '4c101bc7113f49101a3e11d2c994c519f41939f6'
+NEMO_SPEECH_COMMIT = '1a7e945f3e5553bc51995a1a7ec361ccee3c7280'
 INSTALL_PREFIX = '/opt/nemo-speech'
 
 BUILD_NEMO_SPEECH = (
     'USER root',
     # patches/rnnt_confidence.patch: the RNNT decoder computes the entropy-based confidence
     # of the tokens, words and utterances, which is otherwise always 1
+    # patches/rnnt_lm_fusion.patch: the RNNT decoder reranks the tokens with an optional n-gram LM;
+    # it is on top of the confidence patch, git applies them in the order of the names
     'COPY patches/ /tmp/nemo-patches/',
     f'RUN git clone https://github.com/NVIDIA/NeMo-Speech.cpp /tmp/nemo-src && '
     f'cd /tmp/nemo-src && git checkout {NEMO_SPEECH_COMMIT} && '
     f'git apply /tmp/nemo-patches/*.patch && '
-    f'git submodule update --init --depth 1 ggml llama.cpp && '
+    f'git submodule update --init --depth 1 llama.cpp && '
     # The native flags detected on arm64 lack fp16, which ggml needs: set the architecture explicitly
     f'ARM_FLAGS=$([ "$(uname -m)" = aarch64 ] && echo "-DGGML_NATIVE=OFF -DGGML_CPU_ARM_ARCH=armv8.2-a+fp16+dotprod" || true) && '
     f'scripts/configure.sh cpu-asr $ARM_FLAGS && '

@@ -11,6 +11,10 @@ class NemotronModelSpec:
     size: int
     sha256: str
     rnnt_right_context: int = 1
+    # A token-level ARPA in the models folder, see chara/nlu/nemotron_tuning/train_token_lm.py.
+    # 0.2 was the best weight on the dev phrases of the NLU
+    lm_filename: str | None = None
+    lm_weight: float = 0.2
 
 
 class NemotronInstaller(Installer[NemotronModelSpec]):
@@ -44,4 +48,7 @@ class NemotronInstaller(Installer[NemotronModelSpec]):
 
     def _execute_model_loading(self, model: str, model_spec: NemotronModelSpec):
         from nemo_asr import NemoRecognizer
-        return NemoRecognizer(str(self._model_path(model_spec)), model_spec.rnnt_right_context)
+        lm_path = None
+        if model_spec.lm_filename is not None:
+            lm_path = str(self.resources_folder / 'models' / model_spec.lm_filename)
+        return NemoRecognizer(str(self._model_path(model_spec)), model_spec.rnnt_right_context, lm_path, model_spec.lm_weight)
