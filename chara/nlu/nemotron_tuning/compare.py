@@ -1,0 +1,116 @@
+"""
+The speech recognition systems of Kaia side by side on a manifest, through BrainBox as Kaia runs them.
+It works in the environment of Kaia. The results of each system are in <out>/<system>.jsonl, or <out>/<system>-<model>.jsonl
+with --nemotron-model, and a stopped run continues. The report is in <out>/report.txt.
+
+    python chara/nlu/nemotron_tuning/compare.py --manifest <data>/words-test.jsonl --dataset <folder>/dataset.json --out <run>
+
+--dataset is the corpus of KenLM, the same dataset.json as the NLU is trained on.
+"""
+import argparse
+import json
+import time
+import wave
+from pathlib import Path
+from avatar.daemon import StreamingSTTService
+from brainbox.deciders import Nemotron, WhisperKenLM
+from chara.nlu.kenlm_training import KenLMTrainingPipeline
+import manifest
+import metrics
+from build_dataset import kaia_brainbox
+
+LANGUAGES = ('en', 'de', 'ru')
+CHUNK_SIZE = 7056
+
+
+def nemotron_chunks(data: bytes) -> list[bytes]:
+    return [data[i:i + CHUNK_SIZE] for i in range(0, len(data), CHUNK_SIZE)]
+
+
+def nemotron_auto(api, data: bytes, name: str, model: str | None) -> str:
+    result = api.execute(Nemotron.new_task().transcribe_stream(nemotron_chunks(data), language='auto', model=model))
+    return StreamingSTTService.read_final_text(api.cache.read_file(result).content)
+
+
+def nemotron_languages(api, data: bytes, name: str, model: str | None) -> str:
+    result = api.execute(Nemotron.new_task().transcribe_stream_languages(nemotron_chunks(data), languages=list(LANGUAGES), model=model))
+    streams = StreamingSTTService.read_finals_by_stream(api.cache.read_file(result).content)
+    return StreamingSTTService.choose_text(streams, LANGUAGES)
+
+
+def whisper(weight: float):
+    def transcribe(api, data: bytes, name: str, model: str | None) -> str:
+        api.cache.upload(name, data)
+        return api.execute(WhisperKenLM.new_task().transcribe(name, weight=weight, languages=list(LANGUAGES)))
+    return transcribe
+
+
+SYSTEMS = {
+    'whisper': whisper(0),
+    'whisper-kenlm': whisper(0.5),
+    'nemotron-auto': nemotron_auto,
+    'nemotron-languages': nemotron_languages,
+}
+
+
+def duration(data_path: str) -> float:
+    with wave.open(data_path) as w:
+        return w.getnframes() / w.getframerate()
+
+
+def run(api, system: str, items: list[dict], out: Path, model: str | None) -> list[dict]:
+    path = out/(f'{system}-{model}.jsonl' if model and system.startswith('nemotron') else f'{system}.jsonl')
+    done = {}
+    if path.is_file():
+        done = {r['audio']: r for r in map(json.loads, path.read_text().splitlines())}
+    with open(path, 'a') as file:
+        for index, item in enumerate(items):
+            if item['audio'] in done:
+                continue
+            data = Path(item['audio']).read_bytes()
+            begin = time.perf_counter()
+            hypothesis = SYSTEMS[system](api, data, f'compare-{Path(item["audio"]).name}', model)
+            row = dict(item, hypothesis=hypothesis, seconds=time.perf_counter() - begin)
+            done[item['audio']] = row
+            file.write(json.dumps(row, ensure_ascii=False) + '\n')
+            file.flush()
+            if (index + 1) % 50 == 0:
+                print(f'{system}: {index + 1}/{len(items)}', flush=True)
+    return [done[i['audio']] for i in items]
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--manifest', required=True)
+    parser.add_argument('--dataset', required=True, help='dataset.json: the corpus of KenLM')
+    parser.add_argument('--out', required=True)
+    parser.add_argument('--systems', nargs='+', default=list(SYSTEMS), choices=list(SYSTEMS))
+    parser.add_argument('--nemotron-model', default=None, help='a model of installation.yaml, e.g. the tuned one')
+    args = parser.parse_args()
+
+    items = manifest.read(args.manifest)
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    total = sum(duration(i['audio']) for i in items)
+
+    with kaia_brainbox() as api:
+        if any(s.startswith('whisper') for s in args.systems):
+            texts = [r['text'] for r in json.loads(Path(args.dataset).read_text())]
+            api.execute(WhisperKenLM.new_task().train_lm(KenLMTrainingPipeline.corpus(texts)))
+        reports = []
+        for system in args.systems:
+            rows = run(api, system, items, out, args.nemotron_model)
+            rtf = sum(r['seconds'] for r in rows) / total
+            wer = metrics.word_error_rate(rows, [r['hypothesis'] for r in rows])
+            exact = sum(manifest.normalize(r['text']) == manifest.normalize(r['hypothesis']) for r in rows)
+            lines = [f'{system}: {len(rows)} utterances, {total:.0f} s of audio, RTF {rtf:.2f}, exact {exact}', f'WER {wer}']
+            slotted = metrics.with_slot(rows)
+            if slotted:
+                lines += metrics.table(slotted)
+            reports.extend(lines + [''])
+            print('\n'.join(lines), flush=True)
+    (out/'report.txt').write_text('\n'.join(reports))
+
+
+if __name__ == '__main__':
+    main()

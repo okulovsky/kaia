@@ -1,0 +1,12 @@
+# The environment of train_lora.py, evaluate.py and export_gguf.py (not of Kaia): python 3.12
+torch==2.9.1
+torchaudio==2.9.1
+transformers==5.20.2
+peft==0.21.2
+safetensors
+huggingface_hub
+sentencepiece
+protobuf
+soundfile
+librosa
+numpy
