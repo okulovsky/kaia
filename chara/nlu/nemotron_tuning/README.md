@@ -4,16 +4,16 @@ The goal, in Yuri's words: how to fine-tune Nemotron so that it recognizes any w
 the model does not know fails: "Позвони Тодороки", "добавь мумзики в список покупок". It breaks the word and the words around it.
 
 These scripts make the test for that, fine-tune Nemotron with LoRA, merge the LoRA into the weights and convert the model to
-the GGUF of NeMo-Speech.cpp. The runtime and the decider stay as they are: only the model file changes.
+the GGUF of NeMo-Speech.cpp. The decider stays as it is, only the model file changes. The GGUF is converted by NeMo-Speech.cpp
+1a7e945, the commit the decider runs since #72.
 
 ## Results
 
 Six systems on the same sets, run as Kaia runs them: Whisper through BrainBox, Nemotron streaming in the image of the decider
 with 3 language streams (en, de, ru) and `StreamingSTTService.choose_text`.
-- Nemotron: NeMo-Speech.cpp 1a7e945 and the GGUF converted there.
+- Nemotron: the decider at NeMo-Speech.cpp 1a7e945 (#72) and the GGUF converted there.
 - Nemotron tuned: the pilot below, merged at strength 0.4.
-- KenLM: for Whisper the LM of its decider, for Nemotron a token LM of the testbed dataset at weight 0.2 in the decoder
-  (`train_token_lm.py` and the patch of the decider).
+- KenLM: for Whisper the LM of its decider, for Nemotron a token LM of the testbed dataset at weight 0.2 in the decoder (#73).
 
 | System | Made-up word | Long name | Ordinary word | FLEURS WER, 3 streams / right language | Real commands | Lag, s |
 |---|---|---|---|---|---|---|
@@ -26,6 +26,7 @@ with 3 language streams (en, de, ru) and `StreamingSTTService.choose_text`.
 
 - The slot columns: the share of phrases with the slot word exact / within 25% of wrong characters, of 90 phrases each,
   voiced by Piper in carriers the training never saw (`words-unseen.jsonl`). A made-up word has no single spelling, hence the second number.
+  A few of these carriers do not agree with an ordinary word in case or number ("у Сергею", "Was kostet Äpfel"); every system hears the same audio.
 - FLEURS: WER on 300 clips of real read speech, 100 per language. Nemotron with 3 streams as in Kaia, and with the stream
   of the right language only; the LM was run with the right language only. Whisper chooses the language itself.
 - Real commands: exact, of the 77 testbed recordings with speech.
@@ -85,7 +86,7 @@ What follows from it:
 - A run that looks good can break real speech. Piper only at strength 1 took FLEURS from 0.123 to 0.220, and worse on 203 of the 300 clips,
   while the real commands did not show it (61 to 62 of 77 with similarity at least 0.8). So FLEURS is a required check.
 - The harm grows faster than the gain, so an adapter can be merged at a lower strength without training again (`merge_lora.py`).
-  On dev (90 real clips and 90 phrases), for strength 0, 0.25, 0.4, 0.5 and 1, the WER of real speech is 0.090, 0.090, 0.091, 0.103, 0.199,
+  On 90 real clips and 90 phrases of the dev set, for strength 0, 0.25, 0.4, 0.5 and 1, the WER of real speech is 0.090, 0.090, 0.091, 0.103, 0.199,
   and the WER of the phrases is 0.272, 0.220, 0.196, 0.181, 0.142.
   The harm comes from the encoder layers of the adapter: with only them the real speech has 0.177, with only the projections and the joint 0.087.
 - Real speech in the training protects real speech: half of the steps from FLEURS (1369 clips up to 8 s, batch 2) gave 0.127 at strength 1.
@@ -99,13 +100,12 @@ What follows from it:
 
 ## Environments
 
-1. **Kaia** (the repository environment, with Docker): `build_dataset.py`.
-2. **Training** (a GPU machine; Python 3.12): `train_lora.py`, `evaluate.py`, `export_gguf.py`.
+1. **Kaia** (the repository environment, with Docker): `build_dataset.py`, `compare.py`.
+2. **Training** (a GPU machine; Python 3.12): `train_lora.py`, `merge_lora.py`, `evaluate.py`, `export_gguf.py`.
 
        python3.12 -m venv .venv-tuning
        .venv-tuning/bin/pip install -r chara/nlu/nemotron_tuning/requirements.txt
 
-   Run the scripts from `chara/nlu/nemotron_tuning`, they import `manifest.py` next to them.
 3. **Converter** of NeMo-Speech.cpp, at the commit the decider is built from (1a7e945):
 
        git clone https://github.com/NVIDIA/NeMo-Speech.cpp && git -C NeMo-Speech.cpp checkout 1a7e945f3e5553bc51995a1a7ec361ccee3c7280
@@ -141,29 +141,37 @@ the audio path relative to the manifest, the text written as Nemotron writes it 
 
    The more speakers and rooms, the better; a few hundred utterances per language make the numbers stable.
 3. **General speech**, for `--replay` and for the regression check: a few thousand utterances per language,
-   as manifests in the same format (texts as the model writes them). The pilot took [FLEURS](https://huggingface.co/datasets/google/fleurs):
+   as manifests in the same format. The pilot took [FLEURS](https://huggingface.co/datasets/google/fleurs):
    the `train` split for `--replay`, 300 clips of the `validation` split for the check, 90 other clips of it for the dev set.
+   The text is `raw_transcription` through `manifest.as_model_writes`; leave the clips with digits out of `--replay`.
+4. **The dev set** chooses the step, so it needs phrases and real speech, as two manifests for `--dev`. The phrases come from
+   another seed, with the training set held out: its speakers do not go to the dev set, and the test voices stay.
+
+       python chara/nlu/nemotron_tuning/build_dataset.py words --dataset <folder>/dataset.json --hold-out <data>/words-train.jsonl \
+           --out <dev> --test-per-group 10 --seed 1
+
+   All scripts are run from the root of the repository.
 
 ## Steps
 
-1. Baseline, in the environment of Kaia, through BrainBox as Kaia runs the systems. The results are in `<run>/report.txt`:
+1. Baseline, in the environment of Kaia, through BrainBox as Kaia runs the systems. The report is in `<baseline>/report.txt`:
 
        python chara/nlu/nemotron_tuning/compare.py --manifest <test>/words-test.jsonl --dataset <folder>/dataset.json --out <baseline>
 
    The general speech and the real voices, in the training environment:
 
-       python evaluate.py --manifest <data>/real.jsonl --out base-real.json
-       python evaluate.py --manifest <general>/test.jsonl --out base-general.json
+       python chara/nlu/nemotron_tuning/evaluate.py --manifest <data>/real.jsonl --out base-real.json
+       python chara/nlu/nemotron_tuning/evaluate.py --manifest <general>/test.jsonl --out base-general.json
 
 2. Training, for a first run:
 
-       python train_lora.py --train <data>/words-train.jsonl --train <data>/words-ordinary.jsonl --replay <general>/train.jsonl \
-           --replay-share 0.5 --dev <dev>/words-test.jsonl --out <run> --steps 3000 --batch 16 --lr 1e-4 --rank 16 --targets all
+       python chara/nlu/nemotron_tuning/train_lora.py --train <data>/words-train.jsonl --train <data>/words-ordinary.jsonl \
+           --replay <general>/train.jsonl --dev <dev>/words-test.jsonl --dev <general>/dev.jsonl --out <run> --steps 3000
 
    - It evaluates the dev set every `--eval-every` steps, keeps the best adapter in `<run>/adapter` and merges it
      into `<run>/merged`; `<run>/log.json` has the loss, the dev WER and the skipped utterances per step.
-   - The dev set chooses the step, so it needs both phrases and real speech: the pilot had 120 phrases and 90 clips of FLEURS.
-     `log.json` has the WER by language and by the `group` of the manifest.
+   - The defaults are `--targets all`, `--replay-share 0.5`, batch 16, lr 1e-4 and rank 16; the CPU pilot had batch 4.
+     Its dev set had 120 phrases and 90 clips of FLEURS; `log.json` has the WER by language and by the `group` of the manifest.
    - A batch comes from one source, `--replay-share` is the share of the steps taken from `--replay`.
      `--replay-batch` makes these batches smaller: real clips are longer and the memory of the loss grows with the length of the clip and of the text.
    - `--targets`: `attention` (the least), `encoder` (attention and feed-forward of the encoder),
@@ -175,19 +183,19 @@ the audio path relative to the manifest, the text written as Nemotron writes it 
 3. The tuned model on the same sets. `new` should get better, `control` should not get worse, and the general WER should not
    grow by more than 0.5-1 point. With the slot fields in the manifest `evaluate.py` prints the table of `compare.py`:
 
-       python evaluate.py --manifest <unseen>/words-unseen.jsonl --model <run>/merged --out tuned-unseen.json
-       python evaluate.py --manifest <test>/words-test.jsonl --model <run>/merged --out tuned-words.json
-       python evaluate.py --manifest <data>/real.jsonl --model <run>/merged --out tuned-real.json
-       python evaluate.py --manifest <general>/test.jsonl --model <run>/merged --out tuned-general.json
+       python chara/nlu/nemotron_tuning/evaluate.py --manifest <unseen>/words-unseen.jsonl --model <run>/merged --out tuned-unseen.json
+       python chara/nlu/nemotron_tuning/evaluate.py --manifest <test>/words-test.jsonl --model <run>/merged --out tuned-words.json
+       python chara/nlu/nemotron_tuning/evaluate.py --manifest <data>/real.jsonl --model <run>/merged --out tuned-real.json
+       python chara/nlu/nemotron_tuning/evaluate.py --manifest <general>/test.jsonl --model <run>/merged --out tuned-general.json
 
 4. If the general WER grew, merge the adapter at a lower strength and evaluate again. Take the highest strength that keeps
    the general WER within the limit:
 
-       python merge_lora.py --adapter <run>/adapter --strength 0.4 --out <run>/merged-0.4
+       python chara/nlu/nemotron_tuning/merge_lora.py --adapter <run>/adapter --strength 0.4 --out <run>/merged-0.4
 
-5. GGUF (it needs about 8 GB of free disk for the temporary .nemo files):
+5. GGUF of the chosen merge (it needs about 8 GB of free disk for the temporary .nemo files, and the converter unpacks the .nemo into /tmp):
 
-       python export_gguf.py --merged <run>/merged --out <run>/nemotron-tuned.q8_0.gguf \
+       python chara/nlu/nemotron_tuning/export_gguf.py --merged <run>/merged-0.4 --out <run>/nemotron-tuned.q8_0.gguf \
            --nemo-speech NeMo-Speech.cpp --converter-python NeMo-Speech.cpp/.venv/bin/python
 
 6. In Kaia: put the GGUF into `<brainbox resources>/Nemotron/models/` and add it to `installation.yaml` there,
@@ -201,22 +209,21 @@ the audio path relative to the manifest, the text written as Nemotron writes it 
          url: ''
 
    Then `StreamingSTTService(..., nemotron_model='multilingual-tuned')` uses it. `evaluate.py` decodes offline, while Kaia streams,
-   so the last word is `compare.py --systems nemotron-languages --nemotron-model multilingual-tuned` and the testbed by voice.
+   so the last word is `compare.py --systems nemotron-languages --nemotron-model multilingual-tuned`.
 
 ## Checking that everything runs
 
-A few minutes on a laptop CPU, with the base model and two training steps. This was run on a Mac:
+A few minutes on a CPU, with the base model and two training steps:
 
     python chara/nlu/nemotron_tuning/build_dataset.py tts --dataset <folder>/dataset.json --out <data> --limit 3 --per-text 2 --speakers-per-voice 3
     python chara/nlu/nemotron_tuning/build_dataset.py real --labels labels.json --audio-dir <folder> --out <data>
     head -4 <data>/real.jsonl > <data>/dev_small.jsonl
-    python train_lora.py --train <data>/train.jsonl --dev <data>/dev_small.jsonl --out <run> \
+    python chara/nlu/nemotron_tuning/train_lora.py --train <data>/train.jsonl --dev <data>/dev_small.jsonl --out <run> \
         --steps 2 --batch 2 --eval-every 2 --dev-limit 2 --warmup 1 --always-merge --device cpu
-    python export_gguf.py --merged <run>/merged --out <run>/tuned.q8_0.gguf --nemo-speech ... --converter-python ...
+    python chara/nlu/nemotron_tuning/export_gguf.py --merged <run>/merged --out <run>/tuned.q8_0.gguf --nemo-speech ... --converter-python ...
 
-The GGUF of the two steps differs from the published one in exactly the 192 tensors LoRA was put on (24 layers,
-attention and feed-forward) and decodes in the image of the Nemotron decider. Exported from the original weights,
-all its 657 tensors are identical to the direct conversion of the `.nemo` by the same converter.
+The GGUF of the pilot differs from the direct conversion of the original `.nemo` by the same converter in exactly the 197 tensors
+LoRA was put on with `--targets all`; the other 460 of its 657 tensors are identical.
 
 ## Things the scripts work around (Transformers 5.20)
 

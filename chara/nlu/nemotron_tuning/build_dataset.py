@@ -5,20 +5,20 @@ Builds the speech datasets for the fine-tuning of Nemotron, in the environment o
     python chara/nlu/nemotron_tuning/build_dataset.py tts --dataset <folder>/dataset.json --out <out>
 
     # Phrases with made-up words: <out>/words-test.jsonl, <out>/words-train.jsonl with --train-per-language,
-    # <out>/words-unseen.jsonl with --unseen-per-group
+    # <out>/words-unseen.jsonl with --unseen-per-group, <out>/words-ordinary.jsonl with --train-ordinary
     python chara/nlu/nemotron_tuning/build_dataset.py words --dataset <folder>/dataset.json --out <out>
 
     # Recordings of real voices as the test set: <out>/real.jsonl and <out>/real
     python chara/nlu/nemotron_tuning/build_dataset.py real --labels labels.json --audio-dir <folder> --out <out>
 
-The dev set has both the texts and the speakers that are not in the training set.
+The dev set of tts has texts that are not in the training set, and speakers too where a language has enough of them.
 Russian has only four Piper voices: add real recordings or cloned voices for it, see README.md.
 """
 import argparse
 import json
 import random
 import shutil
-import sys
+from contextlib import contextmanager
 from pathlib import Path
 import requests
 from foundation_kaia.fork import Fork
@@ -27,10 +27,8 @@ from brainbox.deciders import Piper
 from brainbox.deciders.voice_generation.piper.app.model import PiperModelSpec
 from brainbox.framework import BrainBoxSetup
 from kaia.app import KaiaAppSettings
-
-sys.path.insert(0, str(Path(__file__).parent))
-import manifest  # noqa: E402
-import words as made_up  # noqa: E402
+import manifest
+import words as made_up
 
 PIPER_VOICES = 'https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/'
 # Checked on ordinary phrases: Nemotron does not understand de_DE-mls and de_DE-ramona, and thorsten_emotional has
@@ -49,6 +47,20 @@ TEST_VOICES = {
 }
 WORKING_FOLDER = Loc.data_folder/'nemotron-tuning'
 BATCH = 32
+
+
+@contextmanager
+def kaia_brainbox():
+    """The BrainBox of Kaia without the rest of Kaia, also for compare.py"""
+    settings = KaiaAppSettings()
+    settings.kaia = None
+    settings.avatar_server = None
+    settings.avatar_processor = None
+    settings.brainbox.deciders_files_in_kaia_working_folder = False
+    app = settings.create_app(WORKING_FOLDER)
+    with Fork(app.brainbox_server):
+        app.brainbox_api.wait_for_connection(30)
+        yield app.brainbox_api
 
 
 def piper_catalog() -> dict:
@@ -86,7 +98,8 @@ def plan(texts_by_language: dict, catalog: dict, args, rnd: random.Random) -> li
     jobs = []
     for language, texts in texts_by_language.items():
         train_texts, dev_texts = split(sorted(texts), args.dev_share, rnd)
-        train_speakers, dev_speakers = split(speakers(catalog, language, args.speakers_per_voice, rnd), args.dev_share, rnd)
+        allowed = [s for s in speakers(catalog, language, args.speakers_per_voice, rnd) if s[0] not in TEST_VOICES[language]]
+        train_speakers, dev_speakers = split(allowed, args.dev_share, rnd)
         # With too few speakers to hold any out, the dev set differs from the training set only in the texts
         dev_speakers = dev_speakers or train_speakers
         for part, part_texts, part_speakers in (('train', train_texts, train_speakers), ('dev', dev_texts, dev_speakers)):
@@ -96,18 +109,14 @@ def plan(texts_by_language: dict, catalog: dict, args, rnd: random.Random) -> li
     return jobs
 
 
+def speaker_name(voice: str, speaker: int | None) -> str:
+    return voice if speaker is None else f'{voice}#{speaker}'
+
+
 def voice_over(jobs: list[dict], catalog: dict, out: Path, part_names: dict[str, str]):
-    """Voices the jobs and writes a manifest per part; the fields of a job besides the voice go to its record"""
+    """Voices the jobs and writes a manifest per part that has any; the fields of a job besides the voice go to its record"""
     (out/'wavs').mkdir(parents=True, exist_ok=True)
-    settings = KaiaAppSettings()
-    settings.kaia = None
-    settings.avatar_server = None
-    settings.avatar_processor = None
-    settings.brainbox.deciders_files_in_kaia_working_folder = False
-    app = settings.create_app(WORKING_FOLDER)
-    with Fork(app.brainbox_server):
-        api = app.brainbox_api
-        api.wait_for_connection(30)
+    with kaia_brainbox() as api:
         BrainBoxSetup().up(Piper).execute(api)
         for voice in sorted({j['voice'] for j in jobs}):
             print('Installing the voice', voice)
@@ -122,13 +131,14 @@ def voice_over(jobs: list[dict], catalog: dict, out: Path, part_names: dict[str,
                 extra = {k: v for k, v in job.items() if k not in ('part', 'text', 'language', 'voice', 'speaker')}
                 records[job['part']].append(dict(
                     audio=f'wavs/{name}', text=job['text'], language=manifest.LOCALES[job['language']],
-                    voice=job['voice'] if job['speaker'] is None else f'{job["voice"]}#{job["speaker"]}',
+                    voice=speaker_name(job['voice'], job['speaker']),
                     **extra,
                 ))
             print(f'{min(start + BATCH, len(jobs))}/{len(jobs)}', flush=True)
     for part, file_name in part_names.items():
-        manifest.write(out/file_name, records[part])
-        print(part, len(records[part]), 'utterances in', out/file_name)
+        if records[part]:
+            manifest.write(out/file_name, records[part])
+            print(part, len(records[part]), 'utterances in', out/file_name)
 
 
 def tts(args):
@@ -147,10 +157,6 @@ def tts(args):
     voice_over(jobs, catalog, Path(args.out), dict(train='train.jsonl', dev='dev.jsonl'))
 
 
-def speaker_name(voice: str, speaker: int | None) -> str:
-    return voice if speaker is None else f'{voice}#{speaker}'
-
-
 def words(args):
     """The words and the speakers of the test are never in the training set: the test measures hearing and not memory"""
     rnd = random.Random(args.seed)
@@ -166,6 +172,7 @@ def words(args):
         many = [s for s in all_speakers if s[1] is not None]
         test_speakers = [s for s in all_speakers if s[0] in TEST_VOICES[language]]
         test_speakers += rnd.sample(many, int(len(many) * args.test_speakers_share))
+        test_speakers = [s for s in test_speakers if speaker_name(*s) not in held_out_speakers]
         train_speakers = [s for s in all_speakers if s not in test_speakers and speaker_name(*s) not in held_out_speakers]
         test = [p for group in made_up.GROUPS for p in made_up.phrases(language, group, args.test_per_group, rnd, known)]
         unseen = [p for group in made_up.GROUPS for p in made_up.phrases(language, group, args.unseen_per_group, rnd, known, made_up.UNSEEN_SKILLS)]
@@ -176,6 +183,8 @@ def words(args):
         ordinary = [dict(text=t, word='', group='ordinary', skill='', language=language)
                     for t in rnd.sample(texts, min(args.train_ordinary, len(texts)))]
         for part, part_phrases, part_speakers in (('test', test, test_speakers), ('unseen', unseen, test_speakers), ('train', train, train_speakers), ('ordinary', ordinary, train_speakers)):
+            if part_phrases and not part_speakers:
+                raise ValueError(f'No {language} speakers are left for {part}: they are all in --hold-out')
             for phrase in part_phrases:
                 voice, speaker = rnd.choice(part_speakers)
                 jobs.append(dict(phrase, part=part, text=manifest.as_model_writes(phrase['text']), voice=voice, speaker=speaker))
@@ -215,7 +224,7 @@ if __name__ == '__main__':
     p.add_argument('--test-per-group', type=int, default=100, help='test phrases per language and group (control, names, new)')
     p.add_argument('--unseen-per-group', type=int, default=0, help='test phrases per language and group in carriers the training never sees')
     p.add_argument('--train-per-language', type=int, default=0, help='training phrases with made-up words per language')
-    p.add_argument('--train-ordinary', type=int, default=0, help='ordinary phrases of --dataset per language, for --replay of train_lora.py')
+    p.add_argument('--train-ordinary', type=int, default=0, help='ordinary phrases of --dataset per language, for --train of train_lora.py')
     p.add_argument('--hold-out', action='append', default=[], help='a manifest whose words and speakers must not be used')
     p.add_argument('--speakers-per-voice', type=int, default=60)
     p.add_argument('--test-speakers-share', type=float, default=0.2)

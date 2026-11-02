@@ -1,5 +1,5 @@
 """
-The WER per language of Nemotron on a manifest: the base model, or a model merged by train_lora.py.
+The WER per language of Nemotron on a manifest: the base model, or a model merged by train_lora.py or merge_lora.py.
 
     python chara/nlu/nemotron_tuning/evaluate.py --manifest <data>/real.jsonl
     python chara/nlu/nemotron_tuning/evaluate.py --manifest <data>/real.jsonl --model <run>/merged --out <run>/real.json
@@ -13,7 +13,8 @@ import torch
 from transformers import AutoProcessor, Nemotron3_5AsrForRNNT
 import manifest
 import metrics
-from train_lora import MODEL, REVISION, transcribe, word_error_rate
+from manifest import MODEL, REVISION
+from train_lora import transcribe
 
 
 def main():
@@ -26,22 +27,23 @@ def main():
 
     source = dict(pretrained_model_name_or_path=args.model) if args.model else dict(pretrained_model_name_or_path=MODEL, revision=REVISION)
     processor = AutoProcessor.from_pretrained(**source)
-    model = Nemotron3_5AsrForRNNT.from_pretrained(**source, torch_dtype=torch.float32).to(args.device)
+    model = Nemotron3_5AsrForRNNT.from_pretrained(**source, dtype=torch.float32).to(args.device)
     items = manifest.read(args.manifest)
     texts = transcribe(model, processor, items, args.device)
-    wer = word_error_rate(items, texts)
+    wer = metrics.word_error_rate(items, texts)
     exact = sum(manifest.normalize(i['text']) == manifest.normalize(t) for i, t in zip(items, texts))
-    print(f'WER {wer}, exact {exact}/{len(items)}')
-    if all('word' in i for i in items):
-        print('\n'.join(metrics.table([dict(i, hypothesis=t) for i, t in zip(items, texts)])))
-    for item, text in zip(items, texts):
-        if manifest.normalize(item['text']) != manifest.normalize(text):
-            print(f'   {item["text"]!r} -> {text!r}')
     if args.out:
         Path(args.out).write_text(json.dumps(dict(
             model=args.model or MODEL, wer=wer, exact=exact, count=len(items),
             results=[dict(audio=i['audio'], expected=i['text'], text=t) for i, t in zip(items, texts)],
         ), ensure_ascii=False, indent=1))
+    print(f'WER {wer}, exact {exact}/{len(items)}')
+    slotted = metrics.with_slot([dict(i, hypothesis=t) for i, t in zip(items, texts)])
+    if slotted:
+        print('\n'.join(metrics.table(slotted)))
+    for item, text in zip(items, texts):
+        if manifest.normalize(item['text']) != manifest.normalize(text):
+            print(f'   {item["text"]!r} -> {text!r}')
 
 
 if __name__ == '__main__':

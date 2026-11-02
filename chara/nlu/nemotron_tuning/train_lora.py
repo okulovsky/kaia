@@ -18,14 +18,14 @@ import soundfile
 import torch
 import torchaudio
 from huggingface_hub import hf_hub_download
-from peft import LoraConfig, PeftModel, get_peft_model
+from peft import LoraConfig, get_peft_model
 from sentencepiece import SentencePieceProcessor
 from transformers import AutoProcessor, Nemotron3_5AsrForRNNT, get_cosine_schedule_with_warmup
 import manifest
+from manifest import MODEL, NEMO_FILE, REVISION
+from merge_lora import merge
+from metrics import word_error_rate
 
-MODEL = 'nvidia/nemotron-3.5-asr-streaming-0.6b'
-REVISION = 'ea30d66debe3740a08b573244286791d423d6b3e'
-NEMO_FILE = 'nemotron-3.5-asr-streaming-0.6b.nemo'
 SAMPLE_RATE = 16000
 LAYER = r'encoder\.layers\.\d+\.'
 TARGETS = {
@@ -87,10 +87,12 @@ def load_tokenizer() -> SentencePieceProcessor:
         return SentencePieceProcessor(model_proto=tar.extractfile(member).read())
 
 
-def make_batch(processor, tokenizer, model, items: list[dict], augmentation: Augmentation | None, device):
-    audios = [load_audio(i['audio']) for i in items]
-    if augmentation is not None:
-        audios = [augmentation(a) for a in audios]
+def to_device(inputs, device) -> dict:
+    return {k: v.to(device) if hasattr(v, 'to') else v for k, v in inputs.items()}
+
+
+def make_batch(processor, tokenizer, model, items: list[dict], augmentation: Augmentation, device):
+    audios = [augmentation(load_audio(i['audio'])) for i in items]
     inputs = processor(audios, sampling_rate=SAMPLE_RATE, language=[i['language'] for i in items], return_tensors='pt', padding=True)
     # The decoder starts with the blank, and the labels are padded with it. This is config.blank_token_id:
     # the `<blank>` of the processor is outside of the model's vocabulary
@@ -100,7 +102,7 @@ def make_batch(processor, tokenizer, model, items: list[dict], augmentation: Aug
     labels = torch.tensor([ids + [blank] * (width - len(ids)) for ids in labels])
     inputs['labels'] = labels
     inputs['decoder_input_ids'] = torch.cat([torch.full((len(items), 1), blank), labels], dim=1)
-    return {k: v.to(device) if hasattr(v, 'to') else v for k, v in inputs.items()}
+    return to_device(inputs, device)
 
 
 def rnnt_loss(base, logits, labels, attention_mask, max_per_token: float):
@@ -128,30 +130,19 @@ def transcribe(model, processor, items: list[dict], device) -> list[str]:
     with torch.no_grad():
         for item in items:
             inputs = processor(load_audio(item['audio']), sampling_rate=SAMPLE_RATE, language=item['language'], return_tensors='pt')
-            inputs = {k: v.to(device) if hasattr(v, 'to') else v for k, v in inputs.items()}
-            output = model.generate(**inputs)
+            output = model.generate(**to_device(inputs, device))
             ids = output.sequences if hasattr(output, 'sequences') else output
             texts.append(processor.batch_decode(ids, skip_special_tokens=True)[0].strip())
     model.train()
     return texts
 
 
-def word_error_rate(items: list[dict], texts: list[str]) -> dict:
-    """WER in total, per language and per group of the manifest"""
-    result = {}
-    for key in sorted({i['language'] for i in items} | {i['group'] for i in items if 'group' in i}) + ['all']:
-        pairs = [(i, t) for i, t in zip(items, texts) if key in ('all', i['language'], i.get('group'))]
-        errors = [manifest.word_errors(i['text'], t) for i, t in pairs]
-        result[key] = round(sum(e for e, _ in errors) / max(1, sum(n for _, n in errors)), 4)
-    return result
-
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--train', action='append', required=True, help='manifest, can be repeated')
-    parser.add_argument('--dev', required=True, help='manifest the best adapter is chosen on')
+    parser.add_argument('--dev', action='append', required=True, help='manifest the best adapter is chosen on, can be repeated')
     parser.add_argument('--replay', action='append', default=[], help='manifest of real speech against forgetting')
-    parser.add_argument('--replay-share', type=float, default=0.3, help='the share of the steps taken from --replay')
+    parser.add_argument('--replay-share', type=float, default=0.5, help='the share of the steps taken from --replay')
     parser.add_argument('--replay-batch', type=int, default=None, help='the batch of these steps, --batch if not given')
     parser.add_argument('--out', required=True)
     parser.add_argument('--steps', type=int, default=3000)
@@ -159,7 +150,7 @@ def main():
     parser.add_argument('--lr', type=float, default=1e-4)
     parser.add_argument('--warmup', type=int, default=200)
     parser.add_argument('--rank', type=int, default=16)
-    parser.add_argument('--targets', choices=TARGETS, default='encoder')
+    parser.add_argument('--targets', choices=TARGETS, default='all')
     parser.add_argument('--max-loss-per-token', type=float, default=20.0)
     parser.add_argument('--augment', type=float, default=0.5, help='the probability of each augmentation')
     parser.add_argument('--noise-dir', default=None, help='folder with noise recordings, e.g. MUSAN noise')
@@ -177,7 +168,9 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     train = [r for path in args.train for r in manifest.read(path)]
     replay = [r for path in args.replay for r in manifest.read(path)]
-    dev = manifest.read(args.dev)
+    dev = [r for path in args.dev for r in manifest.read(path)]
+    if not train or not dev:
+        raise ValueError(f'Empty manifests: train {len(train)}, dev {len(dev)}')
     dev = rnd.sample(dev, min(args.dev_limit, len(dev)))
     noise_files = sorted(str(p) for p in Path(args.noise_dir).rglob('*.wav')) if args.noise_dir else []
     augmentation = Augmentation(noise_files, args.augment, tuple(args.snr), rnd)
@@ -185,7 +178,7 @@ def main():
 
     processor = AutoProcessor.from_pretrained(MODEL, revision=REVISION)
     tokenizer = load_tokenizer()
-    base = Nemotron3_5AsrForRNNT.from_pretrained(MODEL, revision=REVISION, torch_dtype=torch.float32).to(args.device)
+    base = Nemotron3_5AsrForRNNT.from_pretrained(MODEL, revision=REVISION, dtype=torch.float32).to(args.device)
     # 0.1 is the default of the config, the checkpoint was trained without it (stochastic_depth_drop_prob: 0).
     # A layer is dropped for the whole batch, and every 6th batch got a loss of thousands
     base.encoder.layerdrop = 0
@@ -197,7 +190,7 @@ def main():
     optimizer = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=args.lr, weight_decay=0.01)
     schedule = get_cosine_schedule_with_warmup(optimizer, args.warmup, args.steps)
     autocast = torch.autocast('cuda', dtype=torch.bfloat16) if args.device.startswith('cuda') else torch.autocast('cpu', enabled=False)
-    best = log['base_dev']['all']
+    best, saved = log['base_dev']['all'], False
     model.train()
     for step in range(1, args.steps + 1):
         # A batch comes from one source, so short phrases are not padded up to the long clips of the replay
@@ -223,22 +216,17 @@ def main():
             if entry['dev']['all'] < best:
                 best = entry['dev']['all']
                 model.save_pretrained(out/'adapter')
-                entry['saved'] = True
+                entry['saved'] = saved = True
         log['steps'].append(entry)
         print(json.dumps(entry), flush=True)
         (out/'log.json').write_text(json.dumps(log, indent=1))
 
-    if not (out/'adapter').exists():
+    if not saved:
         if not args.always_merge:
             print('The dev WER never got better than the base model; nothing to merge')
             return
         model.save_pretrained(out/'adapter')
-    # The best adapter, merged into the weights: the same architecture and names as the base model
-    merged = PeftModel.from_pretrained(
-        Nemotron3_5AsrForRNNT.from_pretrained(MODEL, revision=REVISION, torch_dtype=torch.float32), out/'adapter'
-    ).merge_and_unload()
-    merged.save_pretrained(out/'merged')
-    processor.save_pretrained(out/'merged')
+    merge(out/'adapter', 1.0, out/'merged')
     print(f'dev WER {log["base_dev"]["all"]} -> {best}; merged model in {out/"merged"}')
 
 

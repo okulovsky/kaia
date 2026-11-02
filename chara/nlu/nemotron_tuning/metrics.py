@@ -6,18 +6,24 @@ No heavy imports, as in manifest.py.
 """
 from collections import defaultdict
 import manifest
+from manifest import edit_distance
 
 CLOSE = 0.25
 
 
-def edit_distance(a, b) -> int:
-    previous = list(range(len(b) + 1))
-    for i, x in enumerate(a, 1):
-        current = [i]
-        for j, y in enumerate(b, 1):
-            current.append(min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + (x != y)))
-        previous = current
-    return previous[-1]
+def word_error_rate(items: list[dict], texts: list[str]) -> dict:
+    """WER in total, per language and per group of the manifest"""
+    result = {}
+    for key in sorted({i['language'] for i in items} | {i['group'] for i in items if 'group' in i}) + ['all']:
+        pairs = [(i, t) for i, t in zip(items, texts) if key in ('all', i['language'], i.get('group'))]
+        errors = [manifest.word_errors(i['text'], t) for i, t in pairs]
+        result[key] = round(sum(e for e, _ in errors) / max(1, sum(n for _, n in errors)), 4)
+    return result
+
+
+def with_slot(rows: list[dict]) -> list[dict]:
+    """The rows of the phrases with a word in the slot: real speech and ordinary phrases have none"""
+    return [r for r in rows if r.get('word')]
 
 
 def slot_result(text: str, word: str, hypothesis: str) -> dict:
@@ -64,7 +70,7 @@ def summary(rows: list[dict]) -> dict:
 
 
 def table(rows: list[dict]) -> list[str]:
-    """By group and language, and by group over all the languages"""
+    """By group and language, and by group over all the languages. The rows must have a slot, see with_slot"""
     groups = defaultdict(list)
     for row in rows:
         groups[row['group'], row['language']].append(row)

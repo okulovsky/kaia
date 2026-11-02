@@ -1,6 +1,7 @@
 """
-The speech recognition systems of Kaia side by side on the phrases of build_dataset.py words, through BrainBox as Kaia runs them.
-It works in the environment of Kaia. The results of each system are in <out>/<system>.jsonl, a stopped run continues.
+The speech recognition systems of Kaia side by side on a manifest, through BrainBox as Kaia runs them.
+It works in the environment of Kaia. The results of each system are in <out>/<system>.jsonl, or <out>/<system>-<model>.jsonl
+with --nemotron-model, and a stopped run continues. The report is in <out>/report.txt.
 
     python chara/nlu/nemotron_tuning/compare.py --manifest <data>/words-test.jsonl --dataset <folder>/dataset.json --out <run>
 
@@ -8,22 +9,16 @@ It works in the environment of Kaia. The results of each system are in <out>/<sy
 """
 import argparse
 import json
-import sys
 import time
 import wave
 from pathlib import Path
 from avatar.daemon import StreamingSTTService
 from brainbox.deciders import Nemotron, WhisperKenLM
-from foundation_kaia.fork import Fork
-from foundation_kaia.misc import Loc
 from chara.nlu.kenlm_training import KenLMTrainingPipeline
-from kaia.app import KaiaAppSettings
+import manifest
+import metrics
+from build_dataset import kaia_brainbox
 
-sys.path.insert(0, str(Path(__file__).parent))
-import manifest  # noqa: E402
-import metrics  # noqa: E402
-
-WORKING_FOLDER = Loc.data_folder/'nemotron-tuning'
 LANGUAGES = ('en', 'de', 'ru')
 CHUNK_SIZE = 7056
 
@@ -64,7 +59,7 @@ def duration(data_path: str) -> float:
 
 
 def run(api, system: str, items: list[dict], out: Path, model: str | None) -> list[dict]:
-    path = out/f'{system}.jsonl'
+    path = out/(f'{system}-{model}.jsonl' if model and system.startswith('nemotron') else f'{system}.jsonl')
     done = {}
     if path.is_file():
         done = {r['audio']: r for r in map(json.loads, path.read_text().splitlines())}
@@ -98,15 +93,7 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     total = sum(duration(i['audio']) for i in items)
 
-    settings = KaiaAppSettings()
-    settings.kaia = None
-    settings.avatar_server = None
-    settings.avatar_processor = None
-    settings.brainbox.deciders_files_in_kaia_working_folder = False
-    app = settings.create_app(WORKING_FOLDER)
-    with Fork(app.brainbox_server):
-        api = app.brainbox_api
-        api.wait_for_connection(30)
+    with kaia_brainbox() as api:
         if any(s.startswith('whisper') for s in args.systems):
             texts = [r['text'] for r in json.loads(Path(args.dataset).read_text())]
             api.execute(WhisperKenLM.new_task().train_lm(KenLMTrainingPipeline.corpus(texts)))
@@ -114,7 +101,12 @@ def main():
         for system in args.systems:
             rows = run(api, system, items, out, args.nemotron_model)
             rtf = sum(r['seconds'] for r in rows) / total
-            lines = [f'{system}: {len(rows)} phrases, {total:.0f} s of audio, RTF {rtf:.2f}'] + metrics.table(rows)
+            wer = metrics.word_error_rate(rows, [r['hypothesis'] for r in rows])
+            exact = sum(manifest.normalize(r['text']) == manifest.normalize(r['hypothesis']) for r in rows)
+            lines = [f'{system}: {len(rows)} utterances, {total:.0f} s of audio, RTF {rtf:.2f}, exact {exact}', f'WER {wer}']
+            slotted = metrics.with_slot(rows)
+            if slotted:
+                lines += metrics.table(slotted)
             reports.extend(lines + [''])
             print('\n'.join(lines), flush=True)
     (out/'report.txt').write_text('\n'.join(reports))

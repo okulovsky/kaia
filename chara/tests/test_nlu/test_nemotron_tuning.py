@@ -97,6 +97,23 @@ class SlotResultTestCase(TestCase):
         self.assertTrue(result['slot_exact'])
         self.assertEqual(0, result['neighbour_errors'])
 
+    def test_only_rows_with_a_word_have_a_slot(self):
+        rows = [
+            dict(text='Call Anna.', word='Anna', hypothesis='call anna'),
+            dict(text='What time is it?', word='', hypothesis='what time is it'),
+            dict(text='The winter can be chilly.', hypothesis='the winter can be chilly'),
+        ]
+        self.assertEqual(rows[:1], metrics.with_slot(rows))
+
+    def test_word_error_rate_of_rows_with_and_without_a_group(self):
+        items = [
+            dict(text='Call Anna.', language='en-US', group='names'),
+            dict(text='The winter can be chilly.', language='en-US'),
+        ]
+        wer = metrics.word_error_rate(items, ['call anna', 'the winter is chilly'])
+        self.assertEqual(dict(names=0.0, all=round(2 / 7, 4)), {k: wer[k] for k in ('names', 'all')})
+        self.assertEqual(round(2 / 7, 4), wer['en-US'])
+
     def test_summary(self):
         rows = [
             dict(text='Call Anna.', word='Anna', hypothesis='call anna'),
@@ -112,6 +129,9 @@ class SlotResultTestCase(TestCase):
 class ManifestTestCase(TestCase):
     def test_yo_is_the_same_as_ye(self):
         self.assertEqual(manifest.normalize('Ещё раз!'), manifest.normalize('еще раз'))
+
+    def test_model_writes_without_the_stars_of_paraphrasing(self):
+        self.assertEqual('Come on, call Kagami already!', manifest.as_model_writes('come on**, call Kagami already!'))
 
     def test_transcript_closes_with_the_language_tag(self):
         self.assertEqual('Call Anna. <en-US>', manifest.transcript(dict(text='Call Anna.', language='en-US')))

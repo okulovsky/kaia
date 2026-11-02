@@ -1,5 +1,5 @@
 """
-Converts a model merged by train_lora.py into the GGUF of NeMo-Speech.cpp, the runtime of the Nemotron decider.
+Converts a model merged by train_lora.py or merge_lora.py into the GGUF of NeMo-Speech.cpp, the runtime of the Nemotron decider.
 
     python chara/nlu/nemotron_tuning/export_gguf.py --merged <run>/merged --out <run>/nemotron-tuned.q8_0.gguf \
         --nemo-speech <checkout of NVIDIA/NeMo-Speech.cpp> --converter-python <its venv>/bin/python
@@ -20,10 +20,9 @@ from pathlib import Path
 import torch
 from huggingface_hub import hf_hub_download
 from safetensors import safe_open
+from manifest import MODEL, NEMO_FILE, REVISION
 
-MODEL = 'nvidia/nemotron-3.5-asr-streaming-0.6b'
-REVISION = 'ea30d66debe3740a08b573244286791d423d6b3e'
-# brainbox/deciders/voice_analysis/nemotron/controller.py builds the runtime from this commit
+# The same as in brainbox/deciders/voice_analysis/nemotron/controller.py
 NEMO_SPEECH_COMMIT = '1a7e945f3e5553bc51995a1a7ec361ccee3c7280'
 
 
@@ -62,7 +61,7 @@ def variants(tensor: torch.Tensor):
 
 
 def find_mapping(nemo: dict, hf: LazyTensors) -> dict:
-    """NeMo name -> (Transformers name, how it is stored); fails if a trained tensor has no match"""
+    """NeMo name -> (Transformers name, how it is stored); fails if a Transformers tensor has no match"""
     by_shape = {}
     for name in hf.keys():
         by_shape.setdefault(hf.shape(name), []).append(name)
@@ -120,10 +119,10 @@ def main():
 
     commit = subprocess.run(['git', '-C', args.nemo_speech, 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip()
     if commit != NEMO_SPEECH_COMMIT:
-        print(f'Warning: NeMo-Speech.cpp is at {commit[:7]}, the decider runs {NEMO_SPEECH_COMMIT[:7]}')
+        print(f'Warning: NeMo-Speech.cpp is at {commit[:7]}, not at {NEMO_SPEECH_COMMIT[:7]}')
     out = Path(args.out).resolve()
     out.parent.mkdir(parents=True, exist_ok=True)
-    source = Path(hf_hub_download(MODEL, 'nemotron-3.5-asr-streaming-0.6b.nemo', revision=REVISION))
+    source = Path(hf_hub_download(MODEL, NEMO_FILE, revision=REVISION))
     mapping_file = out.parent/'nemo_mapping.json'
     with tempfile.TemporaryDirectory(dir=out.parent) as work:
         work = Path(work)
