@@ -119,6 +119,46 @@ SKILLS = {
     },
 }
 
+# Carriers the training never sees, for the second test: the carriers of SKILLS are in the training set, so the first test also measures memory
+UNSEEN_SKILLS = {
+    'en': {
+        'message': Skill(NAME, (
+            'Send a message to {word}', 'Tell {word} that dinner is ready', 'Is {word} online right now?',
+            'Show me the photos of {word}', 'When is the birthday of {word}?',
+        ), SKILLS['en']['call'].control),
+        'order': Skill(THING, (
+            'How much does {word} cost?', 'Find a recipe with {word}', 'Order {word} online', 'Where can I find {word}?',
+        ), SKILLS['en']['shopping'].control),
+        'home': Skill(PLACE, (
+            'Is the heating on in the {word}?', 'How warm is it in the {word}?', 'Play music in the {word}', 'Vacuum the {word} today',
+        ), SKILLS['en']['room'].control),
+    },
+    'de': {
+        'message': Skill(NAME, (
+            'Schick {word} eine Nachricht', 'Sag {word}, dass das Essen fertig ist', 'Ist {word} gerade online?',
+            'Zeig mir die Fotos von {word}', 'Wann hat {word} Geburtstag?',
+        ), SKILLS['de']['call'].control),
+        'order': Skill(THING, (
+            'Was kostet {word}?', 'Such ein Rezept mit {word}', 'Bestell {word} im Internet', 'Wo finde ich {word}?',
+        ), SKILLS['de']['shopping'].control),
+        'home': Skill(PLACE, (
+            'Läuft die Heizung im {word}?', 'Wie warm ist es im {word}?', 'Spiel Musik im {word}', 'Saug heute im {word}',
+        ), SKILLS['de']['room'].control),
+    },
+    'ru': {
+        'message': Skill(NAME, (
+            'Напиши сообщение {word}', 'Скажи {word}, что ужин готов', 'Передай привет {word}',
+            'Покажи фотографии {word}', 'Когда день рождения у {word}?',
+        ), SKILLS['ru']['call'].control),
+        'order': Skill(THING, (
+            'Сколько стоят {word}?', 'Найди рецепт, где есть {word}', 'Закажи {word} в интернете', 'Где найти {word}?',
+        ), SKILLS['ru']['shopping'].control),
+        'home': Skill(PLACE, (
+            'Работает ли отопление в {word}?', 'Какая температура в {word}?', 'Поставь музыку в {word}', 'Пропылесось в {word} сегодня',
+        ), SKILLS['ru']['room'].control),
+    },
+}
+
 
 def _pick(parts: tuple[list, ...], rnd: random.Random) -> str:
     simple, complex_ = parts
@@ -151,9 +191,9 @@ def _phrase(language: str, skill: str, group: str, carrier: str, word: str) -> d
     return dict(text=carrier.format(word=word), word=word, group=group, skill=skill, language=language)
 
 
-def phrases(language: str, group: str, count: int, rnd: random.Random, known: set[str]) -> list[dict]:
+def phrases(language: str, group: str, count: int, rnd: random.Random, known: set[str], all_skills: dict = SKILLS) -> list[dict]:
     """`count` phrases, evenly over the skills that can take the words of `group`. New words are added to `known`."""
-    skills = SKILLS[language]
+    skills = all_skills[language]
     names = [s for s in skills if group != 'names' or skills[s].kind == NAME]
     result = []
     for index in range(count):

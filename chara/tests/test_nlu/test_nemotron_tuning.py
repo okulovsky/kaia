@@ -43,6 +43,19 @@ class MadeUpWordsTestCase(TestCase):
                     self.assertIn(phrase['word'], phrase['text'])
                     self.assertNotIn('{', phrase['text'])
 
+    def test_unseen_carriers_are_not_in_the_training_carriers(self):
+        for language in words.LANGUAGES:
+            seen = {c for skill in words.SKILLS[language].values() for c in skill.carriers}
+            unseen = {c for skill in words.UNSEEN_SKILLS[language].values() for c in skill.carriers}
+            self.assertEqual(set(), seen & unseen)
+
+    def test_every_group_makes_an_unseen_phrase_with_the_word(self):
+        for language in words.LANGUAGES:
+            for group in words.GROUPS:
+                for phrase in words.phrases(language, group, 8, random.Random(1), set(), words.UNSEEN_SKILLS):
+                    self.assertIn(phrase['word'], phrase['text'])
+                    self.assertNotIn('{', phrase['text'])
+
     def test_test_and_train_words_do_not_overlap(self):
         rnd, known = random.Random(1), set()
         test = words.phrases('ru', 'new', 100, rnd, known)
