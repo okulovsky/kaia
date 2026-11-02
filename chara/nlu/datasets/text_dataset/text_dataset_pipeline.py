@@ -1,3 +1,4 @@
+import random
 from chara.paraphrasing.common import Paraphrase, ParsedTemplate, generate_values_for_variables
 from dataclasses import dataclass
 from pathlib import Path
@@ -52,7 +53,18 @@ class TextDatasetPipeline:
         return list(paraphrase_results.successes)
 
     @staticmethod
-    def export(cases, variants_count: int) -> list[dict]:
+    def export(cases, variants_count: int, seed: int = 0) -> list[dict]:
+        # The dubs draw from the global random. The same cases must give the same dataset.json, as it is hashed
+        # into the folder of the training, and the state is restored, so the seed does not affect the caller.
+        state = random.getstate()
+        random.seed(seed)
+        try:
+            return TextDatasetPipeline._export(cases, variants_count)
+        finally:
+            random.setstate(state)
+
+    @staticmethod
+    def _export(cases, variants_count: int) -> list[dict]:
         result = []
         for case in cases:
             intent = case.original_template.get_name()
