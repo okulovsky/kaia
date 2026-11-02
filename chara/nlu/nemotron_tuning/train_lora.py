@@ -137,12 +137,12 @@ def transcribe(model, processor, items: list[dict], device) -> list[str]:
 
 
 def word_error_rate(items: list[dict], texts: list[str]) -> dict:
-    """WER in total and per language"""
+    """WER in total, per language and per group of the manifest"""
     result = {}
-    for language in sorted({i['language'] for i in items}) + ['all']:
-        pairs = [(i, t) for i, t in zip(items, texts) if language in ('all', i['language'])]
+    for key in sorted({i['language'] for i in items} | {i['group'] for i in items if 'group' in i}) + ['all']:
+        pairs = [(i, t) for i, t in zip(items, texts) if key in ('all', i['language'], i.get('group'))]
         errors = [manifest.word_errors(i['text'], t) for i, t in pairs]
-        result[language] = round(sum(e for e, _ in errors) / max(1, sum(n for _, n in errors)), 4)
+        result[key] = round(sum(e for e, _ in errors) / max(1, sum(n for _, n in errors)), 4)
     return result
 
 
@@ -150,8 +150,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--train', action='append', required=True, help='manifest, can be repeated')
     parser.add_argument('--dev', required=True, help='manifest the best adapter is chosen on')
-    parser.add_argument('--replay', action='append', default=[], help='manifest of general speech against forgetting')
-    parser.add_argument('--replay-share', type=float, default=0.3, help='the share of the batch taken from --replay')
+    parser.add_argument('--replay', action='append', default=[], help='manifest of real speech against forgetting')
+    parser.add_argument('--replay-share', type=float, default=0.3, help='the share of the steps taken from --replay')
+    parser.add_argument('--replay-batch', type=int, default=None, help='the batch of these steps, --batch if not given')
     parser.add_argument('--out', required=True)
     parser.add_argument('--steps', type=int, default=3000)
     parser.add_argument('--batch', type=int, default=16)
@@ -199,8 +200,11 @@ def main():
     best = log['base_dev']['all']
     model.train()
     for step in range(1, args.steps + 1):
-        replay_count = int(round(args.batch * args.replay_share)) if replay else 0
-        items = rnd.sample(train, min(args.batch - replay_count, len(train))) + rnd.sample(replay, min(replay_count, len(replay)))
+        # A batch comes from one source, so short phrases are not padded up to the long clips of the replay
+        if replay and rnd.random() < args.replay_share:
+            items = rnd.sample(replay, min(args.replay_batch or args.batch, len(replay)))
+        else:
+            items = rnd.sample(train, min(args.batch, len(train)))
         inputs = make_batch(processor, tokenizer, base, items, augmentation, args.device)
         labels = inputs.pop('labels')
         begin = time.time()
