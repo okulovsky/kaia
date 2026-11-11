@@ -1,0 +1,10 @@
+{
+  "original_sha256": "c5db2e1b13575c822b13579482b2a623454f5d769b9257d28e91eedc9688bdeb",
+  "weights_bit_identical": true,
+  "weight_tensors": 79,
+  "unknown_word": "computeroo",
+  "predicted_phonemes": "[K][AH][M][P][Y][UW][T][ER][UW]",
+  "generated_negative": "interpretation",
+  "checkpoint_revision": "524f09e81b3962ffa5b3ef5af9953bbc059cce99",
+  "legacy_position_buffer_first_nonfinite_index": 4085
+}

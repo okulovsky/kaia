@@ -43,6 +43,9 @@ class FakeBrainBox:
     def __init__(self):
         self.cache = Cache()
         self.jobs = self
+        self.batches = self
+        self.submissions = []
+        self.job_batches = {}
         self.completed = {}
         self.voices = {}
         self.tts_calls = 0
@@ -82,9 +85,27 @@ class FakeBrainBox:
     def get_job(self, identity):
         if identity not in self.completed:
             raise ValueError("Can't find a job with id " + identity)
+        self.completed[identity].id = identity
+        self.completed[identity].batch = self.job_batches.get(identity)
         return self.completed[identity]
 
+    def get_jobs(self, ids):
+        return [self.get_job(identity) for identity in ids]
+
+    def get_batch_progress(self, batch_id):
+        ids = [
+            identity
+            for identity, batch in self.job_batches.items()
+            if batch == batch_id
+        ]
+        return SimpleNamespace(
+            is_finished=all(self.completed[identity].finished for identity in ids)
+        )
+
     def base_add(self, descriptions):
+        self.submissions.append([job.id for job in descriptions])
+        for job in descriptions:
+            self.job_batches[job.id] = job.batch
         for job in descriptions:
             self.calls += 1
             self.deciders.append(job.decider)

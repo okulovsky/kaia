@@ -12,55 +12,28 @@ from .io import read_json, write_json
 class DurableCasePipeline(BrainBoxCasePipeline):
     def __call__(self, cases):
         active = cases.clone().successes
+        if not active:
+            return CaseCollection([], cases.errors)
         folder = Chara.current.folder
         api = Chara.Apis.brainbox_api
         if self.uploader is not None:
             self.uploader.upload(active)
-        tasks = [self.task_builder(case) for case in active]
-        descriptions = []
-        ids = []
-        for task in tasks:
-            request = task.to_job_request()
-            if len(request.jobs) != 1 or request.jobs[0].dependencies:
-                raise ValueError("durable case stage requires one independent task")
-            job = request.jobs[0]
-            if not task.optionals.id:
-                raise ValueError("task identity must be persisted before submission")
-            job.batch = job.batch or "wakeword-" + folder.name
-            descriptions.append(job)
-            ids.append(job.id)
-        state = folder / "tasks.json"
-        if state.exists():
-            if read_json(state)["ids"] != ids:
-                raise ValueError("cached task identity mismatch")
-        else:
-            write_json(state, {"ids": ids})
-        for description in descriptions:
-            try:
-                api.jobs.get_job(description.id)
-                continue
-            except Exception as error:
-                # Only the explicit not-found response permits submission.
-                expected = "Can't find a job with id " + description.id
-                if expected not in str(error):
-                    raise RuntimeError(
-                        "cannot establish task state; refusing synthesis"
-                    ) from error
-            try:
-                api.jobs.base_add([description])
-            except Exception:  # noqa: BLE001 - Pipeline boundary records failures from remote services and native libraries.
-                # A lost response may follow a successful commit. Query the SAME id.
-                api.jobs.get_job(description.id)
-        pending = set(ids)
-        jobs = {}
-        while pending:
-            for task_id in tuple(pending):
-                job = api.jobs.get_job(task_id)
-                if job.finished:
-                    jobs[task_id] = job
-                    pending.remove(task_id)
-            if pending:
-                time.sleep(1)
+        descriptions = self._build_descriptions(active)
+        ids = [job.id for job in descriptions]
+        batch_id = self._persist_batch(folder, ids)
+        existing, missing = self._find_existing(api, descriptions)
+        for job in missing:
+            job.batch = batch_id
+        self._submit_missing(api, missing)
+        # Older saved runs may contain jobs assigned to a shared legacy batch.
+        # Poll those jobs directly rather than waiting for unrelated legacy jobs.
+        tracked = bool(missing) or any(
+            getattr(job, "batch", None) == batch_id for job in existing
+        )
+        jobs = self._wait_for_results(api, ids, batch_id if tracked else None)
+        return self._apply_results(cases, active, folder, api, ids, jobs)
+
+    def _apply_results(self, cases, active, folder, api, ids, jobs):
         results = []
         files = folder / "files"
         files.mkdir(exist_ok=True)
@@ -81,3 +54,74 @@ class DurableCasePipeline(BrainBoxCasePipeline):
             results.append(SimpleNamespace(result=result, error=job.error))
         output = self.result_applicator.apply_iterable_result(active, results)
         return CaseCollection(output, cases.errors)
+
+    def _build_descriptions(self, active):
+        descriptions = []
+        for case in active:
+            task = self.task_builder(case)
+            request = task.to_job_request()
+            if len(request.jobs) != 1 or request.jobs[0].dependencies:
+                raise ValueError("durable case stage requires one independent task")
+            if not task.optionals.id or request.jobs[0].id != task.optionals.id:
+                raise ValueError("task identity must be persisted before submission")
+            descriptions.append(request.jobs[0])
+        if len({job.id for job in descriptions}) != len(descriptions):
+            raise ValueError("duplicate task identities in batch")
+        return descriptions
+
+    @staticmethod
+    def _persist_batch(folder, ids):
+        from uuid import uuid4
+
+        path = folder / "tasks.json"
+        previous = read_json(path) if path.exists() else {"ids": ids}
+        if previous["ids"] != ids:
+            raise ValueError("cached task identity mismatch")
+        if not previous.get("batch_id"):
+            previous["batch_id"] = "wakeword-" + uuid4().hex
+            write_json(path, previous)
+        return previous["batch_id"]
+
+    @staticmethod
+    def _find_existing(api, descriptions):
+        existing, missing = [], []
+        for description in descriptions:
+            try:
+                existing.append(api.jobs.get_job(description.id))
+            except Exception as error:
+                expected = "Can't find a job with id " + description.id
+                if expected not in str(error):
+                    raise RuntimeError(
+                        "cannot establish task state; refusing synthesis"
+                    ) from error
+                missing.append(description)
+        return existing, missing
+
+    @staticmethod
+    def _submit_missing(api, descriptions):
+        if not descriptions:
+            return
+        try:
+            api.jobs.base_add(descriptions)
+        except Exception:  # noqa: BLE001 - A lost response must be reconciled without duplicate submission.
+            # The transaction may have committed despite the lost HTTP response.
+            # Never retry this submission blindly, even if only some IDs are visible.
+            list(api.jobs.get_jobs([job.id for job in descriptions]))
+
+    @staticmethod
+    def _wait_for_results(api, ids, batch_id):
+        while True:
+            if batch_id is not None:
+                progress = api.batches.get_batch_progress(batch_id)
+                if not progress.is_finished:
+                    time.sleep(1)
+                    continue
+            records = list(api.jobs.get_jobs(ids))
+            jobs = {job.id: job for job in records}
+            if len(records) != len(ids) or set(jobs) != set(ids):
+                raise RuntimeError(
+                    "BrainBox returned incomplete or duplicate task results"
+                )
+            if all(job.finished for job in records):
+                return jobs
+            time.sleep(1)

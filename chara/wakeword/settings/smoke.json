@@ -1,0 +1,145 @@
+{
+  "generation": {
+    "_comments": {
+      "name": "Generation run name in lowercase snake_case; this is a label, not the spoken target.",
+      "target_variants": "Wakeword strings to synthesize as positive examples. Change these to select the actual wakeword.",
+      "counts": "Smoke test: 2 accepted samples per class/split, 8 total. Rejected samples go to review; each group retains the 3N synthesis attempt limit.",
+      "language_code": "Recognition language. The current adversarial text generator supports English (en) only.",
+      "min_vosk_confidence": "Minimum Vosk confidence for accepting a recognized target word, from 0 to 1. Separate from the training classification threshold.",
+      "augmentation_rounds": "Number of augmentation rounds used to produce feature rows from accepted audio.",
+      "custom_negative_phrases": "Additional negative phrases to synthesize; these should not contain the target wakeword.",
+      "prefix": "Short text before the target word for positive synthesis.",
+      "suffix": "Short text after the target word for positive synthesis. Vosk extracts the target word from this utterance.",
+      "seed": "Random seed for generation; independent of the training seed.",
+      "batch_size": "Submit up to 2 tasks together to test BrainBox batch submission.",
+      "augmentation_batch_size": "Batch size for local audio augmentation and feature extraction.",
+      "resource_folder": "Local resource cache path, resolved relative to this configuration file.",
+      "resource_specs": "Pinned resource specifications for feature models, phonemization, augmentation audio and ACAV background features. Usually keep unchanged.",
+      "schema_version": "Generation configuration version; keep 2."
+    },
+    "name": "computer",
+    "target_variants": [
+      "computer"
+    ],
+    "counts": {
+      "positive_train": 2,
+      "positive_test": 2,
+      "negative_train": 2,
+      "negative_test": 2
+    },
+    "language_code": "en",
+    "min_vosk_confidence": 0.7,
+    "augmentation_rounds": 1,
+    "custom_negative_phrases": [],
+    "prefix": "Hi ",
+    "suffix": " go.",
+    "seed": 42,
+    "batch_size": 2,
+    "augmentation_batch_size": 16,
+    "resource_folder": "../../../data/wakeword-resources",
+    "resource_specs": [
+      {
+        "id": "embedding_model.onnx",
+        "kind": "model",
+        "revision": "v0.5.1",
+        "sha256": "70d164290c1d095d1d4ee149bc5e00543250a7316b59f31d056cff7bd3075c1f",
+        "source": "https://github.com/dscripka/openWakeWord/releases/download/v0.5.1/embedding_model.onnx"
+      },
+      {
+        "id": "melspectrogram.onnx",
+        "kind": "model",
+        "revision": "v0.5.1",
+        "sha256": "ba2b0e0f8b7b875369a2c89cb13360ff53bac436f2895cced9f479fa65eb176f",
+        "source": "https://github.com/dscripka/openWakeWord/releases/download/v0.5.1/melspectrogram.onnx"
+      },
+      {
+        "id": "en_us_cmudict_forward.pt",
+        "kind": "phonemizer",
+        "revision": "524f09e81b3962ffa5b3ef5af9953bbc059cce99",
+        "source": "https://huggingface.co/NRC-CNRC/en_us_cmudict_ipa_forward_g2p/resolve/524f09e81b3962ffa5b3ef5af9953bbc059cce99/en_us_cmudict_forward.pt",
+        "sha256": "c5db2e1b13575c822b13579482b2a623454f5d769b9257d28e91eedc9688bdeb"
+      },
+      {
+        "id": "mit_rir",
+        "kind": "mit_rir",
+        "source": "davidscripka/MIT_environmental_impulse_responses",
+        "revision": "main"
+      },
+      {
+        "id": "fma_small.zip",
+        "kind": "background",
+        "source": "https://os.unil.cloud.switch.ch/fma/fma_small.zip",
+        "revision": "fma_small"
+      },
+      {
+        "id": "acav.npy",
+        "kind": "acav",
+        "revision": "main",
+        "source": "https://huggingface.co/datasets/davidscripka/openwakeword_features/resolve/main/openwakeword_features_ACAV100M_2000_hrs_16bit.npy"
+      }
+    ],
+    "schema_version": 2
+  },
+  "training": {
+    "_comments": {
+      "schema_version": "Configuration format version. Keep 1 for the current loader.",
+      "model_name": "Safe output file name without an extension; the exported model is <model_name>.onnx.",
+      "seed": "Random seed for initialization and sampling (integer from 0 through 4294967295). Cross-platform bitwise reproducibility is not guaranteed.",
+      "device": "Training device: cpu, auto (CUDA when available, otherwise CPU), or cuda (fails if unavailable). ONNX validation always uses CPU.",
+      "num_threads": "Number of CPU threads used by PyTorch and ONNX Runtime.",
+      "mode": "Run label: smoke or production. This label does not change the explicit iteration counts.",
+      "stage_steps": "Sampling iterations for each of the three training stages. Hard mining and gradient accumulation can produce fewer optimizer updates.",
+      "stage_learning_rates": "Base learning rate for each of the three stages. Each stage creates a new Adam optimizer and uses warmup, hold, and cosine decay.",
+      "batch_counts": "Examples sampled with replacement per iteration: positive = target-word features; adversarial_negative = generated negative features; background = ACAV windows. All three counts must be positive integers.",
+      "accumulation_examples": "Minimum retained examples accumulated before an optimizer update. A nonempty remainder is applied before the final validation of each stage.",
+      "max_negative_weight": "Initial maximum negative-example loss weight. Each stage ramps from 1 to this maximum; the maximum can double after stages 1 and 2 if the best historical background rate remains above the target.",
+      "target_window_fp_per_hour": "Target threshold-positive background windows per feature-equivalent hour, used for negative-weight adaptation. This is not a rate of independent audio activation events.",
+      "threshold": "Classification threshold in [0, 1]: a score greater than or equal to this value is positive. Separate from Vosk recognition confidence.",
+      "validations_per_stage": "Maximum validation events per stage, from 1 through 20. Short stages may have fewer unique validation iterations.",
+      "validation_start_fractions": "Fraction of each stage elapsed before validation starts. For example, 0.75 uses the last quarter; 0 starts immediately; 1 validates only at the end.",
+      "validation_batch_size": "Maximum examples or background windows evaluated together. Lower values reduce batch memory use.",
+      "export_atol": "Absolute tolerance for PyTorch-versus-ONNX probability parity: abs(reference - exported) <= export_atol + export_rtol * abs(reference).",
+      "export_rtol": "Relative tolerance in the ONNX parity check; used together with export_atol.",
+      "recipe_version": "Training recipe identifier. Keep notebook-28-v1 unless implementing a new versioned recipe.",
+      "selection_version": "Checkpoint selection policy identifier. Keep percentiles-v1 for the current implementation.",
+      "background_version": "Background segmentation and window policy identifier. Keep segmented-windows-v1 for the current implementation."
+    },
+    "schema_version": 1,
+    "model_name": "wakeword",
+    "seed": 42,
+    "device": "auto",
+    "num_threads": 2,
+    "mode": "smoke",
+    "stage_steps": [
+      8,
+      4,
+      4
+    ],
+    "stage_learning_rates": [
+      0.0001,
+      1e-05,
+      1e-06
+    ],
+    "batch_counts": {
+      "positive": 2,
+      "adversarial_negative": 2,
+      "background": 4
+    },
+    "accumulation_examples": 8,
+    "max_negative_weight": 10,
+    "target_window_fp_per_hour": 0.5,
+    "threshold": 0.5,
+    "validations_per_stage": 20,
+    "validation_start_fractions": [
+      0.75,
+      0.0,
+      0.0
+    ],
+    "validation_batch_size": 4096,
+    "export_atol": 1e-05,
+    "export_rtol": 0.0001,
+    "recipe_version": "notebook-28-v1",
+    "selection_version": "percentiles-v1",
+    "background_version": "segmented-windows-v1"
+  }
+}

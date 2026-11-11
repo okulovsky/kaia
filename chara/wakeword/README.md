@@ -35,7 +35,18 @@ python -m brainbox.run --data-folder ./brainbox-data
 
 Replace `./brainbox-data` with your existing BrainBox data directory. Keep the server running.
 
-### 4. Prepare resources and train
+### 4. Get a Hugging Face token
+
+Create a **Read** token in [Hugging Face settings](https://huggingface.co/settings/tokens), then run:
+
+```powershell
+conda activate wakeword
+huggingface-cli login
+```
+
+Paste the token at `Enter your token` and press Enter (input is hidden). Answer `n` when asked to add a Git credential. Then run `make setup`.
+
+### 5. Prepare resources and train
 
 Back in the `wakeword` terminal, from `chara/wakeword`:
 
@@ -47,7 +58,7 @@ make run OUTPUT=../../temp/wakeword/my-word-001
 
 The first setup downloads models and datasets and requires more than 25 GB of free disk space. Use a new `OUTPUT` directory when training a different wake word.
 
-### 5. Get the results
+### 6. Get the results
 
 Open `temp/wakeword/my-word-001/training/` relative to the repository root:
 
