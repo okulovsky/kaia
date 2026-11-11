@@ -1,0 +1,25 @@
+# Host-side processing only. BrainBox/Chara itself comes from the kaia environment.
+--extra-index-url https://download.pytorch.org/whl/cpu
+numpy==1.26.4
+scipy==1.12.0
+soundfile==0.12.1
+onnxruntime==1.17.3
+onnx==1.16.1
+matplotlib==3.9.2
+torch==2.2.2+cpu
+torchaudio==2.2.2+cpu
+openwakeword @ git+https://github.com/dscripka/openwakeword.git@368c03716d1e92591906a84949bc477f3a834455
+audiomentations==0.33.0
+torch-audiomentations==0.11.1
+speechbrain==0.5.16
+huggingface-hub==0.25.2
+torchinfo==1.8.0
+torchmetrics==0.11.4
+acoustics==0.2.6
+mutagen==1.47.0
+pronouncing==0.2.0
+datasets==2.19.2
+deep-phonemizer==0.0.19
+pyarrow==16.1.0
+setuptools==80.9.0
+networkx==3.3

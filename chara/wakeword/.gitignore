@@ -1,0 +1,13 @@
+﻿.staging/
+__pycache__/
+*.pyc
+.venv/
+venv/
+dist/
+*.egg-info/
+*.tmp
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
