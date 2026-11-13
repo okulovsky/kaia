@@ -1,0 +1,3 @@
+# Optional static analysis tools; not part of the runtime environment.
+ruff==0.17.4
+mypy==2.4.1

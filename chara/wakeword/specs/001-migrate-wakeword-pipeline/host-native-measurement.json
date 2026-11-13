@@ -1,0 +1,6 @@
+{
+  "exit_code": 0,
+  "seconds": 44.28,
+  "peak_rss_mib": 464.7,
+  "scope": "synthetic native smoke only; excludes BrainBox; concurrent remote test"
+}

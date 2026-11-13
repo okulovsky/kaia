@@ -1,0 +1,31 @@
+{
+  "models": {
+    "embedding_model.onnx": "70d164290c1d095d1d4ee149bc5e00543250a7316b59f31d056cff7bd3075c1f",
+    "melspectrogram.onnx": "ba2b0e0f8b7b875369a2c89cb13360ff53bac436f2895cced9f479fa65eb176f"
+  },
+  "shapes": {
+    "positive_features_train.npy": [
+      2,
+      16,
+      96
+    ],
+    "positive_features_test.npy": [
+      2,
+      16,
+      96
+    ],
+    "negative_features_train.npy": [
+      2,
+      16,
+      96
+    ],
+    "negative_features_test.npy": [
+      2,
+      16,
+      96
+    ]
+  },
+  "platform": "win32",
+  "python": "3.12.2 (tags/v3.12.2:6abddd9, Feb  6 2024, 21:26:36) [MSC v.1937 64 bit (AMD64)]",
+  "fixture": "synthetic signals; not a generated training dataset"
+}

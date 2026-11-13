@@ -1,0 +1,62 @@
+{
+  "_comments": {
+    "schema_version": "Configuration format version. Keep 1 for the current loader.",
+    "model_name": "Safe output file name without an extension; the exported model is <model_name>.onnx.",
+    "seed": "Random seed for initialization and sampling (integer from 0 through 4294967295). Cross-platform bitwise reproducibility is not guaranteed.",
+    "device": "Training device: cpu, auto (CUDA when available, otherwise CPU), or cuda (fails if unavailable). ONNX validation always uses CPU.",
+    "num_threads": "Number of CPU threads used by PyTorch and ONNX Runtime.",
+    "mode": "Run label: smoke or production. This label does not change the explicit iteration counts.",
+    "stage_steps": "Sampling iterations for each of the three training stages. Hard mining and gradient accumulation can produce fewer optimizer updates.",
+    "stage_learning_rates": "Base learning rate for each of the three stages. Each stage creates a new Adam optimizer and uses warmup, hold, and cosine decay.",
+    "batch_counts": "Examples sampled with replacement per iteration: positive = target-word features; adversarial_negative = generated negative features; background = ACAV windows. All three counts must be positive integers.",
+    "accumulation_examples": "Minimum retained examples accumulated before an optimizer update. A nonempty remainder is applied before the final validation of each stage.",
+    "max_negative_weight": "Initial maximum negative-example loss weight. Each stage ramps from 1 to this maximum; the maximum can double after stages 1 and 2 if the best historical background rate remains above the target.",
+    "target_window_fp_per_hour": "Target threshold-positive background windows per feature-equivalent hour, used for negative-weight adaptation. This is not a rate of independent audio activation events.",
+    "threshold": "Classification threshold in [0, 1]: a score greater than or equal to this value is positive. Separate from Vosk recognition confidence.",
+    "validations_per_stage": "Maximum validation events per stage, from 1 through 20. Short stages may have fewer unique validation iterations.",
+    "validation_start_fractions": "Fraction of each stage elapsed before validation starts. For example, 0.75 uses the last quarter; 0 starts immediately; 1 validates only at the end.",
+    "validation_batch_size": "Maximum examples or background windows evaluated together. Lower values reduce batch memory use.",
+    "export_atol": "Absolute tolerance for PyTorch-versus-ONNX probability parity: abs(reference - exported) <= export_atol + export_rtol * abs(reference).",
+    "export_rtol": "Relative tolerance in the ONNX parity check; used together with export_atol.",
+    "recipe_version": "Training recipe identifier. Keep notebook-28-v1 unless implementing a new versioned recipe.",
+    "selection_version": "Checkpoint selection policy identifier. Keep percentiles-v1 for the current implementation.",
+    "background_version": "Background segmentation and window policy identifier. Keep segmented-windows-v1 for the current implementation."
+  },
+  "schema_version": 1,
+  "model_name": "wakeword",
+  "seed": 42,
+  "device": "cpu",
+  "num_threads": 2,
+  "mode": "smoke",
+  "stage_steps": [
+    8,
+    4,
+    4
+  ],
+  "stage_learning_rates": [
+    0.0001,
+    1e-05,
+    1e-06
+  ],
+  "batch_counts": {
+    "positive": 2,
+    "adversarial_negative": 2,
+    "background": 4
+  },
+  "accumulation_examples": 8,
+  "max_negative_weight": 10.0,
+  "target_window_fp_per_hour": 0.5,
+  "threshold": 0.5,
+  "validations_per_stage": 20,
+  "validation_start_fractions": [
+    0.75,
+    0.0,
+    0.0
+  ],
+  "validation_batch_size": 4096,
+  "export_atol": 1e-05,
+  "export_rtol": 0.0001,
+  "recipe_version": "notebook-28-v1",
+  "selection_version": "percentiles-v1",
+  "background_version": "segmented-windows-v1"
+}

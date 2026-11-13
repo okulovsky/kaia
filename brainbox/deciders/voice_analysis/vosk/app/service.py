@@ -52,7 +52,7 @@ class VoskService(IVosk):
 
     def transcribe_to_array(self, file: FileLike, model: str | None = None) -> list[dict[str, JSON]]:
         result = self.transcribe(file, model)
-        return [item for part in result for item in part['result']]
+        return [item for part in result for item in part.get('result', [])]
 
     def transcribe_to_string(self, file: FileLike, model: str | None = None) -> str:
         return ' '.join(z['word'] for z in self.transcribe_to_array(file, model))

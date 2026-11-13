@@ -1,0 +1,102 @@
+{
+  "status": "complete",
+  "summary": {
+    "negative_test": {
+      "accepted": 1,
+      "attempts": 1,
+      "budget": 3,
+      "review": 0,
+      "target": 1
+    },
+    "negative_train": {
+      "accepted": 1,
+      "attempts": 1,
+      "budget": 3,
+      "review": 0,
+      "target": 1
+    },
+    "positive_test": {
+      "accepted": 1,
+      "attempts": 1,
+      "budget": 3,
+      "review": 0,
+      "target": 1
+    },
+    "positive_train": {
+      "accepted": 1,
+      "attempts": 1,
+      "budget": 3,
+      "review": 0,
+      "target": 1
+    }
+  },
+  "jobs": [
+    {
+      "id": "85614fd222e947a88a65f6f42c12e45e",
+      "decider": "ParlerTts",
+      "method": "voiceover_with_description",
+      "finished": true,
+      "error": null
+    },
+    {
+      "id": "dec80f9b-1347-585f-99f8-40994472e674",
+      "decider": "Vosk",
+      "method": "transcribe_to_array",
+      "finished": true,
+      "error": null
+    },
+    {
+      "id": "67d959c0ac6f472fb04dd1717b0ba1dd",
+      "decider": "ParlerTts",
+      "method": "voiceover_with_description",
+      "finished": true,
+      "error": null
+    },
+    {
+      "id": "de74978d-9919-5e10-b7b2-76ffd66b76ed",
+      "decider": "Vosk",
+      "method": "transcribe_to_array",
+      "finished": true,
+      "error": null
+    },
+    {
+      "id": "1e799376c58f4ea8b978339561379183",
+      "decider": "ParlerTts",
+      "method": "voiceover_with_description",
+      "finished": true,
+      "error": null
+    },
+    {
+      "id": "ad3a8ae9d5314050bcc3b3789a9dc2bc",
+      "decider": "ParlerTts",
+      "method": "voiceover_with_description",
+      "finished": true,
+      "error": null
+    }
+  ],
+  "shapes": {
+    "negative_features_test.npy": [
+      1,
+      16,
+      96
+    ],
+    "negative_features_train.npy": [
+      1,
+      16,
+      96
+    ],
+    "positive_features_test.npy": [
+      1,
+      16,
+      96
+    ],
+    "positive_features_train.npy": [
+      1,
+      16,
+      96
+    ]
+  },
+  "fixture": "real Parler/Vosk, synthetic background/RIR/ACAV, one accepted WAV per class/split",
+  "cached_repeat": "successful; no synthesis stages in cached invocation log",
+  "seconds_from_first_stage": 1019
+}

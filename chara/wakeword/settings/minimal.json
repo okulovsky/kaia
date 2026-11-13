@@ -1,0 +1,64 @@
+{
+  "augmentation_batch_size": 16,
+  "augmentation_rounds": 1,
+  "batch_size": 16,
+  "counts": {
+    "negative_test": 2,
+    "negative_train": 2,
+    "positive_test": 2,
+    "positive_train": 2
+  },
+  "custom_negative_phrases": [],
+  "language_code": "en",
+  "min_vosk_confidence": 0.7,
+  "name": "computer",
+  "prefix": "Hi ",
+  "resource_specs": [
+    {
+      "id": "embedding_model.onnx",
+      "kind": "model",
+      "revision": "v0.5.1",
+      "sha256": "70d164290c1d095d1d4ee149bc5e00543250a7316b59f31d056cff7bd3075c1f",
+      "source": "https://github.com/dscripka/openWakeWord/releases/download/v0.5.1/embedding_model.onnx"
+    },
+    {
+      "id": "melspectrogram.onnx",
+      "kind": "model",
+      "revision": "v0.5.1",
+      "sha256": "ba2b0e0f8b7b875369a2c89cb13360ff53bac436f2895cced9f479fa65eb176f",
+      "source": "https://github.com/dscripka/openWakeWord/releases/download/v0.5.1/melspectrogram.onnx"
+    },
+    {
+      "id": "en_us_cmudict_forward.pt",
+      "kind": "phonemizer",
+      "revision": "524f09e81b3962ffa5b3ef5af9953bbc059cce99",
+      "source": "https://huggingface.co/NRC-CNRC/en_us_cmudict_ipa_forward_g2p/resolve/524f09e81b3962ffa5b3ef5af9953bbc059cce99/en_us_cmudict_forward.pt",
+      "sha256": "c5db2e1b13575c822b13579482b2a623454f5d769b9257d28e91eedc9688bdeb"
+    },
+    {
+      "id": "mit_rir",
+      "kind": "mit_rir",
+      "source": "davidscripka/MIT_environmental_impulse_responses",
+      "revision": "main"
+    },
+    {
+      "id": "fma_small.zip",
+      "kind": "background",
+      "source": "https://os.unil.cloud.switch.ch/fma/fma_small.zip",
+      "revision": "fma_small"
+    },
+    {
+      "id": "acav.npy",
+      "kind": "acav",
+      "revision": "main",
+      "source": "https://huggingface.co/datasets/davidscripka/openwakeword_features/resolve/main/openwakeword_features_ACAV100M_2000_hrs_16bit.npy"
+    }
+  ],
+  "schema_version": 2,
+  "seed": 42,
+  "suffix": " go.",
+  "target_variants": [
+    "computer"
+  ],
+  "resource_folder": "../../../data/wakeword-resources"
+}
