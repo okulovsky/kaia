@@ -4,8 +4,11 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from wakeword.generation.positives.verification import RejectedAudio, verify
-from wakeword.generation.progress import AttemptLedger
+from chara.wakeword.generation.positives.verification import (
+    RejectedAudio,
+    verify,
+)
+from chara.wakeword.generation.progress import AttemptLedger
 
 
 class VerificationTests(unittest.TestCase):

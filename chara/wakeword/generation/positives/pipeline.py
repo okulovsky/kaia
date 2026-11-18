@@ -1,7 +1,6 @@
 from pathlib import Path
 
 from brainbox.deciders import ParlerTts, Vosk
-
 from chara import BrainBoxCasePipeline, CaseCollection, Chara, Language
 
 from ..brainbox_execution import DurableCasePipeline

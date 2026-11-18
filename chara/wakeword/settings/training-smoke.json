@@ -20,7 +20,10 @@
     "export_rtol": "Relative tolerance in the ONNX parity check; used together with export_atol.",
     "recipe_version": "Training recipe identifier. Keep notebook-28-v1 unless implementing a new versioned recipe.",
     "selection_version": "Checkpoint selection policy identifier. Keep percentiles-v1 for the current implementation.",
-    "background_version": "Background segmentation and window policy identifier. Keep segmented-windows-v1 for the current implementation."
+    "background_version": "Background segmentation and window policy identifier. Keep segmented-windows-v1 for the current implementation.",
+    "expected_target_variants": "Expected wakeword variants; validated against the uploaded corpus before training.",
+    "minimum_positive_counts": "Minimum accepted original positive samples for train and validation, before augmentation.",
+    "server_resource_profile": "Installed server-side permanent background profile ID."
   },
   "schema_version": 1,
   "model_name": "wakeword",
@@ -58,5 +61,13 @@
   "export_rtol": 0.0001,
   "recipe_version": "notebook-28-v1",
   "selection_version": "percentiles-v1",
-  "background_version": "segmented-windows-v1"
+  "background_version": "segmented-windows-v1",
+  "expected_target_variants": [
+    "computer"
+  ],
+  "minimum_positive_counts": {
+    "train": 2,
+    "validation": 2
+  },
+  "server_resource_profile": "acav-notebook-v1"
 }

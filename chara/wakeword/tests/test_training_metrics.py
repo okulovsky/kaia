@@ -1,6 +1,8 @@
 import unittest
 
-from chara.wakeword.training.metrics import calculate_metrics
+from brainbox.deciders.voice_analysis.wakeword_training.runtime.metrics import (
+    calculate_metrics,
+)
 
 
 class MetricTests(unittest.TestCase):

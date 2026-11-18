@@ -1,4 +1,4 @@
-"""Local training. Importing configuration does not load a model."""
+"""Remote training. Importing configuration does not load a model."""
 
 from .settings import TrainingSettings as TrainingSettings
 

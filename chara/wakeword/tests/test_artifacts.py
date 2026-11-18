@@ -2,13 +2,19 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+np: Any
 try:
     import numpy as np
 except ImportError:
     np = None
-from wakeword.generation.validation import FEATURES, check_completed, publish_manifest
+from chara.wakeword.generation.validation import (
+    FEATURES,
+    check_completed,
+    publish_manifest,
+)
 
 
 @unittest.skipIf(np is None, "requires numpy")

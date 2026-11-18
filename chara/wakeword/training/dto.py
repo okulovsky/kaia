@@ -1,30 +1,12 @@
-"""Results are small metadata objects; arrays remain disk backed."""
+"""Compatibility alias for the canonical wakeword implementation."""
 
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Any
+import importlib
+import sys
+from typing import TYPE_CHECKING
 
-DatasetSnapshot = dict[str, Any]
-HistoryEvent = dict[str, Any]
-CheckpointSelection = dict[str, Any]
-ExportCheck = dict[str, Any]
-ValidationResult = dict[str, Any]
+if TYPE_CHECKING:
+    from brainbox.deciders.voice_analysis.wakeword_training.runtime.dto import *
 
-
-@dataclass
-class TrainingResult:
-    status: str
-    output: Path
-    model: Path | None = None
-    report: Path | None = None
-    metrics: Path | None = None
-    error_stage: str | None = None
-    error: str | None = None
-
-
-@dataclass
-class FullRunResult:
-    status: str
-    output: Path
-    training: TrainingResult | None = None
-    error: str | None = None
+sys.modules[__name__] = importlib.import_module(
+    "brainbox.deciders.voice_analysis.wakeword_training.runtime.dto"
+)

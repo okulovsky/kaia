@@ -1,75 +1,74 @@
-﻿# Wake Word Model Training
+# Full wakeword pipeline
 
-## Getting started
+Run all commands from the `kaia` project root. Generation and training use the main configuration file, [learn-settings.json](learn-settings.json).
 
-### 1. Create the wakeword environment
+The examples below use PowerShell on Windows. Replace the project and data paths with your own locations.
 
-From the repository root:
+## 1. Start BrainBox
 
-```sh
-conda create -n wakeword --clone brainbox -y
-conda activate wakeword
-cd chara/wakeword
-```
-
-This copies the existing BrainBox environment and its dependencies.
-
-### 2. Set your wake word
-
-In [learn-settings.json](learn-settings.json), set `generation.target_variants` to your word or phrase:
-
-```json
-"target_variants": ["computer"]
-```
-
-English is currently supported. You can leave the other settings unchanged.
-
-### 3. Start BrainBox
-
-In a separate terminal, from the repository root, activate the `brainbox` environment and start the server:
-
-```sh
-conda activate brainbox
-python -m brainbox.run --data-folder ./brainbox-data
-```
-
-Replace `./brainbox-data` with your existing BrainBox data directory. Keep the server running.
-
-### 4. Get a Hugging Face token
-
-Create a **Read** token in [Hugging Face settings](https://huggingface.co/settings/tokens), then run:
+Start Docker Desktop. In a separate terminal, activate your existing BrainBox environment and start the server from the current project sources:
 
 ```powershell
+conda activate brainbox
+cd D:\Document\FourthCourseMATMEX\kaia
+python -m brainbox.run --data-folder "D:\brainbox-data"
+```
+
+Keep this terminal open. The client connects to `http://127.0.0.1:8090` by default. If BrainBox runs on another machine, add `--brainbox-url http://SERVER:8090` to the `prepare`, `generate`, and `train` commands.
+
+## 2. Create the environment and prepare resources
+
+Your existing `brainbox` environment must use Python 3.11 or 3.12. In a second terminal, **create a separate `wakeword` environment** by cloning it to reuse the project's base dependencies. Then install the tools and pinned generation dependencies. Changes to `wakeword` do not affect the original `brainbox` environment.
+
+Run these environment creation commands once:
+
+```powershell
+conda create --name wakeword --clone brainbox --yes
 conda activate wakeword
-huggingface-cli login
+cd D:\Document\FourthCourseMATMEX\kaia
+
+conda install --channel conda-forge git ffmpeg --yes
+python -m pip install --no-deps -r chara/wakeword/requirements-host.lock.txt
+python -m pip install --no-deps -e .
 ```
 
-Paste the token at `Enter your token` and press Enter (input is hidden). Answer `n` when asked to add a Git credential. Then run `make setup`.
+Run all subsequent commands **in the `wakeword` environment, from the `kaia` project root**. Complete the dependency installation above before starting the pipelines.
 
-### 5. Prepare resources and train
-
-Back in the `wakeword` terminal, from `chara/wakeword`:
-
-```sh
-make setup
-make check
-make run OUTPUT=../../temp/wakeword/my-word-001
+```powershell
+python -m chara.wakeword.scripts.prepare --scope all
+python -m chara.wakeword.scripts.prepare --scope all --check-only
 ```
 
-The first setup downloads models and datasets and requires more than 25 GB of free disk space. Use a new `OUTPUT` directory when training a different wake word.
+The first command prepares ParlerTts, Vosk, the `WakewordTraining` decider, and the required resources. The second checks readiness without installing anything. Wait for a successful readiness check before proceeding.
 
-### 6. Get the results
+The initial ACAV download requires internet access and at least 21 GiB of free space on the filesystem containing BrainBox's server resources. Existing prepared and verified background data is reused.
 
-Open `temp/wakeword/my-word-001/training/` relative to the repository root:
+## 3. Set your wakeword
 
-- `wakeword.onnx` — the trained model;
-- `report.html` — the training quality report.
+Set your wakeword in `generation.target_variants` in [learn-settings.json](learn-settings.json), and use the same value in `training.expected_target_variants`.
 
-## How the pipeline works
+## 4. Generate the dataset
 
-1. **Speech generation.** ParlerTTS runs through BrainBox to synthesize the wake word in different voices and similar phrases without it. Vosk verifies and crops the target word from positive recordings.
-2. **Data preparation.** Background sounds and room effects are added to the audio. Training and validation recordings are converted into features.
-3. **Training.** A classifier learns to distinguish the wake word from similar phrases and background sounds. Speech generation runs in BrainBox; data processing and training run in the `wakeword` environment.
-4. **Export and evaluation.** The pipeline selects and averages the best saved model states, exports the model to ONNX, evaluates it, and generates a report.
+```powershell
+python -m chara.wakeword.scripts.generate --config chara/wakeword/learn-settings.json --output temp/wakeword/full-generation-001
+```
 
-Generated data is saved to `OUTPUT/generation/`; the model and reports are saved to `OUTPUT/training/`.
+The output includes the dataset directory, `portable-dataset`, and `dataset.zip`. The archive contains four feature arrays and a manifest. Rejected samples are saved separately in `review`.
+
+## 5. Train the model
+
+Pass the generation output directory from the previous step:
+
+```powershell
+python -m chara.wakeword.scripts.train --config chara/wakeword/learn-settings.json --dataset temp/wakeword/full-generation-001 --output temp/wakeword/full-training-001
+```
+
+The pipeline validates the dataset and uploads the archive through the BrainBox API. Training runs inside the `WakewordTraining` container, using the permanent ACAV background stored in the server's resources.
+
+After successful completion, `temp/wakeword/full-training-001` contains:
+
+- `wakeword.onnx`: the trained model, if `training.model_name` retains its default value;
+- `report.html` and `report_ru.html`: the English and Russian reports;
+- `metrics.json`, training history, saved validation scores, and dataset metadata.
+
+Use new output directories when changing settings, for example by replacing the `001` suffix with `002`.

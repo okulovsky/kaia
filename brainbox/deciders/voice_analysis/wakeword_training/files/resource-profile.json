@@ -1,0 +1,26 @@
+{
+  "profile_id": "acav-notebook-v1",
+  "source": "https://huggingface.co/datasets/davidscripka/openwakeword_features/resolve/985bf1b47e7f19c07741af82bfe32d5a9dc56096/openwakeword_features_ACAV100M_2000_hrs_16bit.npy",
+  "revision": "985bf1b47e7f19c07741af82bfe32d5a9dc56096",
+  "sha256": "721a66d0682c65a1b5c1da0aa109409cede1d20e28b15235c344b000cbb7654f",
+  "feature_space": {
+    "shape": [
+      16,
+      96
+    ],
+    "dtype": "float32",
+    "recipe": "host-v2",
+    "models": [
+      {
+        "id": "embedding_model.onnx",
+        "revision": "v0.5.1",
+        "sha256": "70d164290c1d095d1d4ee149bc5e00543250a7316b59f31d056cff7bd3075c1f"
+      },
+      {
+        "id": "melspectrogram.onnx",
+        "revision": "v0.5.1",
+        "sha256": "ba2b0e0f8b7b875369a2c89cb13360ff53bac436f2895cced9f479fa65eb176f"
+      }
+    ]
+  }
+}

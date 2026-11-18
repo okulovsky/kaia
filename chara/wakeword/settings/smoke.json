@@ -14,7 +14,7 @@
       "batch_size": "Submit up to 2 tasks together to test BrainBox batch submission.",
       "augmentation_batch_size": "Batch size for local audio augmentation and feature extraction.",
       "resource_folder": "Local resource cache path, resolved relative to this configuration file.",
-      "resource_specs": "Pinned resource specifications for feature models, phonemization, augmentation audio and ACAV background features. Usually keep unchanged.",
+      "resource_specs": "Pinned resource specifications for feature models, phonemization and augmentation audio. Permanent ACAV training background is installed on the BrainBox server.",
       "schema_version": "Generation configuration version; keep 2."
     },
     "name": "computer",
@@ -70,12 +70,6 @@
         "kind": "background",
         "source": "https://os.unil.cloud.switch.ch/fma/fma_small.zip",
         "revision": "fma_small"
-      },
-      {
-        "id": "acav.npy",
-        "kind": "acav",
-        "revision": "main",
-        "source": "https://huggingface.co/datasets/davidscripka/openwakeword_features/resolve/main/openwakeword_features_ACAV100M_2000_hrs_16bit.npy"
       }
     ],
     "schema_version": 2
@@ -102,7 +96,10 @@
       "export_rtol": "Relative tolerance in the ONNX parity check; used together with export_atol.",
       "recipe_version": "Training recipe identifier. Keep notebook-28-v1 unless implementing a new versioned recipe.",
       "selection_version": "Checkpoint selection policy identifier. Keep percentiles-v1 for the current implementation.",
-      "background_version": "Background segmentation and window policy identifier. Keep segmented-windows-v1 for the current implementation."
+      "background_version": "Background segmentation and window policy identifier. Keep segmented-windows-v1 for the current implementation.",
+      "expected_target_variants": "Expected target variants checked against the dataset before training; update together with generation.target_variants.",
+      "minimum_positive_counts": "Minimum accepted original positive samples per training/validation split, not augmented feature rows.",
+      "server_resource_profile": "Installed immutable server background resource profile."
     },
     "schema_version": 1,
     "model_name": "wakeword",
@@ -140,6 +137,14 @@
     "export_rtol": 0.0001,
     "recipe_version": "notebook-28-v1",
     "selection_version": "percentiles-v1",
-    "background_version": "segmented-windows-v1"
+    "background_version": "segmented-windows-v1",
+    "expected_target_variants": [
+      "computer"
+    ],
+    "minimum_positive_counts": {
+      "train": 2,
+      "validation": 2
+    },
+    "server_resource_profile": "acav-notebook-v1"
   }
 }

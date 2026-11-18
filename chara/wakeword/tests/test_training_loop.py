@@ -5,13 +5,27 @@ from unittest.mock import patch
 
 import numpy as np
 import torch
-from chara.wakeword.training.batches import sample_batch, window_batches
-from chara.wakeword.training.inputs import resolve_inputs
-from chara.wakeword.training.model import WakewordModel
-from chara.wakeword.training.settings import TrainingSettings
-from chara.wakeword.training.state import history
-from chara.wakeword.training.trainer import learning_rate, train, validation_steps
 from training_fixtures import dataset_fixture
+
+from brainbox.deciders.voice_analysis.wakeword_training.runtime.batches import (
+    sample_batch,
+    window_batches,
+)
+from brainbox.deciders.voice_analysis.wakeword_training.runtime.inputs import (
+    resolve_inputs,
+)
+from brainbox.deciders.voice_analysis.wakeword_training.runtime.model import (
+    WakewordModel,
+)
+from brainbox.deciders.voice_analysis.wakeword_training.runtime.settings import (
+    TrainingSettings,
+)
+from brainbox.deciders.voice_analysis.wakeword_training.runtime.state import history
+from brainbox.deciders.voice_analysis.wakeword_training.runtime.trainer import (
+    learning_rate,
+    train,
+    validation_steps,
+)
 
 
 class LoopTests(unittest.TestCase):
@@ -85,7 +99,7 @@ class LoopTests(unittest.TestCase):
             try:
                 with (
                     patch(
-                        "chara.wakeword.training.trainer.sample_batch",
+                        "brainbox.deciders.voice_analysis.wakeword_training.runtime.trainer.sample_batch",
                         return_value=(x, y),
                     ),
                     self.assertRaisesRegex(ValueError, "zero optimizer updates"),

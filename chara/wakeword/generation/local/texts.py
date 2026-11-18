@@ -82,7 +82,9 @@ def generate_adversarial_texts(
     # Download phonemizer model for OOV words, if needed
     if [] in input_text_phones:
         if phonemizer_path is None or not Path(phonemizer_path).is_file():
-            raise ValueError("DeepPhonemizer checkpoint missing; run make setup")
+            raise ValueError(
+                "DeepPhonemizer checkpoint missing; run python -m chara.wakeword.scripts.prepare --scope generation"
+            )
         phonemizer_mdl_path = str(phonemizer_path)
 
         # Create phonemizer object

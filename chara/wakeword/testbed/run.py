@@ -1,6 +1,8 @@
 import webbrowser
 from pathlib import Path
+
 from loguru import logger
+
 from avatar.app import AvatarApi, AvatarServer, AvatarServerSettings, compile_frontend
 from avatar.daemon.common.known_messages import WakeWordEvent
 from foundation_kaia.marshalling import TestApi

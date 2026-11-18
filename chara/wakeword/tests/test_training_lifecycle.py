@@ -3,11 +3,16 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from chara.wakeword.generation.io import sha256
-from chara.wakeword.training.pipeline import run_training
-from chara.wakeword.training.settings import TrainingSettings
-from chara.wakeword.training.state import run_lock
 from training_fixtures import dataset_fixture
+
+from brainbox.deciders.voice_analysis.wakeword_training.runtime.execution import (
+    run_training,
+)
+from brainbox.deciders.voice_analysis.wakeword_training.runtime.settings import (
+    TrainingSettings,
+)
+from brainbox.deciders.voice_analysis.wakeword_training.runtime.state import run_lock
+from chara.wakeword.generation.io import sha256
 
 
 class LifecycleTests(unittest.TestCase):
@@ -41,7 +46,7 @@ class LifecycleTests(unittest.TestCase):
             before = sha256(output / "history.jsonl")
             result.report.unlink()
             with patch(
-                "chara.wakeword.training.trainer.train",
+                "brainbox.deciders.voice_analysis.wakeword_training.runtime.trainer.train",
                 side_effect=AssertionError("no retrain"),
             ):
                 result = run_training(data, settings, output)
@@ -56,14 +61,14 @@ class LifecycleTests(unittest.TestCase):
             data = dataset_fixture(root / "source")
             output = root / "out"
             with patch(
-                "chara.wakeword.training.checkpoints.select_state",
+                "brainbox.deciders.voice_analysis.wakeword_training.runtime.checkpoints.select_state",
                 side_effect=RuntimeError("injected selection fault"),
             ):
                 result = run_training(data, TrainingSettings(), output)
             self.assertEqual(result.error_stage, "selecting")
             before = sha256(output / "history.jsonl")
             with patch(
-                "chara.wakeword.training.trainer.train",
+                "brainbox.deciders.voice_analysis.wakeword_training.runtime.trainer.train",
                 side_effect=AssertionError("no retrain"),
             ):
                 result = run_training(data, TrainingSettings(), output)
@@ -76,7 +81,7 @@ class LifecycleTests(unittest.TestCase):
             data = dataset_fixture(root / "source")
             output = root / "out"
             with patch(
-                "chara.wakeword.training.trainer.train",
+                "brainbox.deciders.voice_analysis.wakeword_training.runtime.trainer.train",
                 side_effect=KeyboardInterrupt("injected"),
             ):
                 self.assertEqual(
@@ -106,7 +111,7 @@ class LifecycleTests(unittest.TestCase):
                 self.assertEqual(result.error_stage, stage)
                 before = sha256(output / "history.jsonl")
                 with patch(
-                    "chara.wakeword.training.trainer.train",
+                    "brainbox.deciders.voice_analysis.wakeword_training.runtime.trainer.train",
                     side_effect=AssertionError("no updates"),
                 ):
                     result = run_training(data, TrainingSettings(), output)

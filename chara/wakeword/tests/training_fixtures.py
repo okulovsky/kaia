@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import numpy as np
+
 from chara.wakeword.generation.io import sha256, write_json
 
 

@@ -4,10 +4,15 @@ from pathlib import Path
 from unittest.mock import patch
 
 import numpy as np
-from chara.wakeword.generation.io import read_json, sha256, write_json
-from chara.wakeword.training.inputs import resolve_inputs
-from chara.wakeword.training.settings import TrainingSettings
 from training_fixtures import dataset_fixture
+
+from brainbox.deciders.voice_analysis.wakeword_training.runtime.inputs import (
+    resolve_inputs,
+)
+from brainbox.deciders.voice_analysis.wakeword_training.runtime.settings import (
+    TrainingSettings,
+)
+from chara.wakeword.generation.io import read_json, sha256, write_json
 
 
 class InputTests(unittest.TestCase):
@@ -99,7 +104,8 @@ class InputTests(unittest.TestCase):
                 return finite(x)
 
             with patch(
-                "chara.wakeword.training.inputs.np.isfinite", side_effect=checked
+                "brainbox.deciders.voice_analysis.wakeword_training.runtime.inputs.np.isfinite",
+                side_effect=checked,
             ):
                 _, arrays = resolve_inputs(root)
             try:

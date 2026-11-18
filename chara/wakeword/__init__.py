@@ -1,23 +1,31 @@
-"""Wakeword data generation and local training with lazy model imports."""
-
-from .generation.settings import GenerationSettings
-
-__all__ = [
-    "GenerationSettings",
-    "TrainingSettings",
-    "WakewordPipeline",
-    "render_training_report",
-    "run",
-    "run_full",
-    "run_training",
-]
+"""Chara orchestration for wakeword generation and remote training."""
 
 
 def __getattr__(name):
-    if name == "TrainingSettings":
-        from .training.settings import TrainingSettings
+    if name in ("GenerationPipeline", "WakewordPipeline", "generate_dataset", "run"):
+        from . import generation_pipeline
 
-        return TrainingSettings
+        return getattr(generation_pipeline, name)
+    if name in ("TrainingPipeline", "train_dataset"):
+        from . import training_pipeline
+
+        return getattr(training_pipeline, name)
+    if name == "GenerationSettings":
+        from .generation.settings import GenerationSettings
+
+        return GenerationSettings
+    if name in ("TrainingSettings", "render_training_report"):
+        if name == "TrainingSettings":
+            from brainbox.deciders.voice_analysis.wakeword_training.runtime.settings import (
+                TrainingSettings,
+            )
+
+            return TrainingSettings
+        from brainbox.deciders.voice_analysis.wakeword_training.runtime.reporting import (
+            render_training_report,
+        )
+
+        return render_training_report
     if name == "run_training":
         from .training.pipeline import run_training
 
@@ -26,12 +34,4 @@ def __getattr__(name):
         from .training.full_pipeline import run_full
 
         return run_full
-    if name == "render_training_report":
-        from .training.reporting import render_training_report
-
-        return render_training_report
-    if name in ("WakewordPipeline", "run"):
-        from .generation.pipeline import WakewordPipeline, run
-
-        return WakewordPipeline if name == "WakewordPipeline" else run
     raise AttributeError(name)

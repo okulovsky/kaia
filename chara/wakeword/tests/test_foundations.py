@@ -5,8 +5,8 @@ import zipfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from wakeword.generation.processing import extract_archive
-from wakeword.generation.settings import GenerationSettings
+from chara.wakeword.generation.processing import extract_archive
+from chara.wakeword.generation.settings import GenerationSettings
 
 
 class FoundationTests(unittest.TestCase):

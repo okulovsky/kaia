@@ -54,7 +54,9 @@ def issues():
             info.get("vcs_info", {}).get("commit_id")
             != "368c03716d1e92591906a84949bc477f3a834455"
         ):
-            result.append("openwakeword: source revision mismatch; run make setup")
+            result.append(
+                "openwakeword: source revision mismatch; run python -m chara.wakeword.scripts.prepare --scope generation"
+            )
     except importlib.metadata.PackageNotFoundError:
         pass
     if not shutil.which("ffmpeg"):

@@ -3,11 +3,18 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from chara.wakeword.generation.io import read_json, write_json
-from chara.wakeword.training.pipeline import run_training
-from chara.wakeword.training.reporting import render_training_report
-from chara.wakeword.training.settings import TrainingSettings
 from training_fixtures import dataset_fixture
+
+from brainbox.deciders.voice_analysis.wakeword_training.runtime.execution import (
+    run_training,
+)
+from brainbox.deciders.voice_analysis.wakeword_training.runtime.reporting import (
+    render_training_report,
+)
+from brainbox.deciders.voice_analysis.wakeword_training.runtime.settings import (
+    TrainingSettings,
+)
+from chara.wakeword.generation.io import read_json, write_json
 
 
 class ConsistencyTests(unittest.TestCase):

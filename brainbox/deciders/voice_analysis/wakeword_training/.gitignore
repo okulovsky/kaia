@@ -1,0 +1,5 @@
+app/wakeword_core/
+app/resource-profile.json
+foundation_kaia/
+__pycache__/
+*.pyc

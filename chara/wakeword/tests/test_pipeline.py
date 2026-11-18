@@ -6,18 +6,24 @@ import unittest
 import zipfile
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Any
 from unittest.mock import patch
 from uuid import uuid4
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+np: Any
 try:
     import numpy as np
     import soundfile as sf
+
     from chara import Chara
-    from wakeword.generation.pipeline import run
-    from wakeword.generation.settings import GenerationSettings
-    from wakeword.generation.validation import FEATURES, check_completed
+    from chara.wakeword.generation.settings import GenerationSettings
+    from chara.wakeword.generation.validation import (
+        FEATURES,
+        check_completed,
+    )
+    from chara.wakeword.generation_pipeline import run
 except ImportError:
     np = None
 
@@ -153,7 +159,7 @@ class FakeBrainBox:
 @unittest.skipIf(np is None, "requires the kaia environment")
 class PipelineTests(unittest.TestCase):
     def setUp(self):
-        from wakeword.generation.pipeline import WakewordPipeline
+        from chara.wakeword.generation_pipeline import WakewordPipeline
 
         original = WakewordPipeline._normalize
 
@@ -183,7 +189,9 @@ class PipelineTests(unittest.TestCase):
             return folder
 
         def resources(settings):
-            from wakeword.generation.resources import read_voice_models
+            from chara.wakeword.generation.resources import (
+                read_voice_models,
+            )
 
             return {
                 "resources": [],
@@ -193,20 +201,20 @@ class PipelineTests(unittest.TestCase):
 
         for target, kwargs in [
             (
-                "wakeword.generation.pipeline.prepare_resources",
+                "chara.wakeword.generation_pipeline.prepare_resources",
                 {"side_effect": resources},
             ),
             (
-                "wakeword.generation.pipeline.WakewordPipeline._normalize",
+                "chara.wakeword.generation_pipeline.WakewordPipeline._normalize",
                 {"new": normalize},
             ),
             (
-                "wakeword.generation.pipeline.WakewordPipeline._features",
+                "chara.wakeword.generation_pipeline.WakewordPipeline._features",
                 {"new": features},
             ),
-            ("wakeword.generation.pipeline.ResourceInstaller", None),
+            ("chara.wakeword.generation_pipeline.ResourceInstaller", None),
             (
-                "wakeword.generation.negatives.pipeline.generate_negative_texts",
+                "chara.wakeword.generation.negatives.pipeline.generate_negative_texts",
                 {"return_value": ["commuter", "compost"]},
             ),
         ]:
@@ -216,7 +224,7 @@ class PipelineTests(unittest.TestCase):
             patcher.start()
             self.addCleanup(patcher.stop)
         patcher = patch(
-            "wakeword.generation.local.resources.ResourceInstaller.load",
+            "chara.wakeword.generation.local.resources.ResourceInstaller.load",
             return_value={"resources": [], "versions": {}},
         )
         patcher.start()

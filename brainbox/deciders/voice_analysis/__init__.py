@@ -5,3 +5,5 @@ from .vosk import Vosk
 from .whisperx import WhisperX
 from .whisper_kenlm import WhisperKenLM
 from .nemotron import Nemotron
+
+from .wakeword_training import WakewordTraining
