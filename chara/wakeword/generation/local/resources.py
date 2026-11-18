@@ -62,12 +62,6 @@ def default_specs():
             "source": "https://os.unil.cloud.switch.ch/fma/fma_small.zip",
             "revision": "fma_small",
         },
-        {
-            "id": "acav.npy",
-            "kind": "acav",
-            "revision": "main",
-            "source": "https://huggingface.co/datasets/davidscripka/openwakeword_features/resolve/main/openwakeword_features_ACAV100M_2000_hrs_16bit.npy",
-        },
     ]
 
 
@@ -419,9 +413,13 @@ class ResourceInstaller:
 
     def load(self, specs, verify=True):
         if not (self.root / "manifest.json").is_file():
-            raise ValueError("local resources are not prepared; run make setup")
+            raise ValueError(
+                "local resources are not prepared; run python -m chara.wakeword.scripts.prepare --scope generation"
+            )
         if read_json(self.root / "requested.json") != specs:
-            raise ValueError("resource configuration changed; run make setup")
+            raise ValueError(
+                "resource configuration changed; run python -m chara.wakeword.scripts.prepare --scope generation"
+            )
         manifest = read_json(self.root / "manifest.json")
         for item in manifest["resources"]:
             for artifact in item["artifacts"]:

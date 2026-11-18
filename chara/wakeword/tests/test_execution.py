@@ -3,14 +3,16 @@ import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Any
 from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+execution: Any
 try:
     from chara import CaseCollection
-    from wakeword.generation import brainbox_execution as execution
-    from wakeword.generation.dto import AudioCase
+    from chara.wakeword.generation import brainbox_execution as execution
+    from chara.wakeword.generation.dto import AudioCase
 except ImportError:
     execution = None
 

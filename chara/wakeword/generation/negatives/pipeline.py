@@ -1,5 +1,4 @@
 from brainbox.deciders import ParlerTts
-
 from chara import Chara
 
 from ..positives.case import create_case

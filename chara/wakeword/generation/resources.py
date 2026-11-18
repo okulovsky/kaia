@@ -1,8 +1,8 @@
 import hashlib
 
 import yaml
-from brainbox.deciders import ParlerTts, Vosk
 
+from brainbox.deciders import ParlerTts, Vosk
 from chara import Chara
 
 from .io import write_json
@@ -42,7 +42,7 @@ def prepare_resources(settings):
         or not result.get("versions")
     ):
         raise ValueError(
-            "resources: incomplete local resource manifest; run make setup"
+            "resources: incomplete local resource manifest; run python -m chara.wakeword.scripts.prepare --scope generation"
         )
     result["voice_models"] = voice_models
     write_json(Chara.current.folder / "resources.json", result)

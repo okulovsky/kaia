@@ -11,8 +11,8 @@ import numpy as np
 import soundfile as sf
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from wakeword.generation.local.features import compute
-from wakeword.generation.local.normalization import normalize
+from chara.wakeword.generation.local.features import compute
+from chara.wakeword.generation.local.normalization import normalize
 
 
 def main():

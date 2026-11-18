@@ -95,7 +95,9 @@ def check(api, settings):
     if not (installer.root / "manifest.json").is_file():
         rows.append(
             Check(
-                "host/resources", "missing", "run make setup to prepare local resources"
+                "host/resources",
+                "missing",
+                "run python -m chara.wakeword.scripts.prepare --scope generation to prepare local resources",
             )
         )
     else:

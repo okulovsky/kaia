@@ -3,10 +3,12 @@ import sys
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Any
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+Vosk: Any
 try:
     from brainbox.deciders import Vosk
     from brainbox.deciders.voice_analysis.vosk.app import interface as vosk_interface

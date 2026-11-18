@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
-from wakeword.generation import environment as env
+from chara.wakeword.generation import environment as env
 
 
 class Storage:
@@ -35,13 +35,16 @@ class EnvironmentTests(unittest.TestCase):
         self.resource_folder = Path(self.temporary.name)
         (self.resource_folder / "manifest.json").write_text("{}")
         for target, kwargs in [
-            ("wakeword.generation.dependencies.issues", {"return_value": []}),
             (
-                "wakeword.generation.local.resources.ResourceInstaller.load",
+                "chara.wakeword.generation.dependencies.issues",
+                {"return_value": []},
+            ),
+            (
+                "chara.wakeword.generation.local.resources.ResourceInstaller.load",
                 {"return_value": {}},
             ),
             (
-                "wakeword.generation.local.resources.ResourceInstaller.prepare",
+                "chara.wakeword.generation.local.resources.ResourceInstaller.prepare",
                 {"return_value": {}},
             ),
         ]:

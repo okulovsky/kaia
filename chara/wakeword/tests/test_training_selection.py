@@ -3,12 +3,13 @@ import unittest
 from pathlib import Path
 
 import torch
-from chara.wakeword.training.checkpoints import (
+
+from brainbox.deciders.voice_analysis.wakeword_training.runtime.checkpoints import (
     candidate_gate,
     choose_candidates,
     select_state,
 )
-from chara.wakeword.training.state import save_state
+from brainbox.deciders.voice_analysis.wakeword_training.runtime.state import save_state
 
 
 class SelectionTests(unittest.TestCase):

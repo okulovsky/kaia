@@ -46,12 +46,6 @@
       "kind": "background",
       "source": "https://os.unil.cloud.switch.ch/fma/fma_small.zip",
       "revision": "fma_small"
-    },
-    {
-      "id": "acav.npy",
-      "kind": "acav",
-      "revision": "main",
-      "source": "https://huggingface.co/datasets/davidscripka/openwakeword_features/resolve/main/openwakeword_features_ACAV100M_2000_hrs_16bit.npy"
     }
   ],
   "schema_version": 2,

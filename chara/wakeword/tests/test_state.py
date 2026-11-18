@@ -4,11 +4,11 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from wakeword.generation.dto import AudioCase
-from wakeword.generation.io import read_json
-from wakeword.generation.review import save_review
-from wakeword.generation.run_state import check_settings, run_lock
-from wakeword.generation.settings import GenerationSettings
+from chara.wakeword.generation.dto import AudioCase
+from chara.wakeword.generation.io import read_json
+from chara.wakeword.generation.review import save_review
+from chara.wakeword.generation.run_state import check_settings, run_lock
+from chara.wakeword.generation.settings import GenerationSettings
 
 
 class StateTests(unittest.TestCase):

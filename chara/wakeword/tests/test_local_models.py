@@ -2,21 +2,23 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+texts: Any
 try:
-    from wakeword.generation.local import texts
+    from chara.wakeword.generation.local import texts
 except ImportError:
     texts = None
 
 
 class LocalEmbeddingTests(unittest.TestCase):
     def test_windows_safe_memmap_trimming(self):
-        from wakeword.generation.local.embedding import trim_mmap
+        from chara.wakeword.generation.local.embedding import trim_mmap
 
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "features.npy"
@@ -36,7 +38,10 @@ class LocalTextTests(unittest.TestCase):
         import io
 
         from dp.preprocessing.text import SequenceTokenizer
-        from wakeword.generation.local.phonemizer import TokenizerUnpickler
+
+        from chara.wakeword.generation.local.phonemizer import (
+            TokenizerUnpickler,
+        )
 
         loader = TokenizerUnpickler(io.BytesIO())
         self.assertIs(

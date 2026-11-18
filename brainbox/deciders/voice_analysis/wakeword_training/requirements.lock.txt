@@ -1,0 +1,29 @@
+# Linux/Python 3.11 CPU runtime; transitive versions resolved from the validated native environment.
+# Linux wheel/build validation remains a separate required check.
+--extra-index-url https://download.pytorch.org/whl/cpu
+coloredlogs==15.0.1
+contourpy==1.3.3
+cycler==0.12.1
+filelock==3.32.6
+flatbuffers==25.12.19
+fonttools==4.65.0
+fsspec==2026.7.0
+humanfriendly==10.0
+jinja2==3.1.6
+kiwisolver==1.5.1
+markupsafe==3.0.3
+matplotlib==3.9.2
+mpmath==1.3.0
+networkx==3.6.1
+numpy==1.26.4
+onnx==1.16.1
+onnxruntime==1.17.3
+packaging==26.3
+pillow==12.3.0
+protobuf==7.36.2
+pyparsing==3.3.2
+python-dateutil==2.9.0.post0
+six==1.17.0
+sympy==1.14.0
+torch==2.2.2+cpu
+typing-extensions==4.16.0

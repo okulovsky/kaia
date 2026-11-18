@@ -8,9 +8,9 @@ import numpy as np
 import soundfile as sf
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from wakeword.generation.local.normalization import normalize
-from wakeword.generation.local.resources import ResourceInstaller
-from wakeword.generation.settings import GenerationSettings
+from chara.wakeword.generation.local.normalization import normalize
+from chara.wakeword.generation.local.resources import ResourceInstaller
+from chara.wakeword.generation.settings import GenerationSettings
 
 
 class HostProcessingTests(unittest.TestCase):

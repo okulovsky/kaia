@@ -4,9 +4,16 @@ from pathlib import Path
 from unittest.mock import patch
 
 import numpy as np
-from chara.wakeword.training.export import export_model
-from chara.wakeword.training.model import WakewordModel
-from chara.wakeword.training.settings import TrainingSettings
+
+from brainbox.deciders.voice_analysis.wakeword_training.runtime.export import (
+    export_model,
+)
+from brainbox.deciders.voice_analysis.wakeword_training.runtime.model import (
+    WakewordModel,
+)
+from brainbox.deciders.voice_analysis.wakeword_training.runtime.settings import (
+    TrainingSettings,
+)
 
 
 class ExportTests(unittest.TestCase):
@@ -25,7 +32,10 @@ class ExportTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "model.onnx"
             with (
-                patch("chara.wakeword.training.export.np.allclose", return_value=False),
+                patch(
+                    "brainbox.deciders.voice_analysis.wakeword_training.runtime.export.np.allclose",
+                    return_value=False,
+                ),
                 self.assertRaisesRegex(ValueError, "parity"),
             ):
                 export_model(
